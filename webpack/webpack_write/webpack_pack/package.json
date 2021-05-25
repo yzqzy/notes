@@ -1,0 +1,26 @@
+{
+  "name": "webpack_pack",
+  "version": "0.1.0",
+  "description": "手写webpack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "webpack",
+    "手写"
+  ],
+  "author": "月落",
+  "license": "MIT",
+  "bin": {
+    "pack": "./bin/pack.js"
+  },
+  "devDependencies": {
+    "@babel/generator": "^7.10.2",
+    "@babel/traverse": "^7.10.1",
+    "@babel/types": "^7.10.2",
+    "babylon": "^6.18.0",
+    "ejs": "^3.1.3",
+    "tapable": "^1.1.3"
+  }
+}

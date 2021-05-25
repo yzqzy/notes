@@ -1,0 +1,42 @@
+/* .clearfix::after {
+  display: block;
+  content: "";
+  clear: both;
+}
+
+.radio-wrapper {
+  width: 300rpx;
+}
+
+.radio-box {
+  float: left;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-left: 15px;
+}
+
+.radio-box input[type = "radio"] {
+  visibility: hidden;
+}
+
+.radio-box input[type = "radio"]:checked + label {
+  background-color: burlywood;
+}
+
+.radio-box label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ccc;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 90px;
+}
+
+.radio-box span {
+  font-size: 40px;
+  color: #fff;
+} */

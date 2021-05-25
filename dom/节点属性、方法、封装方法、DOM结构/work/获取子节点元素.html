@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>获取子节点元素</title>
+</head>
+<body>
+
+  <div>
+    <!-- ul元素 -->
+    <ul>
+      <!-- li元素 -->
+      <li>
+        <!-- a元素 -->
+        <a href="javascript:;">点击</a>
+      </li>
+      <!-- li元素 -->
+      <li>
+        <!-- a元素 -->
+        <a href="javascript:;">点击</a>
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript">
+    var list = document.getElementsByTagName('ul')[0];
+
+    Element.prototype.elemChildren  = function () {
+      var children = this.childNodes,
+          len = children.length,
+          idx = arguments[0];
+
+      var res = {
+        'length': 0,
+        'push': Array.prototype.push,
+        'splice': Array.prototype.splice
+      }
+
+      for (var i = 0; i < len; i++) {
+        var item = children[i];
+        if (item.nodeType === 1) {
+          res.push(item);
+        }
+      }
+
+      if (idx >= 0) {
+        return res[idx] || undefined;
+      } else {
+        return res;
+      }
+    }
+
+    console.log(list.elemChildren());
+    console.log(list.elemChildren(0));
+  </script>
+  
+</body>
+</html>

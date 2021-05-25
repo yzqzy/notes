@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DocumentFragment案例</title>
+  <style type="text/css">
+
+  </style>
+</head>
+<body>
+
+  <ul id="list"></ul>
+
+  <script type="text/javascript">
+    var oUl = document.getElementById('list'),
+        oFrag = document.createDocumentFragment();
+
+    for (var i = 0; i < 10000; i++) {
+      var oLi = document.createElement('li');
+      oLi.innerHTML = i + '、这是第' + i + '个项目';
+      // oLi.setAttribute('class', 'list-item');
+      oLi.className = 'list-item';
+
+      // oUl.appendChild(oLi);
+      oFrag.appendChild(oLi);
+    }
+
+    oUl.appendChild(oFrag);
+  </script>
+  
+</body>
+</html>

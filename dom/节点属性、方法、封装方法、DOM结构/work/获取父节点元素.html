@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>获取父节点元素</title>
+</head>
+<body>
+
+    <div>
+      <!-- ul元素 -->
+      <ul>
+        <!-- li元素 -->
+        <li>
+          <!-- a元素 -->
+          <a href="javascript:;">点击</a>
+        </li>
+        <!-- li元素 -->
+        <li>
+          <!-- a元素 -->
+          <a href="javascript:;">点击</a>
+        </li>
+      </ul>
+    </div>
+
+    <script type="text/javascript">
+      var a = document.getElementsByTagName('li')[0];
+
+      Element.prototype.getParentElem = function () {
+        var idx = arguments[0],
+            res = this;
+
+        if (idx) {
+          while (idx--) {
+            res = res.parentElement;
+          }
+        } else {
+          res = res.parentElement;
+        }
+
+        return res;
+      }
+
+      console.log(a.getParentElem());
+      console.log(a.getParentElem(2));
+
+    </script>
+  
+</body>
+</html>

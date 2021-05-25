@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>获取元素节点方法封装</title>
+  <style type="text/css">
+    
+  </style>
+</head>
+<body>
+
+  <div class="box" id="box" style="background-color: green">
+    我是文本节点
+    <!-- 注释节点 -->
+    <h1>我是标题标签</h1>
+    <p>我是段落标签</p>
+  </div>
+  
+
+  <script type="text/javascript">
+    var div = document.getElementsByTagName('div')[0];
+
+    /*
+     * 获取元素集合（不包含文本、注释节点等）
+     */
+    // function elemChildren (node) {
+    //   var arr = [],
+    //       children = node.childNodes;
+
+    //   for (var i = 0; i < children.length; i++) {
+    //     var childItem = children[i];
+
+    //     if (childItem.nodeType === 1) {
+    //       arr.push(childItem);
+    //     }
+    //   }
+
+    //   return arr;
+    // }
+
+    // console.log(elemChildren(div));
+
+    // var obj = {
+    //   '0': 1,
+    //   '1': 2,
+    //   '2': 3,
+    //   'length': 3,
+    //   'push': Array.prototype.push,  // 类数组可以继承数组的push方法使用，length是自动增加的。
+    //   'splice': Array.prototype.splice // 可以使用继承数组splice方法，使类数组像真正的数组。
+    // }
+
+    // obj.push(4);
+    // console.log(obj);
+    // console.log([1, 2, 3, 4]);
+
+    // 获取元素集合（不包含文本、注释节点等）
+    // function elemChildren (node) {
+    //   var temp = {
+    //         'length': 0,
+    //         'push': Array.prototype.push,
+    //         'splice': Array.prototype.splice
+    //       },
+    //       len = node.childNodes.length;
+      
+    //   for (var i = 0; i < len; i++) {
+    //     var childItem = node.childNodes[i];
+
+    //     if (childItem.nodeType === 1) {
+    //       // temp[temp['length']] = childItem; 
+    //       // temp['length']++;
+    //       temp.push(childItem);
+    //     }
+    //   }
+
+    //   return temp;
+    // }
+
+    // console.log(elemChildren(div));
+
+  </script>
+  
+</body>
+</html>

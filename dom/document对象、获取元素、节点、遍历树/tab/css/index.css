@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.tab-wrap {
+  width: 500px;
+  margin: 50px auto;
+}
+
+.tab .tab-item {
+  /* float会使父级元素塌陷，可以设置clearfix */
+  float: left; 
+  width: 100px;
+  height: 50px;
+}
+
+.tab .tab-item.cur {
+  background-color: #000;
+}
+
+.tab .tab-item a {
+  display: block;
+  height: 100%;
+  text-align: center;
+  line-height: 50px;
+  color: #000;
+}
+
+.tab .tab-item.cur a {
+  color: #fff;
+}
+
+.page {
+  position: relative;
+  height: 450px;
+  border: 1px solid #000;
+}
+
+.page .page-item {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  line-height: 450px;
+  font-size: 100px;
+}
+
+.page .page-item.active {
+  display: block;
+}

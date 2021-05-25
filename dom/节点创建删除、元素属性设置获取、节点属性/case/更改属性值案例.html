@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>更改属性值案例</title>
+  <style type="text/css">
+    .running {
+      color: green;
+    }
+
+    .warning {
+      color: orange;
+    }
+
+    .danger {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="running">
+    系统正常运行中...
+  </div>
+
+  <script type="text/javascript">
+    var div = document.getElementsByTagName('div')[0];
+
+    function setSystemStatus (status) {
+      div.setAttribute('class', status);
+
+      switch (status) {
+        case 'running':
+          div.innerHTML = '系统正常运行中';
+          break;
+        case 'warning':
+          div.innerHTML = '系统运行时有告警异常';
+          break;
+        case 'danger':
+          div.innerHTML = '系统存在危险';
+          break;
+        default:
+          div.innerHTML = '系统处于未知状况';
+          break;
+      }
+    }
+
+    // setSystemStatus('warning');
+    // setSystemStatus('danger');
+  </script>
+
+</body>
+</html>

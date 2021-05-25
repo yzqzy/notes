@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>封装文档解析完毕函数</title>
+</head>
+<body>
+
+  <script type="text/javascript">
+    function domReady (fn) {
+      if (document.addEventListener) {
+        document.addEventListener('DOMContentLoaded', function () {
+          document.removeEventListener('DOMContentLoaded', arguments.callee, false);
+          fn();
+        }, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('onreadystatechange', function () {
+          if (this.readyState === 'complete') {
+            document.detachEvent('onreadystatechange', arguments.callee);
+            fn();
+          }
+        })
+      } 
+
+      // 判断不在iframe中、兼容IE67
+      if (document.documentElement.doScroll && 
+            typeof(window.frameElement) === 'undefined') {
+              
+        try {
+          document.documentElement.doScroll('left');
+        } catch (e) {
+          return setTimeout(arguments.callee, 20);
+        }
+
+        fn();
+      }
+    }
+  </script>
+  
+</body>
+</html>

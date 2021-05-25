@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>window属性应用案例</title>
+</head>
+<body>
+  
+  <p>窗口<span id="status">关闭</span>状态</p>
+  <button onclick="openWin()">打开窗口</button>
+  <button onclick="closeWin()">关闭窗口</button>
+
+  <script type="text/javascript">
+    var win,
+        oStatus = document.getElementById('status');
+
+    function openWin () {
+      win = window.open('', '', 'width=500, height=500');
+      checkStatus();
+    }
+
+    function closeWin () {
+      win.close();
+      checkStatus();
+    }
+
+    function checkStatus () {
+      if (win.closed) {
+        oStatus.innerHTML = '关闭';
+      } else {
+        oStatus.innerHTML = '打开';
+      }
+    }
+  </script>
+
+</body>
+</html>

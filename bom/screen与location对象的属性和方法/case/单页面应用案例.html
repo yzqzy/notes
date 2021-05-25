@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>单页面应用案例</title>
+  <style type="text/css">
+    .demo {
+      height: 500px;
+      border: 1px solid #000;
+      line-height: 500px;
+      text-align: center;
+      font-size: 100px;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 50px;
+      right: 50px;
+      width: 400px;
+      height: 50px;
+      border: 1px solid orange;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <a href="#demo1">demo1</a>
+    <a href="#demo2">demo2</a>
+    <a href="#demo3">demo3</a>
+    <a href="#demo4">demo4</a>
+    <a href="#demo5">demo5</a>
+  </div>
+
+  <!-- div#demo5${demo$}*5 -->
+
+  <div id="demo1" class="demo">demo1</div>
+  <div id="demo2" class="demo">demo2</div>
+  <div id="demo3" class="demo">demo3</div>
+  <div id="demo4" class="demo">demo4</div>
+  <div id="demo5" class="demo">demo5</div>
+
+  <script type="text/javascript">
+    window.onhashchange = function () {
+      console.log(window.location.hash);
+    }
+  </script>
+  
+</body>
+</html>

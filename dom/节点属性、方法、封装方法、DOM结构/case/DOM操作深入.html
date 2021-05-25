@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DOM操作深入</title>
+  <style type="text/css">
+    
+  </style>
+</head>
+<body>
+
+  <div>
+    <p class="p">测试1</p>
+    <p>测试2</p>
+    <h1>测试3</h1>
+  </div>
+
+  <script type="text/javascript">
+    // getElementById()
+    var div = document.getElementsByTagName('div')[0];
+    // console.log(div); 
+    // console.log(div.getElementById()); //  div.getElementById is not a function
+
+    // getElementsByName()
+    // console.log(div.getElementsByName()); //  div.getElementsByName is not a function
+
+    // getElementsByTagName
+    // console.log(div.getElementsByTagName('P')[0]);
+
+    // getElementsByClassname
+    // console.log(div.getElementsByClassName('p')[0]);
+
+    // *
+    // console.log(document.getElementsByTagName('*'));
+
+    // 如何选择body和head元素？
+    // console.log(document.body);
+    // console.log(document.head);
+    // console.log(document.title); // DOM操作深入
+
+    // 如何获取元素？
+    // console.log(document.documentElement);
+
+    
+
+  </script>
+  
+</body>
+</html>

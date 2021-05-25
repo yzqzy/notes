@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组件介绍、组件的注册、命名、组件间传值</title>
+</head>
+<body>
+  
+  <div id="root">
+    <input type="text" v-model="inputValue" />
+    <button @click="hanleBtnClick">提交</button>
+    <ul>
+      <todo-item
+        v-for="item in list"
+        v-bind:content="item"
+      >
+      </todo-item>
+    </ul>
+  </div>
+
+  <script type="text/javascript" src="../vue.js"></script>
+
+  <script type="text/javascript">
+    const TodoItem = {
+      props: ['content'],
+      template: '<li>{{ content }}</li>'
+    }
+
+    var vm = new Vue({
+      el: '#root',
+      components: {
+        TodoItem
+      },
+      data: {
+        inputValue: '',
+        list: [ 1, 2 ]
+      },
+      methods: {
+        hanleBtnClick () {
+          this.list.push(this.inputValue);
+          this.inputValue = '';
+        }
+      }
+    })
+  </script>
+
+</body>
+</html>

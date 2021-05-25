@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>open、resize、move、print</title>
+</head>
+<body>
+  
+  <button onclick="openWin()">openWindow</button>
+  <button onclick="winResizeBy()">resizeBy</button>
+  <button onclick="winResizeTo()">resizeTo</button>
+  <button onclick="winMoveBy()">moveBy</button>
+  <button onclick="winMoveTo()">moveTo</button>
+  <button onclick="printWin()">printWindow</button>
+
+  <script type="text/javascript">
+    var win;
+
+    function openWin () {
+      win = window.open('', '', 'width=500, height=600');
+    }
+
+    function winResizeTo () {
+      win.resizeTo(400, 400);
+    }
+
+    function winResizeBy () {
+      win.resizeBy(50, 50);
+    }
+
+    function winMoveBy () {
+      win.moveBy(50, 50);
+    };
+
+    function winMoveTo () {
+      win.moveTo(600, 600);
+    }
+
+    function printWin () {
+      window.print();
+    }
+  </script>
+
+</body>
+</html>

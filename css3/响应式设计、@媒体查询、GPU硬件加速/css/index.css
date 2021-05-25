@@ -1,0 +1,41 @@
+.wrap {
+  position: relative;
+  width: 500px;
+  height: 500px;
+  background-color: green;
+  transform-style: preserve-3d;
+  opacity: .6;
+}
+
+.box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate3d(-50%, -50%, -1px);
+  font-size: 40px;
+  background-color: orange;
+}
+
+.html {
+  font-size: 12px;
+}
+
+.wrap {
+  font-size: 20px;
+}
+
+.b {
+  font-size: 1rem;
+}
+
+@media screen and (orientation: portrait) {
+  .a {
+    font-size: 3rem;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  .a {
+    font-size: 1rem;
+  }
+}

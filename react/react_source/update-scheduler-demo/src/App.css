@@ -1,0 +1,8 @@
+.main {
+  font-size: 30px;
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  align-items: flex-start;
+  margin: 50px auto;
+}

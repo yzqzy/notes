@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>JSONP封装</title>
+</head>
+<body>
+
+  <script type="text/javascript" src="../../utils/ajax.js"></script>
+  <script type="text/javascript">
+    $.ajax({
+      url: 'https://www.baidu.com/sugrec?prod=pc&from=pc_web&wd=' + '杨志强', // 新地址
+      // url: 'https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su?wd=' + '杨志强', // 旧地址
+      type: 'GET',
+      dataType: 'JSONP',
+      jsonp: 'cb',
+      success: function(data){
+        console.log(data);
+      }
+    })
+  </script>
+  
+</body>
+</html>

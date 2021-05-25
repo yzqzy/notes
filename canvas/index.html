@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas</title>
+  <style type="text/css">
+    #J-canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  
+  <canvas id="J-canvas" width="300" height="150"></canvas>
+
+  <script type="text/javascript">
+
+const oCanvas = document.getElementById('J-canvas');
+const ctx = oCanvas.getContext('2d');
+
+// ctx.fillStyle = 'orange';
+// ctx.fillRect(50, 50, 100, 100);
+
+// ctx.clearRect(75, 75, 50, 50);
+
+// ctx.strokeStyle = 'orange';
+// ctx.strokeRect(50, 50, 100, 100);
+
+// ctx.beginPath();
+// ctx.strokeStyle = 'orange';
+// ctx.moveTo(50, 50);
+// ctx.lineWidth = 5;
+// ctx.lineTo(150, 50);
+// ctx.lineTo(100, 100);
+// ctx.closePath();
+// ctx.stroke();
+
+
+// ctx.beginPath();
+// ctx.moveTo(150, 20);
+// ctx.arcTo(150, 100, 50, 20, 30);
+// ctx.lineTo(50, 20);
+// ctx.stroke();
+
+
+ctx.beginPath();
+ctx.moveTo(50, 50);
+ctx.quadraticCurveTo(230, 30, 50, 100);
+ctx.stroke();
+
+
+  </script>
+
+</body>
+</html>

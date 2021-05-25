@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+}
+
+a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  background-color: orange;
+}
+
+div {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}

@@ -1,0 +1,51 @@
+div {
+  box-sizing: border-box;
+}
+
+.container {
+  width: 800px;
+  height: 200px;
+}
+
+.box {
+  float: left;
+  width: 150px;
+  height: 150px;
+  margin: 20px;
+  color: #fff;
+  font-size: 30px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 150px;
+  cursor: pointer;
+  transition: all .2s ease-out;
+}
+
+.red {
+  background-color: red;
+  border: 5px solid red;
+}
+
+.green {
+  background-color: green;
+  border: 5px solid green;
+}
+
+.blue {
+  background-color: blue;
+  border: 5px solid blue;
+}
+
+.black {
+  background-color: black;
+  border: 5px solid black;
+}
+
+.box:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+.box.selected {
+  transform: scale(1.2);
+}

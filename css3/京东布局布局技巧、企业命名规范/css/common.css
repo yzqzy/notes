@@ -1,0 +1,52 @@
+body {
+  margin: 0;
+  background-color: #f1f3ef;
+  font-family: "Hiragino Sans GB", "Microsoft YaHei", arial, \5b8b\4f53, "Helvetica Neue", Helvetica, STHeiTi, sans-serif;
+}
+
+h3 {
+  font-weight: normal;
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+i {
+  font-style: normal;
+}
+
+.clearfix::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+ul,
+li,
+div {
+  box-sizing: border-box;
+}
+
+/* 
+不常用的清除浮动的方式
+ul::after,
+div::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+*/
+
+a {
+  color: #000;
+  text-decoration: none;
+}
+
+img {
+  width: 100%;
+  height: 100%;
+}

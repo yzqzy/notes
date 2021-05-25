@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>减少回流次数及影响规模</title>
+  <style type="text/css">
+    div {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+      background-color: #000;
+    }
+
+    div.active {
+      width: 200px;
+      height: 200px;
+      background-color: green;
+      border: 5px solid orange;
+    }
+
+    .box {
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+
+  <div></div>
+
+  <script type="text/javascript">
+    var oDiv = document.getElementsByTagName('div')[0],
+        width = 200,
+        height = 200
+        backgroundColor = 'green',
+        border = '5px solid orange';
+
+    oDiv.onmouseover = function () {
+      // // 回流 + 重绘
+      // this.style.width = '200px';
+      // // 回流 + 重绘
+      // this.style.height = '200px';
+      // // 重绘
+      // this.style.backgroundColor = 'green';
+      // // 回流 + 重绘
+      // this.style.border = '5px solid orange';
+
+      // 回流 + 重绘
+      // this.className += ' active';
+
+      // 回流 + 重绘
+      // this.style.cssText = '\
+      //   width: ' + width + 'px; \
+      //   height: ' + height + 'px; \
+      //   background-color: ' + backgroundColor + '; \
+      //   border: ' + border + '; \
+      // ';
+
+      // 回流 + 重绘
+      // var oFragment = document.createDocumentFragment();
+      // for (var i = 0; i < 10; i++) {
+      //   var oDiv = document.createElement('div');
+      //   oDiv.className = 'box';
+      //   oFragment.appendChild(oDiv);
+      // }
+      // document.body.appendChild(oFragment);
+
+      // 两次回流 + 两次重绘
+      // this.style.display = 'none';
+      // this.style.width = '200px';
+      // this.style.height = '200px';
+      // this.style.backgroundColor = 'green';
+      // this.style.border = "5px solid orange";
+      // this.style.display = 'block';
+    }
+
+
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>检测网络类型</title>
+</head>
+<body>
+
+  <script type="text/javascript">
+    function networkType () {
+      var type = navigator.connection.effectiveType;
+      
+      switch (type) {
+        case 'slow-2g':
+          return '2G-';
+        case '2g':
+          return '2G';
+        case '3g':
+          return '3G';
+        case '4g': 
+          return '4G';
+        default:
+          return 'Unknown network';
+      }
+    }
+
+    console.log(networkType());
+  </script>
+
+</body>
+</html>

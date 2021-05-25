@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>dataset属性案例</title>
+</head>
+<body>
+
+  <a href="javascript:;" data-uri="txwz" data-sort="free">天下无贼</a><br />
+  <a href="javascript:;" data-uri="fczlm" data-sort="pay">复仇者联盟</a><br />
+  <a href="javascript:;" data-uri="olbbg" data-sort="free">欧罗巴报告</a><br />
+  <a href="javascript:;" data-uri="plmxs" data-sort="pay">普罗米修斯</a>
+
+  <script type="text/javascript">
+    var links = document.getElementsByTagName('a');
+
+    for (var i = 0; i < links.length; i++) {
+      ;(function (j) {
+        links[j].onclick = function () {
+          var sort = this.dataset.sort;
+          var uri = this.dataset.uri;
+
+          if (sort === 'free') {
+            window.open('https://www.baidu.com/' + uri);
+          } else {
+            alert('这是付费影片');
+          }
+        }
+      })(i);
+    }
+  </script>
+
+</body>
+</html>

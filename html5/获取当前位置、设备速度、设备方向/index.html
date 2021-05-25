@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>获取当前位置、设备速度、设备方向</title>
+</head>
+<body>
+
+  <script type="text/javascript">
+    // window.navigator.geolocation.getCurrentPosition(success, failure);
+    // function success (e) {
+    //   console.log('获取当前位置成功', e);
+    // }
+
+    // function failure (e) {
+    //   console.log('获取位置失败', e);
+    // }
+    // window.navigator.geolocation.watchPosition(success, failure);
+    // function success (e) {
+    //   console.log('获取当前位置成功', e);
+    // }
+
+    // function failure (e) {
+    //   console.log('获取位置失败', e);
+    // }
+
+    // var accDiff = 10,
+    //     lastTime = 0,
+    //     lastAtc = {
+    //       x: 0,
+    //       y: 0,
+    //       z: 0
+    //     };
+    // window.addEventListener('devicemotion', function (e) {
+    //   var curTime = new Date().getTime(),
+    //       curAtc =  {
+    //         x: e.acceleration.x,
+    //         y: e.acceleration.y,
+    //         z: e.acceleration.z
+    //       };
+
+    //   if (curTime - lastTime > 1000) {
+    //     if (Math.abs(curAtc.x - lastAtc.x) > accDiff ||
+    //         Math.abs(curAtc.y - lastAtc.y) > accDiff || 
+    //         Math.abs(curAtc.z - lastAtc.z) > accDiff) {
+    //       console.log('你刚才摇了一下');
+    //     }
+    //   }
+    // });
+
+    window.addEventListener('deviceorientation', function (e) {
+      console.log(e.alpha); // 设备沿着z轴的方向  0-360
+      console.log(e.beta); // 设备沿着x轴的方向 -180-180
+      console.log(e.gamma); // 设备沿着z轴的方向 -90-90
+    })
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>touchstart、touchmove、touchend</title>
+  <style type="text/css">
+    div {
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>  
+
+  <div id="box"></div>
+  
+  <script type="text/javascript">
+    document.addEventListener('touchstart', function (e) {
+      console.log(e.type);
+      console.log(e.target);
+    });
+    document.addEventListener('touchmove', function (e) {
+    });
+    document.addEventListener('touchend', function (e) {
+    });
+    document.addEventListener('touchcancel', function (e) {
+    });
+  </script>
+
+</body>
+</html>

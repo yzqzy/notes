@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>鼠标行为坐标系、PagePos</title>
+  <style type="text/css">
+    .box {
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+  
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <div class="box"></div>
+  
+  <script type="text/javascript" src="../../../utils/tools.js"></script>
+  <script type="text/javascript">
+    var box = document.getElementsByClassName('box')[0];
+    
+    // 鼠标行为 坐标系
+    box.onclick = function (ev) {
+      var e = ev || window.event;
+
+      console.log(e.pageY, pagePos(e).Y);
+    }
+
+    function pagePos (e) {
+      var sLeft = getScrolloffset().left,
+          sTop = getScrolloffset().top,
+          cLeft = document.documentElement.clientLeft || 0,        
+          cTop = document.documentElement.clientTop || 0;
+
+      return {
+        X: e.clientX + sLeft - cLeft,
+        Y: e.clientY + sTop - cTop
+      }     
+    }
+  </script>
+
+
+</body>
+</html>

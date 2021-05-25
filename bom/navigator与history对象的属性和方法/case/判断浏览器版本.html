@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>判断浏览器版本</title>
+</head>
+<body>
+
+  <script src="../../../utils/checkBrowser.js"></script>
+  <script type="text/javascript">
+   function checkBrowserTest () {
+    var userAgent = navigator.userAgent;
+
+    if (userAgent.indexOf('Opera') > -1) {
+      return 'Opera';
+    }
+
+    if (userAgent.indexOf('Firefox') > -1) {
+      return 'Firefox';
+    }
+
+    if (userAgent.indexOf('Chrome') > -1) {
+      return 'Chrome';
+    }
+
+    if (userAgent.indexOf('Safari') > -1) {
+      return 'Safari';
+    }
+
+    if (userAgent.indexOf('compatible') > -1 && 
+        userAgent.indexOf('MSIE') > -1 && 
+        userAgent.indexOf('Opera') === -1) {
+      return 'IE';
+    }
+   }
+
+   console.log(checkBrowserTest());
+   console.log(checkBrowser());
+  </script>
+  
+</body>
+</html>

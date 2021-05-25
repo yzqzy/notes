@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>箭头函数的实质、箭头函数的使用场景</title>
+</head>
+<body>
+  
+  <button id="button">button</button>
+
+  <script type="text/javascript">
+    (function () {
+      function Button () {
+        this.button = document.getElementById('button');
+      }
+
+      Button.prototype = {
+        init () {
+          this.bindEvent();
+        },
+
+        bindEvent () {
+          // this.button.addEventListener('click', this.btnClick.bind(this), false);
+          this.button.addEventListener('click', () => this.btnClick(), false);
+        },
+
+        btnClick () {
+          console.log(this);
+        }
+      }
+
+      new Button().init();
+    })();
+  </script>
+
+</body>
+</html>

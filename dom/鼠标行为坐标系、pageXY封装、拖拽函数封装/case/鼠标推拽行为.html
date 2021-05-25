@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>鼠标推拽行为</title>
+  <style type="text/css">
+    .box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }  
+  </style>
+</head>
+<body>
+  
+  <div class="box"></div>
+
+  <script type="text/javascript" src="../../../utils/tools.js"></script>
+  <script type="text/javascript">
+    var oBox = document.getElementsByClassName('box')[0],
+        x,
+        y;
+
+    oBox.onmousedown = function (ev) {
+      var e = ev || window.event;
+
+      x = pagePos(e).X - parseInt(getStyles(oBox, 'left'));
+      y = pagePos(e).Y - parseInt(getStyles(oBox, 'top'));
+
+      document.onmousemove = function (ev) {
+        var e = ev || window.event;
+
+        oBox.style.left = pagePos(e).X - x + 'px';
+        oBox.style.top = pagePos(e).Y - y + 'px';
+      }
+
+      document.onmouseup = function (ev) {
+        this.onmousemove = null;
+        this.onmouseup = null;
+      }
+    }
+  </script>
+
+</body>
+</html>

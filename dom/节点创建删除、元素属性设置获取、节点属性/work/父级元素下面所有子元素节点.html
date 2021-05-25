@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>父级元素下面所有子元素节点</title>
+</head>
+<body>
+
+    <div class="box">
+      <ul>
+        <li>
+          <h1></h1>
+          <p></p>
+          <a href=""></a>
+        </li>
+        <li>
+          <div></div>
+        </li>
+      </ul>
+      <div>
+        <h1>
+          <span></span>
+          <a href=""></a>
+        </h1>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var oDiv = document.getElementsByClassName('box')[0];
+
+      Element.prototype.printFullChilren = function () {
+        var children = this.childNodes,
+            len = children.length;
+
+        for (var i = 0; i < len; i++) {
+          var item = children[i];
+
+          if (item.nodeType === 1) {
+            console.log(item);
+          }
+
+          if (item.childNodes.length > 0) {
+            item.printFullChilren();
+          }
+        }
+      }
+
+      oDiv.printFullChilren();
+    </script>
+  
+</body>
+</html>

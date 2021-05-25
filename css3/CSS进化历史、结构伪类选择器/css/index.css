@@ -1,0 +1,45 @@
+/* input[type = "text"] {
+  outline: none
+} 
+
+div {
+  width: 100px;
+  height: 100px;
+  border: 1px solid #000;
+}
+
+.box:empty {
+  border: 1px solid orange;
+} */
+
+/* :target {
+  background-color: black;
+}
+
+p:first-child {
+  background-color: red;
+}
+
+p:last-child {
+  background-color: blue;
+}
+
+p:nth-child(3) {
+  background-color: orange;
+}
+
+p:nth-last-child(2){
+  background-color: palegreen;
+} */
+
+/* div:first-child-of {
+  background-color: red;
+} */
+
+/* div span:first-child {
+  background-color: orange;
+} */
+
+div em:first-of-type {
+  background-color: orange;
+}

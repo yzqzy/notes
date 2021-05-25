@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>自定义异步加载案例</title>
+  <script type="text/javascript"></script>
+</head>
+<body>
+  
+  <script type="text/javascript">
+
+    // ;(function () {
+    //   function async_load () {
+    //     var s = document.createElement('script'),
+    //         oScript = document.getElementsByTagName('script')[0];
+
+    //     s.type = 'text/javascript';
+    //     s.async = true;
+    //     s.src = 'js/index.js';
+
+    //     oScript.parentNode.insertBefore(s, oScript);
+    //   }
+
+    //   if (window.attachEvent) {
+    //     window.attachEvent('onload', async_load);
+    //   } else {
+    //     window.addEventListener('load', async_load, false);
+    //   }
+    // })();
+
+    
+    function async_exec (url, fn) {
+      var s = document.createElement('script'),
+          oScript = document.getElementsByTagName('script')[0];
+
+      s.type = 'text/javascript';
+      s.async = true;
+
+      if (s.readyState) {
+        s.onreadystatechange = function () {
+          var state = s.readyState;
+
+          if (state === 'complate' || state === 'loaded') {
+            utils[fn]();
+          }
+        }
+      } else {
+        s.onload = function () {
+          utils[fn]();
+        }
+      }
+     
+      s.src = url;
+      oScript.parentNode.insertBefore(s, oScript);
+    }
+
+    async_exec('js/index.js', 'test1');
+  </script>
+
+</body>
+</html>

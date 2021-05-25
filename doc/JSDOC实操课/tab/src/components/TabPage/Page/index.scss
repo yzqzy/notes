@@ -1,0 +1,24 @@
+// Page组件样式
+.page-wrapper {
+  position: relative;
+  width: 100%;
+  height: 450px;
+  overflow: auto;
+
+  .page-item {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+
+    img {
+      width: 100%;
+    }
+
+    &.page-current {
+      display: block;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "clock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^7.1.7",
+    "timer.js": "^1.0.4"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Tab页案例</title>
+  <link type="text/css" rel="stylesheet" href="./css/index.css" />
+</head>
+<body>
+
+  <div class="tab-wrap">
+    <div class="tab clearfix">
+      <div class="tab-item cur">
+        <a href="javascript:;">选项卡1</a>
+      </div>
+      <div class="tab-item">
+        <a href="javascript:;">选项卡2</a>
+      </div>
+      <div class="tab-item">
+        <a href="javascript:;">选项卡3</a>
+      </div>
+    </div>
+    <div class="page">
+      <div class="page-item active">1</div>
+      <div class="page-item">2</div>
+      <div class="page-item">3</div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="./js/index.js"></script>
+  <script type="text/javascript">
+    new Tab({
+      tabItem: 'tab-item',
+      pageItem: 'page-item',
+      cur: 'cur',
+      active: 'active'
+    })
+  </script>
+  
+</body>
+</html>

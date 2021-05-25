@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>alert、confirm、prompt</title>
+</head>
+<body>
+  
+  <button onclick="openAlert()">打开alert</button>
+  <button onclick="openConfirm()">打开confirm</button>
+  <button onclick="openPrompt()">打开prompt</button>
+
+  <script type="text/javascript">
+    function openAlert () {
+      alert('你吃饭了嘛');
+    }
+
+    function openConfirm () {
+      var c = window.confirm('您是奥特曼嘛');
+      document.write( c ? '我是一个奥特曼' : '我是一个小怪兽');
+    }
+
+    function openPrompt () {
+      var num1 = Number(window.prompt('请填写第一个数字')),
+          num2 = Number(window.prompt('请填写第二个数字'));
+      
+      console.log(num1 + num2);
+    }
+  </script>
+
+</body>
+</html>

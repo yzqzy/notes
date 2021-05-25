@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>操作伪元素</title>
+  <style type="text/css">
+    .box {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      background-color: orange;
+    }
+
+    .box::after {
+      content: "";
+      display: block;
+      width: 50px;
+      height: 50px;
+      background-color: blue;
+    }
+
+    .box.active::after {
+      background-color: gray;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box"></div>
+
+  <script type="text/javascript">
+    var oDiv = document.getElementsByTagName('div')[0];
+
+    oDiv.onclick = function () {
+      this.className += ' active';
+    }
+  </script>
+  
+</body>
+</html>

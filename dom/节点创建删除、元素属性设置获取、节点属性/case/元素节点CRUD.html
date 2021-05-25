@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>元素节点CRUD</title>
+</head>
+<body>  
+
+  <!-- <div></div> -->
+
+  <!-- <a href="">我是超链接</a> -->
+
+  <div>
+    <h1>我是标题标签</h1>
+    <p>我是段落标签</p>
+    <a href="">我是超链接标签</a>
+  </div>
+
+  <script type="text/javascript">
+    // createElment
+    // var div = document.createElement('div');
+    // div.innerHTML = '123';
+    // document.body.appendChild(div);
+
+    // createTextNode
+    // var text = document.createTextNode('123');
+    // document.body.appendChild(text);
+
+    // createComment
+    // var comment = document.createComment('我是注释');
+    // document.body.appendChild(comment);
+
+    // appendChild 增加子节点
+    // var p = document.createElement('p');
+    // document.body.appendChild(p);
+    // var div = document.getElementsByTagName('div')[0];
+    // var p = document.createElement('p');
+    // p.innerHTML = 'JavaScript';
+    // var text = document.createTextNode('ECMAScript');
+    // var comment = document.createComment('我是注释节点');
+    // div.appendChild(p);
+    // div.appendChild(text);
+    // div.appendChild(comment);
+    // var a = document.getElementsByTagName('a')[0];
+    // var div = document.createElement('div');
+    // div.innerHTML = '<p>我是段落标签</p>';
+    // document.body.appendChild(div);
+    // div.appendChild(a);
+
+    // insertBefore(a, b)
+    // var div = document.getElementsByTagName('div')[0],
+    //     p = div.getElementsByTagName('p')[0];
+    // var a = document.createElement('a');
+    // a.href = '';
+    // div.insertBefore(a, p);    
+    // var h1 = document.createElement('h1');
+    // h1.innerHTML = '我是标题标签';
+    // div.insertBefore(h1, a);
+
+    // removeChild()
+    // var div = document.getElementsByTagName('div')[0],
+    //     p = div.getElementsByTagName('p')[0];
+    // div.removeChild(p);
+    // document.body.appendChild(p);
+
+    // remove() 
+    // var p = document.getElementsByTagName('p')[0];
+    // p.remove();
+
+    // innerHTML 
+    // var div = document.getElementsByTagName('div')[0];
+    // console.log(div.innerHTML);
+    // div.innerHTML = '123';
+    // console.log(div.innerHTML);
+    // div.innerHTML += '456';
+
+    // innerText
+    // var div = document.getElementsByTagName('div')[0];
+    // console.log(div.innerText);
+    // div.innerText = '123';
+    // div.innerText += '456';
+    // div.innerText = '<a href="https://www.baidu.com">我是超链接</a>';
+
+    // replaceChild(new, origin)
+    // var div = document.getElementsByTagName('div')[0],
+    //     h1 = document.getElementsByTagName('h1')[0];
+    // var h2 = document.createElement('h2');
+    // h2.innerHTML = '我是H2标签';
+    // div.replaceChild(h2, h1);
+
+  </script>
+  
+</body>
+</html>

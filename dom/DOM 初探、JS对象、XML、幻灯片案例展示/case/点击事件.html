@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>点击事件</title>
+  <style type="text/css">
+    div {
+      width: 100px;
+      height: 100px;
+      border: 1px solid #000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- onclick事件 -->
+
+  <div id="box">元素1</div>
+  <div>元素2</div>
+  <div>元素3</div>
+
+  <script type="text/javascript">
+    var box = document.getElementById('box');
+    console.log(box);
+    
+    box.onclick = function () {
+      console.log(1);
+    }
+
+    var boxes = document.getElementsByTagName('div');
+    console.log(boxes);
+
+    for (var i = 0; i < boxes.length; i++) {
+      boxes[i].onclick = function () {
+        console.log(this.innerText);
+      }
+    }
+  </script>
+  
+</body>
+</html>

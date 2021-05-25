@@ -1,0 +1,23 @@
+{
+  "name": "vue_cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "vue-cli": "./bin/www"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "axios": "^0.20.0",
+    "commander": "^6.1.0",
+    "consolidate": "^0.16.0",
+    "download-github-repo": "^0.1.4",
+    "ejs": "^3.1.5",
+    "inquirer": "^7.3.3",
+    "metalsmith": "^2.3.0",
+    "ncp": "^2.0.0",
+    "ora": "^5.1.0"
+  }
+}

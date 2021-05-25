@@ -1,0 +1,24 @@
+{
+  "name": "yueluo-first",
+  "version": "0.2.0",
+  "description": "Learning npm publish",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wy0525/yueluo-first.git"
+  },
+  "keywords": [
+    "npm",
+    "package.json",
+    "node"
+  ],
+  "author": "yueluo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wy0525/yueluo-first/issues"
+  },
+  "homepage": "https://github.com/wy0525/yueluo-first#readme"
+}

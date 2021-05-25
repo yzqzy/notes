@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>封装 可视尺寸_滚动距离_边框距离</title>
+  <style type="text/css">
+    .box {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      margin: 10px;
+      padding: 10px;
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box"></div>
+
+  <script type="text/javascript">
+
+    // console.log(window.innerWidth, window.innerHeight);    
+    // console.log(document.documentElement.clientWidth, document.documentElement.clientHeight);
+    // console.log(document.body.clientWidth, document.body.clientHeight);
+    
+    // function getViewportSize () {
+    //   if (window.innerWidth) {
+    //     return {
+    //       width: window.innerWidth,
+    //       height: window.innerHeight
+    //     }
+    //   } else {
+    //     if (document.compatMode === 'BackCompat') {
+    //       return {
+    //         width: document.body.clientWidth,
+    //         height: document.body.clientHeight
+    //       }
+    //     } else {
+    //       return {
+    //         width: document.documentElement.clientWidth,
+    //         height: document.documentElement.clientHeight
+    //       }
+    //     }
+    //   }
+    // }
+    // console.log(getViewportSize());
+
+    // function getScrollSize () {
+    //   if (document.body.scrollWidth) {
+    //      return {
+    //       width: document.body.scrollWidth,
+    //       height: document.body.scrollHeight
+    //     }
+    //   } else {
+    //     return {
+    //       width: document.documentElement.scrollWidth,
+    //       height: document.documentElement.scrollHeight
+    //     }
+    //   }
+    // }
+    // console.log(getScrollSize());
+
+
+    // var box = document.getElementsByClassName('box')[0];
+
+    // console.log(box.getBoundingClientRect());
+    // box.style.width = '400px';
+
+    // console.log(box.offsetLeft);
+    // console.log(box.offsetTop);
+
+    // console.log(box.offsetParent);
+
+    // function getElemDocPosition (el) {
+    //   var parent = el.offsetParent,
+    //       offsetLeft = el.offsetLeft,
+    //       offsetTop = el.offsetTop;
+
+    //   while (parent) {
+    //     offsetLeft += parent.offsetLeft;
+    //     offsetTop += parent.offsetTop;
+    //     parent = parent.offsetParent;
+    //   }
+
+    //   return {
+    //     left: offsetLeft,
+    //     top: offsetTop
+    //   }
+    // }
+
+    // var box = document.getElementsByClassName('box')[0];
+    // console.log(getElemDocPosition(box));
+
+  </script>
+
+</body>
+</html>

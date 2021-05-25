@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>回流与重绘</title>
+  <style type="text/css">
+
+  </style>
+</head>
+<body>
+
+  <div class="box">我是一个盒子</div>
+  <script type="text/javascript">
+    var oBoxStyle = document.getElementsByClassName('box')[0].style;
+
+    // 5次回流、7次重绘
+    oBoxStyle.width = '200px'; // 回流 + 重绘
+    oBoxStyle.height = '200px'; // 回流 + 重绘
+    oBoxStyle.margin = '20px'; // 回流 + 重绘
+    oBoxStyle.backgroundColor = 'green'; // 重绘
+    oBoxStyle.border = '5px solid orange'; // 回流 + 重绘
+    oBoxStyle.color = '#fff'; // 重绘
+    oBoxStyle.fontSize = '30px'; // 回流 + 重绘
+
+    // 会形成一次回流
+    var h1 = document.createElement('h1');
+    h1.innerHTML = '我是一个标题';
+    document.body.appendChild(h1);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+.box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+
+  /* 线性渐变 */
+  /* background-image: repeating-linear-gradient(to top, red, green 20%); */
+  /* background-image: repeating-linear-gradient(to bottom left, red, green 20%); */
+  /* background-image: repeating-linear-gradient(to bottom right, #000 0, #fff 10%); */
+  /* background-image: repeating-linear-gradient(to bottom left, red, green 10%, yellow 10%); */
+  /* background-image: repeating-linear-gradient(to bottom left, red, yellow 10%,green 10%, blue 20%); */
+
+  /* 径向渐变 */
+  /* background-image: repeating-radial-gradient(circle, red, green 50%); */
+  /* background-image: repeating-radial-gradient(circle, red, green 10%, yellow 20%); */
+  /* background-image: repeating-radial-gradient(circle, red, green 10%, yellow 10%, blue 20%); */
+  /* background-image: repeating-radial-gradient(circle 100px, red, green 10%, yellow 10%, blue 20%); */
+  /* background-image: repeating-radial-gradient(circle 100px at 0 0, red, green 10%, yellow 10%, blue 20%); */
+  /* background-image: repeating-radial-gradient(ellipse 200px 100px at center, red, green 10%, yellow 10%, blue 20%); */
+}
+
+
+/* Button案例样式*/
+@font-face {
+  font-family: 'myFont';
+  src: url('font/Mathline.otf');
+}
+
+div, input {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+#wrapper {
+  margin: 100px auto;
+  width: 460px;
+  height: auto;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, .2);
+  box-shadow: 0 3px 3px #000;
+  -webkit-box-shadow: 0 3px 3px #000;
+  -moz-box-shadow: 0 3px 3px #000;
+  background-color: #f6f6f6;
+  background-image: linear-gradient(to top, #fff, #f6f6f6);
+  background-image: -webkit-linear-gradient(to top, #fff, #f6f6f6);
+  background-image: -moz-linear-gradient(to top, #fff, #f6f6f6);
+  background-image: -o-linear-gradient(to top, #fff, #f6f6f6);
+  background-image: -ms-linear-gradient(to top, #fff, #f6f6f6);
+  background-image: -webkit-gradient(linear, to top, from(#fff), to(#f6f6f6));
+  /* filter: progid:; 兼容IE7 线性渐变的属性*/
+  border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  overflow: hidden;
+}
+
+#wrapper .search {
+  float: left;
+  width: 350px;
+  height: 50px;
+  font-family: 'myFont';
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 2px 1px #ddd inset, 0 2px 0 #fff;
+  -webkit-box-shadow: 0 2px 1px #ddd inset, 0 2px 0 #fff;
+  -moz-box-shadow: 0 2px 1px #ddd inset, 0 2px 0 #fff;
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+}
+
+#wrapper .search:focus {
+  outline: none;
+  border-color: #aaa;
+  box-shadow: 0 2px 1px #bbb inset, 0 2px 0 hsla(180, 50%, 90%, .3);
+  -webkit-box-shadow: 0 2px 1px #bbb inset, 0 2px 0 #fff;
+  -moz-box-shadow: 0 2px 1px #bbb inset, 0 2px 0 #fff;
+}
+
+#wrapper .btn {
+  float: right;
+  width: 100px;
+  height: 50px;
+  cursor: pointer;
+  color: #fafafa;
+  font-size: 18px;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  font-family: 'myFont', 'Microsoft YaHei', "\5BBB\4F53", Arial, Helvetica, sans-serif;
+  /* 渐变不生效时的背景颜色-回退机制 */
+  background-color: #0483a0;
+  background-image: linear-gradient(to top, #31b2c3, #0483a0);
+  background-image: -webkit-linear-gradient(to top, #31b2c3, #0483a0);
+  background-image: -moz-linear-gradient(to top, #31b2c3, #0483a0);
+  background-image: -o-linear-gradient(to top, #31b2c3, #0483a0);
+  background-image: -ms-linear-gradient(to top, #31b2c3, #0483a0);
+  background-image: -webkit-gradient(linear, to top, from(#31b2c3), to(#0483a0));
+}
+
+#wrapper .btn:hover,
+#wrapper .btn:focus {
+  background-color: #31b2c3;
+  background-image: linear-gradient(to bottom, #31b2c3, #0483a0);
+  background-image: -webkit-linear-gradient(to bottom, #31b2c3, #0483a0);
+  background-image: -moz-linear-gradient(to bottom, #31b2c3, #0483a0);
+  background-image: -o-linear-gradient(to bottom, #31b2c3, #0483a0);
+  background-image: -ms-linear-gradient(to bottom, #31b2c3, #0483a0);
+  background-image: -webkit-gradient(linear, to bottom, from(#31b2c3), to(#0483a0));
+}
+
+#wrapper .btn:active {
+  outline: none;
+  box-shadow: 0 1px 4px #000 inset;
+  -webkit-box-shadow: 0 1px 4px #000 inset;
+  -moz-box-shadow: 0 1px 4px #000 inset;
+}

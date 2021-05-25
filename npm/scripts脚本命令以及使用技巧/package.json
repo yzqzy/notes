@@ -1,0 +1,24 @@
+{
+  "name": "packagejson",
+  "version": "1.0.0",
+  "description": "Learning package.json",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "echo before",
+    "build": "echo build",
+    "postbuild": "echo after build",
+    "port": "echo $npm_package_server_port",
+    "server": "echo $npm_package_server"
+  },
+  "server": {
+    "url": "http://ww.yueluo.club",
+    "port": "3000" 
+  },
+  "author": "yueluo",
+  "license": "ISC",
+  "dependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.1.0"
+  }
+}

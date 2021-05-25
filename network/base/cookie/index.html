@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>cookies</title>
+</head>
+<body> 
+
+  <script type="text/javascript">
+
+    // document.cookie = 'name=jack; max-age=5000';
+
+    // var date = new Date(),
+    //     day = date.getDay();
+
+    // date.setDate(day + 10);
+
+    // document.cookie = 'name=xiaoming; expires=' + date;
+    // document.cookie = 'age=18; expires=' + date;
+    // document.cookie = 'job=student; expires=' + date;
+
+    // console.log(document.cookie);
+
+  </script>
+  
+  <script type="text/javascript" src="../../utils/cookies.js"></script>
+  <script type="text/javascript">
+    manageCookies.set('name', 'xiao', 1000)
+                 .set('age', '23', 1000)
+                 .delete('name');
+    manageCookies.get('age', function (data) {
+      console.log(data);
+    });
+    manageCookies.get('male', function (data) {
+      console.log(data);
+    });
+  </script>
+
+</body>
+</html>

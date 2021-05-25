@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>AJAX</title>
+</head>
+<body>
+
+  <script type="text/javascript">
+    var url = 'http://39.99.162.213:4000/getCourses',
+        xhr;
+
+    if (window.XMLHttpRequest) {
+      xhr = new XMLHttpRequest();
+    } else {
+      xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+
+    console.log(xhr.readyState);
+
+    xhr.open('GET', url, true);
+    xhr.send(); // get
+
+    // xhr.open('POST', url, true);
+    // xhr.setRequestHeader("Content-type", "application/w-www-form-urlencoded"); // post
+    // xhr.send('status=1&flag=1'); // post
+
+    console.log(xhr.readyState);
+
+    xhr.onreadystatechange = function () {
+      console.log(xhr.readyState);
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        console.log(JSON.parse(xhr.responseText));
+      }
+    }
+  </script>
+
+</body>
+</html>

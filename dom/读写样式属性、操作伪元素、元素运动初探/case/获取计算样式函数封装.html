@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>获取计算样式函数封装</title>
+</head>
+<body>
+
+  <div style="width: 100px; height: 200px; background-color: orange;"></div>
+
+  <script type="text/javascript">
+    var div = document.getElementsByTagName('div')[0];
+
+    function getStyles (elem, prop) {
+      if (window.getComputedStyle) {
+        if (prop) {
+          return window.getComputedStyle(elem, null)[prop];
+        } else {
+          return window.getComputedStyle(elem, null);
+        }
+      } else {
+        if (prop) {
+          return elem.currentStyle[prop];
+        } else {
+          return elem.currentStyle;
+        }
+      }
+    }
+
+    console.log(getStyles(div));
+    console.log(getStyles(div, 'width'));
+    console.log(getStyles(div, 'backgroundColor'));
+  </script>
+  
+</body>
+</html>

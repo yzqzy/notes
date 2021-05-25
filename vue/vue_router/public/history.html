@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue-router history</title>
+  <style type="text/css">
+    #app {
+      text-align: center;
+      font-size: 40px;
+    }
+
+    a {
+      font-size: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <a onclick="go('/home')">首页</a>
+  <a onclick="go('/user')">用户</a>
+
+  <div id="app"></div>
+
+  <script type="text/javascript">
+    const app = document.getElementById('app');
+
+    function go (pathname) {
+      history.pushState({}, null, pathname);
+      app.innerHTML = pathname;
+    }
+
+    window.addEventListener('popstate', () => {
+      const pathname = location.pathname;
+      go(pathname);
+    });
+  </script>
+  
+</body>
+</html>

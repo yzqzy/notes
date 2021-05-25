@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>时间线</title>
+  <style type="text/css">
+    div {
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+
+  <div></div>
+  
+  <script type="text/javascript">
+    document.write('<h1>我是h1标签</h1>');
+
+    window.onload = function () {
+      setTimeout(() => {
+        document.write('<h1>我是window.onload中添加的h1标签</h1>');
+      }, 2000);
+    }
+
+    console.log(document.readyState); // loading
+    document.onreadystatechange = function () {
+      console.log(document.readyState); // interactive complete
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      console.log('DOMContentLoaded');
+    }, false);
+  </script>
+
+</body>
+</html>

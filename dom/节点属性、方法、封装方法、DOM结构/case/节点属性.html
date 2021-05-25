@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>节点属性</title>
+  <style type="text/css">
+    
+  </style>
+</head>
+<body>
+<!-- 
+  <div class="box" id="box" style="background-color: green">
+    我是文本节点 -->
+    <!-- 注释节点 -->
+    <!-- <h1>我是标题标签</h1>
+    <p>我是段落标签</p>
+  </div> -->
+
+  <div>
+    <p>我是段落标签</p>
+  </div>
+
+  <script type="text/javascript">
+    var div = document.getElementsByTagName('div')[0];
+
+    // nodeName
+    // console.log(document.nodeName); // #document
+    // console.log(div.nodeName); // DIV
+    // console.log(div.nodeName.toLowerCase()); // div
+
+    // nodeValue
+    // console.log(div.firstChild.nodeValue); // 我是文本节点
+    // console.log(div.childNodes[1].nodeValue); // 注释节点
+    // console.log(div.childNodes[3].nodeValue); // null
+
+    // getAttributeNode()
+    // console.log(div.getAttributeNode('id')); // id="box"
+    // console.log(div.getAttributeNode('id').nodeValue); // box
+    // console.log(div.getAttributeNode('id').value); // box
+
+    // nodeType
+    // console.log(div.nodeType); // 1
+    // console.log(div.getAttributeNode('id').nodeType); // 2
+    // console.log(div.firstChild.nodeType); // 3
+
+    // attributes 获取节点属性集合
+    // console.log(div.attributes); // {}
+    // console.log(div.attributes[0]); // class="box"
+    // console.log(div.attributes[1]); // id="box"
+    // console.log(div.getAttributeNode('id')); // id="box"
+
+    // getAttribute() 获取节点属性值
+    // console.log(div.getAttribute('id')); // box
+
+    // console.log(div.hasChildNodes()); // true
+
+    // console.log(CharacterData.prototype);
+    // console.log(Comment.prototype);
+
+    // 原型上扩展属性
+    // Text.prototype.aaa = 'aaa';
+    // CharacterData.prototype.bbb = 'bbb';
+    // var text = div.childNodes[0];
+    // console.log(text);
+    // console.log(text.aaa);
+
+    // console.log(Element);
+    // console.log(Element.prototype);
+
+    // Element.prototype.aaa = 'aaa';
+    // HTMLElement.prototype.bbb = 'bbb';
+    // HTMLDivElement.prototype.ccc = 'ccc';
+    // console.log(div.aaa, div.bbb, div.ccc);
+
+    // console.log(div.toString()); // [object HTMLDivElement]
+    // console.log(Object.toString()); // function Object() { [native code] }
+    // console.log(Object.prototype.toString.call(div)); // [object HTMLDivElement]
+    // console.log(Object.prototype.toString.call([])); // [object Array]
+    // console.log(Object.prototype.toString.call(Object)); // [object Function]
+
+    
+  </script>
+  
+</body>
+</html>

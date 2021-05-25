@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>AJAX封装改进</title>
+</head>
+<body>
+  
+  <script type="text/javascript" src="../../utils/ajax.js"></script>
+  <script type="text/javascript">
+    // $.ajax({
+    //   type: 'GET',
+    //   url: 'http://39.99.162.213:4000/getCourses',
+    //   success: function (data) {
+    //     console.log(data);
+    //   }
+    // })
+
+    $.ajax({
+      type: 'GET',
+      url: 'http://39.99.162.213:4000/getCourses',
+      async: true,
+      success: function (data) {
+        console.log(data);
+      }
+    })
+
+    $.ajax({
+      type: 'GET',
+      url: 'http://39.99.162.213:4000/getCourses',
+      dataType: 'TEXT',
+      success: function (data) {
+        console.log(data);
+      }
+    })
+
+    $.get('http://39.99.162.213:4000/getCourses', function (data) {
+      console.log(data);
+    })
+  </script>
+
+</body>
+</html>

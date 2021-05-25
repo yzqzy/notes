@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>创建li元素案例</title>
+  <style type="text/css">
+    .title {
+      color: orange;
+    }
+
+    .area {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <ul id="list"></ul>
+
+  <script type="text/javascript">
+    var list = document.getElementById('list'),
+        item,
+        data = [
+          {
+            "title": "天下无贼",
+            "area": "中国"
+          },
+          {
+            "title": "复仇者联盟",
+            "area": "美国"
+          },
+          {
+            "title": "咒怨",
+            "area": "日本"
+          }
+        ];
+      
+      for (var i = 0; i < data.length; i++) {
+        item = data[i];
+
+        // 1. 第一种方法
+        // var li = document.createElement('li'),
+        //     h3 = document.createElement('h3'),
+        //     p = document.createElement('p');
+
+        // h3.innerHTML = '电影名称：<span class="title">' + item.title + '</span>';
+        // p.innerHTML = '地区：<span class="area">' + item.area  + '</span>';
+
+        // li.appendChild(h3);
+        // li.appendChild(p);
+        // list.appendChild(li);
+
+        // 2. 第二种方法
+        list.innerHTML += '<li>' +
+                              '<h3>电影名称：' + item.title + '</h3>' + 
+                              '<p>地区：' + item.area + '</p>' +
+                          '</li>';
+      }
+  </script>
+  
+</body>
+</html>

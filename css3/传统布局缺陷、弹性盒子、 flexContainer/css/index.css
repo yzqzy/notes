@@ -1,0 +1,41 @@
+div.box {
+  display: flex;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+
+  width: 500px;
+  height: 500px;
+  border: 1px solid #000;
+  /* flex-direction: row; */
+  /* flex-wrap: wrap-reverse; */
+  flex-flow: row wrap;
+  /* justify-content: center; */
+  align-content: flex-start;
+}
+
+.left,
+.middle,
+.right {
+  width: 100px;
+  height: 100px;
+  color: #fff;
+  font-size: 30px;
+  text-align: center;
+  line-height: 100px;
+}
+
+.blue {
+  order: 3;
+  background-color: blue;
+}
+
+.red {
+  order: 1;
+  background-color: red;
+}
+
+.orange {
+  order: 2;
+  background-color: orange;
+}

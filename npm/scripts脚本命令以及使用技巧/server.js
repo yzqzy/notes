@@ -1,0 +1,1 @@
+console.log(process.env.npm_package_server_port); // 3000

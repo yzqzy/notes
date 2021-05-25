@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue介绍、指令基础、TodoList、设计模式</title>
+</head>
+<body>
+  
+  <div id="root">
+    {{ message }}
+  </div>
+
+  <script type="text/javascript" src="../vue.js"></script>
+
+  <script type="text/javascript">
+    var vm = new Vue({
+      el: '#root',
+      data: {
+        message: 'Hello World'
+      }
+    })
+
+    setTimeout(() => {
+      vm.$data.message = 'I am Heora';
+    }, 2 * 1000)
+  </script>
+
+</body>
+</html>

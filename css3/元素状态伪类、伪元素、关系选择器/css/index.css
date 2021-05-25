@@ -1,0 +1,90 @@
+/* :not(table) a {
+  color: red;
+} */
+
+/* body :not(table) a {
+  color: red;
+} */
+
+/* div:not(table) a {
+  color: red;
+} */
+
+/* .box :only-child {
+  color: red;
+} */
+
+/* input[type = "text"]:disabled {
+  background-color: orange;
+}
+
+input[type = "password"]:enabled {
+  background-color: red;
+} */
+
+/* 
+input[type = "text"]:read-only {
+  background-color: orange;
+}
+
+input[type = "password"]:read-write {
+  background-color: red;
+} */
+
+/* input[type = "radio"]:checked {
+  outline: 2px solid #000;
+}
+input[type = "checkbox"]:checked {
+  outline: 2px solid #000;
+}
+input[type = "checkbox"] {
+  outline: 2px solid orange;
+} */
+
+/* input[type = "radio"]:default {
+  outline: 2px solid orange;
+}
+input[type = "checkbox"]:checked {
+  outline: 2px solid #000;
+}
+input[type = "checkbox"]:default {
+  outline: 2px solid orange;
+} */
+
+/* :indeterminate, :indeterminate + label {
+  background-color: blue;
+} */
+
+/* .box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+}
+
+.box p::first-line {
+  color: orange;
+}
+
+.box p::first-letter {
+  color: red;
+}
+
+.box p::selection {
+  color: aquamarine;
+} */
+
+/* 
+div span {
+  background-color: orange;
+}
+div > span {
+  background-color: blue;
+} */
+
+/* .text1 + p {
+  background-color: orange;
+} */
+
+.text1 ~ p {
+  background-color: orange;
+}

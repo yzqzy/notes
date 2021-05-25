@@ -1,0 +1,36 @@
+div.box {
+  display: flex;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+
+  width: 500px;
+  height: 500px;
+  border: 1px solid #000;
+  flex-flow: row wrap;
+  align-content: flex-start;
+}
+
+.left,
+.middle,
+.right {
+  width: 100px;
+  height: 100px;
+  color: #fff;
+  font-size: 30px;
+  text-align: center;
+  line-height: 100px;
+}
+
+.blue {
+  background-color: blue;
+}
+
+.red {
+  background-color: red;
+}
+
+.orange {
+  flex-grow: 1;
+  background-color: orange;
+}

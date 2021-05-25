@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>异步加载案例</title>
+  <script type="text/javascript"></script>
+</head>
+<body>
+
+  <input id="first" type="text" />
+  <input id="second" type="text" />
+  <div>
+    <button data-field="plus">相加</button data-field="">
+    <button data-field="minus">相减</button data-field="">
+    <button data-field="mul">相乘</button data-field="">
+    <button data-field="plus">相除</button data-field="">
+  </div>
+  
+  <script type="text/javascript" src="./js/async.js"></script>
+  <script type="text/javascript">
+    init_modules();
+  </script>
+  <script type="text/javascript">
+    ;(function () {
+      var s = document.createElement('script'),
+          oScript = document.getElementsByTagName('script')[0];
+
+      s.type = 'text/javascript';
+      s.async = true;
+      s.src = 'js/utils.js';
+
+      oScript.parentNode.insertBefore(s, oScript);
+    })();
+  </script>
+
+</body>
+</html>

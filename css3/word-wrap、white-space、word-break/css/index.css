@@ -1,0 +1,36 @@
+p {
+  /* text-shadow: 2px 2px 3px red; */
+  /* text-shadow: 20px 20px 3px red,
+               30px 50px 3px blue; */
+  text-shadow: none;
+}
+
+.box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+  /* word-wrap: normal; */
+  /* word-wrap: break-word; */
+
+  /* white-space: normal; */
+  /* white-space: nowrap; */
+  /* white-space: pre; */
+
+  /* 
+    单行文本溢出
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  */
+}
+
+@font-face {
+  font-family: 'yueluoFont';
+  src: url('../font/Mathline.otf'),
+       url('../font/Mathline.otf')
+       format('otf');
+}
+
+.box {
+  font-family: 'yueluoFont';
+}

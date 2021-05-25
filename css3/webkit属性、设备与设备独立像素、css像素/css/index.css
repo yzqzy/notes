@@ -1,0 +1,8 @@
+.box {
+  width: 200px;
+  height: 200px;
+  background-color: orange;
+  /* -webkit-appearance: button; */
+  /* -webkit-filter: blur(20px); */
+  -webkit-filter: brightness(20%);
+}

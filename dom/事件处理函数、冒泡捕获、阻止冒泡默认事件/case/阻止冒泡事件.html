@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>阻止冒泡事件</title>
+  <style type="text/css">
+    .wrapper {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      background-color: orange;
+    }
+
+    .apply {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      width: 80px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      background-color: gray;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="wrapper">
+    <div class="apply">立即申请</div>
+  </div>
+
+  <script type="text/javascript">
+    var wrapper = document.getElementsByClassName('wrapper')[0],
+        apply = document.getElementsByClassName('apply')[0];
+
+    wrapper.addEventListener('click', function () {
+      console.log('详情');
+    }, false);
+
+    apply.addEventListener('click', function (ev) {
+      var e = ev || window.event;
+      cancelBubble(e);
+      console.log('已申请');
+    }, false);
+
+    function cancelBubble (ev) {
+      var e = ev || window.event;
+
+      if (e.stopPropagation) {
+        e.stopPropagation();
+      } else {
+        e.cancelBubble = true;
+      }
+    }
+  </script>
+
+</body>
+</html>

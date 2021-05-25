@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>JS运动</title>
+  <style type="text/css">
+    div {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      background-color: orange;
+    }
+  </style>
+</head>
+<body>
+
+  <div></div>
+
+  <script type="text/javascript" src="../../../utils/tools.js"></script>
+  <script type="text/javascript">
+    var oDiv = document.getElementsByTagName('div')[0];  
+
+    oDiv.onclick = function () {
+      // var width = this.offsetWidth; 存在问题，会加上padding的值
+      var width = getStyles(this, 'width');
+
+      this.style.width = parseInt(width) + 10 + 'px';
+    }
+  </script>
+
+</body>
+</html>

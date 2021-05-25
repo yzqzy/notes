@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>幻灯片案例</title>
+   <link type="text/css" rel="stylesheet" href="./css/slider.css" />    
+  </style>
+</head>
+<body>
+
+  <div class="slider-wrap">
+    <div class="slider">
+      <ul class="slider-list">
+        <li class="slider-item active">
+          <a href="">
+            <img src="imgs/IMG_1.jpg" alt="" />
+          </a>
+        </li>
+        <li class="slider-item">
+          <a href="">
+            <img src="imgs/IMG_2.jpg" alt="" />
+          </a>
+        </li>
+        <li class="slider-item">
+          <a href="">
+            <img src="imgs/IMG_3.jpg" alt="" />
+          </a>
+        </li>
+        <li class="slider-item">
+          <a href="">
+            <img src="imgs/IMG_4.jpg" alt="" />
+          </a>
+        </li>
+        <li class="slider-item">
+          <a href="">
+            <img src="imgs/IMG_5.jpg" alt="" />
+          </a>
+        </li>
+        <li class="slider-item">
+          <a href="">
+            <img src="imgs/IMG_6.jpg" alt="" />
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="thumbs">
+      <ul class="thumbs-list">
+        <li class="thumb-item cur">
+          <a href="javascript:;">
+            <img src="imgs/IMG_1.jpg" alt="" />
+          </a>
+        </li>
+        <li class="thumb-item">
+          <a href="javascript:;">
+            <img src="imgs/IMG_2.jpg" alt="" />
+          </a>
+        </li>
+        <li class="thumb-item">
+          <a href="javascript:;">
+            <img src="imgs/IMG_3.jpg" alt="" />
+          </a>
+        </li>
+        <li class="thumb-item">
+          <a href="javascript:;">
+            <img src="imgs/IMG_4.jpg" alt="" />
+          </a>
+        </li>
+        <li class="thumb-item">
+          <a href="javascript:;">
+            <img src="imgs/IMG_5.jpg" alt="" />
+          </a>
+        </li>
+        <li class="thumb-item">
+          <a href="javascript:;">
+            <img src="imgs/IMG_6.jpg" alt="" />
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="./js/slider.js"></script>
+  <script type="text/javascript">
+    var slider = new Slider({
+      sliderItem: 'slider-item',
+      thumbItem: 'thumb-item'
+    });
+  </script>
+  
+</body>
+</html>

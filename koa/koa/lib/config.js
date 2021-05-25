@@ -1,0 +1,24 @@
+const PROXY_REQUEST_GETTER_KEYS = [
+  'path',
+  'url'
+]
+
+const PROXT_RESPONSE_GETTER_KEYS = [
+  'body'
+]
+
+const PROXT_RESPONSE_SETTER_KEYS = [
+  'body'
+]
+
+const STATUS_CODE = {
+  200: 'SUCCESS',
+  404: 'Not Found'
+}
+
+module.exports = {
+  PROXY_REQUEST_GETTER_KEYS,
+  PROXT_RESPONSE_GETTER_KEYS,
+  PROXT_RESPONSE_SETTER_KEYS,
+  STATUS_CODE
+}

@@ -1,0 +1,33 @@
+html {
+  height: 100%;
+}
+
+@media screen and (max-width: 379px) {
+  html {
+    background-color: black;
+  }
+}
+
+@media screen and (min-width: 480px) and (max-width: 767px) {
+  html {
+    background-color: red;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 959px) {
+  html {
+    background-color: pink;
+  }
+}
+
+@media screen and (min-width: 960px) and (max-width: 1190px) {
+  html {
+    background-color: purple;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  html {
+    background-color: orange;
+  }
+}

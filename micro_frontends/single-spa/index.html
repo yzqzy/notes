@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>single-spa</title>
+</head>
+<body>
+
+  <div id="app"></div>
+  <a href="#/home">加载 APP1</a>
+  <a href="#/user">加载 APP2</a>
+
+  <script src="./lib/umd/single-spa.js"></script>
+
+  <script>
+    ;((global) => {
+      const loadAppScript = (appName) => {
+        let script = document.createElement('script');
+        script.src = `/assets/${appName}.js`;
+        document.body.appendChild(script);
+
+        return new Promise((resolve, reject) => {
+          script.onload = function () {
+            resolve(window[appName]);
+          }
+          script.onerror = function () {
+            reject(window[appName]);
+          }
+        });
+      }
+
+      const singleSpa = global.singleSpa;
+
+      singleSpa.registerApplication(
+        'app1',
+        () => {
+          return loadAppScript('app1');
+        },
+        (localtion) => localtion.hash === '#/home'
+      );
+      singleSpa.registerApplication(
+        'app2',
+        () => {
+          return loadAppScript('app2');
+        },
+        (localtion) => localtion.hash === '#/user'
+      );
+
+      // 启动微前端框架
+      singleSpa.start();
+    })(window);
+  </script>
+
+</body>
+</html>

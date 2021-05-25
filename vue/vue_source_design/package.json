@@ -1,0 +1,22 @@
+{
+  "name": "vue_source",
+  "version": "0.1.0",
+  "description": "vue核心源码实现",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack-dev-server",
+    "build": "webpack"
+  },
+  "keywords": [
+    "vue",
+    "核心源码"
+  ],
+  "author": "月落",
+  "license": "MIT",
+  "devDependencies": {
+    "html-webpack-plugin": "^4.3.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  }
+}

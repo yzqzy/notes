@@ -1,0 +1,25 @@
+/* .box {
+  width: 200px;
+  height: 200px;
+  background-color: hsl(60, 50%, 50%);
+} */
+
+/* .box {
+  padding: 20px;
+  margin: 20px;
+  width: 200px;
+  height: 200px;
+  border: 10px solid #000;
+} */
+
+textarea {
+  resize: none;
+}
+
+div.text {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+  resize: both;
+  overflow: auto;
+}

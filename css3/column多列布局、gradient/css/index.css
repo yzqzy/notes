@@ -1,0 +1,73 @@
+/* .box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+  text-overflow: clip;
+  white-space: nowrap;
+  overflow: hidden;
+} */
+
+/* .box {
+  width: 600px;
+  height: 400px;
+  border: 1px solid #000;
+  columns: 100px 3;
+} */
+
+/* .box {
+  width: 600px;
+  height: 400px;
+  border: 1px solid #000;
+  font-size: 0;
+  columns: 100px 100;
+}
+
+.box p {
+  font-size: 16px;
+} */
+
+/* .box {
+  width: 600px;
+  height: 400px;
+  border: 1px solid #000;
+  columns: 100px 100;
+  column-gap: 2px;
+  column-rule: 1px dotted #000;
+}
+
+.box h2 {
+  column-span: all;
+} */
+
+.box {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+  /* background-image: linear-gradient(red, green); */
+  /* background-image: linear-gradient(red 0, yellow 50%, green 100%); */
+  /* background-image: linear-gradient(to top, red 0, green 100%); */
+  /* background-image: linear-gradient(to top right, red 0, green 100%); */
+  /* background-image: linear-gradient(to top left, red 0, green 100%); */
+  /* background-image: linear-gradient(to bottom left, red 0, green 100%); */
+  /* background-image: linear-gradient(to bottom right, red 0, green 100%); */
+  /* background-image: linear-gradient(125deg, red 0, green 100%); */
+
+  /* background-image: radial-gradient(circle, red, green); */
+  /* background-image: radial-gradient(circle, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at 100px 100px, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at 100px, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at 100px center, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at center center, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at top center, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at 200px 0, red 0, green 100%); */
+  /* background-image: radial-gradient(circle at 100% 0, red 0, green 100%); */
+  /* background-image: radial-gradient(circle 100px at 100% 0, red 0, green 100%); */
+  /* background-image: radial-gradient(circle 200px at 100% 0, red 0, green 100%); */
+
+  /* background-image: radial-gradient(ellipse 100px 50px at center, red 0, green 100%); */
+  /* background-image: radial-gradient(ellipse 200px 100px at center, red 0, green 100%); */
+  /* background-image: radial-gradient(ellipse at center, red 0, green 100%); */
+  /* background-image: radial-gradient(ellipse 200px at center, red 0, green 100%); */
+
+  background-image: radial-gradient(ellipse at center, red 10%, gold 30%, orange 50%, blue 100%);
+}

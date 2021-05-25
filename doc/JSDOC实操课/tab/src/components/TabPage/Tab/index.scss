@@ -1,0 +1,18 @@
+// Tab组件样式
+.tab-wrapper {
+  height: 50px;
+  border-bottom: 1px solid #000;
+
+  .tab-item {
+    float: left;
+    width: 25%;
+    height: 50px;
+    text-align: center;
+    line-height: 50px;
+
+    &.tab-current {
+      background-color: #000;
+      color: #fff;
+    }
+  }
+}

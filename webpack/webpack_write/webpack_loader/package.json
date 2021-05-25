@@ -1,0 +1,21 @@
+{
+  "name": "webpack_loader",
+  "version": "1.0.0",
+  "description": "webpack loader相关的知识",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "月落",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.10.3",
+    "@babel/preset-env": "^7.10.3",
+    "less": "^3.11.3",
+    "loader-utils": "^2.0.0",
+    "mime": "^2.4.6",
+    "schema-utils": "^2.7.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
+  }
+}

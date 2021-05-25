@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>a标签渲染问题</title>
+  <style type="text/css">
+    [href="http://www.baidu.com"] {
+      display: block;
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+
+    [href="http://www.taobao.com"] {
+      display: block;
+      width: 100px;
+      height: 100px;
+      background-color: green;
+    }
+  </style>
+</head>
+<body>
+  
+  <a href="http://www.baidu.com">
+    百度 <a href="http://www.taobao.com">淘宝</a>
+  </a>
+
+  <script type="text/javascript">
+
+  </script>
+
+</body>
+</html>

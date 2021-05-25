@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>操作XHTML</title>
+</head>
+<body>
+  
+  <person>
+    <username>张三</username>
+    <sex>男</sex>
+    <age>18</age>
+  </person>
+  <person>
+    <username>李四</username>
+    <sex>女</sex>
+    <age>23</age>
+  </person>
+
+  <script type="text/javascript">
+    var person = document.getElementsByTagName('person')[0];
+    console.log(person); 
+
+    var username = person.getElementsByTagName('username')[0];
+    console.log(username); // <username>张三</username>
+
+    var name = person.getElementsByTagName('username')[0];
+    console.log(name); // [object HTMLUnknownElement]
+
+    console.log(username.innerText)
+
+    // name是window上一个内置属性，属于全局数组window，全局定义变量应该避免。
+  </script>
+  
+</body>
+</html>

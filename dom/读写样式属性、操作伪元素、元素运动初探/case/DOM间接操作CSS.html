@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>DOM间接操作CSS</title>
+  <style type="text/css">
+    div {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      background-color: green;
+    }
+
+    div::after {
+      content: "";
+      display: block;
+      width: 50px;
+      height: 50px;
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <div></div>
+
+  <script type="text/javascript">
+    var oDiv = document.getElementsByTagName('div')[0];
+
+    // console.log(oDiv.style.width); // '' 
+
+    // oDiv.style.width = '200px';
+    // oDiv.style.height = '200px';
+    // oDiv.style.backgroundColor = 'orange';
+    // // oDiv.style.border = '1px solid #000';
+    // oDiv.style.borderWidth = '1px';
+    // oDiv.style.borderStyle = 'solid';
+    // oDiv.style.borderColor = '#000';
+    // oDiv.style.position = 'absolute';
+    // oDiv.style.left = '100px';
+    // oDiv.style.top = '100px';
+
+    // console.log(oDiv.style);
+
+    // console.log(window.getComputedStyle(oDiv, null));
+    // console.log(window.getComputedStyle(oDiv, null).width);
+    // console.log(window.getComputedStyle(oDiv, null)['width']);
+    // console.log(oDiv.currentStyle);
+
+    // console.log(window.getComputedStyle(oDiv, 'after')['width']);
+
+    
+    oDiv.onclick = function () {
+      this.style.backgroundColor = 'red';
+      this.style.width = '200px';
+      this.style.height = '200px';
+      this.style.borderRadius = '50%';
+    }
+  </script>
+  
+</body>
+</html>
