@@ -48,7 +48,7 @@
   + [koa架构分析与源码重写](https://gogs.yueluo.club/yueluo/notes/src/master/koa) 已完成
 * jenkins
   + [react项目构建部署](https://gogs.yueluo.club/yueluo/notes/src/master/jenkins/practice) 已完成
-  + [Jenkins2.x实践指南](https://gogs.yueluo.club/yueluo/notes/src/master/jenkins/jenkins2.x) 更新中
+  + [Jenkins2.x实践指南](https://gogs.yueluo.club/yueluo/notes/src/master/jenkins/jenkins2.x) 更新中...
 * 微前端
   + [single-spa源码实现](https://gogs.yueluo.club/yueluo/notes/src/master/micro_frontends) 已完成
 * 数据结构与算法
