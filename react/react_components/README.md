@@ -14,7 +14,7 @@
 ### 创建项目
 
 ```tsx
-npx create-react-app react-components --templete typescript
+npx create-react-app react-components --template typescript
 ```
 
 ### 项目结构
@@ -114,9 +114,9 @@ scss `_file`，_ 代表是分音，Partials。
 > 如果需要导入 SCSS 或者 Sass 文件，但又不希望将其编译成 css，只需要在文件前添加下划线，这样会告诉 Sass 不能编译这些文件，但导入语句中并不需要加下划线。
 
 ```css
-// _variable.scss
+// _variables.scss
 
-@import ('variable');
+@import ('variables');
 ```
 
 
@@ -212,4 +212,20 @@ textarea {
 ```
 
 ## Button 组件
+
+### 依赖库安装
+
+sass
+
+```js
+yarn add sass  -D
+```
+
+类名合并
+
+```js
+yarn add classnames @types/classnames -S
+```
+
+### 组件编写
 
