@@ -14,7 +14,7 @@
 ### 创建项目
 
 ```tsx
-npx create-react-app react-components --typescript
+npx create-react-app react-components --templete typescript
 ```
 
 ### 项目结构
@@ -50,7 +50,7 @@ react-ui
 common
 	js
   	functions.js
-  css 
+  styles 
   	_variables.scss
     _functions.scss
     _mixins.scss
@@ -106,4 +106,110 @@ common
   * 隐藏
 * user-switch
   * 用户可配置性
+
+## variables、normalize
+
+scss `_file`，_ 代表是分音，Partials。
+
+> 如果需要导入 SCSS 或者 Sass 文件，但又不希望将其编译成 css，只需要在文件前添加下划线，这样会告诉 Sass 不能编译这些文件，但导入语句中并不需要加下划线。
+
+```css
+// _variable.scss
+
+@import ('variable');
+```
+
+
+
+```scss
+// 希望操作元素时 不存在 outline，需要过滤 :focus-visible（tab 操作时，无障碍操作）
+
+[tabindex="-1"]:focus:not(:focus-visible) {
+  outline: 0 !important;
+}
+```
+
+```scss
+// hr 没有设置 size 属性时，设置默认值
+
+hr:not([size]) {
+  height: $hr-height; // 2
+}
+```
+
+```scss
+@extend // 继承样式
+```
+
+```scss
+abbr[title],
+abbr[data-original-title] { // 1
+  text-decoration: underline; // 2
+  text-decoration: underline dotted; // 2
+  cursor: help; // 3
+  text-decoration-skip-ink: none; // 4 例如 英文 g，下划线是否穿过字母
+}
+```
+
+```scss
+
+button:focus {
+  outline: 1px dotted;
+  // -webkit-focus-ring-colo 代表 webkit 普通蓝色
+  outline: 5px auto -webkit-focus-ring-color;
+}
+```
+
+```scss
+// 去除日历组件小箭头
+[list]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+```
+
+```scss
+button,
+[type="button"], // 1
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance: button; // 2
+
+  @if $enable-pointer-cursor-for-buttons {
+    &:not(:disabled) {
+      cursor: pointer; // 3
+    }
+  }
+}
+
+// -webkit-appearance 针对 ios 手机端样式兼容
+```
+
+```scss
+textarea {
+  overflow: auto; // 1
+  resize: vertical;  // 2
+}
+
+// overflow 滚动条
+// resize 垂直扩张
+```
+
+```scss
+[hidden] {
+  display: none !important;
+}
+
+// hidden 属性，直接设置 display 属性为 none
+```
+
+```scss
+::-moz-focus-inner {
+  padding: 0;
+  border-style: none;
+}
+
+// 火狐的内置伪元素，可以让初始化元素设置生效
+```
+
+## Button 组件
 
