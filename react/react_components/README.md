@@ -229,3 +229,104 @@ yarn add classnames @types/classnames -S
 
 ### 组件编写
 
+自定义属性与原生属性合并。
+
+> Partial<Type>  所有类型属性都变成可选的
+
+> intersection type 联合类型
+
+
+
+```tsx
+import React from 'react';
+import classNames from 'classnames';
+import { SIZE, TYPE } from './typings';
+
+export {
+  SIZE,
+  TYPE
+};
+
+interface UserProps {
+  btnType?: TYPE;
+  size?: SIZE;
+  disabled?: boolean;
+  className?: string;
+  href?: string;
+}
+
+type ButtonProps = Partial<
+  UserProps & 
+  React.ButtonHTMLAttributes<HTMLButtonElement> & 
+  React.AnchorHTMLAttributes<HTMLAnchorElement>
+>;
+
+const Button: React.FC<ButtonProps> = (props) => {
+  const {
+    btnType, size, disabled, className, href, ...restProps
+  } = props;
+
+  const classnames = classNames(
+    'btn',
+    {
+      [`btn-${btnType}`]: btnType,
+      [`btn-${size}`]: size,
+      'disabled': btnType === TYPE.LINK && disabled 
+    },
+    className,
+  );
+
+  return (
+    <>
+      {
+        btnType === TYPE.LINK || href ? (
+          <a
+            className={ classnames }
+            href={ href }
+            { ...restProps }
+          >
+            { props.children }
+          </a>
+        ) : (
+          <button
+            className={ classnames }
+            disabled={ disabled }
+            { ...restProps }
+          >
+            { props.children }
+          </button>
+        )
+      }
+    </>
+  );
+}
+
+Button.defaultProps = {
+  disabled: false,
+  btnType: TYPE.PRIMARY,
+};
+
+export default Button;
+```
+
+```scss
+.btn {
+  display: inline-block;
+  padding: $btn-padding-y $btn-padding-x;
+  border: $btn-border-width solid transparent;
+  border-radius: $border-radius;
+  box-shadow: $btn-box-shadow;
+  background-color: transparent;
+  font-size: $btn-font-size;
+  color: $body-color;
+  font-weight: $btn-font-weight;
+  line-height: $btn-line-height;
+  vertical-align: middle;
+  font-family: $btn-font-family;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+  transition: $btn-transition;
+}
+```
+
