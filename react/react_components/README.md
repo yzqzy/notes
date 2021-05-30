@@ -327,6 +327,106 @@ export default Button;
   text-align: center;
   cursor: pointer;
   transition: $btn-transition;
+
+  @include btn-size(
+    $btn-padding-x,
+    $btn-padding-y,
+    $btn-font-size,
+    $border-radius,
+  );
+
+  &[disabled],
+  &.disabled {
+    opacity: $btn-disabled-opacity;
+    box-shadow: none;
+    cursor: not-allowed;
+    
+    > * {
+      pointer-events: none;
+    }
+  }
+
+  &.btn-lg {
+    @include btn-size(
+      $btn-padding-x-lg,
+      $btn-padding-y-lg,
+      $btn-font-size-lg,
+      $border-radius-lg,
+    );
+  }
+
+  &.btn-sm {
+    @include btn-size(
+      $btn-padding-x-sm,
+      $btn-padding-y-sm,
+      $btn-font-size-sm,
+      $border-radius-sm,
+    );
+  }
+
+  &.btn-primary {
+    @include btn-style(
+      $primary,
+      $primary,
+      $white
+    );
+  }
+  
+  &.btn-secondary {
+    @include btn-style(
+      $secondary,
+      $secondary,
+      $white
+    );
+  }
+
+  &.btn-success {
+    @include btn-style(
+      $success,
+      $success,
+      $white
+    );
+  }
+
+  &.btn-info {
+    @include btn-style(
+      $info,
+      $info,
+      $black
+    );
+  }
+
+  &.btn-warning {
+    @include btn-style(
+      $warning,
+      $warning,
+      $black
+    );
+  }
+
+  &.btn-danger {
+    @include btn-style(
+      $danger,
+      $danger,
+      $white
+    );
+  }
+
+  &.btn-light {
+    @include btn-style(
+      $light,
+      $light,
+      $black
+    );
+  }
+
+  &.btn-dark {
+    @include btn-style(
+      $dark,
+      $dark,
+      $white
+    );
+  }
 }
 ```
 
