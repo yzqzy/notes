@@ -1,0 +1,55 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  background-color: #000;
+
+  text-align: center;
+  color: #fff;
+  line-height: 44px;
+}
+
+.header.black {
+  background-color: #000;
+  color: #fff;
+}
+
+.header.red {
+  background-color: red;
+  color: #fff;
+}
+
+.header.orange {
+  background-color: orange;
+  color: #000;
+}
+
+.header.purple {
+  background-color: purple;
+  color: #fff;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  background-color: #efefef;
+}
+
+.bottom-nav .item {
+  float: left;
+  width: 25%;
+  height: 100%;
+  text-align: center;
+  line-height: 44px;
+  font-size: 14px;
+  color: #999;
+}
+
+.bottom-nav .item.active {
+  color: #000;
+}

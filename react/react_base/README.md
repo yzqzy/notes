@@ -3621,3 +3621,203 @@ ReactDOM.render(
 );
 ```
 
+## Context 使用场景
+
+context 上下文	容器 -> 数据 -> 程序的多个地方传递数据。容器叫做上下文。
+
+程序在执行的时候可访问的容器。
+
+
+
+ThemeContext 
+
+* Provider 供应方
+* Comsumer 消费方 使用方
+
+
+
+主题：
+
+context.js
+
+```js
+const ThemeContext = React.createContext('black');
+
+export {
+  ThemeContext
+}
+```
+
+index.tsx
+
+```tsx
+import { ThemeContext } from '../config/context';
+import '../css/index.css';
+
+class Header extends React.Component {
+  render () {
+    return (
+      <ThemeContext.Consumer>
+        {
+          (theme) => (
+            <header className={`header ${ theme }`}>
+              { this.props.children }
+            </header>
+          )
+        }
+      </ThemeContext.Consumer>
+    );
+  }
+}
+
+class NavItem extends React.Component {
+  render () {
+    const { index, item } = this.props;
+
+    return (
+      <div className={ !index ? `item active` : 'item' }>
+        { item }
+      </div>
+    )
+  }
+}
+
+class BottomNav extends React.Component {
+  render () {
+    return (
+      <div className="bottom-nav">
+        {
+          this.props.data.map((item, index) => {
+            return (
+              <NavItem
+                item={ item }
+                index={ index }
+                key={ index }
+              />
+            )
+          })
+        }
+      </div>
+    );
+  }
+}
+
+class Main extends React.Component {
+  state = {
+    navData: [
+      '第①',
+      '第②',
+      '第③',
+      '第④'
+    ]
+  }
+
+  render () {
+    return (
+      <>
+        <Header>标题</Header>
+        <div style={{ marginTop: '88px' }}>
+          <button onClick={() => this.props.themeChange('black')}>Black</button>
+          <button onClick={() => this.props.themeChange('red')}>Red</button>
+          <button onClick={() => this.props.themeChange('orange')}>Orange</button>
+          <button onClick={() => this.props.themeChange('purple')}>Purple</button>
+        </div>
+        <BottomNav
+          data={ this.state.navData }
+        />
+      </>
+    );
+  };
+}
+
+class  App extends React.Component {
+  state = {
+    theme: 'black'
+  }
+
+  themeChange (theme) {
+    this.setState({
+      theme
+    });
+  }
+
+  render () {
+    return (
+      <ThemeContext.Provider
+        value={this.state.theme}
+      >
+        <Main themeChange={ this.themeChange.bind(this) } />
+      </ThemeContext.Provider>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+index.css
+
+```css
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  background-color: #000;
+
+  text-align: center;
+  color: #fff;
+  line-height: 44px;
+}
+
+.header.black {
+  background-color: #000;
+  color: #fff;
+}
+
+.header.red {
+  background-color: red;
+  color: #fff;
+}
+
+.header.orange {
+  background-color: orange;
+  color: #000;
+}
+
+.header.purple {
+  background-color: purple;
+  color: #fff;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  background-color: #efefef;
+}
+
+.bottom-nav .item {
+  float: left;
+  width: 25%;
+  height: 100%;
+  text-align: center;
+  line-height: 44px;
+  font-size: 14px;
+  color: #999;
+
+}
+
+.bottom-nav .item.active {
+  color: #000;
+}
+```
+
+## Context 与 组合的应用场景
+
