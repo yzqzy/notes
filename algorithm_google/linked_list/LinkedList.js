@@ -71,6 +71,22 @@ function LinkedList (values) {
   }
 }
 
+LinkedList.prototype.add = function (val) {
+  const node = new Node(val);
+
+  if (this.head) {
+    let currNode = this.head;
+
+    while (currNode.next) {
+      currNode = currNode.next;
+    }
+
+    currNode.next = new Node(val);
+  } else {
+    this.head = new Node(val);
+  }
+}
+
 module.exports = {
   LinkedList
 }
