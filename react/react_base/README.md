@@ -3997,3 +3997,86 @@ ReactDOM.render(
 
 ## Context API
 
+displayName
+
+```js
+// 用于 debugger 工具的显示名称
+AContext.displayName = 'MyAContext';
+```
+
+React.createContext 创建一个指定的 Context 对象。
+
+组件会找离自己最近的 Provider，获取其 value。
+
+没有匹配到 Provider 就使用 defaultValue，其他情况均不使用默认参数。
+
+Context.Provider：通过 React.createContext 创建在上下文对象里的一个组件。组件可以插入其他组件，订阅这个 Context。
+
+通过 Provider 的 value 属性将数据传递给 Consumer 组件。
+
+value 变化，插入 Provider 的组件都会重新渲染。 
+
+```tsx
+const AContext = React.createContext('default a');
+const BContext = React.createContext('default b');
+
+AContext.displayName = 'MyAContext';
+
+class App extends React.Component {
+  state = {
+    a: 'a context',
+    b: 'b context'
+  }
+
+  componentDidMount () {
+    setTimeout(() => {
+      this.setState({
+        b: 'bb context'
+      });
+    }, 1000);
+  }
+
+  render () {
+    return (
+      <AContext.Provider value={this.state.a}>
+        <BContext.Provider value={this.state.b}>
+          <Test />
+        </BContext.Provider>
+      </AContext.Provider>
+    );
+  }
+}
+
+class Test extends React.Component {
+  shouldComponentUpdate () {
+    console.log('repaint');
+  }
+
+  render () {
+    return (
+      <AContext.Consumer>
+        {
+          value => (
+            <BContext.Consumer>
+              {
+                value => (
+                  <div>{ value }</div>
+                )
+              }
+            </BContext.Consumer>
+          )
+        }
+      </AContext.Consumer>
+    );
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+new and old value -> comparing -> Object.is  相同的算法。
+
+Object.is 更具备现代开发的逻辑。
