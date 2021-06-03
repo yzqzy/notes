@@ -3825,6 +3825,73 @@ Context 给整个组件树共享全局数据。
 
 Context 会弱化及污染组件纯度，导致组件复用性降低。
 
+```tsx
+const CityContext = React.createContext({
+  name: 'chengdu',
+  text: '成都'
+});
+
+class App extends React.Component {
+  state = {
+    cityInfo: {
+      name: 'chengdu',
+      text: '成都'
+    },
+  }
+
+  changeCity (cityInfo) {
+    this.setState({
+      cityInfo
+    })
+  }
+
+  render () {
+    return (
+      <CityContext.Provider value={this.state.cityInfo}>
+        <Header changeCity={this.changeCity.bind(this)} />
+        <span>{ this.state.cityInfo.text }</span>
+      </CityContext.Provider>
+    );
+  }
+}
+
+class Header extends React.Component {
+  render () {
+    return (
+      <Selector changeCity={this.props.changeCity} />
+    );
+  }
+}
+
+class Selector extends React.Component {
+  static contextType = CityContext;
+
+  render () {
+    return (
+      <select
+        value={ this.context.name }
+        onChange={
+          (e) => this.props.changeCity({
+            name: e.target.value,
+            text: e.target[e.target.selectedIndex].text
+          })
+        }
+      >
+        <option value="beijing">北京</option>
+        <option value="chengdu">成都</option>
+        <option value="shengzhen">深圳</option>
+        <option value="hangzhou">杭州</option>
+      </select>
+    );
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
 Context 适合杂乱无章的组件都需要同一些数据。单纯为了不层层传递属性，不建议使用 Context。
 
 可以使用组合的方式解决层层传递属性的问题，不适合使用 Context。

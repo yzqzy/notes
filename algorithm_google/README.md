@@ -5870,6 +5870,278 @@ class Graph {
 下面写的 bfs() 函数就是基于之前定义的，图的广度优先搜索的代码实现。其中 s 表示起始顶点，t 表示终止顶点。我们搜索一条从 s 到 t 的路径。实际上，这样求得的路径就是从 s 到 t 的最短路径。
 
 ```js
+// LinkedList js 实现
 
+function Node (val) {
+  this.val = val;
+  this.next = null;
+}
+
+function LinkedList (values) {
+  if (values) {
+    this.head = new Node(values.shift());
+    
+    currNode = this.head;
+
+    values.forEach(val => {
+      currNode.next = new Node(val);
+      currNode = currNode.next;
+    });
+  }
+}
+
+LinkedList.prototype.add = function (val) {
+  if (this.head) {
+    let currNode = this.head;
+
+    while (currNode.next) {
+      currNode = currNode.next;
+    }
+
+    currNode.next = new Node(val);
+  } else {
+    this.head = new Node(val);
+  }
+}
+
+LinkedList.prototype.size = function () {
+  if (this.head) {
+    let current = this.head;
+    let count = 0;
+
+    while (current) {
+      current = current.next;
+      count++;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+LinkedList.prototype.poll = function () {
+  const current = this.head;
+  this.head = this.head.next;
+  return current.val;
+}
+
+LinkedList.prototype.get = function (idx) {
+  let current = this.head;
+  let count = 0;
+  
+  while (current) {
+    if (count === idx) {
+      return current.val;
+    }
+
+    current = current.next;
+    count++;
+  }
+
+  return 0;
+}
 ```
 
+```js
+// Graph 实现
+
+class Graph {
+  v;
+  agj;
+
+  constructor (v) {
+    this.v = v;
+    this.agj = [];
+
+    for (let i = 0; i < v; i++) {
+      this.agj[i] = new LinkedList();
+    }
+  }
+
+  addEdge (s, t) {
+    this.agj[s].add(t);
+    this.agj[t].add(s);
+  }
+
+  bfs (s, t) {
+    if (s === t) return;
+    
+    const visited = [];
+    const queue = new LinkedList();
+  
+    visited[s] = true;
+    queue.add(s);
+
+    const prev = new Array(this.v);
+
+    for (let i = 0; i < this.v; i++) {
+      prev[i] = -1;
+    }
+  
+    while (queue.size() != 0) {
+      const w = queue.poll(); 
+
+      for (let i = 0; i < this.agj[w].size(); i++) {
+        const q = this.agj[w].get(i);
+
+        if (!visited[q]) {
+          prev[q] = w;
+
+          if (q === t) {
+            this.print(prev, s, t);
+            return;
+          }
+
+          visited[q] = true;
+          queue.add(q);
+        }
+      }
+    }
+  }
+
+  print (prev, s, t) {
+    if (prev[t] != -1 && t != s) {
+      this.print(prev, s, prev[t]);
+    }
+    
+    console.log(t + ' ');
+  }
+}
+```
+
+```js
+// 测试用例
+
+const graph = new Graph(8);
+
+graph.addEdge(0, 1);
+graph.addEdge(0, 3);
+graph.addEdge(1, 2);
+graph.addEdge(1, 4);
+graph.addEdge(4, 5);
+graph.addEdge(4, 6);
+graph.addEdge(3, 4);
+graph.addEdge(2, 5);
+graph.addEdge(5, 7);
+graph.addEdge(6, 7);
+
+graph.bfs(0, 7);
+```
+
+图的 bfs 不是很好理解，里面有三个重要的辅助变量 visited，queue，prev 。只要理解了这三个变量，读懂这段代码就没有什么问题了。
+
+visited 是用来记录已经被访问的顶点，用来避免顶点被重复访问。如果顶点 q 被访问，那相应的 visited 会被设置为 true。
+
+queue 是一个队列，用来存储已经被访问，但相连的顶点还没有被访问的顶点。因为广度优先搜索是逐层访问的，也就是说，我们只有把第 k 层的顶点都访问完成之后，才能访问第 k + 1 层的顶点，我们只需要把第 k 层的顶点记录下来，稍后才能通过第 k 层来找第 k + 1 层的顶点。所以，我们用这个队列来实现记录的功能。
+
+prev 用来记录搜索路径。当我们从顶点 s 开始，广度优先搜索到顶点 t 后，prev 数组中存储的就是搜索的过程。不过，这个路径是反向存储的，prev[w] 存储的是，顶点 w 是从哪个前驱节点遍历过来的。比如，我们通过顶点 2 的邻接表访问到顶点 3，那 prev[3] 就等于 2。为了正向打印出路径，我们需要递归来打印，这也就是 print 函数的作用。
+
+下面有一个广度优先搜索的分解图。
+
+
+
+<img src="./images/graph_09.jpg" style="zoom: 70%" />
+
+<img src="./images/graph_10.jpg" style="zoom: 70%" />
+
+<img src="./images/graph_11.jpg" style="zoom: 70%" />
+
+
+
+明白广度优先搜索算法的原理之后，我们再来看下，广度优先搜索的时间、空间复杂度是多少。
+
+最坏情况下，终止顶点 t 离起始顶点 s 很远，需要遍历完整个图才能找到。这个时候，每个顶点都要进出一遍队列，每个边都会被访问一次，所以，广度优先搜索的时间复杂度是 O(V + E)，其中，V 表示顶点的个数，E 表示边的个数。当然，对于一个连通图来说，也就是说一个图中的所有顶点都是连通的，E 肯定要大于等于 V - 1，所以，广度优先搜索的时间复杂度也可以简写为 O(E)。
+
+> 树的特性是E = V - 1，树是边最少的联通图，因此一般而言E >= V -1
+
+广度优先搜索的空间消耗主要在几个辅助变量 visited 数组、queue 队列、prev 数组上。这三个存储空间的大小都不会超过顶点的个数，所以空间复杂度是 O(V)。
+
+### 深度优先搜索（DFS）
+
+深度优先搜索（Depth-First-Search），简称 DFS。最直观地例子就是 “走迷宫”。
+
+假设你站在迷宫的某个岔路口，想找到出口。你随意选择一个岔路口来走，走着走着发现走不通的时候，你就会回退到上一个岔路口，重新选择一条路继续走，直到最终找到出口。这种走法就是一种深度优先搜索策略。
+
+走迷宫的例子很容易就能看懂，我们来看下，如果在图中应用深度优先搜索，来找某个顶点到另一个顶点的路径。
+
+你可以参考下图。搜索的起点顶点是 s，终止顶点是 t，我们希望在图中寻找一条从顶点 s 到顶点 t 的路径。如果映射到迷宫那个例子，s 就是你起始所在的位置，t 就是出口。
+
+用深度递归算法，把整个搜索的路径标记出来。这里面实线箭头表示遍历，虚线箭头表示回退。从图中我们可以看出，深度优先搜索找出的路径，并不是顶点 s 到到顶点 t 的最短路径。
+
+
+
+<img src="./images/graph_12.jpg" style="zoom: 70%" />
+
+
+
+实际上，深度优先搜索用的是一种比较著名的算法思想，回溯思想。这种思想解决问题的过程，非常适合用递归来实现。
+
+把上面的过程用递归翻译出来，就是下面这个样子。深度优先搜索代码实现也用到了 prev、visited 变量以及 print() 函数，它们跟广度优先搜索代码实现里的作用是一样的。不过，深度优先搜索代码实现里，有个比较特殊的变量 found，它的作用是，当我们已经找到终点 t 之后，我们就不再递归地继续查找了。
+
+```js
+class Graph {
+  v;
+  agj;
+
+  // ...
+
+  found = false;
+
+  dfs (s, t) {
+    this.found = false;
+
+    const visited = [];
+    const prev = new Array(this.v);
+
+    for (let i = 0; i < this.v; i++) {
+      prev[i] = -1;
+    }
+
+    this.recurDfs(s, t, visited, prev);
+    this.print(prev, s, t);
+  }
+
+  recurDfs (w, t, visited, prev) {
+    if (this.found === true) return;
+
+    visited[w] = true;
+
+    if (w == t) {
+      this.found = true;
+      return;
+    }
+
+    console.log(w, t);
+
+    for (let i = 0; i < this.agj[w].size(); i++) {
+      const q = this.agj[w].get(i);
+
+      if (!visited[q]) {
+        prev[q] = w;
+        this.recurDfs(q, t, visited, prev);
+      }
+    }
+  }
+
+  // ...
+}
+```
+
+理解深度优先搜索算法之后，我们来看，深度优先搜索的时间、空间复杂度是多少呢？
+
+从前面的图来看，每条边最多会被访问两次，一次是遍历，一次是回退。所以，图上的深度优先搜索算法的时间复杂度是 O(E)，E 表示边的个数。
+
+深度优先搜索算法的消耗内存主要是 visited、prev 数组和递归调用栈。visted、prev 数组的大小跟顶点的个数 V 成正比，递归调用栈的最大深度不会超过顶点的个数，所以总的空间复杂度就是 O(V)。
+
+### 总结
+
+
+
+### 技术拓展
+
+#### 如何找出社交网络中某个用户的三度好友关系？
+
+社交网络可以用图来表示。这个问题非常适合用图的广度优先搜索算法来解决，因为广度优先搜索算法是层层往外推进的。首先，遍历与起始顶点最近的一层顶点，也就是用户的一度好友，然后再遍历与用户距离的边数为 2 的顶点，也就是二度好友关系，以及与用户距离的边数为 3 的顶点，也就是三度好友关系。
+
+我们只需要稍微改造一下广度优先搜索代码，用一个数组来记录每个顶点与起始顶点的距离，非常容易就可以找出三度好友关系。

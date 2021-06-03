@@ -72,8 +72,6 @@ function LinkedList (values) {
 }
 
 LinkedList.prototype.add = function (val) {
-  const node = new Node(val);
-
   if (this.head) {
     let currNode = this.head;
 
@@ -85,6 +83,44 @@ LinkedList.prototype.add = function (val) {
   } else {
     this.head = new Node(val);
   }
+}
+
+LinkedList.prototype.size = function () {
+  if (this.head) {
+    let current = this.head;
+    let count = 0;
+
+    while (current) {
+      current = current.next;
+      count++;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+LinkedList.prototype.poll = function () {
+  const current = this.head;
+  this.head = this.head.next;
+  return current.val;
+}
+
+LinkedList.prototype.get = function (idx) {
+  let current = this.head;
+  let count = 0;
+  
+  while (current) {
+    if (count === idx) {
+      return current.val;
+    }
+
+    current = current.next;
+    count++;
+  }
+
+  return 0;
 }
 
 module.exports = {
