@@ -4077,6 +4077,57 @@ ReactDOM.render(
 );
 ```
 
-new and old value -> comparing -> Object.is  相同的算法。
+new and old value -> comparing -> Object.is  相同的算法。Object.is 更具备现代开发的逻辑。
 
-Object.is 更具备现代开发的逻辑。
+
+
+Consumer 使用 Provider 提供的 value，订阅 Context 的变更。
+
+Consumer 内部使用函数作为子元素， function as a child。
+
+函数接收 context 最近的 Provider 提供的 value。
+
+
+
+如果没有 Provider，会寻找默认的 value。
+
+```tsx
+<AContext.Consumer>
+  {
+    value => (
+      <BContext.Consumer>
+        {
+          value => (
+            <div>{ value }</div>
+          )
+        }
+      </BContext.Consumer>
+    )
+  }
+</AContext.Consumer>
+
+const AContext = React.createContext('default a'); // 显示 default a
+
+<AContext.Provider value={this.state.a}>
+  <Test />
+</AContext.Provider>
+```
+
+
+
+```js
+static contextType = CityContext;
+// 将当前的环境下的 context 重新指定引用
+
+=> 
+static contextType; // 报错
+```
+
+不合法的静态属性 contextType，react 组件可以监控到是否是所需要的 contextType。
+
+conextType 必须是由 React.createContext () 创建的 Context 对象。
+
+> ES3 中静态属性是 Select.contextType。
+
+context 在生命周期函数和 render 函数中都可以访问。
+
