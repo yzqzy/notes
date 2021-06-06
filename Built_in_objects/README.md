@@ -223,3 +223,101 @@ Array.prototype.$copyWithin = function (target) {
 
 ## 生成器与迭代器
 
+var arr = [1, 2, 3, 4, 5];
+
+```js
+forEach // 普通的数据遍历方法 for
+map // 映射，每次遍历返回新的数组元素，map 会返回一个新的数组
+filter // 过滤，通过每一次遍历，返回 bool，来决定当前元素是否纳入新的数组中
+reduce // 归纳，每一次遍历，将当前元素收归到容器中
+reduceRight // reduce 的反向操作
+every // 判定是否所有元素都符合指定条件
+some // 判断是否有一个或者多个符合执行条件
+```
+
+遍历就是一次性对数组中每一个元素进行查询和处理。
+
+我们希望遍历的过程是可控的（遍历的过程可停止，也可继续），手动控制遍历流程，即迭代的过程。
+
+产品迭代，人为控制的产品升级与扩展，迭代， manually control
+
+
+
+生成器和迭代器
+
+生成器是一个函数，生成器函数。迭代器是由生成器函数执行后返回的带有 next 方法的对象。
+
+生成器对迭代的控制是由 yield 关键字来执行的。
+
+
+
+```js
+function * generator () {
+  yield '姓名：月落';
+  yield '年龄：23';
+  yield '爱好：前端';
+  return '我爱 JavaScript';
+}
+
+const iterator = generator();
+
+console.log(iterator.next());
+// {value: "姓名：月落", done: false}
+```
+
+每次 yield 都会产出一个迭代器对象。
+
+
+
+```js
+const arr = ['姓名：月落', '年龄：23', '爱好：前端', '我爱 JavaScript'];
+
+function * gen (arr) {
+  for (var i = 0; i < arr.length; i++) {
+    yield arr[i];
+  }
+}
+
+const iterator = gen(arr);
+
+console.log(iterator.next());
+```
+
+
+
+```js
+const arr = ['姓名：月落', '年龄：23', '爱好：前端', '我爱 JavaScript'];
+
+function gen (arr) {
+  var nextIdx = 0;
+  
+  return {
+    next: function () {
+      return nextIdx < arr.length ? 
+        {
+          value: arr[nextIdx++], 
+          done: false
+        } : {
+        	value: arr[nextIdx++],
+          done: true
+      	}
+    }
+  }
+}
+
+const iterator = gen(arr);
+
+console.log(iterator.next());
+```
+
+## Array.prototype.entries
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+const _ = arr.entries();
+console.log(_); // 数组的迭代器对象
+
+
+```
+
