@@ -18,7 +18,7 @@ function bm (a, n, b, m) {
 
   let i = 0; // 表示主串与模式串对齐的第一个字符
 
-  while (i < n - m) {
+  while (i <= n - m) {
     let j;
 
     // 模式串从后往前匹配
@@ -38,3 +38,8 @@ function bm (a, n, b, m) {
   return -1;
 }
 
+const str = 'abda';
+const matchStr = 'a';
+
+
+console.log(bm(str, str.length, matchStr, matchStr.length));
