@@ -6532,3 +6532,210 @@ function bm (a, n, b, m) {
 
 我们不仅要在模式串中，查找跟好后缀匹配的另一个子串，还要在好后缀的后缀子串中，查找最长的能跟模式串前缀子串匹配的后缀子串。
 
+如果我们只记录刚刚定义的 suffix，实际上，只能处理规则的前半部分，也就是，在模式串中，查找和好后缀匹配的另一个子串。所以，除了 suffix 数组之外，我们还需要另外一个 boolean 类型的 prefix 数组，来记录模式串的后缀子串是否能匹配模式串的前缀子串。
+
+
+
+<img src="./images/match_25.jpg" style="zoom: 60%" />
+
+
+
+现在，我们来看下，如何来计算并填充这两个数组的值？
+
+我们拿下标从 0 到 i 的子串（i 可以是 0 到 m - 2）与整个模式串，求公共后缀子串。如果公共后缀子串的长度是 k，那我们就记录 suffix[k] = j（j 表示公共后缀子串的起始下标）。如果 j 等于 0，也就是说，公共后缀子串也是模式串的前缀子串，我们就来记录 prefix[k] = true。
+
+
+
+<img src="./images/match_26.jpg" style="zoom: 60%" />
+
+
+
+我们把 suffix 数组和 prefix 数组的计算过程，用代码实现出来：
+
+```js
+/**
+ * @param {array} b 
+ * @param {number} m 
+ * @param {array} suffix 
+ * @param {array} prefix 
+ */
+function generateGS (b, m, suffix, prefix) {
+  for (let i = 0; i < m; i++) {
+    suffix[i] = -1;
+    prefix[i] = false;
+  }
+
+  for (let i = 0; i < m - 1; i++) {
+    let j = i;
+    let k = 0; // 公共后缀子串长度
+
+    // 与 b [0, m - 1] 求公共后缀子串
+    while (j >= 0 && b[j] === b[m - 1 - k]) {
+      j--;
+      k++;
+      suffix[k] = j + 1; // j + 1 表示公共后缀子串在 b [0, i] 中的起始下标
+    }
+
+    if (j == -1) {
+      prefix[k] = true; // 如果公共后缀子串也是模式串的前缀子串
+    }
+  }
+}
+```
+
+有了这两个数组之后，我们现在来看，在模式串跟主串匹配的过程中，遇到不能匹配的字符，如何根据好后缀规则，计算模式串往后滑动的位数？
+
+假设好后缀的长度是 k。我们先拿好后缀，在 suffix 数组中查找其匹配的子串。如果suffix[k] 不等于 -1（-1 表示不存在匹配的子串），那我们就将模式串往后移动 j - suffix[k] + 1 位（j 表示一个坏字符对应的模式串的字符下标）。如果 suffix[k]  等于 -1，表示模式串中不存在另一个跟好后缀匹配的子串片段。我们可以用下面这条规则来处理。
+
+
+
+<img src="./images/match_27.jpg" style="zoom: 60%" />
+
+
+
+好后缀的后缀子串 b[r, m - 1] （其中，r 取值从 j + 2 到 m - 1） 的长度 k = m - r，如果 prefix[k] 等于 true，表示长度为 k 的后缀子串，有可匹配的前缀子串，这样我们可以把模式串后移 r 位。
+
+
+
+<img src="./images/match_28.jpg" style="zoom: 60%" />
+
+
+
+如果两条规则都没有找到可以匹配好后缀及其后缀子串的子串，我们就将整个模式串后移 m 位。
+
+
+
+<img src="./images/match_29.jpg" style="zoom: 60%" />
+
+
+
+至此，好后缀规则的代码实现我们也讲完了。代码如下。
+
+```js
+const SIZE = 256;
+
+function generateBC(b, m, bc) {
+  for (let i = 0; i < SIZE; i++) {
+    bc[i] = -1;
+  }
+  
+  for (let i = 0; i < m; i++) {
+    const ascii = b[i].charCodeAt();
+    bc[ascii] = i;
+  }
+}
+
+/**
+ * @param {array} b 
+ * @param {number} m 
+ * @param {array} suffix 
+ * @param {array} prefix 
+ */
+ function generateGS (b, m, suffix, prefix) {
+  for (let i = 0; i < m; i++) {
+    suffix[i] = -1;
+    prefix[i] = false;
+  }
+
+  for (let i = 0; i < m - 1; i++) {
+    let j = i;
+    let k = 0; // 公共后缀子串长度
+
+    // 与 b [0, m - 1] 求公共后缀子串
+    while (j >= 0 && b[j] === b[m - 1 - k]) {
+      j--;
+      k++;
+      suffix[k] = j + 1; // j + 1 表示公共后缀子串在 b [0, i] 中的起始下标
+    }
+
+    if (j == -1) {
+      prefix[k] = true; // 如果公共后缀子串也是模式串的前缀子串
+    }
+  }
+}
+
+function moveByGs (j, m, suffix, prefix) {
+  let k = m - 1 - j;
+
+  if (suffix[k] != -1) {
+    j - suffix[k] + 1;
+    return;
+  }
+
+  for (let r = j + 2; r <= m -1; r++) {
+    if (prefix[m - r]) {
+      return r;
+    }
+  }
+
+  return m;
+}
+
+function bm (a, n, b, m) {
+  const bc = new Array(SIZE); // 记录模式串每个字符最后出现位置
+
+  generateBC(b, m, bc); // 构建坏字符哈希表
+
+  const suffix = new Array(m);
+  const prefix = new Array(m);
+
+  generateGS(b, m, suffix, prefix);
+
+  let i = 0; // 表示主串与模式串对齐的第一个字符
+
+  while (i <= n - m) {
+    let j;
+
+    // 模式串从后往前匹配
+    for (j = m - 1; j >= 0; j--) {
+      if (a[i + j] != b[j]) break; // 坏字符对应模式串中的下标是 j
+    }
+
+    if (j < 0) {
+      return i; // 匹配成功，返回主串与模式串第一个匹配的字符的位置
+    }
+
+    const x = j - bc[a[i + j].charCodeAt()];
+    let y = 0;
+
+    // 如果存在好后缀
+    if (j < m - 1) {
+      y = moveByGs(j, m, suffix, prefix);
+    }
+
+    i = i + Math.max(x, y);
+  }
+
+  return -1;
+}
+```
+
+### BM 算法性能分析与优化
+
+我们先来分析 BM 算法的内存消耗。整个算法用到了额外的 3 个数组，其中 bc 数组的大小跟字符集大小有关，suffix 数组和 prefix 数组的大小跟模式串长度 m 有关。
+
+如果我们处理字符集很大的字符串匹配问题，bc 数组对内存的消耗就会比较多。因为好后缀和坏字符规则是独立的，如果我们运行的环境对内存要求苛刻，我们只使用好后缀规则，不使用坏字符规则，这样就可以避免 bc 数组过多的内存消耗。不过，单纯使用好后缀规则的 BM 算法效率就会下降一些。
+
+对于执行效率来说，我们可以先从时间复杂度的角度来分析。
+
+实际上，前面讲的 BM 算法只是一个处理版本。为了能容易理解，有些复杂的优化我们并没有做。基于目前这个版本，在极端情况下，预处理计算 suffix 数组、prefix 数组的性能会比较差。
+
+比如模式串是 aaaaaaa 这种包含很多重复的字符的模式串，预处理的时间复杂度就是 O(m^2)。当然，大部分情况下，时间复杂度不会这么差。关于如何优化这种极端情况下的时间复杂度退化，如果感兴趣，你可以自己研究一下。
+
+实际上，BM 算法的时间复杂度分析起来是非常复杂，这篇论文 “[A new proof of the linearity of the Boyer-Moore string searching algorithm](http://dl.acm.org/citation.cfm?id=1382431.1382552)” 证明了在最坏情况下，BM 算法的比较次数上限是 5n。这篇论文 “[Tight bounds on the complexity of the Boyer-Moore string matching algorithm](https://dl.acm.org/doi/10.5555/127787.127830)” 证明了在最坏情况下，BM 算法的比较次数上限是 3n。你可以自己阅读看看。
+
+### 总结
+
+BM 算法，一种比较复杂的字符串匹配算法。尽管复杂、难懂，但匹配的效率却很高，在实际的软件开发中，特别是文本编辑器中，应用比较多。
+
+BM 算法核心思想是，利用模式串本身的特点，在模式串中某个字符与主串不能匹配的时候，将模式串往后多滑动几位，以此来减少不必要的字符比较，提高匹配的效率。BM 算法构建的规则有两类，坏字符规则和好后缀规则。好后缀规则可以独立于坏字符规则使用。因为坏字符规则的实现比较耗内存，为了节省内存，我们可以只用好后缀规则来实现 BM 算法。
+
+### 技术拓展
+
+#### 字符串匹配算法应用场景
+
+你熟悉的编程语言中的查找函数，或者工具、软件中的查找功能，都是用了哪种字符串匹配算法呢？
+
+。。。
+
+## 二十二、字符串匹配：KMP 算法
