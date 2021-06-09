@@ -1,126 +1,122 @@
-import { btnStyle } from "../config";
-import { BtnStyleContext, LoginStatusContext } from '../config/context';
+// class Table extends React.Component {
+//   state = {
+//     headers: [
+//       'Name',
+//       'ID',
+//       'Age'
+//     ],
+//     info: [
+//       'yueluo',
+//       '2324324234',
+//       '23'
+//     ]
+//   }
 
-class Button extends React.Component {
-  render () {
-    return (
-      <BtnStyleContext.Consumer>
-        {
-          ({ style, doClick }) => (
-            <button
-              style={style}
-              onClick={ doClick }
-              { ...this.props }
-            />
-          )
-        }
-      </BtnStyleContext.Consumer>
-    );
+//   render () {
+//     return (
+//       <table border="1">
+//         <caption>Private Information</caption>
+//         <thead>
+//           <tr>
+//             <TableHeaders headers={ this.state.headers } />
+//           </tr>
+//         </thead>
+//         <tbody>
+//           <tr>
+//             <TableCells info={ this.state.info } />
+//           </tr>
+//         </tbody>
+//       </table>
+//     );
+//   }
+// }
+
+// class TableHeaders extends React.Component {
+//   render () {
+//     return (
+//       <>
+//         {
+//           this.props.headers.map((item, index) => (
+//             <th key={ index }>{ item }</th>
+//           ))
+//         }
+//       </>
+//     )
+//   }
+// }
+
+// class TableCells extends React.Component {
+//   render () {
+//     return (
+//       <>
+//         {
+//           this.props.info.map((item, index) => (
+//             <td key={index}>{ item }</td>
+//           ))
+//         }
+//       </>
+//     )
+//   }
+// }
+
+// class App extends React.Component {
+//   render () {
+//     return (
+//       <Table />
+//     );
+//   }
+// }
+
+class StaffList extends React.Component {
+  state = {
+    list: [
+      {
+        id: 1,
+        name: '小红',
+        desc: '研发'
+      },
+      {
+        id: 2,
+        name: '小李',
+        desc: '运维'
+      },
+      {
+        id: 3,
+        name: '小明',
+        desc: '财务'
+      },
+      {
+        id: 4,
+        name: '小华',
+        desc: '销售'
+      },
+    ]
   }
-}
 
-class Header extends React.Component {
   render () {
     return (
-      <LoginStatusContext.Consumer>
+      <dl>
         {
-          ({ status, login }) => (
-            <div className="header">
-              <h1>Header</h1>
-              <Button>Header({ status ? '已登录' : '未登录' })</Button>
-              <button onClick= {login }>登录/注销</button>
-            </div>
-          )
+          this.state.list.map(({ id, name, desc }) => (
+            // <>
+            //   <dl>{ id }: { name }</dl>
+            //   <dd>{ desc }</dd>
+            // </>
+            <React.Component key={ id }>
+              <dl>{ id }: { name }</dl>
+              <dd>{ desc }</dd>
+            </React.Component>
+          ))
         }
-      </LoginStatusContext.Consumer>
-    )
-  }
-}
-
-class Main extends React.Component {
-  render () {
-    return (
-      <LoginStatusContext.Consumer>
-        {
-          ({ status }) => (
-            <div className="main">
-              <h1>Main</h1>
-              <Button>Main({ status ? '已登录' : '未登录' })</Button>
-            </div>
-          )
-        }
-      </LoginStatusContext.Consumer>
-    )
-  }
-}
-
-class Footer extends React.Component {
-  render () {
-    return (
-      <LoginStatusContext.Consumer>
-        {
-          ({ status }) => (
-            <div className="footer">
-              <h1>Footer</h1>
-              <Button>Footer({ status ? '已登录' : '未登录' })</Button>
-            </div>
-          )
-        }
-      </LoginStatusContext.Consumer>
-    )
-  }
-}
-
-class Home extends React.Component {
-  render () {
-    return (
-      <div className="page-home">
-        <Header />
-        <hr />
-        <Main />
-        <hr />
-        <Footer />
-        <hr />
-      </div>
+      </dl>
     );
   }
 }
 
 class App extends React.Component {
-  state = {
-    style: btnStyle.success,
-    loginStatus: false,
-  }
-
-  doClick (e) {
-    console.log(e.target.textContent);
-  }
-
-  login () {
-    this.setState({
-      loginStatus: !this.state.loginStatus
-    });
-  }
-
   render () {
     return (
-      <div className="app">
-        <BtnStyleContext.Provider
-          value={{
-            style: this.state.style,
-            doClick: this.doClick
-          }}
-        >
-          <LoginStatusContext.Provider
-            value={{
-              status: this.state.loginStatus,
-              login: this.login.bind(this)
-            }}
-          >
-            <Home />
-          </LoginStatusContext.Provider>
-        </BtnStyleContext.Provider>
-      </div>
+      <StaffList />
     );
   }
 }
