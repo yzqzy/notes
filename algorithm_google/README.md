@@ -6977,3 +6977,104 @@ Trie 树，也叫 “字典树”。顾名思义，它是一个树形结构。�
 
 
 
+如果我们要查找的是字符串 “he” 呢？我们还用上面同样的方法，从根节点开始，沿着某条路径来匹配，如果所示，绿色的路径，是字符串 “he” 匹配的路径。但是，路径的最后一个节点 “e” 并不是红色的。也就是说，“he” 是某个字符串的前缀子串，但并不能完全匹配任何字符串。
+
+
+
+<img src="./images/trie_05.webp" style="zoom: 60%" />
+
+### 如何实现一棵 Trie 树
+
+Trie 树主要有两个操作，一个是将字符串集合构造成 Trie 树，这个过程可以分解为将一个字符串插入到 Trie 树的过程。另一个是在 Trie 树中查询一个字符串。
+
+了解 Trie 树的两个主要操作之后，我们来看下，如何存储一个 Trie 树？
+
+从前面的图中，我们可以看出，Trie 树是一个多叉树。我们知道，二叉树中，一个节点的左右子节点是通过两个指针来存储的。那对于多叉树来说，我们怎么存储一个节点的所有子节点的指针呢？
+
+这里先介绍一种存储方式，也是经典的存储方式，大部分数据结构和算法书籍中都是这么讲的。还记得我们前面讲到的散列表吗？借助散列表的思想，我们通过一个下标与字符一一映射的数组，来存储子节点的指针。
+
+
+
+<img src="./images/trie_06.webp" style="zoom: 60%" />
+
+
+
+假设我们的字符串只有从 a 到 z 这 26 个小写字母，我们在数组中下标为 0 的位置，存储指向子节点 a 的指针，下标为 1 的位置存储指向子节点 b 的指针，以此类推，下标为 25 的位置，存储的是指向的子节点 z 的指针。如果某个子节点不存在，我们就在对应的下标的位置存储 null。
+
+```js
+class TrieNode {
+ 	data;
+  children;
+}
+```
+
+当我们在 Trie 树中查找字符串的时候，我们就可以通过字符的 ASCII 码减去 “a” 的 ASCII 码，迅速找到匹配的子节点的指针。比如，d 的 ASCII 码减去 a 的 ASCII 码就是 3，那子节点 d 的指针就存储在数组中下标为 3 的位置中。
+
+```js
+class TrieNode {
+  data;
+  children = new Array(26);
+  isEndingChar = false;
+
+  constructor (data) {
+    this.data = data;
+  }
+}
+
+class Trie {
+  root = new TrieNode('/');
+
+  getCode (val) {
+    return val.charCodeAt();
+  }
+
+  insert (text) {
+    let p = this.root;
+
+    for (let i = 0; i < text.length; i++) {
+      const index = this.getCode(text[i]) - this.getCode('a');
+
+      if (p.children[index] == null) {
+        const newNode = new TrieNode(text[i]);
+        p.children[index] = newNode;
+      }
+
+      p = p.children[index];
+    }
+
+    p.isEndingChar = true;
+  }
+
+  find (pattern) {
+    let p = this.root;
+
+    for (let i = 0; i < pattern.length; i++) {
+      const index = this.getCode(pattern[i]) - this.getCode('a');
+
+      if (p.children[index] == null) {
+        return false;
+      }
+
+      p = p.children[index];
+    }
+
+    return p.isEndingChar;
+  }
+}
+```
+
+Trie 树的实现，你现在应该搞懂了。我们来看下，在 Trie 树中，查找某个字符串的时间复杂度是多少？
+
+如果要在一组字符串中，频繁地查询某些字符串，用 Trie 树会非常高效。构建 Trie 树的过程，需要扫描所有的字符串，时间复杂度是 O(n)（n 表示所有字符串的长度和）。但是一旦构建成功后，后续的查询操作会非常高效。
+
+每次查询时，如果要查询的字符串的字符串长度是 k，那我们只需要比对大约 k 个节点，就能完成查询操作。跟原本那组字符串的长度和个数没有任何关系。所以说，构建好 Trie 树后，在其中查找字符串的时间复杂度是 O(k)，k 表示要查找的字符串的长度。
+
+### Trie 树真的很耗内存吗
+
+Trie 树是一种非常独特的、高效的字符串匹配方法。但是，关于 Trie 树，你有没有听过这样一种说法：“Trie 树是非常耗内存的，用的是一种空间换时间的思路”。这是什么原因呢？
+
+我们在讲到 Trie 树的实现的时候，讲到用数组来存储一个节点的子节点的指针。如果字符串中包含从 a 到 z 这 26 个字符，那每个节点都要存储一个长度为 26 的数组，并且每个数组元素都要存储一个 8 字节指针（或者 4 字节，这个大小跟 CPU、操作系统、编译器等有关）。而且，即便一个节点只有很少的子节点，远小于 26 个，比如 3、4 个，我们也要维护一个长度为 26 的数组。
+
+Trie 树的本质是避免重复存储一组字符串的相同前缀子串，但是现在每个字符（对应一个节点）的存储远远大于 1 个字节。按照我们上面举的例子，数组长度为 26，每个元素是 8 字节，那每个节点就会额外需要 26 * 8 = 208 个字节。而且这还是只包含26 个字符的情况。
+
+如果
