@@ -123,6 +123,10 @@ LinkedList.prototype.get = function (idx) {
   return 0;
 }
 
+LinkedList.prototype.isEmpty = function () {
+  return this.size() == 0;
+}
+
 module.exports = {
   LinkedList
 }
