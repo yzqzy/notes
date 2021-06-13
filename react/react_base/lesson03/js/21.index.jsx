@@ -85,68 +85,50 @@ const fetchListData = (field) => {
   return axios(url);
 }
 
-function listHoc (WrapperComponent, fetchListData) {
-  return class extends React.Component {
-    state = {
-      listData: []
-    }
-
-    removeStudent (id) {
-      this.setState({
-        listData: this.state.listData.filter(item => item.id !== id)
-      });
-    }
-
-    likeTeacher (id) {
-      this.setState({
-        listData: this.state.listData.map(item => {
-          if (item.id === id) {
-            item.like += 1;
-          }
-          return item;
-        })
-      });
-    }
-
-    async componentDidMount () {
-      const result = await fetchListData(this.props.field);
-
-      this.setState({
-        listData: result.data
-      });
-    }
-
-    render () {
-      return (
-        <>
-          {
-            this.props.field === 'student' ? (
-              <WrapperComponent
-                data={ this.state.listData }
-                removeStudent={ this.removeStudent.bind(this) }
-              />
-            ) : (
-              <WrapperComponent
-                data={ this.state.listData }
-                likeTeacher={ this.likeTeacher.bind(this) }
-              />
-            )
-          }
-        </>
-      )
-    }
-  }
-}
-
-const StudentListHoc = listHoc(StudentList, fetchListData);
-const TeacherListHoc = listHoc(TeacherList, fetchListData);
-
 class App extends React.Component {
+  state = {
+    studentList: [],
+    teacherList: []
+  }
+
+  async componentDidMount () {
+    const studentData = await fetchListData('student');
+    const teacherData = await fetchListData('teacher');
+
+    this.setState({
+      studentList: studentData.data,
+      teacherList: teacherData.data
+    });
+  }
+
+  removeStudent (id) {
+    this.setState({
+      studentList: this.state.studentList.filter(item => item.id !== id)
+    });
+  }
+
+  likeTeacher (id) {
+    this.setState({
+      teacherList: this.state.teacherList.map(item => {
+        if (item.id === id) {
+          item.like += 1;
+        }
+        return item;
+      })
+    });
+  }
+
   render () {
     return (
       <div className="app">
-        <StudentListHoc field="student" />
-        <TeacherListHoc field="teacher" />
+        <StudentList
+          data={ this.state.studentList }
+          removeStudent={ this.removeStudent.bind(this) }
+        />
+        <TeacherList
+          data={ this.state.teacherList }
+          likeTeacher={ this.likeTeacher.bind(this) }
+        />
       </div>
     )
   }
