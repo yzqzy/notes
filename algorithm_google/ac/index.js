@@ -58,5 +58,36 @@ class Trie {
       }
     }
   }
+
+  match (text) {
+    const n = text.length;
+    let p = this.root;
+
+    for (let i = 0; i < n; i++) {
+      const idx = this.getCode(text[i]) - this.getCode('a');
+
+      while (p.children[idx] == null && p !== this.root) {
+        p = p.fail; // 失败指针发挥作用的地方
+      }
+
+      p = p.children[idx];
+
+      if (p == null) {
+        p = this.root; // 如果没有匹配的，从 root 开始重新匹配
+      }
+
+      let tmp = p;
+
+      // 打印出所有可以匹配的模式串
+      while (tmp != this.root) {
+        if (tmp.isEndingChar) {
+          let pos = i - tmp.length + 1;
+          console.log("匹配起始下标：" + pos + ";长度：" + tmp.length);
+        }
+
+        tmp = tmp.fail;
+      }
+    }
+  }
 }
 
