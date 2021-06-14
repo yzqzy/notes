@@ -312,12 +312,199 @@ console.log(iterator.next());
 
 ## Array.prototype.entries
 
+ES6 新增的内置方法。
+
 ```js
 const arr = [1, 2, 3, 4, 5];
 
-const _ = arr.entries();
-console.log(_); // 数组的迭代器对象
+const it = arr.entries();
+console.log(it); // 数组的迭代器对象
 
+console.log(it.next()); // {value: [0, 1], done: false}
+console.log(it.next()); // {value: [1, 2], done: false}
+console.log(it.next()); // {value: [2, 3], done: false}
+console.log(it.next()); // {value: [4, 4], done: false}
+console.log(it.next()); // {value: [5, 5], done: true}
+
+// 第一项为下标，第二项为数组元素
+```
+
+```js
+var o = {
+  a: 1,
+  b: 2,
+  c: 3
+}
+
+for (let k in o) {
+  console.log(k, o[k]);
+  // a 1
+  // b 2
+  // c 3
+}
 
 ```
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+for (let v of arr) {
+  console.log(v);
+  // 1
+  // 2
+  // 3
+  // 4
+  // 5
+}
+```
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+const it = arr.entries();
+
+for (let v of it) {
+  console.log(v);
+  // [0, 1]
+  // [1, 2]
+  // [2, 3]
+  // [3, 4]
+  // [4, 5]
+}
+
+for (let [i, v] of it) {
+  console.log(i, v);
+  // 0 1
+  // 1 2
+  // 2 3
+  // 3 4
+  // 4 5
+}
+```
+
+数组实际上就是一个特殊的对象，key 键名是一个从 0 开始有序递增的数字，按顺序对应数组的每一个元素。
+
+```js
+// 类数组
+
+const o = {
+  0: 1,
+  1: 2,
+  2: 3,
+  length: 3
+}
+
+// o is not iterable
+for (let v of o) {
+  console.log(v);
+}
+```
+
+```js
+const o = {
+  0: 1,
+  1: 2,
+  2: 3,
+  [Symbol.iterator]: Array.prototype[Symbol.iterator],
+  length: 3
+}
+
+for (let v of o) {
+  console.log(v);
+  // 1
+  // 2
+  // 3
+}
+```
+
+```js
+Object.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
+
+const o = {
+  0: 1,
+  1: 2,
+  2: 3,
+  length: 3
+}
+
+for (let v of o) {
+  console.log(v);
+  // 1
+  // 2
+  // 3
+}
+```
+
+```js
+const o = {
+  0: 1,
+  1: 2,
+  2: 3,
+  length: 3
+}
+
+for (let v of Array.from(o)) {
+  console.log(v);
+  // 1
+  // 2
+  // 3
+}
+```
+
+Array.from 也可以转换类数组为数组。
+
+
+
+```js
+var newArr = [];
+
+const arr = [1, 2, 3, 4, 5];
+
+const it = arr.entries();
+
+for (var i = 0; i < arr.length + 1; i++) {
+  var item = it.next();
+  
+  !item.done && (newArr[i] = item.value);
+}
+
+console.log(newArr); // [[0,1],[1,2],[2,3],[3,4],[4,5]]
+```
+
+
+
+二维数组排序
+
+```js
+const newArr = [
+  [56, 23],
+  [56, 34, 100, 1],
+  [123, 234, 12]
+];
+
+function sortArr (arr) {
+  const _it = arr.entries();
+  let _doNext = true;
+  	
+  while (_doNext) {
+    const _r = _it.next();
+    
+    if (!_r.done) {
+      _r.value[1].sort((a, b) => a - b);
+      _doNext = true;
+    } else {
+      _doNext = false;
+    }
+  }
+  
+  return arr;
+}
+
+console.log(sortArr(newArr));
+// [[23,56],[1,34,56,100],[12,123,234]]
+```
+
+## Array.prototype.fill
+
+
 
