@@ -114,6 +114,141 @@ https://nginx.org/en/download.html。
 
 ### 编译适合自己的 Nginx
 
+#### 下载 Nginx
+
+https://nginx.org
+
+download
+
+Mainline version、Stable version
+
+下载稳定版。
+
+```js
+wget https://nginx.org/download/nginx-1.20.1.tar.gz
+tar -xzf nginx-1.20.1.tar.gz
+cd nginx-1.20.1
+```
+
+#### 目录介绍
+
+<img src="./images/contents.png" />
+
+* auto 
+  * cc 编译
+  * lib
+  * os
+  * types
+* CHANGES：Nginx 每个版本中提供提供的特性和修复的 BUG
+* CHANGES.ru：俄罗斯版本的 CHANGEES 文件，作者是俄罗斯的
+* conf 示例文件
+* configure：脚本，生成中间文件，执行编译前的必备动作
+* contrib：提供脚本和 VIM 工具
+  * cp -r contrib/vim/* ～/.vim/	可以使 vim 支持 nginx 语法
+* html：提供标准 HTML 文件，500 错误文件与默认 nginx 欢迎界面
+* main：linux 对 nginx 的帮助文件
+* src：Nginx 源代码
+
+#### Configure
+
+```js
+./configure --help | more // 查看帮助文件
+```
+
+默认参数编译
+
+```js
+./configure --prefix=/data/nginx
+```
+
+<img src="./images/configura.png"/>
+
+#### 中间文件介绍
+
+<img src="./images/contents02.png" />
+
+objs
+
+* ngx_modules.c：决定 nginx 编译时有哪些模块会被编译进 nginx
+
+* src
+
+#### 编译
+
+```js
+make // 编译
+```
+
+编译结束后，会在 objs 目录下生成大量二进制文件。
+
+> c 语言编译时生成的所有的中间文件都会放到 src 目录
+
+nginx 版本升级时，需要将 objs 目录下的文件拷贝到安装目录中。
+
+如果我们使用动态模块，动态模块会生成 so 动态文件，也会放到 objs 目录下。
+
+#### 安装
+
+```js
+make install // 首次安装时可以使用此命令
+```
+
+安装完成后可以去指定目录查看。
+
+<img src="./images/install.png"/>
+
+sbin：nginx 二进制文件
+
+config：和源代码中配置文件相同，决定 nginx 功能文件
+
+logs：日志文件
+
+### Nginx 配置文件的通用语法介绍
+
+#### 基础语法
+
+* 配置文件由指令与指令块组成
+* 每条指令以 ；分号结尾，指令与参数间以空格符号分割
+* 指令块以 {} 大括号将多条指令组织在一起
+* include 语句允许组合多个配置文件以提升可维护性
+* 使用 # 符号添加注释，提高可读性
+* 使用 $ 符号使用变量
+* 部分指令的参数支持正则表达式
+
+#### 配置参数：时间单位
+
+```js
+ms milliseconds
+d days
+s seconds
+w weeks
+m minutes
+M months, 30 days
+h hours
+y years, 365 days
+```
+
+#### 配置参数：空间单位
+
+```js
+bytes
+k/K kilobytes
+m/M megabytes
+g/G gigabytes
+```
+
+#### http 配置的指令块
+
+http：表示内部所有执行由 http 解析并执行
+
+server：定义域名或者一组域名
+
+location：url 表达式
+
+upstream：上游服务，nginx 需要与 tomcat 等其他服务交互时，我们可以定义 upstream
+
+### Nginx 命令行：重载、热部署、日志切割
+
 
 
 ## 二、Nginx 架构基础
