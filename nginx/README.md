@@ -249,6 +249,63 @@ upstream：上游服务，nginx 需要与 tomcat 等其他服务交互时，我�
 
 ### Nginx 命令行：重载、热部署、日志切割
 
+#### linux 命令行
+
+* 格式：nginx -s reload
+* 帮助：-?	-h
+* 使用指定的配置文件：-c
+* 指定配置指令：-g
+* 指定运行目录：-p
+* 发送信号：-s
+  * 立刻停止服务：stop
+  * 优雅的停止服务：quit
+  * 重载配置文件：reload
+  * 重新开始记录日志文件：reopen
+* 测试配置文件是否有语法错误：-t、-T
+* 打印 nginx 的版本信息、编译信息等：-v、-V
+
+#### 重载配置文件
+
+```js
+./nginx -s reload // 不停止服务的情况下，重新载入配置文件
+```
+
+#### 热部署
+
+```js
+ps -ef | grep nginx // 查看进程状况
+```
+
+```js
+// 备份现有二进制文件
+cp nginx nginx.old
+
+// 替换正在运行的二进制文件
+cp -r nginx /data/nginx/sbin/ -f 
+
+// 向 master 进程发送信号
+kill -USR2 13195
+
+// 向老的进程发送关闭信号（关闭 work 进程，老的 master 进程还可以重新拉起 worker 进程）
+kill -WINCH 13195
+```
+
+#### 日志切割
+
+```js
+mv blog.log blog.bak.log
+
+./nginx -s reopen
+```
+
+```js
+// bash 脚本
+
+crontab -l
+```
+
+### Nginx 搭建静态资源 Web 服务器
+
 
 
 ## 二、Nginx 架构基础
