@@ -7705,3 +7705,95 @@ function merge (a, p, q, r) {
 
 ## 二十七、回溯算法
 
+深度优先搜索算法利用的是回溯算法思想。这个算法思想非常简单，但是应用却十分广泛。它除了用来指导像深度优先搜索这种经典的算法设计之外，还可以用在很多的软件开发场景中，比如正则表达式匹配、编译原理的语法分析等。
+
+除此之外，很多经典问题都可以用回溯算法来解决，比如数独、八皇后、0-1 背包、图的着色、旅行商问题、全排列等等。
+
+### 如何理解回溯算法
+
+贪心算法每次面对岔路口的时候，都作出看起来最优的选择，期望这一组选择可以使得我们的人生达到 “最优”。但是，前面我们也说过，贪心算法并不一定能得到最优解。那有什么办法能得到最优解呢？答案就是回溯算法。
+
+笼统地讲，回溯算法很多时候都应用在 “搜索” 这类问题上。不过这里说的搜索，并不是狭义的指我们前面讲过的图的搜索算法，而是在一组可能的解中，搜索满足期望的解。
+
+回溯的处理思想，有点类似于枚举搜索。我们枚举所有的解，找到满足期望的解。为了有规律地枚举所有思想的解，避免遗漏和重复，我们把问题求解的过程分为多个阶段。每个阶段，我们都会面对一个岔路口，我们先随意选一条路走，当发现这条路走不通的时候（不符合预期的解），就回退到上一个岔路口，另选一种走法继续走。
+
+这里举一个经典的回溯例子，八皇后问题。
+
+我们有一个 8*8 的棋盘，希望往里放 8 个棋子（皇后），每个棋子所在的行、列、对角线都不能有另一个棋子。你可以看我画的图，第一幅图是满足条件的一种做法，第二幅图是不满足条件的。八皇后问题就是期望找到所有满足这种要求的放棋子的方式。
+
+
+
+<img src="./images/recall_01.webp" style="zoom: 60%" />
+
+
+
+我们把这个问题划分成 8 个阶段，依次将 8 个棋子放到第一行、第二行、第三行 ... 第八行。在放置的过程中，我们不停地检查当前做法，是否满足要求。如果满足，则跳到下一行继续放置棋子；如果不满足，那就再换一种放法，继续尝试。
+
+回溯算法非常适合用递归代码实现。
+
+```js
+ // 全局或成员变量，下标表示行，值表示 queen 存储在哪一列
+let result = new Array(8);
+
+function cal8queens (row) {
+  if (row === 8) {
+    printQueens(result);
+    return;
+  }
+
+  // 每一行都有 8 种方法
+  for (let column = 0; column < 8; column++) {
+    // 有些方法不满足要求
+    if (isOk(row, column)) {
+      // 第 row 行的棋子放到 column 列
+      result[row] = column;
+      // 考察下一行
+      cal8queens(row + 1);
+    }
+  }
+}
+
+// 判断 row 行 column 列放置是否合适
+function isOk (row, column) {
+  let leftup = column - 1,
+      rightup = column + 1;
+
+  // 逐行往上考察每一行
+  for (let i = row - 1; i >= 0; i--) {
+    if (result[i] === column) return false; // 第 i 行的 column 列有棋子吗？
+
+    if (leftup > 0) {
+      // 考察左上对角线：第 i 行 leftup 列有棋子吗？
+      if (result[i] === leftup) return false;
+    }
+    if (rightup < 8) {
+      // 考察右上对角线：第 i 行 rightup 列有棋子吗？
+      if (result[i] === rightup) return false;
+    }
+
+    leftup--;
+    rightup++;
+  }
+
+  return true;
+}
+
+function printQueens (result) {
+  for (let row = 0; row < 8; row++) {
+    for (let column = 0; column < 8; column++) {
+      if (result[row] == column) {
+        process.stdout.write("Q ")
+      } else {
+        process.stdout.write("* ");
+      }
+    }
+    console.log(" ");
+  }
+  console.log(" ");
+}
+
+cal8queens(0); // 调用
+```
+
+### 回溯算法的经典应用
+
