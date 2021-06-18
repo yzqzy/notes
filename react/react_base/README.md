@@ -5095,3 +5095,378 @@ HOC 更加关注逻辑与状态的管理，参数组件的逻辑与状态的订�
 参数组件主要关注视图与状态。
 
 ## Refs的应用场景与选用思考
+
+Refs 允许访问我们的真实 DOM。
+
+React 数据流，通过 props 实现父子组件的交互，Refs 允许用于强制修改子组件。
+
+### 管理 input 焦点
+
+通过一个按钮，清空 input value，input 聚焦。
+
+```jsx
+class MyInput extends React.Component {
+  state = {
+    inputValue: ''
+  }
+
+  constructor (props) {
+    super(props);
+
+    this.inputRef = React.createRef();
+  }
+
+  inputOperating () {
+    const oInput = this.inputRef.current;
+
+    oInput.focus();
+
+    this.setState({
+      inputValue: ''
+    });
+  }
+
+  changeInputVal (e) {
+    this.setState({
+      inputValue: e.target.value
+    });
+  }
+
+  render () {
+    return (
+      <div>
+        <input
+          type="text"
+          ref={ this.inputRef }
+          value={ this.state.inputValue }
+          onChange={ this.changeInputVal.bind(this) }
+        />
+        <button onClick={ this.inputOperating.bind(this) }>Button</button>
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyInput />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+### 媒体管理（播放、暂停）
+
+```jsx
+class MyVideo extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.videoRef = React.createRef();
+  }
+
+  videoPlay () {
+    this.videoRef.current.play();
+  }
+
+  videoPause () {
+    this.videoRef.current.pause();
+  }
+
+  render () {
+    return (
+      <div>
+        <video
+          ref={ this.videoRef }
+          src="https://data.yueluo.club/react"
+          width="300"
+          height="200"
+          controls
+        />
+        <div>
+          <button onClick={ this.videoPlay.bind(this) }>Play</button>
+          <button onClick={ this.videoPause.bind(this) }>Pause</button>
+        </div>
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyVideo />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+### 强制动画
+
+```jsx
+
+class MyBox extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.boxRef = React.createRef();
+  }
+
+  boxExtend () {
+    const oBox = this.boxRef.current;
+
+    oBox.style.width = '500px';
+    oBox.style.height = '500px';
+  }
+
+  render () {
+    return (
+      <>
+        <div
+          ref={ this.boxRef }
+          style={{
+            width: 200,
+            height: 200,
+            backgroundColor: 'orange',
+            transition: 'all 1s'
+          }}
+        ></div>
+        <button onClick={ this.boxExtend.bind(this) }>Extend</button>
+      </>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyBox />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+### 集成 DOM 库
+
+使用 jQuery。
+
+```jsx
+class MyBox2 extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.boxRef = React.createRef();
+  }
+
+  boxExtend () {
+    const $box = $(this.boxRef.current);
+
+    $box.animate({
+      width: '500px',
+      height: '500px'
+    });
+  }
+
+  render () {
+    return (
+      <>
+        <div
+          ref={ this.boxRef }
+          style={{
+            width: 200,
+            height: 200,
+            backgroundColor: 'orange',
+
+          }}
+        ></div>
+        <button onClick={ this.boxExtend.bind(this) }>Extend</button>
+      </>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyBox2 />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+### 模态框打开、关闭（bad case）
+
+```jsx
+class Modal extends React.Component {
+  modalRef = React.createRef();
+
+  constructor (props) {
+    super(props);
+
+    if (props.onRef) {
+      props.onRef(this);
+    }
+  }
+
+  open () {
+    this.modalRef.current.style.display = 'block';
+  }
+
+  close () {
+    this.modalRef.current.style.display = 'none';
+  }
+
+  render () {
+    return (
+      <div
+        ref={ this.modalRef }
+        style={{
+          width: 300,
+          border: '1px solid #000',
+          display: 'none'
+        }}
+      >
+        <h1>This is a Modal</h1>
+        <p>This is a super Modal.</p>
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  modalOpen (status) {
+    switch (status) {
+      case 'open':
+        this.modal.open();
+        break;
+      case 'close':
+        this.modal.close();
+        break;
+      default:
+        break;
+    }
+  }
+
+  render () {
+    return (
+      <div>
+        <Modal onRef={ ref => (this.modal = ref) } />
+        <div>
+          <button onClick={ () => this.modalOpen('open') }>Open</button>
+          <button onClick={ () => this.modalOpen('close') }>Close</button>
+        </div>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+没有必要使用 ref 操作模态框展示。我们可以用状态来操作组件的显示或者隐藏。
+
+```jsx
+class Modal extends React.Component {
+  // modalRef = React.createRef();
+
+  // constructor (props) {
+  //   super(props);
+
+  //   if (props.onRef) {
+  //     props.onRef(this);
+  //   }
+  // }
+
+  // open () {
+  //   this.modalRef.current.style.display = 'block';
+  // }
+
+  // close () {
+  //   this.modalRef.current.style.display = 'none';
+  // }
+
+  render () {
+    return (
+      <div
+        // ref={ this.modalRef }
+        style={{
+          width: 300,
+          border: '1px solid #000',
+          // display: 'none'
+          display: this.props.isOpen ? 'block' : 'none'
+        }}
+      >
+        <h1>This is a Modal</h1>
+        <p>This is a super Modal.</p>
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  state = {
+    isOpen: false
+  };
+
+  modalOpen (status) {
+    // switch (status) {
+    //   case 'open':
+    //     this.modal.open();
+    //     break;
+    //   case 'close':
+    //     this.modal.close();
+    //     break;
+    //   default:
+    //     break;
+    // }
+    this.setState({
+      isOpen: status === 'open' ? true : false
+    });
+  }
+
+  render () {
+    return (
+      <div>
+        {/* <Modal onRef={ ref => (this.modal = ref) } /> */}
+        <Modal isOpen={ this.state.isOpen } />
+        <div>
+          <button onClick={ () => this.modalOpen('open') }>Open</button>
+          <button onClick={ () => this.modalOpen('close') }>Close</button>
+        </div>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+## React.createRef 用法与细节分析
+
