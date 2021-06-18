@@ -89,3 +89,44 @@ function f (i, cw, items, n, w) {
     f(i + 1, cw + items[i], items, n, w);
   }
 }
+
+
+
+
+
+class Pattern {
+  matched = false;
+  pattern; // 正则表达式
+  plen; // 正则表达式长度
+
+  constructor (pattern, plen) {
+    this.pattern = pattern;
+    this.plen = plen;
+  }
+
+  match (text, tlen) {
+    this.matched = false;
+    this.rematch(0, 0, text, tlen);
+    return this.matched;
+  }
+
+  rematch (ti, pj, text, tlen) {
+    if (this.matched) return; // 已经匹配，不再递归
+
+    if (pj == this.plen) { // 正则表达式到结尾
+      if (ti == tlen) this.matched = true; // 文本串到结尾
+      return;
+    }
+
+    if (this.pattern[pj] == '*') { // * 匹配任意个字符
+      for (let k = 0; k <= tlen - ti; k++) {
+        this.rematch(ti + k, pj + 1, text, tlen);
+      }
+    } else if (this.pattern[pj] == '?') { // 匹配 0 个或者 1 个字符
+      this.rematch(ti, pj + 1, text, tlen);
+      this.rematch(ti + 1, pj + 1, text, tlen);
+    } else if (ti < tlen && this.pattern[pj] === text[ti]) { // 纯字符匹配
+      this.rematch(ti + 1, pj + 1, text, tlen);
+    }
+  }
+}
