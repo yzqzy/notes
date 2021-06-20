@@ -36,3 +36,21 @@ function f (i, cw) {
     f(i + 1, cw + weight[i]); // 选择装第 i 的物品
   }
 }
+
+
+
+let minDist = Number.MAX_VALUE;
+
+function minDistBT (i, j, dist, w, n) {
+  if (i == n && j == n) {
+    if (dist < minDist) minDist = dist;
+    return;
+  }
+
+  if (i < n) {
+    minDistBT(i + 1, j, dist + w[i][j], w, n);
+  }
+  if (j < n) {
+    minDistBT(i, j + 1, dist + w[i][j], w, n);
+  }
+}
