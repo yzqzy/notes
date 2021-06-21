@@ -149,3 +149,34 @@ function double11advance (items, n, w) {
 
   if (j != 0) console.log(items[0]);
 }
+
+
+
+function minDistDp (matrix, n) {
+  const states  = new Array(n).fill(new Array(n));
+
+  let sum = 0;
+
+  for (let j = 0; j < n; j++) {
+    sum += matrix[0][j];
+    states[0][j] = sum;
+  }
+
+  sum = 0;
+
+  for (let i = 0; i < n; i++) {
+    sum += matrix[i][0];
+    states[i][0] = sum;
+  }
+
+  for (let i = 1; i < n; i++) {
+    for (let j = 1; j < n; j++) {
+      states[i][j] = matrix[i][j] + Math.min(states[i][j - 1], states[i - 1][j]);
+    }
+  }
+
+  return states[n - 1][ - 1];
+}
+
+
+

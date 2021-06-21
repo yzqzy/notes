@@ -54,3 +54,43 @@ function minDistBT (i, j, dist, w, n) {
     minDistBT(i, j + 1, dist + w[i][j], w, n);
   }
 }
+
+
+
+
+const matrix = [
+  [1, 3, 5, 9],
+  [2, 1, 3, 4],
+  [5, 2, 6, 7],
+  [6, 8, 4, 3]
+];
+const n = 4;
+const men = new Array(4).fill(new Array(4));
+
+function minDist (i, j) { // minDist(n - 1, n - 1)
+  if (i == 0 && j == 0) {
+    return mem[i][j];
+  }
+
+  if (men[i][j] > 0) {
+    return men[i][j];
+  }
+
+  let minLeft = Number.MAX_VALUE;
+
+  if (j - 1 >= 0) {
+    minLeft = minDist(i, j - 1);
+  }
+
+  let minUp = Number.MAX_VALUE;
+
+  if (i - 1 >= 0) {
+    minUp = minDist(i - 1, j);
+  }
+
+  const currMinDist = matrix[i][j] + Math.min(minLeft, minUp);
+
+  mem[i][j] = currMinDist;
+
+  return currMinDist;
+}

@@ -5470,3 +5470,117 @@ ReactDOM.render(
 
 ## React.createRef 用法与细节分析
 
+createRef => React.createRef();
+
+通过 createRef 可以创建一个 ref 对象，通过元素的 ref 属性可以附加到 React 元素上。
+
+一般通过构造器给 this 上的属性赋值 ref，方便整个组件使用。
+
+```jsx
+class Test extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.divRef = React.createRef();
+  }
+
+  render () {
+    return (
+      <div ref={ this.divRef } >{ this.props.children }</div>
+    )
+  }
+}
+```
+
+ref 只要传递 React 元素中，就可以利用 ref 的 current 属性访问到真实 DOM 节点。
+
+```jsx
+class Test extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.divRef = React.createRef();
+  }
+
+  render () {
+    return (
+      <div ref={ this.divRef } >{ this.props.children }</div>
+    );
+  }
+}
+
+class App extends React.Component {
+  state = {
+    text: 'Hello Ref'
+  }
+
+  render() {
+    return (
+      <Test>
+        { this.state.text }
+      </Test>
+    );
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
+ref 在 componentDidMount 和 componentDidUpdate 触发前更新。
+
+
+
+ref 有不同的使用方式
+
+* ref - html 元素上，current 就是真实 DOM 节点
+* ref - class 组件上，current 指向组件的实例
+
+```jsx
+class App extends React.Component {
+  state = {
+    text: 'Hello Ref'
+  }
+
+  constructor (props) {
+    super(props);
+
+    this.testRef = React.createRef();
+  }
+
+  componentDidMount () {
+    console.log(this.testRef);
+  }
+
+  render() {
+    return (
+      <Test
+        ref={ this.testRef }
+      >
+        { this.state.text }
+      </Test>
+    );
+  }
+}
+```
+
+* ref - 函数组件（没有实例），createRef 附加不到组件上，无法使用，可以使用 React.useRef 。
+
+```jsx
+function Test2 () {
+  const divRef = React.useRef(null);
+
+  React.useEffect(() => {
+    console.log(divRef);
+  }, []);
+
+  return (
+    <div ref={ divRef }>Hello, Function Ref</div>
+  );
+}
+```
+
+## Refs 转发机制与在高阶组件中的使用
+
