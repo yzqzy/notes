@@ -5584,3 +5584,164 @@ function Test2 () {
 
 ## Refs 转发机制与在高阶组件中的使用
 
+```jsx
+class MyInput extends React.Component {
+  render () {
+    return (
+      <input type="text" placeholder="请填写..." />
+    )
+  }
+}
+
+class App extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.myInputRef = React.createRef();
+  }
+
+  componentDidMount () {
+    console.log(this.myInputRef);
+  }
+
+  inputOperate () {
+    
+  }
+
+  render () {
+    return (
+      <div>
+        <MyInput ref={ this.myInputRef } />
+        <button onClick={ this.inputOperate.bind(this) }>Click</button>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+如何将子节点的 ref 暴露给父组件。
+
+16.3 以上，可以使用 Refs 转发，将 ref 自动的通过组件传递给子组件。
+
+```js
+React.forwardRef((props, ref) => {
+  return React 元素;
+})
+```
+
+```jsx
+// 3. 通过 forwardRef 向 input 转发 Ref 属性
+const MyInput = React.forwardRef((props, ref) => (
+  // 5. ref 参数只能用 forwardRef 定义的组件内可接收 
+  <input type="text" ref={ ref } placeholder={ props.placeholder } />
+));
+
+class App extends React.Component {
+  constructor (props) {
+    super(props);
+
+    // 1. 创建 Ref 对象
+    this.myInputRef = React.createRef();
+  }
+
+  componentDidMount () {
+    // 4. myInputRef.current 指向 input DOM 节点
+    console.log(this.myInputRef);
+  }
+
+  inputOperate () {
+    const oInput = this.myInputRef.current;
+
+    oInput.value = '';
+    oInput.focus();
+  }
+
+  render () {
+    return (
+      <div>
+        {/* 2. 组件赋值引用 */}
+        <MyInput ref={ this.myInputRef } placeholder="请填写" />
+        <button onClick={ this.inputOperate.bind(this) }>Click</button>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+获取高阶组件实例
+
+```jsx
+class MyInput extends React.Component {
+  render () {
+    return (
+      <input type="text" placeholder={ this.props.placeholder } />
+    )
+  }
+}
+
+function InputHoc (WrapperComponent) {
+  class Input extends React.Component {
+    render () {
+      // 容器组件内部获取 ref 属性
+      const { forwardRef, ...props } = this.props;
+
+      return (
+        // 将 forwardedRef 传递给参数组件
+        <WrapperComponent ref={ forwardRef } { ...props } />
+      )
+    }
+  }
+
+  // 向子组件传递 ref
+  function forwardRef (props, ref) {
+    return <Input { ...props } forwardRef={ ref } />;
+  }
+
+  forwardRef.displayName = 'Input - ' + WrapperComponent.name;
+
+  return React.forwardRef(forwardRef);
+}
+
+const MyInputHoc = InputHoc(MyInput);
+
+class App extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.inputRef = React.createRef();
+  }
+
+  componentDidMount () {
+    console.log(this.inputRef);
+  }
+
+  render () {
+    return (
+      // 用 ref 接收我们转发的 ref
+      <MyInputHoc ref={ this.inputRef } />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+## Refs 转发机制与各种方式
+
+
+
