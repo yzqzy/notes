@@ -5743,5 +5743,172 @@ ReactDOM.render(
 
 ## Refs 转发机制与各种方式
 
+16.3 使用 React.forwardRef 转发。
+
+
+
+16.2 及以下使用下面方法：
+
+```jsx
+class MyInput extends React.Component {
+  render () {
+    return (
+      <input type="text" ref={ this.props.inputRef } />
+    );
+  }
+}
+
+class App extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.inputRef = React.createRef();
+  }
+
+  componentDidMount () {
+    console.log(this.inputRef);
+  }
+
+  render () {
+    return (
+      <MyInput inputRef={ this.inputRef } />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+回调 Ref 的方法：
+
+```jsx
+class MyInput extends React.Component {
+  constructor (props) {
+    super(props);
+
+    this.myInput = null;
+  }
+
+  setMyInput (el) {
+    this.myInput = el;
+  }
+
+  focuesInput () {
+    this.myInput.value = null;
+    this.myInput.focus();
+  }
+
+  render () {
+    return (
+      <div>
+        <input type="text" ref={ this.setMyInput.bind(this) } />
+        <button onClick={ this.focuesInput.bind(this) }>Click</button>
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyInput />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+```jsx
+
+class MyInput extends React.Component {
+  render () {
+    return (
+      <div>
+        <input type="text" ref={ this.props.inputRef } />
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  componentDidMount () {
+    console.log(this.oInput);
+  }
+
+  render () {
+    return (
+      <MyInput inputRef={ el => this.oInput = el } />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+已废弃的方式
+
+```jsx
+class MyInput extends React.Component {
+  componentDidMount () {
+    console.log(this.refs);
+  }
+
+  render () {
+    return (
+      <div>
+        <input type="text" ref="inputRef" />
+      </div>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyInput />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+string Refs 依赖当前组件实例下面的 refs 集合里的 ref。必须需要 React 保持追踪当前正在渲染的组件，this 无法确定。
+
+会导致 React 获取 ref 时会比较慢。不能在 render 中工作（render 中访问不到 ref）。不能组合，只能有一个 ref。
+
+
+
+不建议使用 string ref 和 callback ref 的方式。建议使用 React.createRef 和 React.forwardRef。
+
+不要随时把 React 版本升级到最高，需要按照需求，对项目进行评估。
+
+小版本升级可能会对当前项目中的模块造成不必要影响，纵观整个项目要不要改成高版本的必要性。
+
+## Jsx 深度剖析与使用技巧
+
+
+
+
+
+
+
 
 
