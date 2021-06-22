@@ -6,9 +6,9 @@
 * [BOM](https://git.yueluo.club/heora/notes/src/master/bom) 已完成
 * [内置对象](https://git.yueluo.club/heora/notes/src/master/Built_in_objects) 更新中...
 * [知识碎片](https://git.yueluo.club/heora/notes/src/master/fragment) 已完成
-* [工具函数](https://git.yueluo.club/heora/notes/src/master/utils) 暂停中...
-* [HTML5](https://git.yueluo.club/heora/notes/src/master/html5) 暂停中...
-* [CSS3](https://git.yueluo.club/heora/notes/src/master/css3) 暂停中...
+* [工具函数](https://git.yueluo.club/heora/notes/src/master/utils) 已完成
+* [HTML5](https://git.yueluo.club/heora/notes/src/master/html5) 已完成
+* [CSS3](https://git.yueluo.club/heora/notes/src/master/css3) 已完成
 * 网络
   + [网络基础](https://git.yueluo.club/heora/notes/src/master/network/base) 已完成
   + [网络进阶](https://git.yueluo.club/heora/notes/src/master/network/plus) 暂停中...
@@ -26,7 +26,7 @@
   + [自定义loader、plugins](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
   + [webpack源码实现](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
 * vue
-  + [vue基础](https://git.yueluo.club/heora/notes/src/master/vue/vue_base) 暂停中...
+  + [vue基础](https://git.yueluo.club/heora/notes/src/master/vue/vue_base) 已废弃
   + [vue3自定义渲染器](https://git.yueluo.club/heora/notes/src/master/vue/vue3_renderer) 已完成
   + [vue源码阅读](https://git.yueluo.club/heora/notes/src/master/vue/vue_source) 已完成
   + [vue源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vue_source_design) 已完成
@@ -37,7 +37,7 @@
   + [vuex源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vuex) 已完成
   + [vue-cli源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vue_cli) 已完成
   + [vue-ssr源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vue_ssr) 已完成
-* [Electron](https://git.yueluo.club/heora/notes/src/master/electron) 暂停中...
+* [Electron](https://git.yueluo.club/heora/notes/src/master/electron) 已完成
 * react
   + [react基础](https://git.yueluo.club/heora/notes/src/master/react/react_base) 更新中...
   + [react进阶](https://git.yueluo.club/heora/notes/src/master/react/react_plus) 已废弃
