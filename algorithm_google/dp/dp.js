@@ -180,3 +180,70 @@ function minDistDp (matrix, n) {
 
 
 
+
+function lwstDP(a, n, b, m) {
+  const minDist = new Array(n).fill(new Array(m));
+
+  for (let j = 0; j < m; ++j) { // 初始化第0行:a[0..0]与b[0..j]的编辑距离
+    if (a[0] == b[j]) minDist[0][j] = j;
+    else if (j != 0) minDist[0][j] = minDist[0][j-1]+1;
+    else minDist[0][j] = 1;
+  }
+  for (let i = 0; i < n; ++i) { // 初始化第0列:a[0..i]与b[0..0]的编辑距离
+    if (a[i] == b[0]) minDist[i][0] = i;
+    else if (i != 0) minDist[i][0] = minDist[i-1][0]+1;
+    else minDist[i][0] = 1;
+  }
+  for (let i = 1; i < n; ++i) { // 按行填表
+    for (let j = 1; j < m; ++j) {
+      if (a[i] == b[j]) minDist[i][j] = min(
+          minDist[i-1][j]+1, minDist[i][j-1]+1, minDist[i-1][j-1]);
+      else minDist[i][j] = min(
+          minDist[i-1][j]+1, minDist[i][j-1]+1, minDist[i-1][j-1]+1);
+    }
+  }
+  return minDist[n-1][m-1];
+}
+
+function min(x, y, z) {
+  let minv = Number.MAX_VALUE;
+  if (x < minv) minv = x;
+  if (y < minv) minv = y;
+  if (z < minv) minv = z;
+  return minv;
+}
+
+
+
+
+
+function lcs (a, n, b, m) {
+  const maxlcs = new Array(n).fill(new Array(m));
+  for (let j = 0; j < m; ++j) {//初始化第0行：a[0..0]与b[0..j]的maxlcs
+    if (a[0] == b[j]) maxlcs[0][j] = 1;
+    else if (j != 0) maxlcs[0][j] = maxlcs[0][j-1];
+    else maxlcs[0][j] = 0;
+  }
+  for (let i = 0; i < n; ++i) {//初始化第0列：a[0..i]与b[0..0]的maxlcs
+    if (a[i] == b[0]) maxlcs[i][0] = 1;
+    else if (i != 0) maxlcs[i][0] = maxlcs[i-1][0];
+    else maxlcs[i][0] = 0;
+  }
+  for (let i = 1; i < n; ++i) { // 填表
+    for (let j = 1; j < m; ++j) {
+      if (a[i] == b[j]) maxlcs[i][j] = max(
+          maxlcs[i-1][j], maxlcs[i][j-1], maxlcs[i-1][j-1]+1);
+      else maxlcs[i][j] = max(
+          maxlcs[i-1][j], maxlcs[i][j-1], maxlcs[i-1][j-1]);
+    }
+  }
+  return maxlcs[n-1][m-1];
+}
+
+function max (x, y, z) {
+  let maxv = Number.MIN_VALUE;
+  if (x > maxv) maxv = x;
+  if (y > maxv) maxv = y;
+  if (z > maxv) maxv = z;
+  return maxv;
+}

@@ -94,3 +94,29 @@ function minDist (i, j) { // minDist(n - 1, n - 1)
 
   return currMinDist;
 }
+
+
+
+const a = "mintcmu".split(" ");
+const b = "mtacnu".split(" ");
+const n = 6;
+const m = 6;
+
+let minDist = Number.MAX_VALUE;
+
+function lwstBT (i, j, edist) {
+  if (i == n || j == m) {
+    if (j < n) edist += (n - i);
+    if (j < m) edist += (m - j);
+    if (edist < minDist) minDist = edist;
+    return;
+  }
+
+  if (a[i] == b[i]) { // 两个字符匹配
+    lwstBT(i + 1, j + 1, edist);
+  } else {
+    lwstBT(i + 1, j, edist + 1); // 删除 a[i] 或者 b[j] 前添加一个字符
+    lwstBT(i, j + 1, edist + 1); // 删除 b[j] 或者 a[i] 前添加一个字符
+    lwstBT(i + 1, j + 1, edist + 1); // 将 a[i] 和 b[j] 替换为相同字符
+  }
+}
