@@ -203,7 +203,7 @@ config：和源代码中配置文件相同，决定 nginx 功能文件
 
 logs：日志文件
 
-### Nginx 配置文件的通用语法介绍
+### 配置文件的通用语法介绍
 
 #### 基础语法
 
@@ -247,7 +247,7 @@ location：url 表达式
 
 upstream：上游服务，nginx 需要与 tomcat 等其他服务交互时，我们可以定义 upstream
 
-### Nginx 命令行：重载、热部署、日志切割
+### 命令行：重载、热部署、日志切割
 
 #### linux 命令行
 
@@ -304,7 +304,134 @@ mv blog.log blog.bak.log
 crontab -l
 ```
 
-### Nginx 搭建静态资源 Web 服务器
+### 搭建静态资源 Web 服务器
+
+ngx_http_gzip_module
+
+* Embeded Variables
+  * $gzip_ratio 表示当时使用的压缩比率
+
+autoindex  module
+
+> 当我们访问以  “/”  结尾的 url 时，当我们对应到这个目录中，显示这个目录的结构
+
+ngx_http_core_module
+
+* Embeded Variables
+  * $limit_rate	限制响应速度
+  * $content_length 记录请求头部长度
+  * 。。。
+
+```nginx
+server {
+  listen 8080;
+  server_name test.yueluo.club;
+  
+  gzip on; # 压缩
+  gzip_min_length 1; # 小于多少字节就不再压缩
+  gzip_comp_level 2; # 压缩级别
+  gzip_types text/plain application/X-javascript text/css image/jpeg; # 压缩类型
+	
+  location / {
+    alias www/project/; 
+    # / 代表所有请求
+    # 通常使用 alias，root 会携带路径
+    # 这里就是说 project 目录下后面的路径和 url 是一一对应的
+    autoindex on; # 显示文件结构，当路径是一个文件时
+    
+    set $limit_rate 1k; # 限制 nginx 向客户端浏览器发送响应的速度，每秒传输多少字节到浏览器中
+    
+  }
+}
+```
+
+日志相关
+
+```nginx
+http {
+  # 命名 main，方便对不同的 url 或者域名做不同的处理
+  log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                  '$status $body_bytes_sent "$http_referer" '
+                  '"$http_user_agent" "$http_x_forwarded_for"'
+}
+```
+
+```nginx
+server {
+  listen 8080;
+  server_name test.yueluo.club;
+  
+  access_log data/logs/test/access.log main; # 使用 main 的日志格式，定义输出目录
+  
+  gzip on; # 压缩
+  gzip_min_length 1; # 小于多少字节就不再压缩
+  gzip_comp_level 2; # 压缩级别
+  gzip_types text/plain application/X-javascript text/css image/jpeg; # 压缩类型
+	
+  location / {
+    alias www/project/; 
+    # / 代表所有请求
+    # 通常使用 alias，root 会携带路径
+    # 这里就是说 project 目录下后面的路径和 url 是一一对应的
+    autoindex on; # 显示文件结构，当路径是一个文件时
+    
+    set $limit_rate 1k; # 限制 nginx 向客户端浏览器发送响应的速度，每秒传输多少字节到浏览器中
+    
+  }
+}
+```
+
+### 搭建具备缓存功能的反向代理服务
+
+listen 8080
+
+listen 127.0.0.1:8080 表示只能本机访问 8080 端口
+
+```nginx
+server {
+  listen 127.0.0.1:8080;
+}
+```
+
+
+
+搭建反向代理服务
+
+ngx_http_proxy_module
+
+* proxy_cache	nginx 性能领先于上游服务器性能，使用 cache 对小的站点会有非常大的性能提升
+
+```nginx
+http {
+  # 缓存文件相关参数配置
+  proxy_cache_path /tmp/nginxcache levels=1:2 keys_zone=my_cache:10m max_size:10g inactive=60m use_temp_path=off; 
+}
+```
+
+```nginx
+upstream local {
+  server 127.0.0.1:8080;
+}
+
+server {
+  listen 80;
+  server_name test.yueluo.club;
+  
+  location / {
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwared_for;
+    
+    proxy_cache my_cache;
+    proxy_cache_key $host$uri$is_args$args;
+    proxy_cache_valid 200 304 302 1d;
+    
+    proxy_pass http://local;
+  }  
+}
+```
+
+### GoAccess 实现日志可视化
 
 
 
