@@ -136,6 +136,14 @@ ReactDOMServer.renderToString({
 
 React/Vue 同构的最大难题是数据部分。
 
+Next.js React 服务端渲染问题。
+
+
+
+同构的关键：
+
+* 注重职责的分离
+
 ## 性能工具：Http 服务性能测试
 
 项目开发 => 性能优化 => 项目上线。
