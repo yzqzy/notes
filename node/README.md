@@ -108,6 +108,34 @@ Object.keys(templateMap).forEach(key => {
 console.log(templateMap['templateA']());
 ```
 
+## 前后端同构
+
+```js
+ReactDOMServer.renderToString()
+VueServerRenderer.renderToString()
+```
+
+```js
+npm i react react-dom
+npm i @babel/register @babel/preset-react @babel/core
+```
+
+```js
+require('@babelregister')({
+  presets: ['@babel/preset-react']
+});
+
+const ReactDOMServer = require('react-dom/server');
+
+ReactDOMServer.renderToString({
+  require('./index.jsx')
+});
+```
+
+
+
+React/Vue 同构的最大难题是数据部分。
+
 ## 性能工具：Http 服务性能测试
 
 项目开发 => 性能优化 => 项目上线。
