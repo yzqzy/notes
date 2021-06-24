@@ -168,3 +168,100 @@ ab -c200 -n1600 http://127.0.0.1:3000/download/
 
 ## 性能工具：NodeJs 性能分析工具
 
+工具
+
+* Node.js 自带 profile 工具
+
+```html
+node --prof index.js
+
+ab -c50 -t http://127.0.0.1:3000/hello
+```
+
+```html
+node --prof-process *.log > profile.txt
+```
+
+* Chrome devtool
+
+```html
+node --inspect -brk index.js
+```
+
+然后打开 chrome 浏览器，输入网址 `chrome://inspect`，查看 Remote Target。然后压测，查看分析报告。
+
+* Clinic.js  提供更多可视化图标
+
+```js
+npm i -g clinic
+```
+
+## 代码优化
+
+### JS 代码优化
+
+ctx.body 底层还是会将返回内容转换为 buffer，这部分可以提前做。
+
+```js
+const str = fs.readFileSync(__dirname + '/source/index.html', 'utf-8');
+
+app.use(
+	mount('/', async (ctx) => {
+    ctx.body = str;
+  });
+)
+```
+
+```js
+const buffer = fs.readFileSync(__dirname + '/source/index.html');
+
+app.use(
+	mount('/', async (ctx) => {
+    ctx.status = 200;
+    ctx.type = 'html';
+    ctx.body = buffer;
+  });
+)
+```
+
+性能优化
+
+* 减少不必要的计算
+* 空间换时间
+
+在用户能感知到的时间里，哪些计算是不必要的？
+
+
+
+Node.js HTTP 服务性能优化准则：
+
+* 提前计算
+
+### 内存管理优化
+
+垃圾回收
+
+* 新生代
+  * 容量小，垃圾回收更快
+* 老生代
+  * 容量大，垃圾回收更慢
+
+
+
+减少内存使用，也是提高服务性能的手段。
+
+* Node.js Buffer 的内存分配策略
+
+  * 大于 8 kb、小于 8 kb  
+
+  * buffer 对应 c++ 中的 char []  数组，对于小于 8 kb 的buffer，会复用内存空间
+* 使用 ”池“
+
+
+
+如果存在内存泄漏，会导致服务性能大大降低。
+
+> 可以使用 chrome devtool 查看内存是否泄露。
+
+### Node.js C++ 插件
+
