@@ -2,6 +2,8 @@
 
 Remote Rroducture Call（远程过程调用）。
 
+### RPC 调用是什么
+
 RPC 与 Ajax 对比
 
 * 相同点
@@ -17,23 +19,286 @@ RPC 与 Ajax 对比
 
 寻址/负载均衡
 
-> Ajax：使用 DNS 进行寻址、RPC：使用特有服务进行寻址
+* Ajax：使用 DNS 进行寻址
+* RPC：使用特有服务进行寻址
 
 
 
 TCP 通讯方式
 
-> 单工通信。半双工通信。全双工通信。
+* 单工通信
+* 半双工通信
+* 全双工通信
 
 
 
 二进制协议
 
-> 更小的数据包体积。更快的编解码速率。
+* 更小的数据包体积
+* 更快的编解码速率
 
 
 
 RPC 通信一般用于服务端与服务端通信。
+
+### Node.js 编解码二进制数据包
+
+node.js Buffer 模块
+
+* 用来处理 TCP 连接的流数据及文件系统的流数据
+
+
+
+```js
+Buffer.from()、Buffer.alloc()、Buffer.allocUnsafe() // 创建 Buffer
+```
+
+```js
+// Buffer 创建
+
+const buffer1 = Buffer.from('yueluo.com');
+const buffer2 = Buffer.from([1, 2, 3, 4]);
+
+const buffer3 = Buffer.alloc(20);
+
+console.log(buffer1);
+console.log(buffer2);
+console.log(buffer3);
+```
+
+```js
+// Buffer 读写
+
+buffer2.writeInt8(12, 1);
+console.log(buffer2);
+
+buffer2.writeInt16BE(512, 2);
+console.log(buffer2);
+
+buffer2.writeInt16LE(512, 2);
+console.log(buffer2);
+```
+
+
+
+protocol buffer（谷歌开发） 可以达到像 JSON.stringify 级别的简单编码方式。但是只提供了 js 的实例，并不是 nodejs。
+
+我们可以使用 protocol-buffers 库。
+
+```js
+npm install protocol-buffers
+```
+
+```js
+// test.proto
+
+message Column {
+  required int32 id = 1;
+  required string name = 2;
+  required float price = 3;
+}
+```
+
+```js
+// index.js
+
+const fs = require('fs');
+const path = require('path');
+const protobuf = require('protocol-buffers');
+
+const testProto = fs.readFileSync(path.resolve(__dirname, './test.proto'), 'utf-8');
+const schema = protobuf(testProto);
+
+console.log(schema);
+
+const buffer = schema.Column.encode({
+  id: 1,
+  name: 'NodeJS',
+  price: 80.4
+});
+
+console.log(schema.Column.decode(buffer));
+```
+
+### Node.js net 建立多路复用的 RPC 通道
+
+net 模块
+
+
+
+单工、半双工的通信通道搭建
+
+```js
+// server.js
+
+const net = require('net');
+
+const server = net.createServer((socket) => {
+  socket.on('data', (buffer) => {
+    const lessonid = buffer.readInt16BE();
+
+    setTimeout(() => {
+      socket.write(
+        Buffer.from(data[lessonid])
+      );
+    }, 500);
+  });
+});
+
+server.listen(4000);
+
+const data = [
+  'HTML',
+  'CSS',
+  'JavaScript',
+  'Browser',
+  'Network',
+  'NodeJS'
+];
+```
+
+```js
+const net = require('net');
+
+const socket = new net.Socket({});
+
+socket.connect({
+  host: '127.0.0.1',
+  port: 4000
+});
+
+// socket.write('hello world.');
+
+const lessonids = [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5
+];
+
+let buffer = Buffer.alloc(2);
+let index = Math.floor(Math.random() * lessonids.length);
+
+buffer.writeInt16BE(lessonids[index]);
+
+socket.write(buffer);
+
+socket.on('data', (buffer) => {
+  console.log(index, buffer.toString());
+
+  buffer = Buffer.alloc(2);
+  index = Math.floor(Math.random() * lessonids.length);
+
+  buffer.writeInt16BE(lessonids[index]);
+
+  socket.write(buffer);
+});
+```
+
+
+
+全双工通信
+
+* 包序号，解决请求包和响应包错乱的情况
+
+  
+
+* 关键在于应用层协议需要有标记包号的字段
+
+* 需要处理以下情况，需要有标记包长的字段
+
+  * 沾包
+  * 不完整包
+
+* 错误处理
+
+```js
+// server.js
+
+const net = require('net');
+
+const server = net.createServer((socket) => {
+  socket.on('data', (buffer) => {
+    const seqBuffer = buffer.slice(0, 2);
+    const lessonid = buffer.readInt32BE(2);
+
+    setTimeout(() => {
+      const buffer = Buffer.concat([
+        seqBuffer,
+        Buffer.from(data[lessonid])
+      ])
+
+      socket.write(buffer);
+    }, 10 + Math.random() * 1000);
+  });
+});
+
+server.listen(4000);
+
+const data = [
+  'HTML',
+  'CSS',
+  'JavaScript',
+  'Browser',
+  'Network',
+  'NodeJS'
+];
+```
+
+```js
+// client.js
+
+const net = require('net');
+
+const socket = new net.Socket({});
+
+socket.connect({
+  host: '127.0.0.1',
+  port: 4000
+});
+
+const lessonids = [0, 1, 2, 3, 4, 5];
+
+let buffer;
+let id;
+
+socket.on('data', (buffer) => {
+  const seqBuffer = buffer.slice(0, 2);
+  const titleBuffer = buffer.slice(2);
+
+  console.log(seqBuffer.readInt16BE(), titleBuffer.toString());
+});
+
+let seq = 0;
+
+setInterval(() => {
+  id = getRandomId();
+  socket.write(encode(id));
+}, 50);
+
+function encode (index) {
+  buffer = Buffer.alloc(6);
+
+  buffer.writeInt16BE(seq);
+  buffer.writeInt32BE(lessonids[index], 2);
+
+  console.log(seq, lessonids[index]);
+
+  seq++;
+
+  return  buffer;
+}
+
+function getRandomId () {
+  return Math.floor(Math.random() * lessonids.length);
+}
+```
+
+> 注意，这里 client 不能同时发包，比如 for 循环发送 100 个包，TCP 底层会把同时发的包合并成一个包。
+>
+> 这其实是 TCP 的优化机制，俗称沾包。针对这个问题，我们可以进行沾包切分。
 
 ##静态资源渲染
 
