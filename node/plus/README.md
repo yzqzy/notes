@@ -151,6 +151,7 @@ Next.js React 服务端渲染问题。
 * 优化性能，首先要做性能检查
   * 压力测试工具
     * ab
+      * windows https://www.apachelounge.com/download/
     * webbench
 
 ```js
@@ -264,4 +265,407 @@ Node.js HTTP 服务性能优化准则：
 > 可以使用 chrome devtool 查看内存是否泄露。
 
 ### Node.js C++ 插件
+
+需要使用 node-gyp 编译 .node 文件。
+
+.node 文件是和平台相关联的，在其他平台无法使用。.node 文件和 node 版本也有关系，必须指定版本。
+
+```js
+node-gyp -v
+ndoe-gyp list
+```
+
+#### C++ Addons
+
+binding.gyp
+
+```c++
+{
+	'targets': [{
+		'target_name': 'test',
+		'sources': [ './index.cc' ]
+	}]
+}
+```
+
+index.cc
+
+```c++
+#include <node.h>
+
+namespace demo {
+
+using v8::FunctionCallbackInfo;
+using v8::Isolate;
+using v8::Local;
+using v8::NewStringType;
+using v8::Object;
+using v8::String;
+using v8::Value;
+
+void Method(const FunctionCallbackInfo<Value>& args) {
+  Isolate* isolate = args.GetIsolate();
+  args.GetReturnValue().Set(String::NewFromUtf8(
+      isolate, "world", NewStringType::kNormal).ToLocalChecked());
+}
+
+void Initialize(Local<Object> exports) {
+  NODE_SET_METHOD(exports, "hello", Method);
+}
+
+NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize)
+
+}  // namespace demo
+```
+
+
+
+编译 C++ 模块
+
+```js
+node-gyp rebuild
+```
+
+
+
+index.js
+
+```js
+const test = require('./build/Release/test/node');
+
+console.log(
+    test.hello()
+);
+```
+
+
+
+使用 bindins 优化引入路径
+
+```js
+npm i bindings
+```
+
+```js
+const test = require('bindings')('test');
+
+console.log(
+    test.hello()
+);
+```
+
+#### C++ Addons - N-API
+
+可以通过一套 API 兼容各个版本的 V8。
+
+#### 为什么使用 C++ 插件
+
+将计算量转移到 C++ 运行
+
+* 收益：C++ 运算比 JavaScript 更快的部分
+* 成本：C++ 变量和 v8 变量的转换
+
+C++ 插件不一定更快，还要考虑运算的成本。收益是否抵得过成本？
+
+## 多进程优化
+
+### Node.js 子进程与线程
+
+进程
+
+* 操作系统挂载运行程序的单元
+* 拥有一些独立的资源，如内存等
+
+线程
+
+* 进行运算调度的单元
+* 进程内的线程共享进程内的资源
+
+>  进程类似 “公司”，线程类似公司的 “职员”。
+
+事件循环
+
+* 主线程运行  v8 与 javascript
+* 多个子线程（一般是 4 个）通过事件循环被调度
+
+
+
+使用子进程或线程利用更多 CPU 资源。
+
+
+
+子进程：child_process
+
+```js
+// child.js
+
+process.on('message', (msg) => {
+  console.log('child：', msg);
+
+  process.send('hehe');
+});
+```
+
+```js
+// master.js
+
+const cp = require('child_process');
+const path = require('path');
+
+const child_process = cp.fork(path.resolve(__dirname, './child.js'));
+
+child_process.send('hello');
+
+child_process.on('message', (msg) => {
+  console.log('master：', msg);
+});
+```
+
+
+
+子线程：Worker Threads
+
+```js
+const worker = require('worker_threads');
+```
+
+### Node.js cluster
+
+cluster 可以快速创建一个拥有多核能力的网络服务。
+
+
+
+压测脚本
+
+```js
+ab -c50 -n400 http://127.0.0.1:3000/
+```
+
+
+
+```js
+// app.js
+
+const fs = require('fs');
+const http = require('http');
+const path = require('path');
+
+http.createServer((req, res) => {
+  res.writeHead(200, { 
+    'content-type': 'text/html'
+  });
+  res.end(
+    fs.readFileSync(path.resolve(__dirname, './index.html'), 'utf-8')
+  )
+}).listen(3000, () => {
+  console.log(`listening 3000`);
+});
+```
+
+```js
+// index.js
+
+const cluster = require('cluster');
+
+if (cluster.isMaster) {
+  cluster.fork();
+  cluster.fork();
+  cluster.fork();
+} else {
+  require('./app');
+}
+```
+
+使用 ab 对两个服务分别压测，cluster 的性能明显好于直接启动 http 服务。
+
+
+
+代码优化。
+
+```js
+
+const cluster = require('cluster');
+const os = require('os');
+
+if (cluster.isMaster) {
+  for (let i = 0; i < os.cpus().length / 2; i++) {
+    cluster.fork();
+  }  
+} else {
+  require('./app');
+}
+```
+
+
+
+cluster 源码阅读
+
+src：C++ 代码、lib：JS 代码
+
+### Node.js 进程守护与管理
+
+```js
+const cluster = require('cluster');
+const os = require('os');
+
+if (cluster.isMaster) {
+  // 子进程心跳检测
+  for (let i = 0; i < os.cpus().length / 2; i++) {
+    const worker = cluster.fork();
+
+    let missedPing = 0;
+    
+ 
+    const inter = setInterval(() => {
+      worker.send('ping');
+      missedPing++;
+
+      if (missedPing >= 3) {
+        clearInterval(inter);
+        process.kill(worker.process.pid);
+      }
+    }, 3000);
+
+    worker.on('message', (msg) => {
+      if (msg === 'pong') {
+        missedPing--;
+      }
+    });
+  }
+
+  // 子进程退出后，新开子进程
+  cluster.on('exit', () => {
+    setTimeout(() => {
+      cluster.fork();
+    }, 5000);
+  });
+
+ 
+
+} else {
+  require('./app');
+
+  // 心跳处理
+  process.on('message', (msg) => {
+    if (msg === 'ping') {
+      process.send('pong');
+    }
+  });
+
+  // 错误捕获
+  process.on('uncaughtException', (err) => {
+    console.error(err);
+
+    process.exit(1);
+  });
+
+  // 内存泄漏监控
+  setInterval(() => {
+    if (process.memoryUsage().rss > 734003200) {
+      console.log('oom');
+      process.exit(1);
+    }
+  }, 5000);
+}
+```
+
+## 架构优化
+
+### 动静分离
+
+静态内容
+
+* 基本不会变动，也不会因为请求参数不同而变化
+* CDN 分发，HTTP 缓存等
+* 使用 nginx 输出静态文件比 node 服务器快很多，还可以使用 nginx 配置 cdn 动态加速完成达到更好的效果
+
+动态内容
+
+* 各种因为请求参数不同而变动，且变种的数量几乎不可枚举
+* 用大量的源站机器承载，结合反向代理进行负载均衡
+
+
+
+linux 安装 ab
+
+```js
+yum install httpd-tools 
+```
+
+### 反向代理与缓存服务
+
+反向代理与负载均衡。
+
+```nginx
+http {
+  upstream node.server {
+    server 127.0.0.1:3000;
+    server 127.0.0.1:3001;
+  }
+  
+  server {
+    root /www/static/;
+
+    # location ~ /node/(\d*) {
+    #  proxy_pass http://127.0.0.1:3000/detail?columid=$1;
+    # }
+    
+    location ~ /node/(\d*) {
+      proxy_pass http:/node.server/detail?columid=$1;
+      # proxy_cache 反向代理缓存 
+    }
+  }
+}
+```
+
+
+
+koa 洋葱模型配合 redis 实现缓存和备份功能
+
+```js
+app.use(async (ctx, next) => {
+  const result = await cacheRedis(ctx.url);
+  	
+  // 命中缓存直接返回
+  if (result) {
+    ctx.body = result;
+    return;
+  }
+  
+  await next();
+  
+  // 缓存
+  if (ctx.status == 200) {
+    cachedRedis.set(ctx.url, ctx.body, {
+      expire: 1000 * 60 * 60
+    });
+    backupRedis.set(ctx.url, ctx.body, {
+      expire: 1000 * 60 * 60
+    });
+  }
+  	
+  // 请求失败，备份兜底
+  if (ctx.status != 200) {
+    const result = await backupRedis(ctx.url);
+    
+    ctx.status = 200;
+    ctx.body = result;
+  }
+});
+```
+
+
+
+请求
+
+* 动
+  * nginx 反向代理
+    * node
+      * redis
+      * koa
+    * node
+      * reids
+      * koa
+* 静
+  * CDN
 
