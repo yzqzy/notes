@@ -5904,9 +5904,494 @@ string Refs 依赖当前组件实例下面的 refs 集合里的 ref。必须需�
 
 ## Jsx 深度剖析与使用技巧
 
+```jsx
+class App extends React.Component {
+  render () {
+    return (
+      // <div className="box" id="J_Box">
+      //   <h1 className="title">
+      //     This is a <span>TITLE</span>
+      //   </h1>
+      // </div>
+      React.createElement(
+        'div',
+        {
+          className: 'box',
+          id: 'J_Box'
+        },
+        React.createElement(
+          'h1',
+          {
+            className: "title"
+          },
+          'This is a',
+          React.createElement(
+            'span',
+            null,
+            'TITLE'
+          )
+        )
+      )
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
+JSX 其实是 React.createElement 函数调用的语法糖。
+
+JSX => React.createElement 调用形式
 
 
 
+React 元素类型：
+
+MyButton 就是 React 元素，并且是一种 React 元素类型。
+
+组件中使用 JSX，该组件必须存在于当前模块中的作用域中。
+
+React 会编译 JSX 成为 React.createElement 的调用形式。 因为 JSX 需要使用到 React，所以必须导入 React 模块。
+
+> import React from 'react';  // 开发环境
+>
+> script 引入 React // 生产环境，不需要引入 React，这时 React 已经挂载到全局。
+
+```jsx
+class MyButton extends React.Component {
+  render () {
+    return (
+      <button>Click</button>
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <MyButton />
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
+
+
+ JSX 中使用 . 语法
+
+```jsx
+const colorSystem = {
+  'primary': 'blue',
+  'success': 'green',
+  'warning': 'orange',
+  'danger': 'red'
+}
+
+const MyUI = {
+  Button: class extends React.Component {
+    render () {
+      const { type, children } = this.props;
+
+      return (
+        <button
+          style={{
+            color: '#fff',
+            backgroundColor: colorSystem[type]
+          }}
+        >
+          { children }
+        </button>
+      )
+    }
+  },
+  Input: function (props) {
+    const { placeholder, onValueInput } = props;
+
+    return (
+      <input
+        type="text"
+        placeholder={ placeholder }
+        onChange={ (e) => onValueInput(e) }
+      />
+    )
+  }
+}
+
+class App extends React.Component {
+  valueInput (e) {
+    console.log(e.target.value);
+  }
+
+  render () {
+    return (
+      <>
+        <MyUI.Button
+          type="primary"
+        >
+          Click
+        </MyUI.Button>
+
+        <MyUI.Input
+          placeholder="请输入文本"
+          onValueInput={ this.valueInput.bind(this) }
+        />
+      </>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
+
+
+JSX 书写规范：
+
+* 小写字母开头代表 HTML 内置组件
+  * `<div>`、`<h1>`
+  * 会把标签转化为字符串，作为 React.createElement 的第一个参数 
+* 大写字母开头代表自定义组件
+  * 会直接编译成 React.createElement(MyButton)
+
+
+
+运行时选择 React 组件
+
+```jsx
+class LoginBtnGroup extends React.Component {
+  render () {
+    return (
+      <div>
+        <button>登录</button>
+        <button>注册</button>
+      </div>
+    )
+  }
+}
+
+class WelcomeInfo extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>欢迎您，{ this.props.usernmae }</h1>
+      </div>  
+    )
+  }
+}
+
+class Header extends React.Component {
+  static components = {
+    'login': LoginBtnGroup,
+    'welcome': WelcomeInfo
+  }
+
+  render () {
+    const HeaderUser = Header.components[this.props.type];
+
+    return (
+      <HeaderUser { ...this.props } />
+    )
+  }
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <Header
+        type={ 'welcome' }
+        usernmae="月落"
+      />
+    )
+  }
+}
+
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+JSX props：
+
+JSX 大括号 {} 里面可以传入任何 JavaScript 表达式（不包括语句 if、for、switch、function）。
+
+非表达式可以在 JSX 外部使用。
+
+```jsx
+function MyTitle (props) {
+  const { title, author } = props;
+
+  return (
+    <div>
+      <h1>{ title }</h1>
+      <p>{ author }</p>
+    </div>
+  )
+}
+
+class App extends React.Component {
+  state = {
+    mainTitle: 'This is a MAINTITLE',
+    subTitle: 'This is a SUBTITLE',
+    titleShow: 'main',
+  }
+
+  render () {
+    let title = '';
+
+    // if (this.state.titleShow === 'sub') {
+    //   title = <h2>{ this.state.subTitle }</h2>;
+    // } else {
+    //   title = <h1>{ this.state.mainTitle }</h1>;
+    // }
+
+    switch (this.state.titleShow) {
+      case 'main':
+        title = <h1>{ this.state.mainTitle }</h1>;
+        break;
+      case 'sub':
+        title = <h2>{ this.state.subTitle }</h2>;
+        break;
+      default:
+        title = <h3>There is no title</h3>;
+        break;
+    }
+
+    return (
+      // <MyTitle
+      //   title="This is a title"
+      //   author="heora"
+      // />
+
+      // <MyTitle
+      //   title={ `${ this.state.mainTitle }（${ this.state.subTitle }）` }
+      //   author="heora"
+      // />
+
+      // <div>{ title }</div>
+
+      <div>
+        {
+          this.state.titleShow === 'sub' ? (
+            <h2>{ this.state.subTitle }</h2>
+          ) : (
+            <h1>{ this.state.mainTitle }</h1>
+          )
+        }
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+字面量字符串
+
+> 字符串字面量传入 props 的方式不会对 HTML 实体转义
+>
+> JSX 表达式方式传入 props，HTML 实体会转义为普通字符 `&lt;月落&gt`
+
+```jsx
+
+function MyTitle (props) {
+  const { title, author } = props;
+
+  return (
+    <div>
+      <h1>{ title }</h1>
+      <p>{ author }</p>
+    </div>
+  )
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <div>
+        <MyTitle
+          title="这是一个标题"
+          author="月落"
+        />
+
+        <MyTitle
+          title={ "这是一个标题" }
+          author={ "月落" }
+        />
+
+        <MyTitle
+          title="这是一个<标题>"
+          author={ "&lt;月落&gt;" } // &lt;月落&gt;
+        />
+
+        <MyTitle
+          title="这是一个&lt;标题&gt;" // 这是一个<标题>
+          author={ "<月落>" } // <月落>
+        />
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+props  的布尔表达：
+
+```jsx
+function MyTitle (props) {
+  const { title, author, authorShow } = props;
+
+  return (
+    <div>
+      <h1>{ title }</h1>
+      {
+        // 真假 Boolean
+        authorShow ? (
+          <p>{ author }</p>
+        ) : null
+      }
+    </div>
+  )
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <div>
+        <MyTitle
+          title="This is  a TITLE"
+          author="heora"
+          // 字符串传入的意义是字符串，不代表 Bool 真假
+          // 逻辑：字符串 true 是逻辑真
+          authorShow="true"
+        />
+        <MyTitle
+          title="This is  a TITLE"
+          author="heora"
+          // 语义和逻辑：Bool true 的意义代表 Bool 真假
+          authorShow={ true }
+        />
+        <MyTitle
+          title="This is  a TITLE"
+          author="heora"
+          // 不赋值属性，默认就是 Bool 真
+          // React 不推荐这么做，语义不好，类似 ES6 省略属性值写法
+          authorShow
+        />
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+
+
+属性展开操作
+
+```jsx
+function MyTitle (props) {
+  const { title, author, authorShow } = props;
+
+  return (
+    <div>
+      <h1>{ title }</h1>
+      {
+        authorShow ? (
+          <p>{ author }</p>
+        ) : null
+      }
+    </div>
+  )
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <div>
+        <MyTitle {...this.props} />
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App
+    title="This is a title"
+    author="heora"
+    authorShow={ true }
+  />,
+  document.getElementById('app')
+);
+```
+
+```jsx
+function MyTitle (props) {
+  const { title, author, authorShow } = props;
+
+  return (
+    <div>
+      <h1>{ title }</h1>
+      {
+        authorShow ? (
+          <p>{ author }</p>
+        ) : null
+      }
+    </div>
+  )
+}
+
+class App extends React.Component {
+  render () {
+    const { abc, ...others } = this.props;
+    
+    return (
+      <div>
+        <MyTitle {...others} />
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App
+    title="This is a title"
+    author="heora"
+    authorShow={ true }
+    abc="abc"
+  />,
+  document.getElementById('app')
+);
+```
 
 
 
