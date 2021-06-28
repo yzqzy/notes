@@ -6395,5 +6395,197 @@ ReactDOM.render(
 
 
 
+JSX 子元素
+
+* 字符串字面量 不转义
+  * 去掉首尾空格换行
+  * 字符串之间的多个空格压缩为一个
+  * 如果希望有空格，可以使用字符实体 `&nbsp;` 
+  * 字符串之间的换行压缩为一个空格，如果希望有换行，使用 `<br/>`
+
+```jsx
+function MyTitle (props) {
+  return (
+    <div>
+      { props.children }
+    </div>
+  )
+}
+
+class App extends React.Component {
+  render () {
+    return (
+      <div>
+        <MyTitle>
+          This is a Title
+        </MyTitle>
+        <MyTitle>
+          This is
+          a Title
+        </MyTitle>
+        <MyTitle>
+          This is &nbsp;&nbsp;&nbsp; a Title
+        </MyTitle>
+        <MyTitle>
+          This is a &lt;TITLE&gt;
+        </MyTitle>
+        <MyTitle>
+          { 'This is a <TITLE>' }
+        </MyTitle>
+        <MyTitle>
+          { 'This is a &lt;TITLE&gt;' }
+        </MyTitle>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+* JSX 作为 JSX 子元素
+
+```jsx
+class MyList extends React.Component {
+  render () {
+    return (
+      <div className={ this.props.listClassName }>
+        <h1>{ this.props.title }</h1>
+        <ul className="my-list">
+          { this.props.children }
+        </ul>
+      </div>
+    )
+  }
+}
+
+class ListItem extends React.Component {
+  render () {
+    return (
+      <li>{ this.props.children }</li>
+    )
+  }
+}
 
 
+class App extends React.Component {
+  state = {
+    listData: [
+      'This a content 1.',
+      'This a content 2.',
+      'This a content 3.',
+    ]
+  }
+
+  render () {
+    return (
+      <div>
+        <MyList
+          listClassName="my-list-container"
+          title="This is my list"
+        >
+          {
+            this.state.listData.map((item, index) => (
+              <ListItem key={ index }>
+                Hello，{ item }
+              </ListItem>
+            ))
+          }
+        </MyList>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+```jsx
+class MyList extends React.Component {
+  render () {
+    return (
+      <div className={ this.props.listClassName }>
+        <h1>{ this.props.title }</h1>
+        <ul className="my-list">
+          { this.props.children }
+        </ul>
+      </div>
+    )
+  }
+}
+
+class ListItems extends React.Component {
+  render () {
+    // return [
+    //   <li key="1">This is content 1.</li>,
+    //   <li key="2">This is content 2.</li>,
+    //   <li key="3">This is content 3.</li>,
+    // ]
+    return this.props.listData.map((item, index) => (
+      <li key={index}>{ item }</li>
+    ))
+  }
+}
+
+
+class App extends React.Component {
+  state = {
+    listData: [
+      'This a content 1.',
+      'This a content 2.',
+      'This a content 3.',
+    ]
+  }
+
+  render () {
+    return (
+      <div>
+        <MyList
+          listClassName="my-list-container"
+          title="This is my list"
+        >
+          {/* <ListItems /> */}
+          <ListItems listData={this.state.listData}  />
+        </MyList>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+* null，undefined，bool 都是可以作为 JSX  的子元素，这些子元素会被忽略，不被渲染。
+
+```jsx
+<div>{ true }</div>
+<div>{ undefined }</div>
+<div>{ null }</div>
+```
+
+```jsx
+<div>{ String(null) }</div>
+```
+
+* JSX 中 0 是会渲染的
+
+```jsx
+state = {
+  data: []
+}
+
+<div>{ this.state.data && '有数据' }</div>
+<div>{ this.state.data > 0 && '有数据' }</div>
+<div>{ this.state.data < 0 || '无数据' }</div>
+```
+
+## JSX 函数子元素的应用与总结
