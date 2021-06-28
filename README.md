@@ -26,7 +26,7 @@
   + [自定义loader、plugins](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
   + [webpack源码实现](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
 * vue
-  + [vue基础](https://git.yueluo.club/heora/notes/src/master/vue/vue_base) 已废弃
+  + [vue基础](https://git.yueluo.club/heora/notes/src/master/vue/vue_base) 更新中...
   + [vue3自定义渲染器](https://git.yueluo.club/heora/notes/src/master/vue/vue3_renderer) 已完成
   + [vue源码阅读](https://git.yueluo.club/heora/notes/src/master/vue/vue_source) 已完成
   + [vue源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vue_source_design) 已完成
