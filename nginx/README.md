@@ -433,6 +433,106 @@ server {
 
 ### GoAccess 实现日志可视化
 
+https://goaccess.io
+
+```js
+goaccess access.log -o report.html --log-format=COMBINED
+```
+
+```js
+goaccess access.log -o ../html/report.html --real-time-html --time-format='%H:%M:%S' --date-format='%d/%b/%Y' --log-format=COMBINED
+```
+
+```nginx
+server {
+	access_log logs/access.log main;
+  
+  location /report.html {
+    alias /data/log/blog/report.html
+  }
+}
+```
+
+### 从网络原理来看 SSL 安全协议
+
+
+
+<img src="./images/SSL.png" style="zoom: 80%" />
+
+
+
+
+
+<img src="./images/TLS.png" style="zoom: 80%" />
+
+
+
+### 对称加密与非对称加密
+
+#### 对称加密
+
+
+
+<img src="./images/tls_secret_01.png" style="zoom: 80%" />
+
+
+
+<img src="./images/tls_secret_02.png" style="zoom: 80%" />
+
+
+
+#### 非对称加密
+
+
+
+<img src="./images/tls_secret_03.png" style="zoom: 80%" />
+
+### SSL 如何保证公信力
+
+#### PKI 公钥基础设施
+
+<img src="./images/pki.png" style="zoom: 100%" />
+
+#### 证书类型
+
+
+
+<img src="./images/domain.png" style="zoom: 100%" />
+
+#### 证书链
+
+
+
+<img src="./images/domain_02.png" style="zoom: 100%" />
+
+### SSL 协议握手的 Nginx 性能瓶颈
+
+#### TLS 通讯过程
+
+
+
+<img src="./images/tls_connection.png" style="zoom: 100%" />
+
+#### Nginx 握手性能
+
+
+
+<img src="./images/tls_nginx.png" style="zoom: 100%" />
+
+#### Nginx 数据加密性能
+
+
+
+<img src="./images/tls_nginx_02.png" style="zoom: 100%" />
+
+
+
+#### Nginx 综合性能
+
+
+
+<img src="./images/tls_nginx_03.png" style="zoom: 100%" />
+
 
 
 ## 二、Nginx 架构基础
