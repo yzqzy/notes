@@ -533,9 +533,128 @@ server {
 
 <img src="./images/tls_nginx_03.png" style="zoom: 100%" />
 
+### 免费 SSL 证书实现一个站点
 
+```jsx
+yum install python2-certbot-nginx 
+
+yum install certbot // 最新
+```
+
+```js
+certbot --nginx --nginx-server-root=/etc/nginx/conf/ -d music.yueluo.club
+```
+
+### 基于 OpenResty 实现简单服务
+
+#### 下载 OpenResty
+
+https://openresty.org/cn/
+
+> OpenResty® 是一个基于 [Nginx](https://openresty.org/cn/nginx.html) 与 Lua 的高性能 Web 平台，其内部集成了大量精良的 Lua 库、第三方模块以及大多数的依赖项。用于方便地搭建能够处理超高并发、扩展性极高的动态 Web 应用、Web 服务和动态网关。
+
+下载页面：https://openresty.org/cn/download.html
+
+通常我们不会下载二进制版本，我们需要下载源码，复制其下载链接
+
+```js
+wget https://openresty.org/download/openresty-1.19.3.2.tar.gz
+```
+
+#### 分析目录结构
+
+* build 编译生成的目标文件
+
+* bundle 模块文件，基于 nginx 二次开发
+  * nginx c 模块
+  * lua 模块
+
+* configure
+  * ./configure --help 帮助命令
+
+* patches
+
+* util
+
+#### 编译
+
+```js
+./configure
+
+make
+```
+
+#### 添加 lua 代码
+
+```js
+vim nginx.conf
+```
+
+```nginx
+server {
+  location /lua {
+    default_type text/html;
+    # http 请求内容生成阶段用 lua 处理
+    content_by_lua 'ngx.say("User-Agent: ", ngx.req.get_headers()["User-Agent"])'
+  }
+  
+  location / {
+    alias html/music/;
+  }
+}
+```
+
+#### 运行
+
+```js
+nginx -s reload
+```
 
 ## 二、Nginx 架构基础
+
+### Nginx 的请求处理流程
+
+
+
+<img src="./images/request.png" style="zoom: 80%" />
+
+
+
+### Nginx 的进程结构
+
+* 单进程结构
+  * 不适合生产环境，只适合开发，调试
+* 多进程结构
+
+
+
+多进程模型
+
+* nginx 需要保持高可用性和高可靠性，所以不能使用线程，线程之间存在共享空间
+* master 进程中通常不会加入第三方模块代码
+  * master 主要是用来做进程管理，处理 worker 进程
+  * 缓存需要被 worker 进程使用，也要被 Cache manager 进程使用
+* woker 进程为什么很多
+  * nginx 采用事件驱动模型之后，希望每个 worker 进程从头到尾占用一个 CPU，可以更好地使用 CPU 缓存
+
+
+
+<img src="./images/nginx_model.png" style="zoom: 100%" />
+
+```js
+ps -ef | grep nginx // 查看 nginx 进程
+```
+
+```js
+nginx -s reload // 重载 nginx 服务，会重新开启新的 worker 子进程和 Cache manager 进程
+kill -SIGHUP 9170 // SIGHUP 信号和 reload 作用是一致的
+```
+
+```js
+kill -SIGTERM 9862 // 退出子进程，子进程会通知父进程，父进程会重启一个子进程
+```
+
+### 信号管理 Nginx 父进程
 
 
 
