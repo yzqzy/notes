@@ -727,6 +727,38 @@ nginx -s stop // 立即关闭
 
 
 
+### 网络收发与 Nginx 事件间的对应关系
+
+Nginx 是一个事件驱动的框架，这里的事件指的是网络事件。
+
+#### 网络传输
+
+
+
+<img src="./images/network.png" style="zoom: 90%" />
+
+
+
+#### TCP 与报文
+
+
+
+<img src="./images/tcp.png" style="zoom: 90%" />
+
+
+
+#### TCP 协议与非阻塞接口
+
+事件收集、分发器，我们会定义每个事件对应的消费者。
+
+
+
+<img src="./images/interface.png" style="zoom: 90%" />
+
+### Nginx 的事件驱动模型
+
+
+
 
 
 ## 三、HTTP 模块
