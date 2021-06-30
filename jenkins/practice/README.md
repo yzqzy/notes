@@ -101,6 +101,8 @@ systemctl disable firewalled.service
  增加构建步骤（执行shell）
 
 ```js
+#!/bin/bash
+
 npm config set registry https://registry.npm.taobao.org
 npm install
 rm -rf build
