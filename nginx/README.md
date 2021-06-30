@@ -656,6 +656,77 @@ kill -SIGTERM 9862 // 退出子进程，子进程会通知父进程，父进程�
 
 ### 信号管理 Nginx 父进程
 
+Master 进程
+
+* TERM 立刻停止 Nginx 进程
+
+* QUIT 优雅的停止 Nginx 进程
+
+* HUP 重载配置文件
+
+* USR1 重新打开日志文件，进行日志文件切割
+
+* 以上 4 个命令可以通过命令行向 master 进程发送
+
+  
+
+* USR2 
+
+* WINCH
+
+* 以上 2 个命令只能通过 kill linux 命令行向 master 进程发送
+
+
+
+<img src="./images/nginx_sign.png" style="zoom: 90%" />
+
+> 调用 Nginx 命令行发送相应命令本质是也是发送信号指令。
+
+### reload 重载配置文件的原理
+
+
+
+<img src="./images/nginx_reload.png" style="zoom: 90%" />
+
+
+
+<img src="./images/nginx_reload02.png" style="zoom: 90%" />
+
+
+
+老进程由于异常导致无法正常关闭，这时可以配置 worker_shutdonwn_timeout 最长等待时间，master 开启子进程之后会开启定时器，如果定时时间到达之后，老的 workder 进程还没有关闭，会强制关闭。
+
+### 热升级的完整流程
+
+替换 Nginx 文件：替换 bundary 文件。
+
+
+
+<img src="./images/nginx_upgrade.png" style="zoom: 90%" />
+
+
+
+<img src="./images/nginx_upgrade02.png" style="zoom: 90%" />
+
+
+
+### 优雅地关闭 worker 进程
+
+```js
+nginx -s reload // 优雅关闭
+nginx -s stop // 立即关闭
+```
+
+优雅关闭是对 worker 进程 的 http 请求 而言的。
+
+当老进程进行 WebSocket 通信时，或者进行 TCP 请求时，nginx 不知道什么时候应该关闭。
+
+
+
+<img src="./images/nginx_reload03.png" style="zoom: 90%" />
+
+
+
 
 
 ## 三、HTTP 模块
