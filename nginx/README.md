@@ -31,7 +31,7 @@ Nginx、Apache、Tomcat。
 
 
 
-<img src="../nginx/images/view.png" style="zoom: 80%" />
+<img src="./images/view.png" style="zoom: 80%" />
 
 
 
