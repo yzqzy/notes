@@ -759,6 +759,52 @@ Nginx 是一个事件驱动的框架，这里的事件指的是网络事件。
 
 
 
+<img src="./images/nginx_loop.png" style="zoom: 90%" />
+
+### epoll 的优势及原理
+
+
+
+<img src="./images/epoll.png" style="zoom: 90%" />
+
+
+
+### Nginx 的事件切换
+
+
+
+<img src="./images/request_switch.png" style="zoom: 90%" />
+
+### 同步，异步、阻塞与非阻塞
+
+阻塞和非阻塞主要是指操作系统或者底层 C 库提供的方法或者系统调用，调用方法是否会导致进程进程 sleep 状态。
+
+#### 阻塞调用
+
+
+
+<img src="./images/nginx_sleep.png" style="zoom: 90%" />
+
+
+
+#### 非阻塞调用
+
+
+
+<img src="./images/nginx_no_sleep.png" style="zoom: 90%" />
+
+
+
+#### 非阻塞调用下的同步与异步
+
+
+
+<img src="./images/nginx_no_sleep02.png" style="zoom: 90%" />
+
+### Nginx 的模块
+
+
+
 
 
 ## 三、HTTP 模块
