@@ -5,7 +5,7 @@ pipeline {
 		stage("Clear") {
 			steps {
 				sh """
-					rm -rf /www/nots
+					rm -rf /www/notes
 					mkdir /www/notes
 				"""
 			}
