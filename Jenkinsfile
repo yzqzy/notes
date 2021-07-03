@@ -3,7 +3,7 @@ pipeline {
 
 	stages {
 		stage("Clear") {
-			setps {
+			steps {
 				sh """
 					rm -rf /www/nots
 					mkdir /www/notes
