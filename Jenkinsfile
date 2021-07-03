@@ -4,22 +4,22 @@ pipeline {
 	stages {
 		stage("Clear") {
 			setps {
-				sh "
+				sh """
 					rm -rf /www/nots
 					mkdir /www/notes
-				"
+				"""
 			}
 		}
 
 		stage('Move') {
 			steps () {
-				sh "
+				sh """
 					tar -zcvf tmp.tar.gz *
 					cp tmp.tar.gz /www/notes
 					cd /www/notes
 					tar -xzvf tmp.tar.gz
 					rm -rf tmp.tar.gz
-				"
+				"""
 			}
 		}
 	}
