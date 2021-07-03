@@ -3,7 +3,7 @@ pipeline {
 
 	stages {
 		stage("Clear") {
-			setps () {
+			setps {
 				sh """
 					rm -rf /www/nots
 					mkdir /www/notes
@@ -12,7 +12,7 @@ pipeline {
 		}
 
 		stage('Move') {
-			steps () {
+			steps {
 				sh """
 					tar -zcvf tmp.tar.gz *
 					cp tmp.tar.gz /www/notes
