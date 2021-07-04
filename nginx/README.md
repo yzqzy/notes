@@ -803,11 +803,110 @@ Nginx 是一个事件驱动的框架，这里的事件指的是网络事件。
 
 ### Nginx 的模块
 
+https://nginx.org/en/docs 官方文档。
+
+我们可以从官方文档或者编译出的 nginx 源码来查看具体使用方式。
 
 
 
+Nginx 模块定义：
+
+* ngx_module_t 是每一个模块都具备的
+  * type 定义模块类型
+
+<img src="./images/modules_def.png" style="zoom: 90%" />
+
+
+
+### Nginx 模块的分类
+
+* ngx_conf_module：解析 Nginx conf 文件
+
+* 核心模块
+  * http
+    * ngx_http_core_module
+    * 请求过滤模块
+    * 响应过滤模块
+  * cvcnts
+  * strcam
+
+<img src="./images/modules_cates.png" style="zoom: 90%" />
+
+### Nginx 如何通过连接池处理网络请求
+
+。。。。
 
 ## 三、HTTP 模块
+
+### 冲突的配置指令以谁为准
+
+#### 配置块嵌套
+
+```nginx
+main
+http {
+  upstream {...}
+  split_clients {...}
+  map {}
+  geo {}
+  
+  server {
+    if () {}
+    location {
+      limit_except {...}
+    }
+    location {
+      location {
+        
+      }
+    }
+  }
+  
+  server {
+    
+  }
+}
+```
+
+#### 指令的 Context
+
+
+
+<img src="./images/direction_context.png" style="zoom: 90%" />
+
+#### 指令的合并
+
+
+
+<img src="./images/direction_merge.png" style="zoom: 90%" />
+
+
+
+#### 存储值的指令继承规则：向上覆盖
+
+
+
+<img src="./images/direction_merge_rule01.png" style="zoom: 90%" />
+
+
+
+#### HTTP 模块合并配置的实现
+
+并不是所有的指令合并都遵循向上覆盖的原则，我们还需要注意以下几点。
+
+
+
+<img src="./images/direction_merge_rule02.png" style="zoom: 90%" />
+
+
+
+###  Listen 指令的用法
+
+
+
+
+
+
 
 ## 四、反向代理与负载均衡
 
