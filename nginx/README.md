@@ -922,6 +922,16 @@ http {
 
 ### Nginx 中的正则表达式
 
+ 可以使用 pcre test 测试正则表达式。
+
+
+
+<img src="./images/reg01.png" style="zoom: 90%" />
+
+<img src="./images/reg02.png" style="zoom: 90%" />
+
+### 如何找到处理请求的 server 指令
+
 
 
 
