@@ -987,7 +987,81 @@ server {
   * 第 1 个
   * listen 指定 default
 
-### 详解 HTTP 请求的 11 个阶段
+### HTTP 请求的 11 个阶段
+
+
+
+<img src="./images/nginx_request01.png" style="zoom: 100%" />
+
+<img src="./images/nginx_request02.png" style="zoom: 100%" />
+
+
+
+### postread 阶段
+
+#### 获取真实客户端地址的 realip 模块
+
+* TCP 连接四元组（src ip，src port，dst ip，dst port）
+* HTTP 头部 X-Forwarded-For 用于传递 IP
+* HTTP 头部 X-Real-IP 用户传递用户 IP
+* 网络中存在许多反向代理
+
+
+
+<img src="./images/src_ip.png" style="zoom: 60%" />
+
+
+
+我们可以根据 X-Forwarded-For 获取到真实 IP，获取到真实 IP 之后如何使用？
+
+答案是基于变量。像 binary_remote_addr、remote_addr 这样的变量，其值就是真实的 IP，这样做连接限制（limit_conn 模块）才有意义。
+
+#### realip 模块
+
+realip 模块默认不会编译进 Nginx
+
+* 通过 --with-http_realip_module 启用功能
+
+功能
+
+* 修改客户端地址
+
+变量
+
+* realip_remote_addr
+* realip_remote_port
+
+指令
+
+* set_real_ip_from
+* real_ip_header
+* real_ip_Rrcursive
+
+
+
+<img src="./images/direction_realip.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+    server_name realip.yueluo.club;
+    
+    error_log data/logs/realip/error.log dubug;
+    
+    set_real_ip_from xxx.xx.xxx.xxx;
+    # real_ip_header X-Real_IP;
+    real_ip_recursive off; # 环回地址
+    # real_ip_reucrsize on;
+    real_ip_header X-Forwared-For;
+    	
+    location / {
+        return 200 "Client real ip: $remote_addr\n";
+    }
+}
+```
+
+### rewrite 阶段
 
 
 
