@@ -932,6 +932,63 @@ http {
 
 ### 如何找到处理请求的 server 指令
 
+#### server_name 指令
+
+指令后可以跟多个域名，第 1 个是主域名。
+
+```js
+Syntax: server_name_in_direct on | off;
+Default: server_name_in_redirect off;
+Context: http,server,location
+```
+
+*泛域名：仅支持在最前或者最后
+
+```js
+例如：server_name *.yueluo.club
+```
+
+正则表达式：加 ~ 前缀
+
+```js
+server_name www.yueluo.club ~^www\d+\.yueluo\.club$;
+```
+
+用正则表达式创建变量：用小括号
+
+```nginx
+server {
+    server_name ~^(www\.)?(.+)S;
+    location / { root /sites/$2; }
+}
+
+server {
+    server_name ~^(www\.)?(?<domain>.+)S;
+    location / { root /sites/$domain; }
+}
+```
+
+其他
+
+* .yueluo.club 可以匹配 yueluo.club *.yueluo.club
+* _匹配所有
+  * yueluo.club_
+* “” 匹配没有传递 Host 头部
+
+#### Server 匹配顺序
+
+* 精确匹配
+
+* `*` 在前的泛域名
+
+* `*` 在后的泛域名
+* 按文件中的顺序匹配正则表达式域名
+* default server
+  * 第 1 个
+  * listen 指定 default
+
+### 详解 HTTP 请求的 11 个阶段
+
 
 
 
