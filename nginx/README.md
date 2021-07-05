@@ -904,6 +904,24 @@ http {
 
 
 
+<img src="./images/nginx_listen.png" style="zoom: 90%" />
+
+### 处理 HTTP 请求头部的流程
+
+#### 接收请求事件模块
+
+
+
+<img src="./images/request_module.png" style="zoom: 90%" />
+
+#### 接收请求 HTTP 模块
+
+
+
+<img src="./images/request_module02.png" style="zoom: 90%" />
+
+### Nginx 中的正则表达式
+
 
 
 
