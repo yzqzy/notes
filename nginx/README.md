@@ -1063,6 +1063,39 @@ server {
 
 ### rewrite 阶段
 
+#### return 指令
+
+<img src="./images/nginx_rewrite.png" style="zoom: 80%" />
+
+
+
+<img src="./images/nginx_error_page.png" style="zoom: 80%" />
+
+
+
+server 与 location 块下的 return 指令关系？
+
+return 与 error_page 指令的关系？
+
+```nginx
+server {
+  server_name return.yueluo.club;
+  listen 8080;
+    
+  root html/;
+  error_page 404 /403.html;
+  return 403;
+    
+  location / {
+  	return 404 "find nothing!";
+  }
+}
+```
+
+return 是 rewrite 提供的指令。
+
+#### rewrite 指令
+
 
 
 
