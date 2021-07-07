@@ -1098,10 +1098,64 @@ return 是 rewrite 提供的指令。
 
 
 
+<img src="./images/nginx_rewrite02.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+  root html/;
+
+  location /first {
+    rewrite /first(.*)/second$1 last;
+    return 200 "first!";
+  }
+
+  location /second {
+    rewrite /second(.*)/third$1 break;
+    return 200 "second!";
+  }
+
+  location /thrid {
+    return 200 "third!";
+  }
+}
+```
+
+
+
+```nginx
+server {
+  location /redirect1 {
+    rewrite /redirect(.*)$1 permanent;
+  }
+  
+  location /redirect2 {
+    rewrite /redirect2(.*)$1 redirect;
+  }
+  
+  location /redirect3 {
+    rewrite /redirect3(.*) http://rewrite.yueluo.club$1;
+  }
+  
+  location /redirect4 {
+    rewrite /redirect4(.*) http://rewrite.yueluo.club$1 permanent;
+  }
+}
+```
+
+
+
+>  rewrite_on 指令默认是不打开的，如果打开会记录到 error.log 日志中。
+
+
+
+
+
 
 
 ## 四、反向代理与负载均衡
 
-##五、Nginx 系统层性能优化
+## 五、Nginx 系统层性能优化
 
 ## 六、深入使用 Nginx 与 OpenResty
