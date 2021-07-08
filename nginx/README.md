@@ -1196,9 +1196,41 @@ if ($invalid_referer) {
 
 ### find_config 阶段
 
+#### location 指令
 
 
 
+<img src="./images/nginx_location.png" style="zoom: 80%" />
+
+location 匹配规则：仅匹配 URI，忽略参数
+
+* 合并连续的 / 符号
+  * merge_slashes on
+* 前缀字符串
+  * 常规
+  * =: 精确匹配
+  * ^~：匹配上后则不再进行正则表达式匹配
+* 用于内部跳转的命名 location
+  * @
+* 正则表达式
+  * ~：大小写敏感的正则匹配
+  * ~*：忽略大小写的正则匹配
+
+
+
+location 匹配顺序
+
+
+
+<img src="./images/nginx_location02.png" style="zoom: 80%" />
+
+
+
+### preaccess 阶段
+
+#### limit_conn
+
+#### limit_req 
 
 ## 四、反向代理与负载均衡
 
