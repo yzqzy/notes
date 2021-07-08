@@ -1230,7 +1230,148 @@ location 匹配顺序
 
 #### limit_conn
 
+限制每个客户端的并发连接数
+
+
+
+<img src="./images/nginx_limit_conn.png" style="zoom: 80%" />
+
+步骤：
+
+* 定义共享内存（包括大小），以及 key 关键字
+
+```js
+Syntax: limit_conn_zone key zone=name:size; // 共享内存大小
+Default: -
+Context: http
+```
+
+* 限制并发连接数
+
+```js
+Syntax: limit_conn zone number;
+Default: -
+Context: http, server, location
+```
+
+* 限制发生时的日志级别
+
+```js
+Syntax: limit_conn_log_level info | notice | warn | error;
+Default: limit_conn_log_level error;
+Context: http, server, location
+```
+
+* 限制发生时向客户端返回的错误码
+
+```js
+Syntax: limit_conn_status code;
+Default: limit_conn_status 503;
+Context: http, server, location
+```
+
+
+
+```nginx
+limit_conn_zone $binary_remote_addr zone=addr:10m;
+# limit_conn_zone $binary_remote_addr zone=one: 10m rate=3r/s;
+
+server {
+  server_name limit.yueluo.club;
+  root html/;
+  error_log logs/myerror.log info;
+  
+  location / {
+    limit_conn_status 500;
+    limit_conn_log_level warn;
+    limit_rate 50;
+    limit_conn addr 1;
+    # limit_req zone=one brust=1 nodelay;
+    # limit_req zone=one;
+  }
+}
+```
+
 #### limit_req 
+
+限制每个客户端的每秒处理请求数
+
+
+
+<img src="./images/nginx_limit_req.png" style="zoom: 80%" />
+
+
+
+步骤：
+
+* 定义共享内存（包括大小），以及 key 关键字和限制速率
+
+```js
+Syntax: limit_req_zone key zone=name:size rate=rate;
+Default: _;
+Context: http
+
+// rate 单位为 r/s 或者 r/m
+```
+
+* 限制并发连接数
+
+```js
+Syntax: limit_req zone=name [brust=number][nodelay];
+Default: _
+Context: http,server,location
+
+// brust 默认为 0
+// nodelay，对 burst 中的请求不再采用延时处理的做法，而是立即处理
+```
+
+* 限制发生时的日志级别
+
+```js
+Syntax: limit_req_log_level info | notice | warn | error;
+Default: limit_req_log_level error;
+Context: http, server, location
+```
+
+* 限制发生时向客户端返回的错误码
+
+```js
+Syntax: limit_red_status code;
+Default: limit_red_status 503;
+Context: http, server, location
+```
+
+
+
+limit_req 与 limit_conn 配置同时生效时，那个有效？
+
+nodelay 添加与否，有什么不同？
+
+
+
+```nginx
+limit_conn_zone $binary_remote_addr zone=addr:10m;
+limit_conn_zone $binary_remote_addr zone=one: 10m rate=2r/m;
+
+server {
+  server_name limit.yueluo.club;
+  root html/;
+  error_log logs/myerror.log info;
+  
+  location / {
+    limit_conn_status 500;
+    limit_conn_log_level warn;
+    # limit_rate 50;
+    # limit_conn addr 1;
+    limit_req zone=one brust=1 nodelay;
+    limit_req zone=one;
+  }
+}
+```
+
+### access 阶段
+
+
 
 ## 四、反向代理与负载均衡
 
