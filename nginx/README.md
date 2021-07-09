@@ -1380,11 +1380,11 @@ nginx_http_access_module 模块
 生效范围：进入 access 阶段前不生效
 ```
 
-#### 限制 IP
+#### deny/allow：限制 IP
 
 <img src="./images/access_allow.png" style="zoom: 80%" />
 
-#### 用户名密码限制 auth_basic
+#### auth_basic：用户名密码限制
 
  
 
@@ -1438,9 +1438,112 @@ server {
 }
 ```
 
-#### 第三方权限控制 auth_request
+#### auth_request：第三方权限控制 
+
+统一的用户权限验证系统
+
+
+
+<img src="./images/access_request.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+  location / {
+    auth_request /test_auth;
+  }
+  
+  location = /test_auth {
+    proxy_pass http://127.0.0.1:8090/auth_upstream;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+  }
+}
+```
 
 #### satisfy 指令
+
+satisfy 模块允许改变模块执行顺序。
+
+
+
+<img src="./images/access_satisfy.png" style="zoom: 80%" />
+
+
+
+如果有 return 指令，access 阶段会生效吗？
+
+> 不会生效，return 指令生效阶段在 rewrite 阶段，领先于 access。
+
+
+
+多个 access 模块的顺序有影响吗？
+
+* 查看 ngx_modules.c
+  * &ngx_http_auth_request_module
+  * &ngx_http_auth_basic_module
+  * &ngx_http_access_module
+
+>会。
+
+
+
+输对密码，下面可以访问到文件吗？
+
+```nginx
+location / {
+  satisfy any;
+  auth_basic "test auth_basic";
+  auth_basic_user_file examples/auth.pass;
+  deny all;
+}
+```
+
+> 可以。
+
+
+
+如果把 deny all 提到 auth_basic 之前呢？
+
+> 可以。
+
+
+
+如果改为 allow all，有机会输入密码吗？
+
+> 没有机会。
+
+### precontent 阶段
+
+#### try_files 指令
+
+默认编译进 nginx 中。
+
+
+
+<img src="./images/precontent_try_files.png" style="zoom: 80%" />
+
+```nginx
+server {
+  location /first {
+    try_files /system/index.html $uri $uri/index.html $uri @lasturl;
+  }
+  
+  location @lasturl {
+    return 200 'lasturl!\n';
+  }
+  
+  location /second {
+    try_files $uri $uri/index.html $uri.html = 404;
+  }
+}
+```
+
+#### mirror 模块：实时拷贝流量
+
+
 
 ## 四、反向代理与负载均衡
 
