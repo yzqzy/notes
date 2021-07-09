@@ -1371,7 +1371,76 @@ server {
 
 ### access 阶段
 
+nginx_http_access_module 模块
 
+```js
+生效阶段：NGX_HTPP_ACCESS_PHASE
+模块：http_access_module
+默认编译进 nginx，通过 --without-http_access_module 禁用功能
+生效范围：进入 access 阶段前不生效
+```
+
+#### 限制 IP
+
+<img src="./images/access_allow.png" style="zoom: 80%" />
+
+#### 用户名密码限制 auth_basic
+
+ 
+
+<img src="./images/rfc2617.png" style="zoom: 80%" />
+
+
+
+<img src="./images/access_auth_basic.png" style="zoom: 80%" />
+
+如何生成密码文件
+
+* 文件格式
+
+```js
+# comment
+name1:password1
+name2:password2:comment
+name3:password3
+```
+
+* 生成工具 htpasswd
+
+```js
+依赖安装包：httpd-tools
+htpasswd -c file -b user pass
+```
+
+
+
+```nginx
+server {
+  default_type text/plain;
+  
+  location / {
+    satisfy any;
+    auth_basic "test auth_basic";
+    auth_basic_user_file examples/auth.pass;
+    deny all;
+  }
+  
+  location /auth_request {
+    auth_request /test_auth;
+  }
+  
+  location = /test_auth {
+    proxy_pass http://127.0.0.1:8090/auth_upstream;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+  }
+}
+```
+
+#### 第三方权限控制 auth_request
+
+#### satisfy 指令
 
 ## 四、反向代理与负载均衡
 
