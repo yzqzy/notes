@@ -47,4 +47,158 @@ React 和 Vue 都是单向数据流，父组件传递 state 给子组件作为 p
 
 ## Vue 项目的构建方式
 
+### vite、CDN 的方式
+
+> https://unpkg.com/browse/vue@3.1.2/dist/vue.global.js
+>
+> 可以选择版本，这里演示的是 vue2 的版本。
+
+```js
+yarn add vite -D
+```
+
+```js
+"scripts": {
+  "dev": "vite"
+}
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <div id="app"></div>
+
+    <script src="https://unpkg.com/vue@3.1.2/dist/vue.global.js"></script>
+    <script type="module" src="./src/main.js"></script>
+
+</body>
+
+</html>
+```
+
+```js
+// main.js
+
+const { createApp } = Vue;
+
+const App = {
+  data () {
+    return {
+      text: 'Hello Vue！！！'
+    }
+  },
+  template: `
+    <div>
+      <h1>{{ text }}</h1>
+      <button @click="change">Change</button>
+    </div>
+  `,
+  methods: {
+    change () {
+      this.text = 'Hello Vite';
+    }
+  }
+}
+
+createApp(App).mount('#app');
+
+// vue2
+// new Vue({
+//  render: h => h(App)
+//}).$mount('#app');
+```
+
+```js
+yarn dev
+```
+
+
+
+```js
+// main.jconst { createApp, ref } = Vue;
+
+const App = {
+  template: `
+    <div>
+      <h1>{{ text }}</h1>
+      <button @click="change">Change</button>
+    </div>
+  `,
+  setup () {
+    const text = ref('Hello Vue!!!');
+
+    const change = () => {
+      text.value = 'Hello Vite!!!'
+    };
+
+    return {
+      text,
+      change
+    };
+  }
+}
+
+createApp(App).mount('#app');s
+
+const { createApp, ref } = Vue;
+
+const App = {
+  template: `
+    <div>
+      <h1>{{ text }}</h1>
+      <button @click="change">Change</button>
+    </div>
+  `,
+  setup () {
+    const text = ref('Hello Vue!!!');
+
+    const change = () => {
+      text.value = 'Hello Vite!!!'
+    };
+
+    return {
+      text,
+      change
+    };
+  }
+}
+
+createApp(App).mount('#app');
+```
+
+### vitejs 的方式
+
+可以使用 create-vite-app 的方式创建 vite 项目。
+
+```js
+npm init @vitejs/app vue-vite // 使用命令并搭建 vue 项目
+```
+
+```js
+yarn dev
+```
+
+这种构建方式只针对于 vue3，只可以开发 vue 3。
+
+### vue-cli 脚手架
+
+```js
+yarn global add @vue/cli
+```
+
+```js
+vue create vue-cli
+```
+
+> 3.x 很大程度上是向后兼容的。
 
