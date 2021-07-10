@@ -49,6 +49,10 @@ React 和 Vue 都是单向数据流，父组件传递 state 给子组件作为 p
 
 ### vite、CDN 的方式
 
+vue3：https://v3.cn.vuejs.org/guide/introduction.html
+
+> https://unpkg.com/browse/vue@3.1.4/dist/
+
 > https://unpkg.com/browse/vue@3.1.2/dist/vue.global.js
 >
 > 可以选择版本，这里演示的是 vue2 的版本。
@@ -190,15 +194,79 @@ yarn dev
 
 这种构建方式只针对于 vue3，只可以开发 vue 3。
 
+
+
+vite 也可以使用 cdn 引入 vue 的方式，可以减少打包体积。
+
 ### vue-cli 脚手架
 
 ```js
-yarn global add @vue/cli
+npm i @vue/cli -g
 ```
 
 ```js
-vue create vue-cli
+vue create vue-cli-demo
 ```
 
 > 3.x 很大程度上是向后兼容的。
+
+```js
+yarn serve
+```
+
+
+
+改造：NPM 转为 CDN 地址
+
+```html
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title><%= htmlWebpackPlugin.options.title %></title>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+
+    <!-- built files will be auto injected -->
+    
+    <script src="https://unpkg.com/vue@3.1.2/dist/vue.global.js"></script>
+
+  </body>
+</html>
+```
+
+main.js
+
+```js
+// import { createApp } from 'vue'; 引入全局 CDN 文件，不使用 NPM 库
+
+const { createApp } = Vue;
+
+import App from './App.vue'
+
+createApp(App).mount('#app')
+```
+
+vue.config.js
+
+```js
+module.exports = {
+  configureWebpack: {
+    externals: {
+      vue: 'Vue'
+    }
+  }
+}
+```
+
+可以安装 dev-tools ，调试 vue 项目。
+
+## webpack 搭建 vue2/3 项目
 
