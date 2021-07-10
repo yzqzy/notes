@@ -657,7 +657,7 @@ fill 方法实现
 Array.prototype.$fill = function () {
   var value = arguments[0] || undefined,
       start = arguments[1] >> 0,
-      end = arguments[2] >> 0;
+      end = arguments[2];
   
   if (this == null) {
     throw new TypeError('This is null or not defined.');
@@ -667,7 +667,7 @@ Array.prototype.$fill = function () {
       len = obj.length >> 0;
   
   start = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
-  end = end === undefined ? len : end;
+  end = end === undefined ? len : end >> 0;
   
   end = end < 0 ? Math.max(len + end, 0) : Math.min(end, len);
   
