@@ -506,5 +506,186 @@ console.log(sortArr(newArr));
 
 ## Array.prototype.fill
 
+ES6 （ECMAScript 2015）， 新增的方法。
+
+根据下标范围给范围内的元素填充新的值。
+
+value，start，end   `[start, end)`
+
+
+
+常规用法
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+arr.fill('a', 2, 4); // [1, 2, "a", "a", 5] 
+arr.fill('b', 2, 5); // [1, 2, "b", "b", "b"]
+```
+
+新数组是原数组引用
+
+```js
+const newArr = arr.fill('a', 2, 4);
+
+console.log(newArr === arr);
+```
+
+start 存在，end 不存在
+
+```js
+arr.fill('c', 2); // [1, 2, "c", "c", "c"]
+```
+
+start，end 都不存在
+
+```js
+arr.fill('d'); // ["d", "d", "d", "d", "d"]
+```
+
+start，end 为负数
+
+```js
+arr.fill('e', -4, -2); // [1, "e", "e", 4, 5]
+```
+
+所有参数都不存在
+
+```js
+arr.fill(); // [undefined, undefined, undefined, undefined, undefined]
+```
+
+start、end 一致
+
+```js
+arr.fill('f', 1, 1); // [1, 2, 3, 4, 5]
+```
+
+start 非数，end 非数
+
+```js
+arr.fill('g', 'a', 'b'); // [1, 2, 3, 4, 5]
+```
+
+start 非数，end 为数字
+
+```js
+arr.fill('g', 'a', 4); // ["g", "g", "g", "g", 5]
+```
+
+start、end 都为 NaN
+
+```js
+arr.fill('h', NaN, NaN); // [1, 2, 3, 4, 5];
+```
+
+start NaN，end 数字
+
+```js
+arr.fill('i', NaN, 4); // ["i", "i", "i", "i", 5]
+```
+
+start、end 都为 Null
+
+```js
+arr.fill('j', null, null); // [1, 2, 3, 4, 5];
+```
+
+start Null，end 数字
+
+```js
+arr.fill('j', null, 4); // ["j", "j", "j", "j", 5]
+```
+
+start，end 都为 undefined，全部覆盖
+
+```js
+arr.fill('k', undefined, undefined); //  ["k", "k", "k", "k", "k"]
+```
+
+start 数字，end undefined
+
+```js
+arr.fill('k', 1, undefined); // [1, "k", "k", "k", "k"]
+```
+
+
+
+无论是非数字、NaN、null 结果都是一致的，undefined 与之不同，undefined 可以看作没有填写。
+
+* 参数 value 可选，默认全部填充 undefined
+* 参数 start 可选，默认为 0
+* 参数 end 可选，默认为数组长度
+
+
+
+对象调用 fill
+
+```js
+[].fill.call({
+  length: 3
+}, 4);
+
+// {0: 4, 1: 4, 2: 4, length: 3}
+```
+
+创建类数组的方法
+
+```js
+function makeArrLike (arr) {
+  var arrLike = {
+    length: arr.length,
+    push: [].push,
+    splice: [].splice
+  };
+		
+	arr.forEach(function (item, index) {
+    [].fill.call(arrLike, item, index, index + 1);
+  });
+
+	return arrLike;
+}
+
+makeArrLike(['a', 'b', 'c', 'd', 'e']); 
+```
+
+
+
+fill 方法实现
+
+```js
+Array.prototype.$fill = function () {
+  var value = arguments[0] || undefined,
+      start = arguments[1] >> 0,
+      end = arguments[2] >> 0;
+  
+  if (this == null) {
+    throw new TypeError('This is null or not defined.');
+  }
+  
+  var obj = Object(this),
+      len = obj.length >> 0;
+  
+  start = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
+  end = end === undefined ? len : end;
+  
+  end = end < 0 ? Math.max(len + end, 0) : Math.min(end, len);
+  
+  while (start < end) {
+    obj[start++] = value;
+  }
+  
+  return obj;
+}
+```
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+arr.$fill('a', 2, 4); // [1, 2, "a", "a", 5]
+```
+
+## Array.prototype.find
+
 
 
