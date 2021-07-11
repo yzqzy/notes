@@ -1545,6 +1545,136 @@ server {
 
 
 
+<img src="./images/precontent_mirror.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+  listen 10020;
+  location / {
+    return 200 'mirror response!';
+  }
+}
+
+server {
+  listen 8081;
+  error_log data/error.log debug;
+  
+  location / {
+    mirror /mirror;
+    mirror_request_body off;
+  }
+  
+  location = /mirror {
+    internal; # 内部请求
+    proxy_pass http://127.0.0.1:10020$request_uri;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+  }
+}
+```
+
+### content 阶段
+
+#### static 模块
+
+##### root 和 alias 指令
+
+都会用于把 URL 映射为文件，返回静态资源。
+
+不过 root 会将完整 URL 映射进文件路径中，alias 只会将 location 后的 URL 路径映射到文件路径中。
+
+
+
+<img src="./images/content_root_alias.png" style="zoom: 80%" />
+
+
+
+root 使用范围更广，且具有默认值。
+
+
+
+```nginx
+location /root {
+  root html;
+}
+
+location /alias {
+  alias html;
+}
+
+location ~/root/(\w+\.txt) {
+  root html/first/$1;
+}
+
+location ~ /alias/(\w+\.txt) {
+  alias html/first/$1;
+}
+```
+
+##### 三个 nginx 变量
+
+当我们访问一个 URI 文件时，会生成三个相关变量。
+
+* request_filename：待访问文件的完整路径
+* document_root：由 URI 和 root/alias 规则生成的文件夹路径
+* realpath_root：将 document_root 中的软链接等换成真实路径
+
+```nginx
+location /RealPath/ {
+  alias html/realpath/;
+  return 200 '$request_filename:$document_root:$document_root:$realpath_root\n';
+}
+```
+
+##### 静态文件返回的 content-type
+
+
+
+<img src="./images/content_content_type.png" style="zoom: 80%" />
+
+##### 未找到文件的错误日志
+
+
+
+<img src="./images/content_no_log.png" style="zoom: 80%" />
+
+可以关闭文件获取不到的错误日志。
+
+
+
+##### url 不以斜杠结尾访问目录
+
+访问目录时 URL 最后没有带 / ?
+
+> static 模块实现了 root/alias 功能，发现访问目标时目录，但 URL 末尾加 / 时，会返回 301 重定向
+
+
+
+<img src="./images/content_redirect.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+  server_name return.yueluo.club dir.yueluo.club;
+  server_name_in_redirect off;
+  listen 8088;
+  port_in_redirect on;
+  absolute_redirect off;
+  
+  root html/;
+}
+```
+
+#### index、autoindex 模块
+
+
+
+
+
 ## 四、反向代理与负载均衡
 
 ## 五、Nginx 系统层性能优化
