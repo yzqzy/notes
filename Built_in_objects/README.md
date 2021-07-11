@@ -687,5 +687,227 @@ arr.$fill('a', 2, 4); // [1, 2, "a", "a", 5]
 
 ## Array.prototype.find
 
+ES6 新增方法。
 
+
+
+返回第一个满足条件的数组元素
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+arr.find(item => item > 3); // 4
+```
+
+如果没有一个元素满足条件，返回 undefined
+
+```js
+arr.find(item => item > 5); // undefined
+```
+
+
+
+返回的元素和数组对应下标的元素是同一个引用
+
+```js
+const arr = [
+  {
+    id: 1,
+    name: '张三'
+  },
+  {
+    id: 2,
+    name: '李四'
+  },
+  {
+    id: 3,
+    name: '王五'
+  },
+  {
+    id: 4,
+    name: '赵六'
+  },
+];
+
+arr.find(item => item.name === '李四'); // {id: 2, name: "李四"}
+
+const item = arr.find(item => item.name === '李四');
+item === arr[1]; // true
+```
+
+
+
+find 回调函数存在 3 个参数，分别是当前遍历元素、当前遍历元素的下标、当前的数组。
+
+```js
+arr.find(function (item, index, array) {
+  console.log(item, index, array);
+});
+
+// {id: 1, name: "张三"} 0 (4) [{…}, {…}, {…}, {…}]
+// {id: 2, name: "李四"} 1 (4) [{…}, {…}, {…}, {…}]
+// {id: 3, name: "王五"} 2 (4) [{…}, {…}, {…}, {…}]
+// {id: 4, name: "赵六"} 3 (4) [{…}, {…}, {…}, {…}]
+```
+
+
+
+find 的第二个参数可以更改回调函数内部的 this 指向。和 ES5 扩展方法一致。
+
+非严格模式环境下，默认指向 window。严格模式下，不传入第二个参数，this 指向 undefined。
+
+```js
+arr.find(function (item, index, array) {
+  console.log(item, index, array);
+  console.log(this);
+}, { a: 1 });
+
+// {id: 1, name: "张三"} 0 (4) [{…}, {…}, {…}, {…}]
+// {a : 1}
+// {id: 2, name: "李四"} 1 (4) [{…}, {…}, {…}, {…}]
+// {a : 1}
+// {id: 3, name: "王五"} 2 (4) [{…}, {…}, {…}, {…}]
+// {a : 1}
+// {id: 4, name: "赵六"} 3 (4) [{…}, {…}, {…}, {…}]
+// {a : 1}
+```
+
+
+
+回调函数的返回值是 bool，第一个返回 true 的对应数组元素作为 find 方法的返回值。
+
+```js
+arr.find(function (item) {
+  return item.id > 1;
+});
+
+// {id: 2, name: "李四"}
+```
+
+
+
+稀疏数组：数组元素与元素之间存在空隙。
+
+find 遍历不会越过空元素。遍历出的值由 undefined 占位。
+
+```js
+const arr = Array(5); 
+
+arr[0] = 1;
+arr[2] = 3;
+arr[4] = 5;
+
+// [1, empty, 3, empty, 5]
+// [1, , 3, , 5]
+
+arr.find(function (item) {
+  console.log('Gone', item);
+  return false;
+});
+
+// Gone 1
+// Gone undefined
+// Gone 3
+// Gone undefined
+// Gone 5
+```
+
+forEach 遍历会越过空数组。ES5 数组扩展方法都会越过空元素，只会遍历有值的索引。
+
+> find 遍历效率低于 ES5 扩展方法。
+
+```js
+arr.forEach(function (item) {
+  console.log('Gone', item);
+});
+
+// Gone 1
+// Gone 3
+// Gone 5
+```
+
+
+
+find 是不会更改数组。
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+arr.find(function (item) {
+  console.log('Gone');
+  item = item + 1;
+});
+
+console.log(arr); // [1, 2, 3, 4, 5]
+```
+
+新增元素，find 会在第一次执行回调函数的时候拿到数组最初的索引范围。
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+arr.find(function (item) {
+	arr.push(6);
+	console.log(item);
+});
+
+// 1
+// 2
+// 3
+// 4
+// 5
+```
+
+
+
+不同方法删除元素的特性
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+arr.find(function (item, index) {
+  if (index === 0) {
+    // arr.splice(1, 1); // 删除对应项，该项位置不保留，在数据最后补 undefined
+    // delete arr[2]; // 删除该项的值并填入 undefined
+    arr.pop(); // 删除该项后填入 undefined
+  }
+  
+  console.log(item);
+});
+```
+
+
+
+代码实现
+
+```js
+Array.prototype.$find = function (cb) {
+  if (this === null) {
+    throw new TypeError('this is null');
+  }
+  
+  if (typeof cb !== 'function') {
+    throw new TypeError('callback must be a function type')
+  }
+  
+  var obj = Object(this),
+      len = obj.length >> 0,
+      arg2 = arguments[1],
+      step = 0;
+  
+ 	while (step < len) {
+    var value = obj[step];
+    
+    if (cb.apply(arg2, [value, step, obj])) {
+      return value;
+    }
+    
+    step++;
+  }
+  
+  return undefined;
+}
+```
+
+## Array.prototype.findIndex
 
