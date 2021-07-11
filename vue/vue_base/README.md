@@ -357,5 +357,125 @@ module.exports = {
 yarn dev
 ```
 
-## vue 以及基本用法
+## vue 基本用法
+
+vue 核心：对模板语法方式进行编译，渲染 DOM。
+
+* template：组件模板
+* script：组件逻辑模块
+* style：组件样式
+
+组件逻辑的本质就是一个对象，里面有很多特定的属性。
+
+vue 将数据与 DOM 进行关联，并建立响应式关系。所谓响应式，就是数据改变，视图更新。
+
+数据  => ViewModel 核心库 => 视图。
+
+> react 不支持视图修改，数据修改，vue 支持。React 必须有事件驱动更改 state，修改视图。
+>
+> 如果不看 v-model，vue 也可以被称为单向数据流。vue 完成了数据双向绑定的机制，使我们的业务关注点全部可以放到业务逻辑层，视图层交由 ViewModel 完成绑定数据、渲染和更新。 
+
+```js
+const Article = {
+  data () {
+    return {
+      title: 'This is a title',
+      author: 'yueluo',
+      dateTime: '2021-07-11 21:21:21',
+      content: 'This is  a Content',
+      like: 0,
+      isLogin: true,
+      isFollowed: false,
+      myComment: "",
+      commentList: []
+    }
+  },
+  methods: {
+    likeThisArticle () {
+      this.like++;
+    },
+    followAction () {
+      this.isFollowed = !this.isFollowed;
+    },
+    submitComment () {
+      if (this.myComment.length > 0) {
+        this.commentList.push({
+          id: new Date().getTime(),
+          dateTime: new Date(),
+          content: this.myComment
+        });
+      }
+
+      console.log(this.commentList);
+    }
+  },
+}
+
+Vue.createApp(Article).mount('#app');
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <div id="app">
+    <div class="article">
+      <!-- 插值表达式 -->
+      <h1>{{ title }}</h1>
+      <p>
+        <span>{{ author }} {{ dateTime }}</span>
+      </p>
+      <p>
+        <span>Like: {{ like }}</span>
+        <!-- v-on onClick/addEventListener 绑定事件处理函数 -->
+        <!-- <button v-on:click="likeThisArticle">Like</button> -->
+        <!-- v-* 都是 vue 的指令 -->
+        <button v-if="isLogin" @click="likeThisArticle">Like</button>
+        <button v-else disabled>Please login first！</button>
+      </p>
+      <p>
+        <button @click="followAction">{{ isFollowed ? 'Followed' : 'Follow' }}</button>
+      </p>
+      <!-- v-bind 绑定属性，引号内部看作变量，vue 会对其进行解析 -->
+      <!-- <p v-bind:title="content">{{ content }}</p> -->
+      <p :title="content">{{ content }}</p>
+
+      <div class="form">
+        <p>{{ myComment }}</p>
+        <!-- v-model oninput value =》 myComment -->
+        <input type="text" placeholder="请填写评论" v-model="myComment" />
+        <button @click="submitComment">Button</button>
+      </div>
+    </div>
+    <div class="comment">
+      <ul>
+        <!-- key in obj，对象使用 -->
+        <!-- (item, index) of arr，数组使用 -->
+        <li v-for="item of commentList" :key="item.id">
+          <p>
+            <p>
+              <span>{{ item.dateTime }}</span>
+            </p>
+            <span>{{ item.content }}</span>
+          </p>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.1.2/dist/vue.global.js"></script>
+   
+</body>
+</html>
+```
+
+## vue 组件化构建
 

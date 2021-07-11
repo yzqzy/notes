@@ -8,7 +8,50 @@
 </head>
 <body>
 
-  <div id="app"></div>
+  <div id="app">
+    <div class="article">
+      <!-- 插值表达式 -->
+      <h1>{{ title }}</h1>
+      <p>
+        <span>{{ author }} {{ dateTime }}</span>
+      </p>
+      <p>
+        <span>Like: {{ like }}</span>
+        <!-- v-on onClick/addEventListener 绑定事件处理函数 -->
+        <!-- <button v-on:click="likeThisArticle">Like</button> -->
+        <!-- v-* 都是 vue 的指令 -->
+        <button v-if="isLogin" @click="likeThisArticle">Like</button>
+        <button v-else disabled>Please login first！</button>
+      </p>
+      <p>
+        <button @click="followAction">{{ isFollowed ? 'Followed' : 'Follow' }}</button>
+      </p>
+      <!-- v-bind 绑定属性，引号内部看作变量，vue 会对其进行解析 -->
+      <!-- <p v-bind:title="content">{{ content }}</p> -->
+      <p :title="content">{{ content }}</p>
+
+      <div class="form">
+        <p>{{ myComment }}</p>
+        <!-- v-model oninput value =》 myComment -->
+        <input type="text" placeholder="请填写评论" v-model="myComment" />
+        <button @click="submitComment">Button</button>
+      </div>
+    </div>
+    <div class="comment">
+      <ul>
+        <!-- key in obj，对象使用 -->
+        <!-- (item, index) of arr，数组使用 -->
+        <li v-for="item of commentList" :key="item.id">
+          <p>
+            <p>
+              <span>{{ item.dateTime }}</span>
+            </p>
+            <span>{{ item.content }}</span>
+          </p>
+        </li>
+      </ul>
+    </div>
+  </div>
 
   <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script> -->
   <script src="https://cdn.jsdelivr.net/npm/vue@3.1.2/dist/vue.global.js"></script>
