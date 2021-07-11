@@ -270,3 +270,92 @@ module.exports = {
 
 ## webpack 搭建 vue2/3 项目
 
+```js
+mkdir vue-webpack
+```
+
+```js
+npm init -y
+```
+
+```js
+yarn add webpack@4.44.2 webpack-cli@3.3.12 webpack-dev-server@3.11.2 -D
+```
+
+```js
+"dev": "webpack-dev-server"
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <div id="app"></div>
+	
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.1.2/dist/vue.global.js"></script>
+  
+</body>
+</html>
+```
+
+
+
+```js
+yarn add vue-loader@next @vue/compiler-sfc vue-template-compiler html-webpack-plugin@4.5.0 -D
+```
+
+> vue 2 需要降低 vue-loader 版本，上述配置支持 vue3，测试项目可以自己搭建，生产环境建议还是使用脚手架工具
+>
+> 低版本：npm i vue-loader -D
+>
+> 高版本：npm i vue-loader@next -D
+
+
+
+```js
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
+
+module.exports = {
+  mode: 'development',
+  entry: './src/main.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name][hash].js'
+  },
+  externals: {
+    'vue': 'Vue'
+  },
+  devtool: 'source-map',
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      }
+    ]
+  },
+  plugins: [
+    new VueLoaderPlugin(),
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'public/index.html')
+    })
+  ]
+}
+```
+
+```js
+yarn dev
+```
+
+## vue 以及基本用法
+
