@@ -1673,6 +1673,120 @@ server {
 
 
 
+访问 / 时的处理
+
+<img src="./images/content_index.png" style="zoom: 80%" />
+
+显示目录内容：content 阶段的 autoindex 模块
+
+<img src="./images/content_auto_index01.png" style="zoom: 80%" />
+
+autoindex 模块的指令
+
+<img src="./images/content_auto_index02.png" style="zoom: 80%" />
+
+```nginx
+server {
+  server_name autoindex.yueluo.club;
+  listen 8080;
+  
+  location / {
+    alias html/;
+    autoindex on;
+    # index a.html
+    autoindex_exact_size off;
+    autoindex_format json;
+    autoindex_localtime on;
+  }
+}
+```
+
+#### concat 模块：提升多个小文件性能
+
+
+
+<img src="./images/content_concat.png" style="zoom: 80%" />
+
+
+
+concat 模块的指令
+
+
+
+<img src="./images/content_concat02.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+  server_name concat.yueluo.club;
+  
+  error_log logs/error.log debug;
+  concat on;
+  root html;
+  
+  location /concat {
+    concat_max_files 20;
+    concat_types text/plain;
+    concat_unique on;
+    concat_delimiter ':::'; # ::: 来分割多个文件
+    concat_ignore_file_error on;
+  }
+}
+```
+
+### log 阶段
+
+#### log 模块：记录请求访问日志
+
+功能：将 HTTP 请求相关信息记录到日志
+
+模块：ngx_http_log_module 无法禁用
+
+
+
+ access 日志格式
+
+
+
+<img src="./images/log.png" style="zoom: 80%" />
+
+配置日志文件路径
+
+
+
+<img src="./images/log02.png" style="zoom: 80%" />
+
+
+
+日志文件名包含变量时的优化
+
+
+
+<img src="./images/log03.png" style="zoom: 80%" />
+
+
+
+### HTTP 过滤模块
+
+介于 content 模块之后，log 模块之前介入请求处理。
+
+
+
+<img src="./images/filter.png" style="zoom: 80%" />
+
+
+
+返回响应-加工响应内容
+
+
+
+<img src="./images/filter02.png" style="zoom: 80%" />
+
+
+
+
+
 
 
 ## 四、反向代理与负载均衡
