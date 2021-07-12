@@ -479,3 +479,190 @@ Vue.createApp(Article).mount('#app');
 
 ## vue 组件化构建
 
+vue 组件化 => 核心 组件系统。
+
+vue 利用 ES 模块化，来完成 vue 的组件系统构建。
+
+
+组件化即抽象小型、独立、可预先定义配置的、可复用的组件。
+
+小型：页面的构成拆分成一个一个的小单元独立开发。
+
+独立：每一个小单元尽可能都独立开发
+
+预先定义：小单元都可以先定义好，在需要的时候导入使用
+
+预先配置：小单元可以接收一些在使用的时候需要的配置
+
+可复用：一个小单元可以在多个地方使用
+
+
+
+> 可复用性要适当考量，组件最大的作用是独立开发、预先配置。目的是为了更好的维护和扩展。
+>
+> 有些组件确实是不需要复用的。可配置性越高，功能就越强。
+
+
+
+TodoList
+
+```js
+{
+  id: new Date().getTime(),
+  content: inputValue,
+  completed: false
+}
+
+TodoList 组件
+	data
+  	todoList
+  methods
+  	removeTodo			id
+    addTodo					inputValue
+    changeCompleted	id
+	tofo-form		 view
+	todo-list	ul view
+  	todo-item v-for  view
+```
+
+
+
+```js
+// main.js
+
+const { createApp } = Vue;
+
+const TodoList = {
+  data () {
+    return {
+      todoList: []
+    }
+  },
+  methods: {
+    removeTodo (id) {
+      this.todoList = this.todoList.filter(item => item.id !== id);
+    },
+    addTodo (val) {
+      console.log('1111')
+
+      this.todoList.push({
+        id: new Date().getTime(),
+        content: val,
+        completed: false
+      });
+    },
+    changeCompleted (id) {
+      this.todoList = this.todoList.map(item => {
+        if (item.id === id) {
+          item.completed = !item.completed;
+        }
+
+        return item;
+      });
+    }
+  }
+};
+
+const app = createApp(TodoList);
+
+app.component('todo-form', {
+  data () {
+    return {
+      inputValue: ''
+    }
+  },
+  template: `
+    <div>
+      <input type="text" placeholder="请填写" v-model="inputValue" />
+      <button @click="addTodo">增加</button>
+    </div>
+  `,
+  methods: {
+    addTodo () {
+      this.$emit('add-todo', this.inputValue);
+      this.inputValue = '';
+    }
+  }
+});
+
+app.component('todo-item', {
+  props: ['todo'],
+  template: `
+    <li>
+      <input
+        type="checkbox"
+        :checked="todo.completed"
+        @click="changeCompleted(todo.id)"
+      />
+      <span
+        :style="{
+          textDecoration: todo.completed ? 'line-through' : 'none'
+        }"
+      >
+        {{ todo.content }}
+      </span>
+      <button @click="removeTodo(todo.id)">删除</button>
+    </li>  
+  `,
+  methods: {
+    changeCompleted (id) {
+      this.$emit('change-completed', id);
+    },
+    removeTodo (id) {
+      this.$emit('remove-todo', id);
+    }
+  }
+});
+
+app.mount('#app');
+```
+
+```html
+// index.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <div id="app">
+    <div class="todo-list">
+      <div>
+        <ul>
+          <todo-form
+            @add-todo="addTodo"
+          />
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <todo-item
+            v-for="item of todoList"
+            :key="item.id"
+            :todo="item"
+            @change-completed="changeCompleted"
+            @remove-todo="removeTodo"
+          />
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.1.2/dist/vue.global.js"></script>
+   
+</body>
+</html>
+```
+
+
+
+组件嵌套形成 vue 组件树。
+
+## 应用实例、组件实例与根组件实例
+
