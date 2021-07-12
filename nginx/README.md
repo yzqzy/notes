@@ -1785,6 +1785,112 @@ server {
 
 
 
+#### sub 模块
+
+
+
+替换响应中的字符串：sub 模块。ngx_http_sub_filter_module。
+
+<img src="./images/filter_sub.png" style="zoom: 80%" />
+
+sub 模块的指令。
+
+
+
+<img src="./images/filter_sub02.png" style="zoom: 80%" />
+
+
+
+sub_fillter_last_modified：是否显示修改之前的 last_modified 内容，默认是关闭的。
+
+sub_filter_once：只替换一次
+
+sub_filter_types：针对什么类型进行替换，默认是 text/html。
+
+
+
+```nginx
+server {
+  server_name sub.yueluo.club;
+  error_log logs/error.log info;
+  
+  location / {
+    # sub_filter 'Nginx.oRg' '$host/nginx';  # 替换时忽略大小写
+    # sub_filter 'nginx.cOm' '$host/nginx';
+    # sub_filter_once on;
+    # sub_filter_once off;
+    # sub_filter_last_modifed off;
+    # sub_filter_last_modifed on;
+  }
+}
+```
+
+
+
+#### addition 模块
+
+
+
+响应前或者响应后增加内容。
+
+<img src="./images/filter_addition.png" style="zoom: 80%" />
+
+
+
+addition 模块的指令。
+
+
+
+<img src="./images/filter_addition02.png" style="zoom: 80%" />
+
+
+
+```nginx
+server {
+  server_name addition.yueluo.club;
+  error_log logs/error.log info;
+  
+  location / {
+    add_before_body /before_action;
+    add_after_body /after_action;
+    addition_types *;
+  }
+  
+  location /brefore_action {
+    return 200 'new content before\n';
+  }
+  
+  location /after_action {
+    return 200 'new content after\n';
+  }
+  
+  location /testhost {
+    uninitialized_variable_warn on;
+    set $foo 'testhost';
+    return 200 '$gzip_ratio\n';
+  }
+}
+```
+
+
+
+### Nginx 变量的运行原理
+
+#### 惰性求值
+
+
+
+<img src="./images/var01.png" style="zoom: 80%" />
+
+#### 变量的特性
+
+* 惰性求值
+* 变量值可以时刻变化，其值为使用的那一刻的值
+
+
+
+### HTTP 框架提供的请求相关的变量
+
 
 
 
