@@ -765,12 +765,70 @@ Vue 不是一个完整的 MVVM 模型，只是参考了 MVVM 模型。
 无论是根组件还是应用内其他的组件，配置选项、组件行为都是一样的。
 
 ```js
+const MyTitle = {
+  props: ['content'],
+  template: `
+		<h1 :title="content">
+			<slot></slot>
+		</h1>
+	`
+}
+
+const MyAuthor = {
+  template: `
+		<p>
+			Author: <slot></slot>
+    </p>
+	`
+}
+
+const MyContent = {
+  template: `
+		<p><slot></slot></p>
+	`
+}
+
 const App = {
   components: {
-    
-  }
+  	MyTitle,
+    MyAuthor,
+    MyContent
+  },
+  data () {
+    return {
+      title: 'This is a Title',
+      author: 'yueluo',
+      content: 'This is a Content'
+    }
+  },
+  template: `
+		<div>
+			<my-title :content="content">{{ title }}</my-title>
+			<my-author>{{ author }}</my-author>
+      <my-content>{{ content }}</my-content>
+		</div>
+	`
 }
+
+const app = Vue.createApp(App);
+
+const vm = app.mount('#app');
+
+console.log(vm);
 ```
 
+组件实例可以添加一些属性 property。
 
+```js
+data/props/components/methods ...
+this -> $attrs/$emit  Vue 组件实例内置方法
+```
+
+### 生命周期函数
+
+组件是有初始化过程的，在这个过程中，Vue 提供了很多每个阶段运行的函数，函数会在对应的初始化阶段自动运行。
+
+ <img src="./images/lifecycle.png" style="zoom: 40%;" />
+
+## 认识及实现 MVC
 
