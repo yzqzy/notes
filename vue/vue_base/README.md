@@ -666,3 +666,111 @@ app.mount('#app');
 
 ## 应用实例、组件实例与根组件实例
 
+### 应用实例
+
+通过 createApp 创建出的实例。
+
+```js
+const app = Vue.createApp({}); // Application 应用
+```
+
+应用实例主要用来注册全局组件
+
+```js
+app.component('MyTitle', {
+  data () {
+    return {
+      title: 'I Love Vue!!!'
+    }
+  },
+  template: `<h1>{{ title }}</h1>`
+});
+```
+
+实例上暴露了很多方法
+
+* component 注册组件
+* directive 注册指令
+* filter 注册过滤器
+* use 使用插件
+* 。。。
+
+大多数这样的方法都会返回 createApp 创建出来的应用实例。
+
+```js
+const app2 = app.component('MyTitle', {});
+
+// app2 === app 
+```
+
+app2 === app，这意味着可以链式调用。
+
+```js
+app.component('MyTitle', {}).directive('toLowerCase', {
+  mounted (el) {
+    el.addEventListener('click', function () {
+    	this.innerText = this.innerText.toLowerCase();
+    });
+  }
+})
+```
+
+### 根组件实例
+
+根组件的本质就是一个对象。`{}`
+
+createApp 执行的时候需要一个根组件，`createApp({})`，根组件时 Vue 渲染的起点。
+
+根元素时一个 HTML 元素，createApp 执行创建 Vue 应用实例时，需要一个 HTML 根元素。
+
+```html
+<div id="app"></div>
+```
+
+```js
+const RootComponent = {
+  data () {
+    return {
+      a: 1,
+      b: 2,
+      total: 0
+    }
+  },
+  mounted () {
+  	this.plus();
+  },
+  methods: {
+    plus () {
+      this.total = this.a + this.b;
+    }
+  },
+  template: `
+		<h1>{{ a }} + {{ b }} = {{ total }}</h1>
+	`
+}
+
+const app = Vue.createApp(RootComponent);
+
+const vm = app.mount('#app');
+```
+
+mount 方法返回的根组件实例，vm。vm 即 ViewModel，MVVM => vm。
+
+Vue 不是一个完整的 MVVM 模型，只是参考了 MVVM 模型。
+
+### 组件实例
+
+每个组件都有自己的组件实例，一个应用中所有的组件都共享一个应用实例。
+
+无论是根组件还是应用内其他的组件，配置选项、组件行为都是一样的。
+
+```js
+const App = {
+  components: {
+    
+  }
+}
+```
+
+
+
