@@ -25,7 +25,9 @@
             set: function (newVal) {
               _this.data[k] = newVal;
 
-              view.render()
+              view.render({
+                [k]: newVal
+              });
             }
           })
         })(k);
@@ -59,16 +61,44 @@
         this.template = this.template.replace(
           /\{\{(.*?)\}\}/g,
           function (node, key) {
-            console.log(node, key);
+            return model[key.trim()];
           }
         )
+
+        var container = document.createElement('div');
+
+        container.innerHTML = this.template;
+  
+        document.querySelector(this.el).appendChild(container);
+      } else {
+        for (var k in mutedData) {
+          document.querySelector('.cal-' + k).textContent = mutedData[k];
+        }
       }
     }
   }
 
   var controller = {
     init: function () {
+      var oCalInputs = document.querySelectorAll('.cal-input'),
+          inputItem;
 
+      for (var i = 0; i < oCalInputs.length; i++) {
+        inputItem = oCalInputs[i];
+
+        inputItem.addEventListener('input', this.handleInput, false);
+      }
+    },
+    handleInput: function (e) {
+      var tar = e.target,
+          value = Number(tar.value),
+          field = tar.className.split(' ')[1];
+
+      model[field] = value;
+    
+      with (model) {
+        r = eval('a' + s + 'b');
+      }
     }
   }
 
