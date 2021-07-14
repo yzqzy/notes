@@ -832,3 +832,52 @@ this -> $attrs/$emit  Vue 组件实例内置方法
 
 ## 认识及实现 MVC
 
+M：数据模型（模型层），操作数据库（对数据进行增删改查的操作）
+
+V：视图层，显示视图或者模板
+
+C：控制器，逻辑层，将数据和视图关联挂载，可以由一些基础逻辑操作，可以充当 API 层，前端请求的 API 对应的是控制器
+
+
+
+服务端渲染：
+
+>  前端异步请求 URL，控制器中的一个方法，通过 Model 层的方法，操纵数据库，获取数据，返回给控制器方法，响应回前端。
+
+服务端渲染：
+
+>  View 需要数据，控制器对应方法，调用 Model  方法，获取数据，返回给控制器方法，render 到 view 中。
+
+
+
+前端：
+
+Model：管理视图所需要的数据，数据关联，数据与视图关联
+
+View：HTML 模板和视图渲染
+
+Controller：管理事件逻辑
+
+
+
+加减乘除计算器
+
+```js
+Model -> data -> a b s r
+				 监听 data change，update view
+         
+View -> template -> render 
+
+Controller -> event trigger -> model/data
+```
+
+```js
+controller -> model -> view -> controller
+
+MVVM 雏形
+```
+
+
+
+
+
