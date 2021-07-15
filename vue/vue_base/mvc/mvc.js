@@ -81,12 +81,20 @@
   var controller = {
     init: function () {
       var oCalInputs = document.querySelectorAll('.cal-input'),
-          inputItem;
+          oCalBtns = document.querySelectorAll('.cal-btn'),
+          inputItem,
+          btnItem;
 
       for (var i = 0; i < oCalInputs.length; i++) {
         inputItem = oCalInputs[i];
 
         inputItem.addEventListener('input', this.handleInput, false);
+      }
+
+      for (var i = 0; i < oCalBtns.length; i++) {
+        btnItem = oCalBtns[i];
+
+        btnItem.addEventListener('click', this.handleBtnClick, false);
       }
     },
     handleInput: function (e) {
@@ -96,6 +104,15 @@
 
       model[field] = value;
     
+      with (model) {
+        r = eval('a' + s + 'b');
+      }
+    },
+    handleBtnClick: function (e) {
+      var type = e.target.textContent;
+
+      model.s = type;
+
       with (model) {
         r = eval('a' + s + 'b');
       }
