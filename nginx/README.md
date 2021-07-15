@@ -1990,6 +1990,114 @@ server {
 
 ### referer 模块：变量防盗链
 
+#### referer 模块
+
+场景：某网站通过 url 引用了你的页面，当用户在浏览器上点击 url 时，http 请求的头部中会通过 referer 头部，将该网站当前页面的 url 带上，告诉服务器本次请求是否这个页面发起的。
+
+目的：拒绝非正常的网站访问我们站点的资源
+
+思路：通过 referer，用 invalid_referer 变量根据配置判断 referer 头部是否合法
+
+referer 模块：默认编译进 Nginx，通过 --without-http_referer_module 禁用
+
+#### referer 模块的指令
+
+
+
+<img src="./images/referer_module.png" style="80%" />
+
+#### valid_referers 指令
+
+可同时携带多个参数，表示多个 referer 头部都生效
+
+
+
+<img src="./images/referer_module02.png" style="80%" />
+
+
+
+### secure_link：变量实现防盗链
+
+#### secure 模块
+
+
+
+<img src="./images/secure_link.png" style="80%" />
+
+
+
+<img src="./images/secure_link02.png" style="80%" />
+
+
+
+#### 变量值及带过期时间的配置
+
+变量
+
+* secure_link
+  * 值为空字符串：验证不通过
+  * 值为 0：URL 过期
+  * 值为 1：验证通过
+* secure_link_expires
+  * 时间戳的值
+
+
+
+<img src="./images/secure_link03.png" style="80%" />
+
+
+
+```nginx
+server {
+  location / {
+    secure_link $arg_md5,$arg_expires;
+    secure_link_md5 "$secure_link_expires$uri$remote_addr secret";
+    
+    if ($secure_link = '0') {
+      return 410;
+    }
+    
+    return 200 '$secure_link:$secure_link_expires\n';
+  }
+}
+```
+
+#### 仅对 URI 进行哈希
+
+* 将请求 URL 分为三部分，`/prefix/hash/link`
+* Hash 生成方式
+  * 对 “link 密钥” 做 md5 哈希值
+* 用 secure_link_secret secret; 配置密钥
+
+
+
+<img src="./images/secure_link04.png" style="80%" />
+
+
+
+
+
+```nginx
+server {
+  location /p/ {
+    secure_link_secret mysecret2;
+    
+    if ($secure_link = " ") {
+      return 403;
+    }
+    
+    rewrite ^ /secure/$secure_link;
+  }
+  
+  location /secure/ {
+    alias html/;
+    internal;
+  }
+}
+```
+
+### map 模块：为复杂业务生成新变量
+
 
 
 ## 四、反向代理与负载均衡
