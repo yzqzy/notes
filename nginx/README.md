@@ -2098,6 +2098,82 @@ server {
 
 ### map 模块：为复杂业务生成新变量
 
+可以根据一个或者多个变量组合而成的值做判断，修改新的变量的值，通过判断新变量的值实现复杂的业务逻辑。
+
+
+
+<img src="./images/map.png" style="80%" />
+
+
+
+<img src="./images/map03.png" style="80%" />
+
+
+
+<img src="./images/map02.png" style="80%" />
+
+
+
+```nginx
+map $http_host $name {
+  hostnames;
+    default       0;
+  ~map\.tao\w+\.org.cn 1; *.taohui.org.cn   2; map.taohui.tech   3; map.taohui.*    4;
+}
+
+map $http_user_agent $mobile { 
+  default       0;
+  "~Opera Mini" 1; 
+}
+
+server {
+  listen 8080;
+  default_type text/plain;
+  
+  location / {
+    return 200 '$name:$mobile\n';
+  }
+}
+```
+
+### split_client 模块：指定少量用户实现 AB 测试
+
+
+
+<img src="./images/split_clients.png" style="zoom: 80%" />
+
+
+
+<img src="./images/split_clients02.png" style="zoom: 80%" />
+
+
+
+```nginx
+split_clients "${http_testcli}" $variant {
+  0.51% .one;
+  20.0% .two;
+  50.5% .three;
+  # 40%   .four; 超过 100 不能访问
+  *     "";
+}
+
+server {
+  server_name split_clients.yueluo.club;
+  error_log logs/error.log debug;
+  default_type text/plain;;
+  
+  location / {
+  	rteurn 200 'ABtestfile$variant\n';  
+  }
+}
+```
+
+```js
+curl -H 'testcli: 213213231adadasdad' split_clients.yueluo.club
+```
+
+### geo 模块：根据 IP 范围的匹配生成新变量
+
 
 
 ## 四、反向代理与负载均衡
