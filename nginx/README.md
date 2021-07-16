@@ -2176,6 +2176,92 @@ curl -H 'testcli: 213213231adadasdad' split_clients.yueluo.club
 
 
 
+<img src="./images/geo.png" style="zoom: 80%" />
+
+
+
+<img src="./images/geo02.png" style="zoom: 80%" />
+
+
+
+```nginx
+geo $country {
+  default        ZZ;
+  # include        conf/geo.conf;
+  proxy          116.62.160.193;
+  
+  127.0.0.0/24   US;
+  127.0.0.1/32   RU;
+  10.1.0.0/16    RU;
+  192.168.1.0/24 UK; 
+}
+
+server {
+  server_name geo.yueluo.club;
+  
+  location / {
+    return 200 '$country\n';
+  }
+}
+```
+
+### geoip 模块：获取用户地理位置
+
+##### 基于 MaxMind 数据库从客户端获取变量
+
+<img src="./images/geoip.png" style="zoom: 80%" />
+
+#### geoip_country 指令提供的变量
+
+
+
+<img src="./images/geoip02.png" style="zoom: 80%" />
+
+
+
+#### geoip_city 指令提供的变量
+
+
+
+<img src="./images/geoip03.png" style="zoom: 80%" />
+
+<img src="./images/geoip04.png" style="zoom: 80%" />
+
+
+
+maxmind 网站，下载 c 语言代码库和地址库，对它进行编译。
+
+```nginx
+geoip_country /usr/local/share/GeoIP/GeoIP.dat;
+geoip_city /usr/local/share/GeoIP/GeoLiteCity.dat;
+geoip_proxy 116.62.160.193/32;
+geoip_proxy_recursize on;
+
+server {
+  location / {
+    return 200 'country:$geoip_country_code'
+  }
+}
+```
+
+```js
+curl -H 'X-Forwarded-For: ip' geoip.yueluo.club
+```
+
+### 对客户端使用 keeplive 提升连接效率
+
+http 协议的 keepalive，不是指 tcp 协议的 keepalive。
+
+
+
+<img src="./images/keepalive.png" style="zoom: 80%" />
+
+
+
+<img src="./images/keepalive02.png" style="zoom: 80%" />
+
+
+
 ## 四、反向代理与负载均衡
 
 ## 五、Nginx 系统层性能优化
