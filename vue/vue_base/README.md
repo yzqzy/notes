@@ -1043,6 +1043,14 @@ MVVM 驱动 VM，ViewModel。
 
 M - Model 数据保存和处理、V - 视图。ViewModel 。
 
+> vue 存在 ref 属性可以操作真实节点，不符合 MVVM 的要求。并没有彻底分离 view 和 model 层。
+
+
+
+MVVM 不是一种框架，也不是设计模式，而是一种设计思想。
+
+
+
 
 
 

@@ -10,10 +10,6 @@ function App () {
     state.count += num;
   }
 
-  console.log(state.count);
-
-  state.count += 1;
-
   const minus = (num) => {
     state.count -= num;
   }

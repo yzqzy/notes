@@ -1,5 +1,7 @@
 import { useReactive } from ".";
 import { hasOwnProperty, isEqual, isObject } from "../../shared/utils";
+import { statePool } from "../compiler/state";
+import { update } from "../render";
 
 const get = createGetter(),
       set = createSetter();
@@ -7,8 +9,6 @@ const get = createGetter(),
 function createGetter () {
   return function get (target, key, receiver) {
     const res = Reflect.get(target, key, receiver);
-
-    console.log('get：', target[key]);
 
     if (isObject(res)) {
       return useReactive(res);
@@ -25,11 +25,9 @@ function createSetter () {
           res = Reflect.set(target, key, value, receiver);
 
     if (!isKeyExist) {
-      console.log('add');
 
     } else if (!isEqual(value, oldVal)) {
-      console.log('update');
-      
+      update(statePool, key, value);
     }
 
     return res;
