@@ -911,3 +911,98 @@ Array.prototype.$find = function (cb) {
 
 ## Array.prototype.findIndex
 
+ES6 新增方法。
+
+```js
+const arr = [1, 2, 3, 4, 5];
+```
+
+
+
+返回第一个满足条件的数组对应的元素下标
+
+```js
+arr.findIndex(item => item > 2); // 2
+```
+
+
+
+如果没有找到符合条件的元素，就返回 -1
+
+```js
+arr.findIndex(item => item > 5); // -1
+```
+
+
+
+数组长度为 0 时，返回 -1
+
+```js
+const arr = [];
+
+arr.findIndex(item => item > 2); // -1
+```
+
+
+
+稀疏数组是可以正常遍历的，空隙会被填充为 undefined。
+
+findIndex 如果回调返回 true，遍历就停止。
+
+```js
+const arr1 = [, 2, , ,];
+
+arr1.findIndex(item => item === 2); // 1
+
+arr1.findIndex(function (item) {
+  console.log(item);
+  return item === 2;
+  // undefined
+  // 2
+}); // 1
+```
+
+
+
+findIndex 会遍历空隙，ES5 扩展方法只会遍历有值的索引。
+
+```js
+arr1.findIndex(function (item) {
+  console.log('Gone');
+})
+```
+
+​	
+
+参数和 ES5 扩展方法一致
+
+回调函数：遍历的数组元素，元素对应下标，原数组。
+
+回调返回值： bool，遍历在某一次调用回调返回 true 时停止。
+
+第二个参数：更改回调函数内部的 this 指向，默认情况下 this 指向 window，设置第二个参数时，this 指向第二个参数。
+
+在严格模式的默认情况下，this 是 undefined。
+
+```js
+arr.findIndex(function (item, index, arr) {
+  console.log(item, index, arr);
+  console.log(this);
+});
+```
+
+
+
+回调函数内部无法改变数组的元素值
+
+```js
+arr.findIndex(function (item) {
+	item += 1;  
+});
+
+console.log(arr); // [1, 2, 3, 4, 5]
+```
+
+
+
+TODO
