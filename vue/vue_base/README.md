@@ -1051,7 +1051,354 @@ MVVM 不是一种框架，也不是设计模式，而是一种设计思想。
 
 
 
+```js
+mvvm
+	shared
+  src
+  vm
+  index.html
+```
 
 
 
+/shared/utils.js
+
+```js
+const reg_check_str = /^[\'|\"].+?[\'|\"]$/;
+const reg_str = /[\'|\"]/g;
+
+export function isObject (value) {
+  return typeof value === 'object' && value !== null;
+}
+
+export function hasOwnProperty (target, key) {
+  return Object.prototype.hasOwnProperty.call(target, key);
+}
+
+export function isEqual (newVal, oldVal) {
+  return newVal === oldVal;
+}
+
+export function randomNum () {
+  return new Date().getTime() + parseInt(Math.random() * 10000);
+}
+
+export function formatData (str) {
+  if (reg_check_str.test(str)) {
+    return str.replace(reg_str, '');
+  }
+
+  switch (str) {
+    case 'true':
+      return true;
+    case 'false':
+      return false;
+    default:
+      break;
+  }
+
+  return Number(str);
+}
+```
+
+
+
+src/app.js
+
+```js
+import { createApp, useReactive } from '../vm';
+
+function App () {
+  const state = useReactive({
+    count: 0,
+    name: 'yueluo'
+  });
+
+  const add = (num) => {
+    state.count += num;
+  }
+
+  const minus = (num) => {
+    state.count -= num;
+  }
+
+  const changeName = (name) => {
+    state.name = name;
+  }
+
+  return {
+    template: `
+      <h1>{{ count }}</h1>
+      <h2>{{ name }}</h2>
+      <button onClick="add(2)">+</button>
+      <button onClick="minus(1)">-</button>
+      <button onClick="changeName('月落')">Change Name</button>
+    `,
+    state,
+    methods: {
+      add,
+      minus,
+      changeName
+    },
+  }
+}
+
+createApp(
+  App,
+  document.getElementById('app')
+)
+```
+
+
+
+vm/compiler/event.js
+
+```js
+import { formatData, randomNum } from '../../shared/utils';
+
+const reg_onClick = /onClick\=\"(.+?)\"/g;
+const reg_fnName = /^(.+?)\(/;
+const reg_args = /\((.*?)\)/;
+
+const eventPool = [];
+
+export function eventFormat (template) {
+  return template.replace(reg_onClick, function (node, key) {
+    const _mark =  randomNum();
+
+    eventPool.push({
+      mark: _mark,
+      hander: key.trim(),
+      type: 'click'
+    });
+
+    return `data-mark="${_mark}"`;
+  });
+}
+
+export function bindEvent (methods)  {
+  const allElements = document.querySelectorAll('*');
+
+  let oItem = null;
+  let _mark = 0;
+
+  eventPool.forEach(event => {
+    for (let i = 0; i < allElements.length; i++) {
+      oItem = allElements[i];
+
+      _mark = parseInt(oItem.dataset.mark);
+
+      if (event.mark === _mark) {
+        oItem.addEventListener(event.type, function () {
+          const fnName = event.hander.match(reg_fnName)[1];
+          const args = formatData(event.hander.match(reg_args)[1]);
+
+          methods[fnName](args);
+        }, false);
+      }
+    }
+  });
+}
+```
+
+vm/compiler/state.js
+
+```js
+import { randomNum } from "../../shared/utils";
+
+const reg_html = /\<.+?\>\{\{(.*?)\}\}<\/.+?\>/g;
+const reg_tag = /\<(.+?)\>/;
+const reg_var = /\{\{(.+?)\}\}/g;
+
+export const statePool = [];
+
+let o = 0;
+
+export function stateFormat (template, state) {
+  let _state = {};
+
+  template = template.replace(reg_html, function (node, key) {
+    const matched = node.match(reg_tag);
+    const _mark = randomNum();
+
+    _state.mark = _mark;
+
+    statePool.push(_state);
+
+    _state = {};
+
+    return `<${matched[1]} data-mark="${_mark}">{{${key}}}</${matched[1]}>`
+  });
+
+  template =  template.replace(reg_var, function (node, key) {
+    let _var = key.trim();
+
+    const _varArr = _var.split('.');
+
+    let i = 0;
+    
+    while (i < _varArr.length) {
+      _var = state[_varArr[i]];
+      i++;
+    }
+
+    statePool[o].state = _varArr;
+    o++;
+
+    return _var;
+  });
+
+  return template;
+}
+```
+
+
+
+vm/reactive/index.js
+
+```js
+import { isObject } from '../../shared/utils';
+import { mutableHandler } from './mutableHandler';
+
+export function useReactive (target) {
+  return createReactObject(target, mutableHandler);
+}
+
+function createReactObject (target, baseHandler) {
+  if (!isObject(target)) {
+    return target;
+  }
+
+  const observer = new Proxy(target, baseHandler);
+
+  return observer;
+}
+```
+
+vm/reactive/mutableHandler.js
+
+```js
+import { useReactive } from ".";
+import { hasOwnProperty, isEqual, isObject } from "../../shared/utils";
+import { statePool } from "../compiler/state";
+import { update } from "../render";
+
+const get = createGetter(),
+      set = createSetter();
+
+function createGetter () {
+  return function get (target, key, receiver) {
+    const res = Reflect.get(target, key, receiver);
+
+    if (isObject(res)) {
+      return useReactive(res);
+    }
+
+    return res;
+  }
+}
+
+function createSetter () {
+  return function set (target, key, value, receiver) {
+    const isKeyExist = hasOwnProperty(target, key),
+          oldVal = target[key],
+          res = Reflect.set(target, key, value, receiver);
+
+    if (!isKeyExist) {
+
+    } else if (!isEqual(value, oldVal)) {
+      update(statePool, key, value);
+    }
+
+    return res;
+  }
+}
+
+const mutableHandler = {
+  get,
+  set
+}
+
+export {
+  mutableHandler
+}
+```
+
+vm/index.js
+
+```js
+export { useReactive } from './reactive';
+export { createApp } from './render';
+export { eventFormat } from './compiler/event';
+export { stateFormat } from './compiler/state';
+```
+
+vm/render.js
+
+```js
+import { bindEvent } from './compiler/event';
+import { eventFormat, stateFormat } from './index';
+
+export function createApp (root, rootDom) {
+  const { template, state, methods } = typeof root === 'function' ? root() : root;
+
+  rootDom.innerHTML = render(template, state);
+
+  bindEvent(methods);
+}
+
+export function render (template, state) {
+  template = eventFormat(template);
+  template = stateFormat(template, state);
+
+  return template;
+}
+
+export function update (statePool, key, value) {
+  const allElements = document.querySelectorAll('*');
+
+  let oItem = null;
+
+  statePool.forEach(item => {
+    if (item.state[item.state.length - 1] === key) {
+      for (let i = 0; i < allElements.length; i++) {
+        oItem = allElements[i];
+
+        const _mark = parseInt(oItem.dataset.mark);
+
+        if (item.mark === _mark) {
+          oItem.innerHTML = value;
+        }
+      }
+    }
+  });
+}
+```
+
+
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+  <div id="app"></div>
+
+  <script type="module" src="./src/app.js"></script>
+
+</body>
+</html>
+```
+
+
+
+## 认识 Mustache 与 Vue 编译
 
