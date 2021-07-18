@@ -127,3 +127,27 @@ chown -R jenkins /www // 如果提示权限不够，可以手动赋予 jenkins �
 
 上述脚本操作的是本机部署程序，将打包后的文件移动至配置好的 nginx 目录。  
 如果选择其他服务器部署，需要配置 SSH 免登录等功能，这里就不演示了。
+
+
+
+jenkins 修改启动用户，脚本执行权限问题
+
+* 将 jenkins 账号分别加入到 root 组中
+
+```js
+gpasswd -a root jenkins
+```
+
+* 修改 /etc/sysconfig/jenkins 文件
+
+```js
+# user id to be invoked as (otherwise will run as root; not wise!)
+JENKINS_USER=root
+JENKINS_GROUP=root
+```
+
+* root 权限重新启动
+
+```js
+service Jenkins restart
+```
