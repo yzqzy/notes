@@ -2372,6 +2372,127 @@ server {
 
 ### 负载均衡算法哈希算法：ip_hash 与 hash 模块
 
+#### upstream_ip_hash 模块
+
+基于客户端 IP 地址的 Hash 算法实现负载均衡。
+
+
+
+<img src="./images/upstream_ip_hash.png" style="zoom: 80%;" />
+
+#### upstaream_hash 模块
+
+
+
+<img src="./images/upstream_hash.png" style="zoom: 80%;" />
+
+
+
+```nginx
+upstream iphashups {
+  ip_hash;
+  # hash user_$arg_username;
+  server 127.0.0.1:8011 weight=2 max_conns=2 max_fails=2 fail_timeout=5;
+  server 127.0.0.1:8012 weight=1;
+}
+
+server {
+  set_real_ip_from 116.62.160.193;
+  real_ip_recursize on;
+  real_ip_header X-Forwared-For;
+  server_name iphash.yueluo.club;
+  
+	error_log logs/error.log;
+  access_log logs/access.log;
+  
+  location / {
+    proxy_pass http://iphashups;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+  }
+}
+```
+
+### 一致性 Hash 算法：Hash 模块
+
+#### Hash 算法的问题
+
+
+
+<img src="./images/upstream_hash_error.png" style="zoom: 80%;" />
+
+#### 宕机或者扩容时，hash 算法引发大量路由变更，导致缓存大范围失效
+
+
+
+<img src="./images/upstream_hash_error02.png" style="zoom: 80%;" />
+
+#### 一致性 Hash 算法
+
+**扩容前：**
+
+<img src="./images/upstream_hash_before.png" style="zoom: 80%;" />
+
+**扩容后：**
+
+<img src="./images/upstream_hash_after.png" style="zoom: 80%;" />
+
+#### 使用一致性 Hash 算法：upstream_hash 模块
+
+原有基础上增加配置 `[consistent]`
+
+<img src="./images/upstream_hash02.png" style="zoom: 80%;" />
+
+### 最少连接算法以及如何跨 worker 进程生效
+
+#### upstream_least_conn 模块
+
+优先选择连接最少的上游服务器。
+
+
+
+<img src="./images/upstream_least_conn.png" style="zoom: 80%;" />
+
+#### upstream_zone 模块
+
+使用共享内存使负载均衡对所有 worker 进程生效。
+
+
+
+<img src="./images/upstream_zone.png" style="zoom: 80%;" />
+
+
+
+#### upstream 模块间的顺序：功能正常运行
+
+
+
+<img src="./images/upstream_order.png" style="zoom: 80%;" />
+
+
+
+### upstream 模块提供的变量（不含 cache）
+
+
+
+| 变量          | 含义 |
+| ------------- | ---- |
+| upstream_addr | 上游服务器的 IP 地址，格式为可读的字符串，例如 127.0.0.1: 8012 |
+| upstream_connect_time | 与上游服务器建立连接消耗的时间，单位为秒，精确到毫秒 |
+| upstream_header_time | 接收上游服务发回响应中 http 头部所消耗的时间，单位为秒，精确到毫秒 |
+| upstream_response_time | 接收完整的上游服务响应所消耗的时间，单位为秒，精确到毫秒 |
+| upstream_http_名称 | 从上游服务返回的响应头部的值 |
+| upstream_bytes_received | 从上游服务接收到的响应长度，单位为字节 |
+| upstream_response_length | 从上游服务返回的响应包体长度，单位为字节 |
+| upstream_status | 上游服务返回的 HTTP 响应中的状态码。如果未连接上，该变量值为 502 |
+| upstream_cookie_名称 | 从上游服务器发回的响应头 Set-Cookie 中取出的 cookie 值 |
+| upstream_trailer_名称 | 从上游服务的响应尾部取到的值 |
+
+
+
+### proxy 模块处理请求的流程
+
+
 
 
 
