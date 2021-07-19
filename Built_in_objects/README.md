@@ -1005,4 +1005,116 @@ console.log(arr); // [1, 2, 3, 4, 5]
 
 
 
-TODO
+虽然增加了元素，但是遍历只会遍历 2 次，findIndex 和 find 都是在第一次调用回调函数的时候确认数组范围。
+
+```js
+arr.findIndex(function (item) {
+  arr.push(6);
+});
+```
+
+
+
+删除元素补 undefined，实际上数组元素已被删除
+
+```js
+arr.findIndex(function (item) {
+  if (index === 0) {
+    arr.splice(1, 1);
+  }
+  
+  console.log(item);
+});
+
+// 1 3 4 5 undefined
+```
+
+
+
+delete 删除元素，不会移动位置，输出 undefined，实际会在原位置补 empty。
+
+```js
+arr.findIndex(function (item) {
+  if (index === 0) {
+    delete arr[1];
+  }
+  
+  console.log(item);
+});
+
+// 1 undefined 3 4 5
+```
+
+
+
+删除元素下标对应的值，补 undefined，实际数组被删除最后一项
+
+```js
+arr.findIndex(function (item) {
+  if (index === 0) {
+    arr.pop();
+  }
+  
+  console.log(item); // [1, 2, 3, 4]
+});
+
+// 1 2 3 4 undefined
+```
+
+
+
+代码实现
+
+```js
+Array.prototype.$findIndex = function (cb) {
+	if (this === null) {
+    throw new TypeError('this is null.');
+  }
+  
+  if (typeof cb !== 'function') {
+    throw new TypeError('callback must be a function');
+  }
+  
+  var obj = Object(this),
+      len = obj.length >> 0,
+      arg2 = arguments[1],
+      step = 0;
+  
+  while (step < len) {
+    var value = obj[step];
+    
+    if (cb.apply(arg2, [value, step, obj])) {
+      return step;
+    }
+    
+    step++;
+  }
+  
+  return -1;
+}
+
+const arr = [1, 2, 3, 4, 5];
+```
+
+```js
+arr.$findIndex(function (item, index, arr) {
+	console.log(item, index, arr);
+  console.log(this); // window
+});
+
+arr.$findIndex(function (item, index, arr) {
+  return item > 2;
+}); // 2
+```
+
+```js
+'use strict';
+
+arr.$findIndex(function (item, index, arr) {
+	console.log(item, index, arr);
+  console.log(this); // undefined
+});
+```
+
+## Array.prototype.flat
+
