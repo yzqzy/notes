@@ -2264,6 +2264,118 @@ http 协议的 keepalive，不是指 tcp 协议的 keepalive。
 
 ## 四、反向代理与负载均衡
 
+### 反向代理与负载均衡原理
+
+#### 负载均衡
+
+<img src="./images/banlance.png" style="zoom: 80%;" />
+
+#### nginx 在 AKF 扩展立方体上的应用
+
+
+
+<img src="./images/nginx.png" style="zoom: 80%;" />
+
+#### 支持多种协议的反向代理
+
+
+
+<img src="./images/nginx02.png" style="zoom: 80%;" />
+
+
+
+#### 反向代理与缓存
+
+
+
+<img src="./images/nginx03.png" style="zoom: 80%;" />
+
+### 负载均衡算法：round-robin 算法
+
+round-robin 算法 所有负载均衡算法的基础。其他负载均衡算法失效时，降级都是 round-robin 算法。
+
+#### 指定上游服务器的 upstream 与 server 指令
+
+<img src="./images/upstream.png" style="zoom: 80%;" />
+
+
+
+<img src="./images/upstream02.png" style="zoom: 80%;" />
+
+
+
+#### 加权 Round-Robin 负载均衡算法
+
+Rounb-Robin：依次执行，轮询的方式
+
+
+
+<img src="./images/upstream03.png" style="zoom: 80%;" />
+
+
+
+#### 对上游服务使用 keep-alive 长连接
+
+
+
+<img src="./images/keepalive03.png" style="zoom: 80%;" />
+
+#### upstream_keepalive 指令
+
+
+
+<img src="./images/keepalive04.png" style="zoom: 80%;" />
+
+#### 指定上游服务器域名解析的 resolver 指令
+
+<img src="./images/keepalive05.png" style="zoom: 80%;" />
+
+upserver.config
+
+```nginx
+server {
+  listen 8011;
+  default_type text/plain;
+  
+  return 200 '8011 server response. \n';
+}
+
+server {
+  listen 8012;
+  default_type text/plain;
+  # client_body_in_single_buffer on;
+  
+  return 200 '8012 server response. \n';
+}
+```
+
+rrups.config
+
+```nginx
+upstream rrups {
+  server 127.0.0.1:8011 weight=2 max_conns=2 max_fails=2 fail_timeout=5;
+  server 127.0.0.1:8012;
+  keepalive 32;
+}
+
+server {
+  server_name rrups.yueluo.club;
+  error_log /logs/error.log;
+  
+  location / {
+    proxy_pass https://rrups;
+    proxy_http_version 1;
+    proxy_set_header Connection "";
+  }
+}
+```
+
+### 负载均衡算法哈希算法：ip_hash 与 hash 模块
+
+
+
+
+
 ## 五、Nginx 系统层性能优化
 
 ## 六、深入使用 Nginx 与 OpenResty
