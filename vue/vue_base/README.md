@@ -1402,3 +1402,144 @@ index.html
 
 ## 认识 Mustache 与 Vue 编译
 
+模板语法：template 内的 HTML 字符串，存在 vue 特性，比如文本，表达式，属性，指令。
+
+Vue 的模板都是基于 HTML，模板中直接写 HTML 都是能够被 HTML 解析器解析的。
+
+Vue 表达式 / 自定义属性 / 指令 ，Vue 提供了一套模板编译系统，即将 HTML 字符串转化成 AST 树，形成虚拟 DOM 树，进行渲染。
+
+
+
+插值表达式
+
+```vue
+const App = {
+  data () {
+    return {
+      title: 'This is my title'
+    }
+  },
+  template: `
+    <div>
+      <h1 class="title">{{ title }}</h1>
+    </div>
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+Mustache：用更少的逻辑来处理模板渲染，github 存在 mustache 库，vue 参考了其实现，但其内部没有使用该库。
+
+Vue 中没有使用 mustache 库，它有自己的模板编译系统。
+
+
+
+Mustache 库
+
+```js
+npm install mustache --save
+```
+
+```js
+import Mustache from 'mustache';
+
+var data = {
+  title: 'This is my title for Mustache'
+}
+
+var html = Mustache.render(
+  `<h1>{{ title }}</h1>`,
+  data
+);
+
+document.getElementById('app').innerHTML = html;
+```
+
+
+
+```vue
+const App = {
+  data () {
+    return {
+      title: 'This is my title',
+      author: 'xiaoye',
+      dateTime: new Date(),
+      content: 'This is my content'
+    }
+  },
+  template: `
+    <div>
+      <h1 class="title">{{ title }}</h1>
+      <p>
+        <span class="author">{{ author }}</span> - {{ dateTime }}
+      </p>
+      <p :title="content">
+        {{ content }}
+      </p>
+    </div>
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+```js
+import { h } from 'vue';
+
+const App = {
+  data () {
+    return {
+      title: 'This is my title',
+      author: 'xiaoye',
+      dateTime: new Date(),
+      content: 'This is my content'
+    }
+  },
+  render () {
+    return h(
+      'div',
+      {},
+      [
+        h(
+          'h1',
+          {
+            class: 'title'
+          },
+          this.title
+        ),
+        h(
+          'p',
+          {},
+          [
+            h(
+              'span',
+              {
+                class: 'author',
+              },
+              this.author
+            ),
+            `- ${this.dateTime}`
+          ]
+        ),
+        h(
+          'p',
+          {
+            title: this.content
+          },
+          this.content
+        )
+      ]
+    )
+  }
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+## 认识 Vue 指令
+
+
+
+
+
