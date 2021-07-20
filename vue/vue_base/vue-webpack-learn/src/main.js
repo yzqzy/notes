@@ -1,80 +1,71 @@
-// const Title = {
-//   props: {
-//     title: String
+// const App = {
+//   data () {
+//     return {
+//       imgUrl: 'https://data.yueluo.club/icon/icon.png',
+//       title: '头像',
+//       content: '个人头像',
+//       isLogin: true
+//     }
 //   },
 //   template: `
-//     <h1>{{ title }}</h1>
+//     <article>
+//       <h1>{{ title }}</h1>
+//       <div>
+//         <img style="width: 100px; height: 100px;" :src="imgUrl" />
+//       </div>
+//       <p
+//         :title="content"
+//         :id="null"
+//         :class="undefined"
+//       >
+//         {{ content }}
+//       </p>
+//       <p>
+//         <textarea
+//           :disabled="!isLogin"
+//           placeholder="请填写评论"
+//         />
+//       </p>
+//     </article>
 //   `
 // }
 
-// const App = {
-//   components: {
-//     Title
-//   },
-//   data () {
-//     return {
-//       title: 'This is my title',
-//       author: 'xiaoye',
-//       dateTime: new Date(),
-//       content: 'This is my content'
-//     }
-//   },
-//   template: `
-//     <div>
-//       <Title :title="title" />
-//       <p>
-//         <span class="author">{{ author }}</span> - {{ dateTime }}
-//       </p>
-//       <p :title="content">
-//         {{ content }}
-//       </p>
-//       <button @click="changeTitle">Change Title</button>
-//     </div>
-//   `,
-//   methods: {
-//     changeTitle () {
-//       this.title = "This is App title";
-//     }
-//   },
-// }
 
-
-// const TITLE = 'This is my title';
-
-// const App = {
-//   data() {
-//     return {
-//       title: 'This is my title',
-//       author: 'yueluo'
-//     }
-//   },
-//   template: `
-//     <div>
-//       <h1>${ TITLE } - {{ author }}</h1>
-//       <h1>{{ title }} - {{ author }}</h1>
-//       <button @click="changeTitle">ChangeTitle</button>
-//     </div>
-//   `,
-//   methods: {
-//     changeTitle () {
-//       this.title = 'This is change title';
-//       this.author = '月落';
-//     }
-//   },
-// }
-
-
-const App = {
-  data() {
+var App = {
+  data () {
     return {
-      title: '<h1>This is my title<h1>' ,
-      xss: '<img src="123" onerror="alert(123)" />'
+      a: 1,
+      b: 2,
+      title: 'main title',
+      subTitle: 'sub title'
     }
   },
   template: `
-    <div>{{ title }}</div>
-    <div v-html="title" />
-    <div v-html="xss" />
+    <!-- 数学运算表达式 -->
+    <h1 :title="a + b">{{ a + b }}</h1>
+    <!-- 字符串拼接 -->
+    <h2>{{ 'a + b = ' + (a + b) }}</h2>
+    <!-- 判断表达式 -->
+    <h3>{{ a + b > 5 ? '大于 5' : '小于等于 5' }}</h3>
+    <h3>{{ title || subTitle }}</h3>
+    <h3>{{ title && subTitle }}</h3>
+    <!-- 使用 JS API -->
+    <h4>{{ title.replace('main', '') }}</h4>
+    <h4>{{ subTitle.split('').reverse().join('-') }}</h4>
+    <!-- 不能绑定多个表达式 -->
+    <!--
+    <h5>
+      {{ 
+        'a + b = ' + (a + b)
+        title
+      }}
+    </h5>
+    报错
+    -->
+    <!-- 不能绑定语句 -->
+    <!-- {{ var a = 1; }} 报错，声明赋值语句 -->
+    <!-- {{ a = 1; }} 报错， -->
+    {{ a = 1 }} <!-- 赋值表达式 -->
   `
 }
 

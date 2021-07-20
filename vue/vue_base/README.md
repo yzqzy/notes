@@ -1537,7 +1537,7 @@ const App = {
 Vue.createApp(App).mount('#app');
 ```
 
-## 认识 Vue 指令
+## 认识 Vue 内置指令
 
 ```vue
 const Title = {
@@ -1736,4 +1736,145 @@ Vue.createApp(App).mount('#app');
 ```
 
 ## 插值表达式的使用指南
+
+属性： 
+
+attribute：HTML 的 扩展，title、src、href 等，attr
+
+property：在对象内部存储数据，通常用来描述数据结构，prop
+
+### v-bind
+
+Mustache 中不支持在 HTML 属性中插值，Vue 因为存在底层的模板编译系统，支持 Vue 内置的属性。
+
+v-bind，`v-bind:id`。
+
+想在 HTML 中插入 JS 表达式，可以使用 v-bind。
+
+```vue
+const App = {
+  data () {
+    return {
+      imgUrl: 'https://data.yueluo.club/icon/icon.png',
+      title: '头像',
+      content: '个人头像',
+      isLogin: true
+    }
+  },
+  template: `
+    <article>
+      <h1>{{ title }}</h1>
+      <div>
+        <img style="width: 100px; height: 100px;" :src="imgUrl" />
+      </div>
+      <p
+        :title="content"
+        :id="null"
+        :class="undefined"
+      >
+        {{ content }}
+      </p>
+      <p>
+        <textarea
+          :disabled="!isLogin"
+          placeholder="请填写评论"
+        />
+      </p>
+    </article>
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+### truthy、falsy
+
+`disabled="true"` ： 对于模板解析，true 是个字符串，并不是逻辑真
+
+`disabled="true"` ：逻辑真
+
+> truthy、falsy
+
+> falsy：false、0、“”、null、undefined、NaN 的集合
+
+>  truthy：除 falsy 以外的值
+
+对于 disabled 逻辑真假的属性来说，只有 true、false、"" 和 truthy 会在解析过程中将 disabled 属性包含在元素上。
+
+### 插值表达式
+
+插值，是 JS 表达式，不是语句、模块、函数、赋值、声明等。
+
+```vue
+var App = {
+  data () {
+    return {
+      a: 1,
+      b: 2,
+      title: 'main title',
+      subTitle: 'sub title'
+    }
+  },
+  template: `
+    <!-- 数学运算表达式 -->
+    <h1 :title="a + b">{{ a + b }}</h1>
+    <!-- 字符串拼接 -->
+    <h2>{{ 'a + b = ' + (a + b) }}</h2>
+    <!-- 判断表达式 -->
+    <h3>{{ a + b > 5 ? '大于 5' : '小于等于 5' }}</h3>
+    <h3>{{ title || subTitle }}</h3>
+    <h3>{{ title && subTitle }}</h3>
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+
+
+```vue
+var App = {
+  data () {
+    return {
+      a: 1,
+      b: 2,
+      title: 'main title',
+      subTitle: 'sub title'
+    }
+  },
+  template: `
+    <!-- 数学运算表达式 -->
+    <h1 :title="a + b">{{ a + b }}</h1>
+    <!-- 字符串拼接 -->
+    <h2>{{ 'a + b = ' + (a + b) }}</h2>
+    <!-- 判断表达式 -->
+    <h3>{{ a + b > 5 ? '大于 5' : '小于等于 5' }}</h3>
+    <h3>{{ title || subTitle }}</h3>
+    <h3>{{ title && subTitle }}</h3>
+    <!-- 使用 JS API -->
+    <h4>{{ title.replace('main', '') }}</h4>
+    <h4>{{ subTitle.split('').reverse().join('-') }}</h4>
+    <!-- 不能绑定多个表达式 -->
+    <!--
+    <h5>
+      {{ 
+        'a + b = ' + (a + b)
+        title
+      }}
+    </h5>
+    报错
+    -->
+    <!-- 不能绑定语句 -->
+    <!-- {{ var a = 1; }} 报错，声明赋值语句 -->
+    <!-- {{ a = 1; }} 报错， -->
+    {{ a = 1 }} <!-- 赋值表达式 -->
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+## ES5-ES6 贯穿对象深拷贝问题
+
+
 
