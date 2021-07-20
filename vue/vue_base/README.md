@@ -1539,7 +1539,199 @@ Vue.createApp(App).mount('#app');
 
 ## 认识 Vue 指令
 
+```vue
+const Title = {
+  props: {
+    title: String
+  },
+  template: `
+    <h1>{{ title }}</h1>
+  `
+}
+
+const App = {
+  components: {
+    Title
+  },
+  data () {
+    return {
+      title: 'This is my title',
+      author: 'xiaoye',
+      dateTime: new Date(),
+      content: 'This is my content'
+    }
+  },
+  template: `
+    <div>
+      <Title :title="title" />
+      <p>
+        <span class="author">{{ author }}</span> - {{ dateTime }}
+      </p>
+      <p :title="content">
+        {{ content }}
+      </p>
+      <button @click="changeTitle">Change Title</button>
+    </div>
+  `,
+  methods: {
+    changeTitle () {
+      this.title = "This is App title";
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
 
 
 
+directive 指令：所有在 Vue 中，模板上的属性 v-* 都是指令。
+
+
+
+为什么叫做指令？
+
+模板应该按照怎样的逻辑进行渲染或绑定行为。
+
+
+
+Vue 提供了大量的内置指令，v-if、v-else、v-for、v-show、v-html、v-once。
+
+开发者也可以自定义指令，v-取名。
+
+### v-once
+
+v-once：一次插值，永不更新。
+
+```vue
+const App = {
+  data() {
+    return {
+      title: 'This is my title'
+    }
+  },
+  template: `
+    <div>
+      <h1 v-once>{{ title }}</h1>
+      <h1>{{ title }}</h1>
+      <button @click="changeTitle">ChangeTitle</button>
+    </div>
+  `,
+  methods: {
+    changeTitle () {
+      this.title = 'This is change title'
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+
+
+使用 v-once 后会影响整个节点。
+
+```vue
+const App = {
+  data() {
+    return {
+      title: 'This is my title',
+      author: 'yueluo'
+    }
+  },
+  template: `
+    <div>
+      <h1 v-once>{{ title }} - {{ author }}</h1>
+      <h1>{{ title }} - {{ author }}</h1>
+      <button @click="changeTitle">ChangeTitle</button>
+    </div>
+  `,
+  methods: {
+    changeTitle () {
+      this.title = 'This is change title';
+      this.author = '月落';
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+
+
+对于不可改变的值，我们可以考虑采用以下方案。
+
+```vue
+const TITLE = 'This is my title';
+
+const App = {
+  data() {
+    return {
+      title: 'This is my title',
+      author: 'yueluo'
+    }
+  },
+  template: `
+    <div>
+      <h1>${ TITLE } - {{ author }}</h1>
+      <h1>{{ title }} - {{ author }}</h1>
+      <button @click="changeTitle">ChangeTitle</button>
+    </div>
+  `,
+  methods: {
+    changeTitle () {
+      this.title = 'This is change title';
+      this.author = '月落';
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+### v-html
+
+插值不会解析 html，因为插值表达式是 JS 表达式，没有对 DOM 的操作，raw HTML。
+
+不要试图用 v-html 做子模板。vue  本身就有一个底层的模板编译系统，而不是直接使用字符串来渲染。
+
+应该把子模板放到子组件中，让模板的重用和组合更加强大。
+
+```vue
+const App = {
+  data() {
+    return {
+      title: '<h1>This is my title<h1>' ,
+    }
+  },
+  template: `
+    <div>{{ title }}</div>
+    <div v-html="title" />
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+
+
+不要把用户提供的内容作为 v-html 的插值，这种插值可能会引起 xss 攻击。
+
+```vue
+const App = {
+  data() {
+    return {
+      title: '<h1>This is my title<h1>' ,
+      xss: '<img src="123" onerror="alert(123)" />'
+    }
+  },
+  template: `
+    <div>{{ title }}</div>
+    <div v-html="title" />
+    <div v-html="xss" />
+  `
+}
+
+Vue.createApp(App).mount('#app');
+```
 

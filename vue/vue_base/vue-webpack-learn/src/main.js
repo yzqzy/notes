@@ -1,34 +1,16 @@
-// const App = {
-//   data () {
-//     return {
-//       title: 'This is my title'
-//     }
+// const Title = {
+//   props: {
+//     title: String
 //   },
 //   template: `
-//     <div>
-//       <h1 class="title">{{ title }}</h1>
-//     </div>
+//     <h1>{{ title }}</h1>
 //   `
 // }
 
-// Vue.createApp(App).mount('#app');
-
-
-// import Mustache from 'mustache';
-
-// var data = {
-//   title: 'This is my title for Mustache'
-// }
-
-// var html = Mustache.render(
-//   `<h1>{{ title }}</h1>`,
-//   data
-// );
-
-// document.getElementById('app').innerHTML = html;
-
-
 // const App = {
+//   components: {
+//     Title
+//   },
 //   data () {
 //     return {
 //       title: 'This is my title',
@@ -39,68 +21,61 @@
 //   },
 //   template: `
 //     <div>
-//       <h1 class="title">{{ title }}</h1>
+//       <Title :title="title" />
 //       <p>
 //         <span class="author">{{ author }}</span> - {{ dateTime }}
 //       </p>
 //       <p :title="content">
 //         {{ content }}
 //       </p>
+//       <button @click="changeTitle">Change Title</button>
 //     </div>
-//   `
+//   `,
+//   methods: {
+//     changeTitle () {
+//       this.title = "This is App title";
+//     }
+//   },
 // }
 
-// Vue.createApp(App).mount('#app');
 
+// const TITLE = 'This is my title';
 
+// const App = {
+//   data() {
+//     return {
+//       title: 'This is my title',
+//       author: 'yueluo'
+//     }
+//   },
+//   template: `
+//     <div>
+//       <h1>${ TITLE } - {{ author }}</h1>
+//       <h1>{{ title }} - {{ author }}</h1>
+//       <button @click="changeTitle">ChangeTitle</button>
+//     </div>
+//   `,
+//   methods: {
+//     changeTitle () {
+//       this.title = 'This is change title';
+//       this.author = '月落';
+//     }
+//   },
+// }
 
-import { h } from 'vue';
 
 const App = {
-  data () {
+  data() {
     return {
-      title: 'This is my title',
-      author: 'xiaoye',
-      dateTime: new Date(),
-      content: 'This is my content'
+      title: '<h1>This is my title<h1>' ,
+      xss: '<img src="123" onerror="alert(123)" />'
     }
   },
-  render () {
-    return h(
-      'div',
-      {},
-      [
-        h(
-          'h1',
-          {
-            class: 'title'
-          },
-          this.title
-        ),
-        h(
-          'p',
-          {},
-          [
-            h(
-              'span',
-              {
-                class: 'author',
-              },
-              this.author
-            ),
-            `- ${this.dateTime}`
-          ]
-        ),
-        h(
-          'p',
-          {
-            title: this.content
-          },
-          this.content
-        )
-      ]
-    )
-  }
+  template: `
+    <div>{{ title }}</div>
+    <div v-html="title" />
+    <div v-html="xss" />
+  `
 }
 
 Vue.createApp(App).mount('#app');
