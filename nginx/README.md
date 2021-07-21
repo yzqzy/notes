@@ -2494,6 +2494,145 @@ server {
 
 
 
+<img src="./images/proxy_pass.png" style="zoom: 80%;" />
+
+
+
+### proxy 模块中的 proxy_pass 指令
+
+#### HTTP 协议的反向代理：proxy 模块
+
+<img src="./images/proxy_pass02.png" style="zoom: 80%;" />
+
+
+
+<img src="./images/proxy_pass03.png" style="zoom: 80%;" />
+
+
+
+```nginx
+server {
+  listen 8011;
+  default_type text/plain;
+  
+  return 200 '8011 server response. \n';
+}
+
+server {
+  listen 8012;
+  default_type text/plain;
+  
+  return 200 '8012 server response. uri：$uri \n';
+}
+```
+
+```nginx
+upstream proxyups {
+  server 127.0.0.1:8012 weight=1;
+}
+
+server {
+  server_name proxy.yueluo.club;
+  error_log logs/error.log;
+  access_log logs/upstream_access.log varups;
+  
+  location /a {
+    proxy_pass http://proxyups/addurl;
+  }
+}
+```
+
+```js
+proxy_pass http://proxyups/addurl;
+
+curl proxy.yueluo.club/a/b/c => uri：/a/b/c
+```
+
+```js
+proxy_pass http://proxyups/addurl/www;
+
+curl proxy.yueluo.club/a/b/c => uri：/www/b/c
+```
+
+proxy_pass 是动作类指令，指定某个阶段使用 proxy 模块处理请求，proxy_pass 是否加 url 可能产生不同的结果。
+
+
+
+### 根据指令修改发往上游的请求
+
+#### proxy 模块：生成发往上游的请求行
+
+
+
+<img src="./images/proxy_pass04.png" style="zoom: 80%;" />
+
+
+
+#### proxy 模块：生成发往上游的请求头部
+
+
+
+<img src="./images/proxy_pass05.png" style="zoom: 80%;" />
+
+
+
+#### proxy 模块：生成发往上游的包体
+
+
+
+<img src="./images/proxy_pass06.png" style="zoom: 80%;" />
+
+
+
+```nginx
+server {
+  listen 8011;
+  default_type text/plain;
+  
+  return 200 '8011 server response. \n';
+}
+
+server {
+  listen 8012;
+  default_type text/plain;
+  
+  return 200 '8012 server response. $uri $request_method $request $http_name \n';
+}
+```
+
+```nginx
+upstream proxyups {
+  server 127.0.0.1:8012 weight=1;
+}
+
+server {
+  server_name proxy.yueluo.club;
+  error_log logs/error.log;
+  access_log logs/upstream_access.log varups;
+  
+  location /a {
+    proxy_pass http://proxyups/addurl;
+    proxy_method POST;
+    proxy_pass_request_headers off;
+    proxy_pass_request_body off;
+    proxy_set_body 'hello-wrold';
+    proxy_set_header name '';
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+  }
+}
+```
+
+
+
+### 接收用户请求包体的方式
+
+
+
+
+
+
+
 
 
 
