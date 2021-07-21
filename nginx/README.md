@@ -2627,7 +2627,83 @@ server {
 
 ### 接收用户请求包体的方式
 
+#### 接收客户端请求的包体：收完再转发还是边收变转发
 
+
+
+<img src="./images/receive.png" style="zoom: 80%;" />
+
+
+
+#### 客户端包体的接收
+
+
+
+<img src="./images/receive02.png" style="zoom: 80%;" />
+
+
+
+#### 最大包体长度限制
+
+
+
+<img src="./images/receive03.png" style="zoom: 80%;" />
+
+#### 临时文件路径格式
+
+
+
+<img src="./images/receive04.png" style="zoom: 80%;" />
+
+
+
+#### 读取包体的超时
+
+
+
+<img src="./images/receive05.png" style="zoom: 80%;" />
+
+
+
+### 与上游服务器建立连接
+
+#### 与上游服务器建立连接
+
+<img src="./images/up_server.png" style="zoom: 80%;" />
+
+当出现状态码 502 时，可以换一个服务器继续处理，通过 proxy_next_upstream。
+
+
+
+#### 上游连接启动 TCP keepalive
+
+
+
+<img src="./images/up_server02.png" style="zoom: 80%;" />
+
+
+
+#### 上游连接启用 HTTP keepalive
+
+
+
+<img src="./images/up_server03.png" style="zoom: 80%;" />
+
+#### 修改 TCP 连接中的 local address
+
+
+
+<img src="./images/up_server04.png" style="zoom: 80%;" />
+
+
+
+#### 当客户端关闭连接时
+
+
+
+<img src="./images/up_server05.png" style="zoom: 80%;" />
+
+### 接收上游的响应
 
 
 
