@@ -691,7 +691,7 @@
       cond5(yes)->mozilla
       cond5(no)->lgpl
 
-## 配置 NPM 私服
+## 搭建 NPM 私服
 
 ### nexus
 
