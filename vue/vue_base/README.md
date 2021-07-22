@@ -1737,7 +1737,197 @@ Vue.createApp(App).mount('#app');
 
 ### v-if、v-else-if、v-else
 
+v-if 未选中时，使用 `<!-- v-if -->`  占位，每次找到注释节点替换。
 
+```vue
+const App = {
+  data () {
+    return {
+      linkIndex: 0,
+      urls: [
+        'https://www.taobao.com',
+        'https://www.tmall.com',
+        'https://www.jd.com'
+      ]
+    }
+  },
+  template: `
+    <div>
+      <div>
+        <p v-if="linkIndex === 0">
+          <a v-bind:href="urls[0]" target="_blank">淘宝</a>
+        </p>
+        <p v-else-if="linkIndex === 1">
+          <a v-bind:href="urls[1]" target="_blank">天猫</a>
+        </p>
+        <p v-else>
+          <a v-bind:href="urls[2]" target="_blank">京东</a>
+        </p>
+      </div>
+      <div>
+        <button v-on:click="changeIndex(0)">淘宝</button>
+        <button v-on:click="changeIndex(1)">天猫</button>
+        <button v-on:click="changeIndex(2)">京东</button>
+      </div>
+    </div>
+  `,
+  methods: {
+    changeIndex (index) {
+      this.linkIndex = index;
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+### v-show
+
+v-show 隐藏节点，v-if 删除节点。
+
+```vue
+const App = {
+  data () {
+    return {
+      linkIndex: 0,
+      urls: [
+        'https://www.taobao.com',
+        'https://www.tmall.com',
+        'https://www.jd.com'
+      ]
+    }
+  },
+  template: `
+    <div>
+      <div>
+        <p v-show="linkIndex === 0">
+          <a v-bind:href="urls[0]" target="_blank">淘宝</a>
+        </p>
+        <p v-show="linkIndex === 1">
+          <a v-bind:href="urls[1]" target="_blank">天猫</a>
+        </p>
+        <p v-show="linkIndex === 2">
+          <a v-bind:href="urls[2]" target="_blank">京东</a>
+        </p>
+      </div>
+      <div>
+        <button v-on:click="changeIndex(0)">淘宝</button>
+        <button v-on:click="changeIndex(1)">天猫</button>
+        <button v-on:click="changeIndex(2)">京东</button>
+      </div>
+    </div>
+  `,
+  methods: {
+    changeIndex (index) {
+      this.linkIndex = index;
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+### v-bind
+
+插入表达式
+
+```js
+v-bind:href="" => href=""
+v-on:eventName => 绑定事件处理函数
+```
+
+v-：提示这是 vue 内置的 attribute，可以使用缩写。
+
+```js
+v-bind => :
+v-on => @
+```
+
+
+
+动态的属性名参数不能出现空格和引号，HTML 的合法属性名不能出现空格引号
+
+```html
+<h1 "data-**"="123"></h1>
+```
+
+
+
+```vue
+const App = {
+  data () {
+    return {
+      linkIndex: 0,
+      aAttr: 'href',
+      eventName: 'click',
+      tag: 'tag',
+      urls: [
+        'https://www.taobao.com',
+        'https://www.tmall.com',
+        'https://www.jd.com'
+      ],
+      title: 'This is my title'
+    }
+  },
+  template: `
+    <div>
+      <div>
+        <h1 :[tag]="tag">{{ title }}</h1>
+        <p v-show="linkIndex === 0">
+          <a :[aAttr]="urls[0]" target="_blank">淘宝</a>
+        </p>
+        <p v-show="linkIndex === 1">
+          <a :[aAttr]="urls[1]" target="_blank">天猫</a>
+        </p>
+        <p v-show="linkIndex === 2">
+          <a :[aAttr]="urls[2]" target="_blank">京东</a>
+        </p>
+      </div>
+      <div>
+        <button @[eventName]="changeIndex(0)">淘宝</button>
+        <button @[eventName]="changeIndex(1)">天猫</button>
+        <button @[eventName]="changeIndex(2)">京东</button>
+      </div>
+    </div>
+  `,
+  methods: {
+    changeIndex (index) {
+      this.linkIndex = index;
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+
+
+如果 null 作为属性是无效的，可以利用 null 解除绑定。
+
+```vue
+<h1 v-bind:[null]="title"></h1>
+```
+
+```vue
+<h1 v-bind:[attr]="title"></h1>
+
+this.attr = 'tag';
+this.attr = null;
+```
+
+
+
+插值表达式不能时候全局变量。受限列表。
+
+```js
+var str = '123';
+```
+
+```vue
+<h1>
+  {{ str }}
+</h1>
+```
 
 ## 插值表达式的使用指南
 
@@ -1879,6 +2069,4 @@ Vue.createApp(App).mount('#app');
 ```
 
 ## ES5-ES6 贯穿对象深拷贝问题
-
-
 
