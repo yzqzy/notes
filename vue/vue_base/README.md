@@ -2068,5 +2068,175 @@ var App = {
 Vue.createApp(App).mount('#app');
 ```
 
-## ES5-ES6 贯穿对象深拷贝问题
+## ES5-ES6 对象深拷贝问题
+
+### WeakMap、Map
+
+Map 键名可以是任意类型。WeakMap 键名只能是对象。
+
+
+
+```js
+const oBtn1 = document.querySelector('#btn1');
+const oBtn2 = document.querySelector('#btn2');
+
+oBtn1.addEventListener('click', handleBtn1Click, false);
+oBtn2.addEventListener('click', handleBtn2Click, false);
+
+function handleBtn1Click () {}
+function handleBtn2Click () {}
+
+oBtn1.remove();
+oBtn2.remove();
+
+handleBtn1Click = null;
+handleBtn2Click = null;
+```
+
+=> 
+
+```js
+const oBtn1 = document.querySelector('#btn1');
+const oBtn2 = document.querySelector('#btn2');
+
+const oBtnMap = new WeakMap();
+
+oBtnMap.set(oBtn1, handleBtn1Click);
+oBtnMap.set(oBtn2, handleBtn2Click);
+
+oBtn1.addEventListener('click', oBtnMap.get(oBtn1), false);
+oBtn2.addEventListener('click', oBtnMap.get(oBtn2), false);
+
+function handleBtn1Click () {}
+function handleBtn2Click () {}
+
+oBtn1.remove();
+oBtn2.remove();
+```
+
+WeakMap 键名是弱引用，只要 oBtn1（键名） 被移除，键值就会被回收掉。Map 没有对应功能。
+
+弱引用指的是键名。
+
+### ES5 deepClone
+
+```js
+var obj = {
+  name: 'yueluo',
+  age: '23',
+  info: {
+    hobby: [
+      'travel',
+      'piano', {
+        a: 1
+      }
+    ],
+    career: {
+      teacher: 4,
+      enginner: 9
+    }
+  }
+}
+```
+
+```js
+function deepClone (origin, target) {
+  var tar = target || {};
+  var toStr = Object.prototype.toString;
+  var arrType = '[object Array]';
+  
+  for (var k in origin) {
+    if (origin.hasOwnProperty(k)) {
+      if (typeof origin[k] === 'object' && origin[k] !== null) {
+      	tar[k] = toStr.call(origin[k]) === arrType ? [] : {};
+        deepClone(origin[k], tar[k])
+    	} else {
+        tar[k] = origin[k];
+      }
+    }
+  }
+  
+  return target;
+}
+
+const newObj = deepClone(obj, {});
+
+console.log(newObj);
+```
+
+
+
+=> 
+
+```js
+function deepClone (origin) {
+  if (origin == undefined || typeof origin !== 'object') {
+    return origin;
+  }
+  
+  if (origin instanceof Date) {
+  	return new Date(origin);
+  }
+  
+  if (origin instanceof RegExp) {
+    return new RegExp(origin);
+  }
+  
+  const target = new origin.constructor();
+  
+  for (let k in origin) {
+    if (origin.hasOwnProperty(k)) {
+    	target[k] = deepClone(origin[k]);
+    }
+  }
+  
+  return target;
+}
+```
+
+> origin == undeinfed -> undefined === undefined && null == undefined
+
+
+
+```js
+let test1 = {};
+let test2 = {};
+
+test2.test1 = test1;
+test1.test2 = test2;
+
+function deepClone (origin, hashMap = new WeakMap()) {
+  if (origin == undefined || typeof origin !== 'object') {
+    return origin;
+  }
+  
+  if (origin instanceof Date) {
+  	return new Date(origin);
+  }
+  
+  if (origin instanceof RegExp) {
+    return new RegExp(origin);
+  }
+  
+  const hashKey = hashMa.get(origin);
+  
+  if (hashKey) {
+    return hashKey;
+  }
+  
+  const target = new origin.constructor();
+  
+  hashMap.set(origin, target);
+  
+  for (let k in origin) {
+    if (origin.hasOwnProperty(k)) {
+    	target[k] = deepClone(origin[k], hashMap);
+    }
+  }
+  
+  return target;
+}
+```
+
+## data 属性及数据响应式实现
 
