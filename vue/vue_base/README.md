@@ -2240,3 +2240,5 @@ function deepClone (origin, hashMap = new WeakMap()) {
 
 ## data 属性及数据响应式实现
 
+data 必须是一个函数，Vue 在创建实例的过程中调用 data 函数，返回数据对象，通过响应式包装存储在实例的 $data 中，并且实例是可以直接越过 $data 访问属性的。
+
