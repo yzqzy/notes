@@ -1,119 +1,179 @@
-// const App = {
-//   data () {
-//     return {
-//       studentCount: 0
-//     }
-//   },
-//   template: `
-//     <h1>{{ studentCountInfo }}</h1>
-//     <h1>{{ studentCountInfo }}</h1>
-//     <button @click="addStudentCount">ADD STUDENT COUNT</button>
-//   `,
-//   computed: {
-//     studentCountInfo () {
-//       return this.studentCount > 0 ? ('学生数：' + this.studentCount) : '暂无学生';
-//     }
-//   },
-//   methods: {
-//     addStudentCount () {
-//       this.studentCount += 1;
-//     }
-//   },
-// }
+var Vue = (function () {
+  /**
+   * total: {
+   *  value：函数执行返回的结果
+   *  get：get
+   *  dep：['a', 'b']
+   * }
+   */
+  var computedData = {};
+  var reg_var = /\{\{(.+?)\}\}/g;
 
+  var dataPool = {};
 
-const App = {
-  data () {
-    return {
-      a: 1,
-      b: 2,
-      type: 'plus'  
-    }
-  },
-  template: `
-    <div>
-      <h1>{{ result }}</h1>
-      <p>
-        <span>{{ a }}</span>
-        <span>{{ sym }}</span>
-        <span>{{ b }}</span>
-        <span>=</span>
-        <span>{{ result }}</span>
-      </p>
-      <div>
-        <input type="number" v-model="a" />
-        <input type="number" v-model="b" />
-      </div>
-      <div>
-        <button @click="compute('plus')">+</button>
-        <button @click="compute('minus')">-</button>
-        <button @click="compute('mul')">*</button>
-        <button @click="compute('div')">/</button>
-      </div>
-    </div>
-  `,
-  methods: {
-    compute (type) {
-      this.type = type;
-    }
-  },
-  computed: {
-    // 默认为 getter
-    sym () {
-      switch (this.type) {
-        case 'plus':
-          return '+';
-        case 'minus':
-          return '-';
-        case 'mul':
-          return '*';
-        case 'div':
-          return '/';
-        default:
-          break;
+  var Vue = function (options) {
+    this.$el = document.querySelector(options.el);
+    this.$data = options.data();
+
+    this._init(this, options.computed, options.template);
+  }
+
+  Vue.prototype._init = function (vm, computed, template) {
+    dataReactive(vm);
+    computedReactive(vm, computed)
+    render(vm, template);
+  }
+
+  function render (vm, template) {
+    var container = document.createElement('div');
+    var _el = vm.$el;
+
+    container.innerHTML = template;
+
+    var domTree = _compileTemplate(vm, container);
+
+    _el.appendChild(domTree);
+  }
+
+  function update (vm, key) {
+    dataPool[key].textContent = vm[key];
+  }
+
+  function _compileTemplate (vm, container) {
+    var allNodes = container.getElementsByTagName('*');
+    var nodeItem = null;
+
+    for (var i = 0; i < allNodes.length; i++) {
+      nodeItem = allNodes[i];
+
+      var matched = nodeItem.textContent.match(reg_var);
+
+      if (matched) {
+        nodeItem.textContent = nodeItem.textContent.replace(reg_var, function (node, key) {
+          dataPool[key.trim()] = nodeItem;
+          return vm[key.trim()];
+        });
       }
-    },
-    result: {
-      get () {
-        const a = Number(this.a);
-        const b = Number(this.b);
+    }
 
-        switch (this.type) {
-          case 'plus':
-            return a + b;
-          case 'minus':
-            return a - b;
-          case 'mul':
-            return a * b;
-          case 'div':
-            return a / b;
-          default:
-            break;
-        }
+    return container;
+  }
+
+  function dataReactive (vm) {
+    var _data = vm.$data;
+
+    for (var key in _data) {
+      (function (k) {
+        Object.defineProperty(vm, k, {
+          get: function () {
+            return _data[k];
+          },
+          set: function (newVal) {
+            _data[k] = newVal;
+
+            update(vm, k);
+            _updateComputedData(vm, k, function (key) {
+              update(vm, key);
+            })
+          }
+        })
+      })(key);
+    }
+  }
+
+  function computedReactive (vm, computed) {
+    _initComputedData(vm, computed);
+
+    for (var key in computedData) {
+      (function (k) {
+        Object.defineProperty(vm, k, {
+          get () {
+            return computedData[k].value;
+          },
+          set (newVal) {
+            computedData[k].value = newVal;
+          }
+        })
+      })(key);
+    }
+  }
+
+  function _initComputedData (vm, computed) {
+    for (var key in computed) {
+      var descriptor = Object.getOwnPropertyDescriptor(computed, key);
+      var descriptorFn = descriptor.value.get ? descriptor.value.get : descriptor.value;
+
+      computedData[key] = {
+        value: descriptorFn.call(vm),
+        get: descriptorFn.bind(vm),
+        dep: _collectDep(descriptorFn)
+      };
+    }
+  }
+
+  function _collectDep (fn) {
+    var _collection = fn.toString().match(/this.(.+?)/g);
+
+    if (_collection.length > 0) {
+      for (var i = 0; i < _collection.length; i++) {
+        _collection[i] = _collection[i].split('.')[1];
       }
-    },
-    calData: {
-      get () {
-        return {
-          a: 'number a:' + this.a,
-          b: 'number b:' + this.b,
-          type: 'computed type:' + this.type,
-          result: 'computed result:' + this.result
+    }
+
+    return _collection;
+  }
+
+  function _updateComputedData (vm, key, update) {
+    var _dep = null;
+
+    for (var _key in computedData) {
+      _dep = computedData[_key].dep;
+
+      for (var i = 0; i < _dep.length; i++) {
+        if (_dep[i] === key) {
+          vm[_key] = computedData[_key].get();
+          update(_key);
         }
-      },
-      set (newVal) {
-        this.a = Number(newVal.a.split(':')[1]);
-        this.b = Number(newVal.b.split(':')[1]);
-        this.type = newVal.type.split(':')[1];
       }
     }
   }
-}
 
-const vm = Vue.createApp(App).mount('#app');
+  return Vue;
+})();
 
-vm.calData = {
-  a: 'number a:100',
-  b: 'number b:200',
-  type: 'computed type:div',
-}
+var vm = new Vue({
+  el: '#app',
+  template: `
+    <span>{{ a }}</span>
+    <span>+</span>
+    <span>{{ b }}</span>
+    <span>=</span>
+    <span>{{ total }}</span>
+  `,
+  data () {
+    return {
+      a: 1,
+      b: 2
+    }
+  },
+  computed: {
+    total () {
+      console.log('computed total');
+      return this.a + this.b;
+    }
+  }
+});
+
+console.log(vm.total);
+console.log(vm.total);
+console.log(vm.total);
+console.log(vm.total);
+console.log(vm.total);
+
+vm.a = 100;
+
+console.log(vm.total);
+console.log(vm.total);
+console.log(vm.total);
+console.log(vm.total);
+console.log(vm.total);
