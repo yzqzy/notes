@@ -2242,3 +2242,111 @@ function deepClone (origin, hashMap = new WeakMap()) {
 
 data 必须是一个函数，Vue 在创建实例的过程中调用 data 函数，返回数据对象，通过响应式包装存储在实例的 $data 中，并且实例是可以直接越过 $data 访问属性的。
 
+
+
+> $，$_，$__  等都是 vue 提供的内置 API，开发者尽量避免用这些前缀命名自己的变量和方法名。
+
+ ```js
+ const app = Vue.createApp({
+   data () {
+     return {
+       title: 'This is my Title'
+     }
+   },
+   template: `
+     <h1>{{ title }}</h1>
+   `,
+ });
+ 
+ const vm = app.mount('#app');
+ 
+ vm.$data.title = 'This is your Title';
+ console.log(vm.title);
+ ```
+
+
+
+data 为什么必须是一个函数：
+
+```js
+const obj = {
+  a: 1,
+  b: 2
+}
+
+var vm1 = new Vue({
+  data: obj
+});
+
+var vm2 = new Vue({
+  data: obj
+});
+
+function Vue (options) {
+  // this.$data = options.data();
+  this.$data = options.data;
+
+  for (let key in this.$data) {
+    ((k) => {
+      Object.defineProperty(this, k, {
+        get: () => {
+          return this.$data[k];
+        },
+        set: (newVal) => {
+          this.$data[k] = newVal;
+        }
+      })
+    })(key);
+  }
+}
+
+vm1.b = 3;
+
+console.log(vm1, vm2);
+```
+
+如果 obj 是一个对象，对象是引用值，所以实例化的时候是一份对象，两个组件同时操作就会引起冲突。
+
+
+
+`__defineGetter__`，`__defineSetter__` 	Obejct 上面的静态方法，Mozila 提出的规范，兼容性比较好
+
+```js
+const obj = () => {
+  return {
+    a: 1,
+    b: 2
+  }
+};
+
+var vm1 = new Vue({
+  data: obj
+});
+
+var vm2 = new Vue({
+  data: obj
+});
+
+function Vue (options) {
+  this.$data = options.data();
+
+  for (let key in this.$data) {
+    ((k) => {
+      this.__defineGetter__(k, () => {
+        return this.$data[k];
+      });
+
+      this.__defineSetter__(k, (newVal) => {
+        this.$data[k] = newVal;
+      });
+    })(key);
+  }
+}
+
+vm1.b = 3;
+
+console.log(vm1, vm2);
+```
+
+## Express 编写后端数据接口
+
