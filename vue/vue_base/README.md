@@ -2348,5 +2348,174 @@ vm1.b = 3;
 console.log(vm1, vm2);
 ```
 
-## Express 编写后端数据接口
+## methods 及实例方法挂载实现
+
+向组件实例添加方法。
+
+
+
+Vue 创建实例时，会自动为 methods 绑定当前实例 this，保证在事件监听时，回调始终指向当前组件实例。避免使用箭头函数。 
+
+箭头函数会阻止 Vue 正确绑定组件实例的 this。模板直接调用的方法应该尽量避免副作用操作。
+
+ ```vue
+ const app = Vue.createApp({
+   data () {
+     return {
+       title: 'This is my title'
+     }
+   },
+   template: `
+     <h1>{{ title }}</h1>
+     <button @click="changeTitle">Change</button>
+   `,
+   methods: {
+     changeTitle () {
+       this.title = 'This is your title';
+     }
+   },
+ });
+ 
+ const vm = app.mount('#app');
+ ```
+
+
+
+lodash 常用的 JS 工具库。
+
+```html
+<script src="https://unpkg.com/lodash@4.17.20/lodash.min.js"></script>
+```
+
+```vue
+const List = {
+  data () {
+    return {
+      teachers: []
+    }
+  },
+  template: `
+    <div>
+      <table border="1">
+        <thead>
+          <tr>
+            <td>ID</td>
+            <td>姓名</td>
+            <td>学科</td>
+          </tr>
+        </thead>
+        <tbody v-if="teachers.length > 0">
+          <tr
+            v-for="item of teachers"
+            key="item.id"
+          >
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.subject }}</td>
+          </tr>
+        </tbody>
+        <tbody>
+          <tr>
+            <td colspan="3">暂无数据</td>
+          </tr>
+        </tbody>
+      </table>
+      <button @click="debounceGetData">GET TEACHERS'DATA</button>
+    </div>
+  `,
+  created () {
+    this.debounceGetData = _.debounce(this.getData, 1000);
+  },
+  unmounted() {
+    this.debounceGetData.cancel();
+  },
+  methods: {
+    async getData () {
+      const result = await axios('http://localhost:4000/getTeachers');
+      this.teachers = result.data;
+    }
+  },
+}
+
+Vue.createApp(List).mount('#app');
+```
+
+
+
+methods 实现
+
+```vue
+
+var Vue = (function () {
+  function Vue (options) {
+    this.$data = options.data();
+    this._methods = options.methods;
+
+    this._init(this);
+  }
+
+  Vue.prototype._init = function (vm) {
+    initData(vm);
+    initMethods(vm);
+  }
+
+  function initData (vm) {
+    for (var key in vm.$data) {
+      (function (k) {
+        Object.defineProperty(vm, k, {
+          get: function () {
+            return vm.$data[k];
+          },
+          set: function (newVal) {
+            vm.$data[k] = newVal;
+          }
+        })
+      })(key);
+    }
+  }
+
+  function initMethods (vm) {
+    for (var key in vm._methods) {
+      vm[key] = vm._methods[key];
+    }
+  }
+
+  return Vue;
+})();
+
+const vm = new Vue({
+  data () {
+    return {
+      a: 1,
+      b: 2
+    }
+  },
+  methods: {
+    increaseA (num) {
+      this.a += num;
+    },
+    increaseB (num) {
+      this.b += num;
+    },
+    getTotal () {
+      console.log(this.a + this.b);
+    }
+  },
+});
+
+vm.increaseA(1);
+vm.increaseA(1);
+vm.increaseA(1);
+vm.increaseA(1);
+
+vm.increaseA(2);
+vm.increaseA(2);
+vm.increaseA(2);
+vm.increaseA(2);
+
+console.log(vm);
+console.log(vm.getTotal());
+```
+
+## v-if/v-show 与构建架子
 
