@@ -3325,5 +3325,204 @@ const App = {
 const vm = Vue.createApp(App).mount('#app');
 ```
 
+## computed、watch 综合案例
 
+### 后端接口
+
+```json
+[
+  {
+    "id": 1,
+    "question": "1 + 1 = ?",
+    "items": [2, 5, 4, 3],
+    "answer": 0
+  },
+  {
+    "id": 2,
+    "question": "1 + 2 = ?",
+    "items": [5, 2, 4, 3],
+    "answer": 3
+  },
+  {
+    "id": 3,
+    "question": "1 + 3 = ?",
+    "items": [2, 4, 5, 3],
+    "answer": 1
+  },
+  {
+    "id": 4,
+    "question": "1 + 4 = ?",
+    "items": [2, 4, 5, 3],
+    "answer": 2
+  }
+]
+```
+
+```js
+const express = require('express');
+const bodyParse = require('body-parser');
+const { readFileSync } = require('fs');
+const { resolve } = require('path');
+
+const app = express();
+
+let myResult = [];
+
+app.use(bodyParse.urlencoded({ extended: true }));
+app.use(bodyParse.json());
+
+app.all('*', function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-methods', 'GET,POST')
+
+  next();
+});
+
+app.post('/getQuestion', function (req, res) {
+  const order = req.body.order;
+  const questionData = JSON.parse(readFileSync(resolve(__dirname, 'data/question.json'), 'utf-8'));
+
+  const questionResult = questionData[order];
+
+  if (questionResult) {
+    const { id, question, items } = questionResult;
+
+    res.send({
+      id,
+      question,
+      items
+    });
+  } else {
+    res.send({
+      errorCode: 1,
+      msg: 'NO_DATA',
+      data: myResult
+    });
+
+    myResult = [];
+  }
+});
+
+app.post('/uploadAnswer', function (req, res) {
+  const { order, myAnswer } = req.body;
+  const questionData = JSON.parse(readFileSync(resolve(__dirname, 'data/question.json'), 'utf-8'));
+
+  const { id, question, items, answer } = questionData[order];
+
+  myResult.push({
+    qid: id,
+    question,
+    myAnswer: items[myAnswer],
+    rightAnswer: items[answer],
+    isRight: myAnswer == answer
+  });
+
+  res.send({
+    errorCode: 0,
+    msg: 'ok'
+  });
+});
+
+app.listen(4000, function () {
+  console.log('Welcome to use Express on 4000');
+});
+```
+
+### 前端代码
+
+```js
+import qs from 'qs';
+
+const App = {
+  data () {
+    return {
+      order: 0,
+      questionData: {},
+      myAnswer: -1,
+      myResults: []
+    }
+  },
+  template: `
+    <div>
+      <div v-if="myResults.length > 0">
+        <h1>考试结果：</h1>
+        <ul>
+          <li
+            v-for="(item, index) of myResults"
+            :key="item.qid"
+          >
+            <h2>编号：{{ item.qid }}</h2>
+            <p>题目：{{ item.question }}</p>
+            <p>你的答案：{{ item.myAnswer }}</p>
+            <p>正确答案：{{ item.rightAnswer }}</p>
+            <p>正确：{{ isRightText(item.isRight) }}</p>
+          </li>
+        </ul>
+      </div>
+      <div v-else>
+        <h1>编号：{{ questionData.id }}</h1>
+        <p>{{ questionData.question }}</p>
+        <div>
+          <button
+            v-for="(item, index) of questionData.items"
+            :key="item"
+            @click="selectAnswer(index)"
+          >
+            {{ item }}
+          </button>
+        </div>
+      </div>
+    </div>    
+  `,
+  mounted () {
+    this.getQuestion(this.order);
+  },
+  watch: {
+    order (newVal, oldVal) {
+      this.uploadAnswer(oldVal, this.myAnswer);
+      this.getQuestion(newVal);
+    }
+  },
+  computed: {
+    isRightText () {
+      return function (isRight) {
+        return isRight ? '是' : '否';
+      }
+    }
+  },
+  methods: {
+    getQuestion (order) {
+      axios.post('http://localhost:4000/getQuestion', qs.stringify({
+        order
+      }))
+        .then(res => {
+          const result = res.data;
+
+          if (result.errorCode) {
+            this.myResults = result.data;
+            return;
+          }
+
+          this.questionData = result.data;
+        });
+    },
+    uploadAnswer (order, myAnswer) {
+      axios.post('http://localhost:4000/uploadAnswer', qs.stringify({
+        order,
+        myAnswer
+      })).then(res => {
+        console.log(res.data);
+      });
+    },
+    selectAnswer (index) {
+      this.myAnswer = index;
+      this.order += 1;
+    }
+  },
+}
+
+Vue.createApp(App).mount('#app');
+```
+
+## watch 实现
 
