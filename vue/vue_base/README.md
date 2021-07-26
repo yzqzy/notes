@@ -3724,3 +3724,57 @@ console.log(vm.total);
 
 ## webpack 样式相关配置方案
 
+webpack 各种依赖之间的版本兼容问题非常大。
+
+webpack 性能优化比较困难。
+
+复杂配置的上手很困难。
+
+
+
+sass less -> sass sass-loader
+
+postcss postcss-loader -> autoprefixer 兼容性前缀
+
+css-loader ：模块化解析
+
+vue-style-loader
+
+
+
+```js
+yarn add sass sass-loader postcss postcss-loader css-loader autoprefixer vue-style-loader -D
+```
+
+```js
+yarn remove sass-loader
+```
+
+```js
+yarn add sass-loader@10.1.1 -D
+```
+
+```js
+yarn remove postcss-loader
+```
+
+```js
+yarn add postcss-loader@^4 -D
+```
+
+```js
+yarn remove css-loader
+```
+
+```js
+yarn add css-loader@^4 -D
+```
+
+
+
+
+
+
+
+
+

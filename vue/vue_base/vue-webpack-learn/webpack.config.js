@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
+const autoperfixer = require('autoprefixer');
 
 module.exports = {
   mode: 'development',
@@ -18,6 +19,29 @@ module.exports = {
       {
         test: /\.vue$/,
         loader: 'vue-loader'
+      },
+      {
+        test: /\.scss/,
+        use: [
+          'vue-style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  autoperfixer({
+                    overrideBrowserslist: [
+                      '> 1%',
+                      'last 2 versions'
+                    ]
+                  })
+                ]
+              }
+            }
+          },
+          'sass-loader'
+        ]
       }
     ]
   },
