@@ -2705,8 +2705,72 @@ server {
 
 ### 接收上游的响应
 
+#### 接收上游的 HTTP 响应头部
 
+限定了上游 server 最大值。
 
+<img src="./images/http_receive.png" style="zoom: 80%;" />
+
+#### 接收上游的 HTTP 包体
+
+<img src="./images/http_receive02.png" style="zoom: 80%;" />
+
+<img src="./images/http_receive03.png" style="zoom: 80%;" />
+
+#### 及时转发包体
+
+<img src="./images/http_receive04.png" style="zoom: 80%;" />
+
+#### 接收上游时网络速度相关指令
+
+<img src="./images/http_receive05.png" style="zoom: 80%;" />
+
+#### 上游包体的持久化
+
+<img src="./images/http_receive06.png" style="zoom: 80%;" />
+
+```nginx
+server {
+  listen 8012;
+  default_type text/plain;
+  
+  root html;
+  
+  location / {
+    
+  }
+  
+  location /test {
+    return 200 '8012 server resonse.';
+  }
+}
+```
+
+```nginx
+upstream proxyups {
+  server 127.0.0.1:8012 weight=1;
+
+server {
+  listen 80;
+  server_name store.yueluo.club;
+  
+  error_log logs/error.log debug;
+  
+  root /tmp;
+  
+  location / {
+    proxy_pass http://proxyups;
+    proxy_store on;
+    proxy_store_access user:rw group:rw all:r;
+  }
+}
+```
+
+```js
+cur store.yueluo.club tech/a.txt
+```
+
+### 处理上游的响应头部
 
 
 
