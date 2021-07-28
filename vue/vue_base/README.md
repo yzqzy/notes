@@ -3995,11 +3995,226 @@ button {
  Vue.createApp(App).mount('#app'); 
  ```
 
-## style 绑定方法分析、变量命名法
+## style 绑定方法、变量命名法
+
+`$attrs` - attribute 父组件通过调用组件时的传递的属性的集合，就是 `$attributes`。
+
+### 命名规范
+
+* cameClass（小驼峰命名法）、thisIsVariable
+  * 变量名、方法名
+
+* kebab-case（短横线命名法 ）、this-is-variable
+  * 脊柱命名法 spinal-case	train-case
+  * 对象的属性名，CSS 常规类名（BEM 规范）
+
+* snake_case（蛇形命名法）、this_is_variable
+  * 大写的常量，ERROR_TYPE
+* 匈牙利命名法（变量 => 属性 + 类型 -> 描述）、lpszTest（lpsz 以空字符为结尾的字符串的长整型指针 Test）
+* PascalCase（大驼峰命名法）、ThisIsVariable
+  * 类名、组件名、模块名
+
+### 案例
+
+`:style`，`v-bind:style: JS 对象，数组`。
+
+属性名可以用 cameClass，kebab-case。
 
 
 
+```css
+h1,
+p {
+  margin: 0;
+  font-weight: normal;
+}
 
 
+button {
+  border: none;
+  outline: none;
+}
 
+.my-alert {
+  display: none;
+  width: 500px;
+  margin: 50px auto;
+  box-shadow: 1px 3px 5px #333;
+  overflow: hidden;
+
+  &.show {
+    display: block;
+  }
+
+  .header {
+    height: 40px;
+    padding: 0 15px;
+    line-height: 44px;
+    box-sizing: border-box;
+
+    h1 {
+      font-size: 16px;
+    }
+  }
+
+  .content {
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  .btn-group {
+    height: 34px;
+    margin: 20px 0;
+    padding: 0 15px;
+
+    button {
+      float: right;
+      height: 34px;
+      padding: 0 15px;
+      background-color: #fff;
+      color: #666;
+      border: 1px solid #666;
+      border-radius: 5px;
+
+      &:hover {
+        opacity: .5;
+      }
+    }
+  }
+
+  &.danger {
+    .header {
+      background-color: red;
+      color: #fff;
+    }
+  }
+}
+```
+
+```js
+import './main.scss';
+
+const MyAlert = {
+  data () {
+    return {
+      title: 'This is a Alert',
+      content: 'This is a Alter Content',
+      isShow: true,
+      hasError: true,
+      alertClassObject: {
+        show: true,
+        danger: true
+      },
+      showClass: 'show',
+      errorClass: 'danger',
+      btnBgColor: 'red',
+      btnStyle: {
+        color: '#fff',
+        backgroundColor: 'red'
+      },
+      commonBtnStyle: {
+        borderRadius: '17px'
+      }
+    }
+  },
+  computed: {
+    alertClassObject2 () {
+      return {
+        show: this.isShow,
+        danger: this.isShow && this.hasError
+      };
+    }
+  },
+  template: `
+    <!-- <div class="my-alert danger show"></div> -->
+    <!-- <div
+      class="my-alert"
+      :class="{
+        // 添加某个样式类名的条件
+        show: isShow,
+        danger: hasError
+      }"
+    > -->
+    <!-- <div
+      class="my-alert"
+      :class="alertClassObject"
+    > -->
+    <!-- <div
+      class="my-alert"
+      :class="alertClassObject2"
+    > -->
+    <!-- <div
+    :class="['my-alert', showClass, errorClass]"
+    > -->
+    <!-- <div
+      :class="[
+        'my-alert',
+        isShow ? showClass : '',
+        isShow && hasError ? errorClass : ''
+      ]"
+    > -->
+    <div
+      :class="[
+        'my-alert',
+        hasError ? errorClass : ''
+      ]"
+    >
+      <header class="header">
+        <h1>{{ title }}</h1>
+      </header>
+      <div class="content">
+        <p>{{ content }}</p>
+      </div>
+      <div class="btn-group">
+        <!-- <button
+          :style="{
+            color: '#fff',
+            // backgroundColor: 'red',
+            // 'background-color': 'red'
+            // backgroundColor: btnBgColor
+          }"
+        > -->
+        <!-- <button
+          :style="btnStyle"
+        > -->
+        <!-- <button
+          :style="[btnStyle, commonBtnStyle]"
+        > -->
+        <!-- 渲染数组中最后一个被浏览器支持的值，如果浏览器本身支持不带前缀的值，那就渲染不带前缀的值 -->
+        <!-- <button
+          :style="{ display: ['-webkit-box', '-ms-flexbox', 'flex'] }"
+        > -->
+        <!-- :style 中，vue 会在运行时自动检测添加相应的前缀，如果不需要前缀，会去掉前缀 -->
+        <button
+          :style="[
+            btnStyle,
+            {
+              '-webkit-transition': 'opacity .3s'
+            }
+          ]"
+        >
+          Confrim
+        </button>
+      </div>
+    </div>
+  `
+}
+
+const App = {
+  components: {
+    MyAlert
+  },
+  data () {
+    return {
+      showClass: 'show'
+    }
+  },
+  template: `
+    <!-- class 与 组件内部 class 会合并 -->
+    <my-alert :class="showClass" />
+  `
+};
+
+Vue.createApp(App).mount('#app'); 
+```
 
