@@ -1,14 +1,77 @@
-div {
-  width: 100px;
-  height: 100px;
-  border-color: #000;
-  transition: background-color .3s;
+// div {
+//   width: 100px;
+//   height: 100px;
+//   border-color: #000;
+//   transition: background-color .3s;
 
-  &.active {
-    background-color: red;
+//   &.active {
+//     background-color: red;
+//   }
+
+//   :hover {
+//     background-color: orange;
+//   }
+// }
+
+h1,
+p {
+  margin: 0;
+  font-weight: normal;
+}
+
+
+button {
+  border: none;
+  outline: none;
+}
+
+.my-alert {
+  display: none;
+  width: 500px;
+  margin: 50px auto;
+  box-shadow: 1px 3px 5px #333;
+  overflow: hidden;
+
+  &.show {
+    display: block;
   }
 
-  :hover {
-    background-color: orange;
+  .header {
+    height: 40px;
+    padding: 0 15px;
+    line-height: 44px;
+    box-sizing: border-box;
+
+    h1 {
+      font-size: 16px;
+    }
+  }
+
+  .content {
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  .btn-group {
+    height: 34px;
+    margin: 20px 0;
+    padding: 0 15px;
+
+    button {
+      float: right;
+      height: 34px;
+      padding: 0 15px;
+      background-color: #fff;
+      color: #666;
+      border: 1px solid #666;
+      border-radius: 5px;
+    }
+  }
+
+  &.danger {
+    .header {
+      background-color: red;
+      color: #fff;
+    }
   }
 }

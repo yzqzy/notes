@@ -3772,6 +3772,231 @@ yarn add css-loader@^4 -D
 
 
 
+```js
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
+const autoperfixer = require('autoprefixer');
+
+module.exports = {
+  mode: 'development',
+  entry: './src/main.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name][hash].js'
+  },
+  externals: {
+    'vue': 'Vue'
+  },
+  devtool: 'source-map',
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      },
+      {
+        test: /\.scss/,
+        use: [
+          'vue-style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: [
+                  autoperfixer({
+                    overrideBrowserslist: [
+                      '> 1%',
+                      'last 2 versions'
+                    ]
+                  })
+                ]
+              }
+            }
+          },
+          'sass-loader'
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new VueLoaderPlugin(),
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'public/index.html')
+    })
+  ]
+}
+```
+
+## class 绑定方法案例分析
+
+v-bind：在标签上绑定属性
+
+>  v-bind:class  v-bind:style -> :class / : style
+
+vue 对 `v-bind:class/style` 进行了特殊的封装，形式时比较多的，对象和数组的绑定方式。
+
+
+
+```css
+h1,
+p {
+  margin: 0;
+  font-weight: normal;
+}
+
+
+button {
+  border: none;
+  outline: none;
+}
+
+.my-alert {
+  display: none;
+  width: 500px;
+  margin: 50px auto;
+  box-shadow: 1px 3px 5px #333;
+  overflow: hidden;
+
+  &.show {
+    display: block;
+  }
+
+  .header {
+    height: 40px;
+    padding: 0 15px;
+    line-height: 44px;
+    box-sizing: border-box;
+
+    h1 {
+      font-size: 16px;
+    }
+  }
+
+  .content {
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  .btn-group {
+    height: 34px;
+    margin: 20px 0;
+    padding: 0 15px;
+
+    button {
+      float: right;
+      height: 34px;
+      padding: 0 15px;
+      background-color: #fff;
+      color: #666;
+      border: 1px solid #666;
+      border-radius: 5px;
+    }
+  }
+
+  &.danger {
+    .header {
+      background-color: red;
+      color: #fff;
+    }
+  }
+}
+```
+
+ ```js
+ import './main.scss';
+ 
+ const MyAlert = {
+   data () {
+     return {
+       title: 'This is a Alert',
+       content: 'This is a Alter Content',
+       isShow: true,
+       hasError: true,
+       alertClassObject: {
+         show: true,
+         danger: true
+       },
+       showClass: 'show',
+       errorClass: 'danger'
+     }
+   },
+   computed: {
+     alertClassObject2 () {
+       return {
+         show: this.isShow,
+         danger: this.isShow && this.hasError
+       };
+     }
+   },
+   template: `
+     <!-- <div class="my-alert danger show"></div> -->
+     <!-- <div
+       class="my-alert"
+       :class="{
+         // 添加某个样式类名的条件
+         show: isShow,
+         danger: hasError
+       }"
+     > -->
+     <!-- <div
+       class="my-alert"
+       :class="alertClassObject"
+     > -->
+     <!-- <div
+       class="my-alert"
+       :class="alertClassObject2"
+     > -->
+     <!-- <div
+     :class="['my-alert', showClass, errorClass]"
+     > -->
+     <!-- <div
+       :class="[
+         'my-alert',
+         isShow ? showClass : '',
+         isShow && hasError ? errorClass : ''
+       ]"
+     > -->
+     <div
+       :class="[
+         'my-alert',
+         hasError ? errorClass : ''
+       ]"
+     >
+       <header class="header">
+         <h1>{{ title }}</h1>
+       </header>
+       <div class="content">
+         <p>{{ content }}</p>
+       </div>
+       <div class="btn-group">
+         <button>Confrim</button>
+       </div>
+     </div>
+   `
+ }
+ 
+ const App = {
+   components: {
+     MyAlert
+   },
+   data () {
+     return {
+       showClass: 'show'
+     }
+   },
+   template: `
+     <!-- class 与 组件内部 class 会合并 -->
+     <my-alert :class="showClass" />
+   `
+ };
+ 
+ Vue.createApp(App).mount('#app'); 
+ ```
+
+## style 绑定方法分析、变量命名法
+
 
 
 
