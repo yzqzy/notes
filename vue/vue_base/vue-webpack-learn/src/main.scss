@@ -13,69 +13,86 @@
 //   }
 // }
 
-h1,
-p {
-  margin: 0;
-  font-weight: normal;
-}
+
+// h1,
+// p {
+//   margin: 0;
+//   font-weight: normal;
+// }
 
 
-button {
-  border: none;
-  outline: none;
-}
+// button {
+//   border: none;
+//   outline: none;
+// }
 
-.my-alert {
+// .my-alert {
+//   display: none;
+//   width: 500px;
+//   margin: 50px auto;
+//   box-shadow: 1px 3px 5px #333;
+//   overflow: hidden;
+
+//   &.show {
+//     display: block;
+//   }
+
+//   .header {
+//     height: 40px;
+//     padding: 0 15px;
+//     line-height: 44px;
+//     box-sizing: border-box;
+
+//     h1 {
+//       font-size: 16px;
+//     }
+//   }
+
+//   .content {
+//     padding: 15px;
+//     box-sizing: border-box;
+//   }
+
+//   .btn-group {
+//     height: 34px;
+//     margin: 20px 0;
+//     padding: 0 15px;
+
+//     button {
+//       float: right;
+//       height: 34px;
+//       padding: 0 15px;
+//       background-color: #fff;
+//       color: #666;
+//       border: 1px solid #666;
+//       border-radius: 5px;
+
+//       &:hover {
+//         opacity: .5;
+//       }
+//     }
+//   }
+
+//   &.danger {
+//     .header {
+//       background-color: red;
+//       color: #fff;
+//     }
+//   }
+// }
+
+
+.box {
   display: none;
   width: 500px;
-  margin: 50px auto;
-  box-shadow: 1px 3px 5px #333;
-  overflow: hidden;
+  height: 500px;
+  background-color: #999;
 
   &.show {
     display: block;
   }
 
-  .header {
-    height: 40px;
-    padding: 0 15px;
-    line-height: 44px;
-    box-sizing: border-box;
-
-    h1 {
-      font-size: 16px;
-    }
-  }
-
-  .content {
-    padding: 15px;
-    box-sizing: border-box;
-  }
-
-  .btn-group {
-    height: 34px;
-    margin: 20px 0;
-    padding: 0 15px;
-
-    button {
-      float: right;
-      height: 34px;
-      padding: 0 15px;
-      background-color: #fff;
-      color: #666;
-      border: 1px solid #666;
-      border-radius: 5px;
-
-      &:hover {
-        opacity: .5;
-      }
-    }
-  }
-
   &.danger {
-    .header {
-      background-color: red;
-      color: #fff;
-    }
+    background-color: red;
   }
 }

@@ -4218,3 +4218,13 @@ const App = {
 Vue.createApp(App).mount('#app'); 
 ```
 
+## 实现 class 和 style 绑定
+
+通过实现更加深刻的掌握 Vue 机制，加深记忆。
+
+提供编程技巧和思路。增强 JS 基本功。
+
+
+
+
+
