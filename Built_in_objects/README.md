@@ -1118,3 +1118,260 @@ arr.$findIndex(function (item, index, arr) {
 
 ## Array.prototype.flat
 
+ES2019 。数组扁平化，将多维数组转换为一维数组。
+
+
+
+```js
+const arr = [0, 1, [2, 3], 4, 5];
+```
+
+返回一个新的数组，将二位数组转化为一维数组。
+
+```js
+const newArr = arr.flat(); // [0, 1, 2, 3, 4, 5]
+
+newArr === arr // false
+```
+
+
+
+flat 默认情况下只平铺一层，默认值为 1。参数代表结构深度，默认为 1。
+
+```js
+const arr = [0, 1, [2, [3, 4], 5], 6];
+
+arr.flat(); // [0, 1, 2, [3, 4], 5, 6]
+arr.flat(1); // [0, 1, 2, [3, 4], 5, 6]
+arr.flat(2); // [0, 1, 2, 3, 4, 5, 6]
+```
+
+
+
+多维数组，参数可以设置为 Infinity，正无穷
+
+```js
+const arr = [0, [1, 2, [3, 4, [5, 6, [7, 8, [9]]]]]];
+
+arr.flat(Infinity); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+
+
+参数为负数或者字符串，不做任何扁平处理。数字字符串除外，会先转化为数字，然后进行处理。
+
+```js
+const arr = [0, 1, [2, [3, 4], 5], 6];
+
+arr.flat(-2); // [0, 1, [2, [3, 4], 5], 6];
+arr.flat('a'); //  [0, 1, [2, [3, 4], 5], 6];
+arr.flat('3'); // [0, 1, 2, 3, 4, 5, 6] 
+
+```
+
+数字必须从 1 开始填写，直到 Infinity。
+
+```js
+arr.flat(0); // [0, 1, [2, [3, 4], 5], 6];
+```
+
+false 会转化为 0，true 会转换为 1。
+
+```js
+arr.flat(false); // [0, 1, [2, [3, 4], 5], 6];
+arr.flat(true); // [0, 1, 2, [3, 4], 5, 6];
+```
+
+
+
+忽略所有的数组空隙，empty
+
+```js
+const arr = [1, , 2, [3, 4, , 5, , , 6, [7, , 8, 9, , [0]]]];
+
+arr.flat(Infinity); // [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+```
+
+
+
+concat 是可以放入多个数组元素，或者其他数组
+
+```js
+var a = 1,
+    b = [2, 3],
+    c = [3, 4];
+
+b.concat(a); // [2, 3, 1];
+b.concat(a, c); // [2, 3, 1, 3, 4]
+```
+
+
+
+浅扁平化实现：
+
+```js
+function $shallowFlat (arr) {
+  return arr.reduce(function (prev, current) {
+    return prev.concat(current);
+  }, []);
+}
+
+const arr = [0, 1, [2, [3, 4], 5], 6];
+
+$shallowFlat(arr); //  [0, 1, 2, [3, 4], 5, 6]
+```
+
+```js
+function $shallowFlat (arr) {
+  return [].concat(...arr);
+}
+
+const arr = [0, 1, [2, [3, 4], 5], 6];
+
+$shallowFlat(arr); //  [0, 1, 2, [3, 4], 5, 6]
+```
+
+
+
+深度扁平化：
+
+```js
+const arr = [0, 1, [2, [3, 4], 5], 6];
+```
+
+```js
+// reduce + concat + isArray + 递归
+
+Array.prototype.$flat = function () {
+	var arr = this,
+      deep = arguments[0] !== Infinity ? arguments[0] >>> 0 : Infinity;
+  
+  return deep > 0 ? (
+  	arr.reduce(function (prev, current) {
+      return prev.concat(Array.isArray(current) ? current.$flat(deep - 1) : current);
+    }, [])
+  ) : arr;
+}
+
+arr.$flat(); // [0, 1, [2, [3, 4], 5], 6]
+arr.$flat(Infinity); // [0, 1, 2, 3, 4, 5, 6]
+```
+
+```js
+// forEach + isArray + push + 递归
+
+Array.prototype.$flat = function () {
+	var arr = this,
+      deep = arguments[0] !== Infinity ? arguments[0] >>> 0 : Infinity,
+      res = [];
+  
+  (function _(arr, deep) {
+    // 数组扩展方法会剔除 empty
+    arr.forEach(function (item) {
+    	if (Array.isArray(item) && deep > 0) {
+        _(item, deep - 1);
+      } else {
+        res.push(item);
+      }
+    });
+  })(arr, deep);
+  
+  return res;
+}
+
+arr.$flat(); // [0, 1, [2, [3, 4], 5], 6]
+arr.$flat(Infinity); // [0, 1, 2, 3, 4, 5, 6]
+```
+
+```js
+// for of + isArray + push + 去除 empty
+
+Array.prototype.$flat = function () {
+	var arr = this,
+      deep = arguments[0] !== Infinity ? arguments[0] >>> 0 : Infinity,
+      res = [];
+  
+  (function _(arr, deep) {
+    for (var item of arr) {
+      if (Array.isArray(item) && deep > 0) {
+        _(item, deep - 1);
+      } else {
+        // empty 判断需要用到 void 0
+        item != void 0 && res.push(item);
+      }
+    }
+  })(arr, deep);
+  
+  return res;
+}
+
+arr.$flat(); // [0, 1, [2, [3, 4], 5], 6]
+arr.$flat(Infinity); // [0, 1, 2, 3, 4, 5, 6]
+```
+
+```js
+// stack pop + push
+
+Array.prototype.$flat = function () {
+  var arr = this,
+      stack = [...arr],
+      res = [];
+  
+  while (stack.length) {
+    const item = stack.pop();
+    
+    if (Array.isArray(item)) {
+      stack.push(...item);
+    } else {
+      res.push(item);
+    }
+  }
+  
+  return res.reverse();
+}
+
+arr.$flat(); // [0, 1, 2, 3, 4, 5, 6]
+arr.$flat(Infinity); // [0, 1, 2, 3, 4, 5, 6]
+```
+
+```js
+// 纯递归
+
+Array.prototype.$flat = function () {
+  var arr = this,
+      res = [];
+  
+  (function _(arr) {
+    arr.forEach(function (item) {
+      if (Array.isArray(item)) {
+        _(item);
+      } else {
+        res.push(item);
+      }
+    })
+  })(arr);
+  
+  return res;
+}
+
+arr.$flat(); // [0, 1, 2, 3, 4, 5, 6]
+```
+
+```js
+// 生成器函数
+
+function * $flat (arr) {
+  for (var item of arr) {
+    if (Array.isArray(item)) {
+      yield * $flat(item);
+    } else {
+      yield item;
+    }
+  }
+}
+
+[...$flat(arr)]; // [0, 1, 2, 3, 4, 5, 6] 
+```
+
+## Array.prototype.flatMap
+
