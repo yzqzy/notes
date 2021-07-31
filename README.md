@@ -38,6 +38,7 @@
   + [vue-cli源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vue_cli) 已完成
   + [vue-ssr源码实现](https://git.yueluo.club/heora/notes/src/master/vue/vue_ssr) 已完成
 * [Electron](https://git.yueluo.club/heora/notes/src/master/electron) 已完成
+* [Superset](https://git.yueluo.club/heora/notes/src/master/superset) 已完成
 * react
   + [react基础](https://git.yueluo.club/heora/notes/src/master/react/react_base) 更新中...
   + [react进阶](https://git.yueluo.club/heora/notes/src/master/react/react_plus) 已废弃
