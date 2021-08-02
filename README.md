@@ -13,7 +13,9 @@
 * [CSS3](https://git.yueluo.club/heora/notes/src/master/css3) 已完成
 * [碎片知识](https://git.yueluo.club/heora/notes/src/master/fragment) 已完成
 * [工具函数](https://git.yueluo.club/heora/notes/src/master/utils) 已完成
-* [NPM](https://git.yueluo.club/heora/notes/src/master/npm) 已完成
+* NPM
+  + [NPM基础](https://git.yueluo.club/heora/notes/src/master/npm/base) 已完成
+  + [NPM私服](https://git.yueluo.club/heora/notes/src/master/npm/repos) 已完成
 * [JSDOC](https://git.yueluo.club/heora/notes/src/master/doc) 已完成
 * 网络
   + [网络基础](https://git.yueluo.club/heora/notes/src/master/network/base) 已完成
