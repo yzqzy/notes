@@ -97,7 +97,7 @@ npm install
     new RegExp(`${APP_DIR}/src`),
     /superset-ui.*\/src/,
     new RegExp(`${APP_DIR}/.storybook`),
-    path.resolve(__dirname, 'src') // 添加本行代码，对 windows 环境不友好
+    path.resolve(__dirname, 'src'), // 添加本行代码，对 windows 环境不友好
   ],
   use: [babelLoader],
 }
@@ -108,6 +108,12 @@ npm install
 ```js
 npm run dev
 ```
+
+
+
+<img src="./images/example.png" style="zoom: 60%" />
+
+
 
 ### 总结
 
