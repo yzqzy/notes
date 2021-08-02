@@ -1,0 +1,15 @@
+{
+  "name": "functional",
+  "version": "1.0.0",
+  "description": "函数式编程的历史：https://zhuanlan.zhihu.com/p/24648375?refer=marisa。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
