@@ -897,7 +897,232 @@ const fp = require('lodash/fp');
 console.log(fp.map(parseInt, arr)); // [ 23, 8, 10 ]
 ```
 
+## Point Free
+
+Point Free：我们可以把数据处理的过程定义成与数据无关的合成运算，不需要用到代表数据的那个参数，只要把简单的运算步骤合成到一起，在使用这种模式之前我们需要定义一些辅助的基本运算函数。
+
+* 不需要指明处理的数据
+* **只需要合成运算过程**
+* 需要定义一些辅助的基本运算函数
+
+```js
+const f = fp.flowFight(fp.join('-'), fp.map(_.toLowser), fp.split(' '));
+```
 
 
 
+案例：Hello World => hello_world
+
+```js
+// 非 Point Free 模式
+
+function f (word) {
+  return word.toLowerCase().replace(/\s+/g, '_');
+}
+
+console.log(f('Hello World')); // hello_world
+```
+
+```js
+// Point Free 模式
+
+const fp = require('lodash/fp');
+
+const f2 = fp.flowRight(fp.replace(/\s+/g, '_'), fp.toLower);
+
+console.log(f2('Hello World')); // hello_world
+```
+
+
+
+案例：把一个字符串首字母提取并转化为大写，使用 . 作为分隔符
+
+world wild web => [ 'W', 'W', 'W' ]
+
+```js
+const fp = require('lodash/fp');
+
+const firstLetterToUpper = fp.flowRight(fp.join('. '), fp.map(fp.first), fp.map(fp.toUpper), fp.split(' '));
+
+console.log(firstLetterToUpper('world wild web')); // W. W. W
+```
+
+优化：
+
+```js
+const fp = require('lodash/fp');
+
+const firstLetterToUpper = fp.flowRight(fp.join('. '), fp.map(fp.flowRight(fp.first, fp.toUpper)), fp.split(' '));
+
+console.log(firstLetterToUpper('world wild web')); // W. W. W
+```
+
+## Functor 函子
+
+ ### 为什么要学习函子
+
+目前为止我们已经学习了函数式编程的基础，但是并没有涉及在函数式编程中如何把副作用控制在可控的范围、异常处理、异步操作等。
+
+### 什么是  Functor
+
+容器：包含值和值的变形关系（这个变形关系就是函数）
+
+函子：是一个特殊的容器，通过一个普通的对象来实现，该对象具有 map 方法，map 方法可以运行一个函数对值进行处理（变形关系）
+
+### 代码演示
+
+```js
+// Functor 函子
+
+class Container {
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return new Container(func(this._value));
+  }
+}
+
+const res = new Container(5)
+  .map(x => x + 1)
+  .map(x => x * x);
+
+console.log(res);
+```
+
+优化
+
+```js
+class Container {
+  static of (value) {
+    return new Container(value);
+  }
+
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return Container.of(func(this._value));
+  }
+}
+
+const res = Container.of(5)
+  .map(x => x + 2)
+  .map(x => x * x);
+
+console.log(res); // Container { _value: 49 }
+```
+
+### 总结
+
+* 函数式编程的运算不直接操作值，而是由函子完成
+* 函子就是一个实现了 map 契约的对象
+* 我们可以把函子想象成一个盒子，这个盒子里封装了一个值
+* 想要处理盒子中的值，我们需要给盒子的 map 方法传递一个处理值的函数（纯函数），由这个函数对值进行处理
+* 最终 map 方法返回一个包含新值的盒子（函子）
+
+```js
+// null、undefined 的问题
+
+class Container {
+  static of (value) {
+    return new Container(value);
+  }
+
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return Container.of(func(this._value));
+  }
+}
+
+const res = Container.of(null)
+  .map(x => x.toUpperCase()); //  Cannot read property 'toUpperCase' of null
+
+console.log(res);
+```
+
+## MayBe 函子
+
+* 编程的过程中可能会遇到很多错误，需要对这些错误做相应的处理
+* MayBe 函子的作用就是可以对外部的空值情况做处理（控制副作用在允许的范围）
+
+### 错误处理
+
+```js
+// MayBe 函子
+
+class MayBe {
+  static of (value) {
+    return new MayBe(value);
+  }
+
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return this.isNothing() ? MayBe.of(null) : MayBe.of(func(this._value));
+  }
+
+  isNothing () {
+    return this._value === null || this._value === undefined;
+  }
+}
+
+const res = MayBe.of('Hello World')
+              .map(x => x.toUpperCase());
+
+console.log(res); // MayBe { _value: 'HELLO WORLD' }
+
+
+const res2 = MayBe.of(null)
+              .map(x => x.toUpperCase());
+
+console.log(res2); // MayBe { _value: null }
+```
+
+### MayBe 函数问题
+
+```js
+// MayBe 函子
+
+class MayBe {
+  static of (value) {
+    return new MayBe(value);
+  }
+
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return this.isNothing() ? MayBe.of(null) : MayBe.of(func(this._value));
+  }
+
+  isNothing () {
+    return this._value === null || this._value === undefined;
+  }
+}
+
+// 虽然可以处理空值问题，但是多次调用 map，如果出现问题，不好调试
+const res2 = MayBe.of('hello world')
+              .map(x => x.toUpperCase())
+              .map(x => null)
+              .map(x => x.split(' '));
+
+console.log(res2); // MayBe { _value: null }
+```
+
+## Either 函子
+
+* Either 两者中的任何一个，类似于 if...else... 的处理
+* 异常会让函数变的不纯，Either 函子可以用来做异常处理
+
+```js
+```
 
