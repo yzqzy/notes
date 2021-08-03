@@ -23,7 +23,7 @@
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
 * webpack
   + [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
-  + [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 暂停中...
+  + [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 已终止
   + [webpack进阶](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
   + [自定义loader、plugins](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
   + [webpack源码实现](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
@@ -43,8 +43,9 @@
   + [react基础](https://git.yueluo.club/heora/notes/src/master/react/react_base) 更新中...
   + [react进阶](https://git.yueluo.club/heora/notes/src/master/react/react_plus) 已废弃
   + [react-hooks](https://git.yueluo.club/heora/notes/src/master/react/react_hooks) 已完成
-  + [react组件库](https://git.yueluo.club/heora/notes/src/master/react/react_components) 更新中...
+  + [react组件库](https://git.yueluo.club/heora/notes/src/master/react/react_components) 已终止
   + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 暂停中...
+* [TypeScipt](https://git.yueluo.club/heora/notes/src/master/typescript)  更新中...
 * NodeJS
   + [Node基础](https://git.yueluo.club/heora/notes/src/master/node/base) 已完成
   + [Node进阶](https://git.yueluo.club/heora/notes/src/master/node/plus) 已完成
