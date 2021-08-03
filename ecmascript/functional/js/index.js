@@ -1,28 +1,42 @@
-// Task 处理异步任务
-
 const fs = require('fs');
-const { task } = require('folktale/concurrency/task');
-const { split, find } = require('lodash/fp');
+const fp = require('lodash/fp');
 
-function readFile (filename) {
-  return task(resolver => {
-    fs.readFile(filename, 'utf-8', (err, data) => {
-      if (err) resolver.reject(err);
-
-      resolver.resolve(data);
+class IO {
+  static of (value) {
+    return new IO(function () {
+      return value;
     });
-  });
+  }
+
+  constructor (func) {
+    this._value = func;
+  }
+
+  join () {
+    return this._value();
+  }
+
+  map (func) {
+    return new IO(fp.flowRight(func, this._value));
+  }
+
+  flatMap (func) {
+    return this.map(func).join();
+  }
 }
 
-readFile('./package.json')
-  .map(split('\n'))
-  .map(find(x => x.includes('version')))
-  .run()
-  .listen({
-    onRejected: err => {
-      console.log(err);
-    },
-    onResolved: value => {
-      console.log(value);
-    }
-  })
+
+const readFile = (filename) => new IO(() => fs.readFileSync(filename, 'utf-8'));
+
+const print = (x) => new IO(() => {
+  console.log(x);
+  return x;
+});
+
+
+const ret = readFile('package.json')
+              .map(fp.toUpper)
+              .flatMap(print)
+              .join();
+
+console.log(ret);

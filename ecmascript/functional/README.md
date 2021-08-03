@@ -1285,5 +1285,129 @@ readFile('./package.json')
   })
 ```
 
-## Pinted 函子
+## Pointed 函子
 
+* Pointed 函子是实现了 of 静态方法的函子
+* of 方法是为了避免使用 new 来创建对象，更深层的含义是 of 方法用来把值放到上下文 Context（把值放到容器中，使用 map 来处理值）
+
+```js
+class Container {
+  static of (value) {
+    return new Container(value);
+  }
+  
+  // ...
+}
+
+Container.of(2)
+	.map(x => x + 5);
+```
+
+## Monad
+
+### IO 函子的问题
+
+```js
+const fs = require('fs');
+const fp = require('lodash/fp');
+
+class IO {
+  static of (value) {
+    return new IO(function () {
+      return value;
+    });
+  }
+
+  constructor (func) {
+    this._value = func;
+  }
+
+  map (func) {
+    return new IO(fp.flowRight(func, this._value));
+  }
+}
+
+
+const readFile = (filename) => new IO(() => fs.readFileSync(filename, 'utf-8'));
+
+const print = (x) => new IO(() => {
+  console.log(x);
+  return x;
+});
+
+const cat = fp.flowRight(print, readFile);
+
+const ret = cat('package.json');
+
+console.log(ret); // IO { _value: [Function (anonymous)] }
+```
+
+### 解决方案
+
+* Monad 函子是可以变扁的 Pointed 函子，IO(IO(x))
+* 一个函子如何具有 join 和 of 两个方法并遵守一些定律就是一个 Monad
+
+```js
+const fs = require('fs');
+const fp = require('lodash/fp');
+
+class IO {
+  static of (value) {
+    return new IO(function () {
+      return value;
+    });
+  }
+
+  constructor (func) {
+    this._value = func;
+  }
+
+  join () {
+    return this._value();
+  }
+
+  map (func) {
+    return new IO(fp.flowRight(func, this._value));
+  }
+
+  flatMap (func) {
+    return this.map(func).join();
+  }
+}
+
+
+const readFile = (filename) => new IO(() => fs.readFileSync(filename, 'utf-8'));
+
+const print = (x) => new IO(() => {
+  console.log(x);
+  return x;
+});
+
+
+const ret = readFile('package.json')
+              .map(fp.toUpper)
+              .flatMap(print)
+              .join();
+
+console.log(ret);
+```
+
+
+
+当一个函数返回一个函子的时候，我们就可以使用 Monad，Monad 可以帮我们解决函子嵌套的问题。
+
+当我们想合并一个函数，并且这个函数返回一个值，这时我们可以调用 map 方法，当我们想合并一个函数，但是这个函数返回一个函子，我们需要使用 flatMap 方法。
+
+## 总结
+
+函数式编程是一种编程范式，也可以说是一种编程思想，它和面向对象编程时同级别的。
+
+函数式编程的核心思想是把运算过程抽象成函数，即编程过程中是面向函数编程的。
+
+我们学习函数式编程，是因为 vue 或者 react 已经使用部分函数式编程的思想，学习函数式编程有助于我们更好的使用 vue 或 react。
+
+
+
+函数式编程基础：lodash、纯函数、柯里化、管道、函数组合。
+
+函子：Functor、MayBe、Either、IO、Task（folktale）、Monad。
