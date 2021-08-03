@@ -1124,5 +1124,166 @@ console.log(res2); // MayBe { _value: null }
 * 异常会让函数变的不纯，Either 函子可以用来做异常处理
 
 ```js
+// Either 函子
+
+class Left {
+  static of (value) {
+    return new Left(value);
+  }
+
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return this;
+  }
+}
+
+class Right {
+  static of (value) {
+    return new Right(value);
+  }
+
+  constructor (value) {
+    this._value = value;
+  }
+
+  map (func) {
+    return Right.of(func(this._value));
+  }
+}
+
+const res1 = Right.of(12).map(x => x + 2);
+const res2 = Left.of(12).map(x => x + 2);
+
+console.log(res1); // Right { _value: 14 }
+console.log(res2); // Left { _value: 12 }
 ```
+
+```js
+function parseJson (str) {
+  try {
+    return Right.of(JSON.parse(str));
+  } catch (e) {
+    return Left.of({
+      message: e.message
+    });
+  }
+}
+
+const ret3 = parseJson('{ name: yueluo }');
+console.log(ret3);
+// Left {
+//   _value: { message: 'Unexpected token n in JSON at position 2' }
+// }
+
+const ret4 = parseJson('{ "name": "yueluo" }');
+console.log(ret4); // Right { _value: { name: 'yueluo' } }
+
+const ret5 = parseJson('{ "name": "yueluo" }')
+              .map(x => x.name.toUpperCase());
+console.log(ret5); // Right { _value: 'YUELUO' }
+```
+
+## IO 函子
+
+* IO 函子的 _value 是一个函数，这里是把函数作为值来处理
+* IO 函子可以把不纯的动作存储到 _value 中，延迟执行这个不纯的操作（惰性执行）
+* 把不纯的操作交给调用者来处理
+
+```js
+const fp = require('lodash/fp');
+
+class IO {
+  static of (value) {
+    return new IO(function () {
+      return value;
+    });
+  }
+
+  constructor (func) {
+    this._value = func;
+  }
+
+  map (func) {
+    // 把当前的 value 和传入的 fn 组合成一个新的函数
+    return new IO(fp.flowRight(func, this._value));
+  }
+}
+
+
+const ret = IO.of(process).map(p => p.execPath);
+
+console.log(ret._value());
+```
+
+
+
+IO 函子内部包装了一些函数，当我们传递函数时，可能是不纯的操作，IO 函子不管函数是否纯或者不纯，会交由用户执行。
+
+## folktale
+
+Task 异步执行
+
+* 异步任务的实现过于复杂，我们可以使用 folktale 中的 Task
+* folktale 一个标准的函数式编程库
+  * 和 lodash、ramda 不同，它没有提供很多功能函数
+  * 只提供了一些函数式处理的操作，例如：compose、curry 等，一些函子 Task、Either、MayBe 等
+
+### folktale 基本使用
+
+```js
+const { compose, curry } = require('folktale/core/lambda');
+const { toUpper, first } = require('lodash/fp');
+
+const f = curry(2, (x, y) => {
+  return x + y;
+});
+
+console.log(f(1, 2)); // 3
+console.log(f(1)(2)); // 3
+
+
+const f2 = compose(toUpper, first)
+
+console.log(f2(['one', 'two'])); // ONE
+```
+
+### Task 函子
+
+folktale（2.3.2）2.x 中的 Task 和 1.0 中的 Task 区别很大，这里以 2.3.2 来演示。
+
+```js
+// Task 处理异步任务
+
+const fs = require('fs');
+const { task } = require('folktale/concurrency/task');
+const { split, find } = require('lodash/fp');
+
+function readFile (filename) {
+  return task(resolver => {
+    fs.readFile(filename, 'utf-8', (err, data) => {
+      if (err) resolver.reject(err);
+
+      resolver.resolve(data);
+    });
+  });
+}
+
+readFile('./package.json')
+  .map(split('\n'))
+  .map(find(x => x.includes('version')))
+  .run()
+  .listen({
+    onRejected: err => {
+      console.log(err);
+    },
+    onResolved: value => {
+      console.log(value); // "version": "1.0.0",
+    }
+  })
+```
+
+## Pinted 函子
 
