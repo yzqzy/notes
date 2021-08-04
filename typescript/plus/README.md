@@ -256,3 +256,226 @@ sum('100', 100);
 ```
 
 安装插件后直接在代码中就会提示错误，不用使用命令进行检测。代码保存后就会进行检测。
+
+### Flow 类型推断
+
+flow 插件可以进检测出类型，给予提示。
+
+```js
+// @flow
+
+function square (n) {
+  return n * n;
+}
+
+square('100');
+```
+
+### Flow 类型注解
+
+```js
+// @flow
+
+function square (n: number) {
+  return n * n;
+}
+
+square('100');
+
+
+let num: number = 10;
+
+num = 'string';
+
+
+function foo (): number {
+  return 'string';
+}
+```
+
+```js
+// @flow
+
+function foo (): void {}
+```
+
+### Flow 原始类型
+
+```js
+// @flow
+
+const a: string = 'foo';
+
+const b1: number = 100;
+const b2: number = NaN;
+const b3: number = Infinity;
+
+const c: boolean = true;
+
+const d: null = null;
+
+const e: void = undefined;
+
+const f: symbol = Symbol();
+```
+
+### Flow 数组类型
+
+```js
+// @flow
+
+const arr1: Array<number> = [1, 2, 3, 4];
+
+const arr2: string[] = ['1', '2', '3', '4'];
+
+const arr3: [string, number] = ['foo', 1]; // 固定长度的数组一般叫做元组
+```
+
+### Flow 对象类型
+
+```js
+// @flow
+
+const obj1: { foo: string, bar: number } = { foo: 'string', bar: 100 };
+
+const obj2: { foo?: string, bar: number } = { bar: 100 };
+
+const obj3: { [string]: string | number } = {};
+
+obj3.key1 = 'value1';
+obj3.key2 = 100;
+obj3.key3 = false;
+```
+
+### Flow 函数类型
+
+```js
+// @flow
+
+function foo (callback: (string,number) => void) {
+  callback('string', 100);
+}
+
+foo(function (a, b) { });
+```
+
+### Flow 特殊类型
+
+```js
+// @flow
+
+const a: 'foo' = 'foo'; // 字面量类型
+
+const type: 'success' | 'warning' | 'danger' = 'success'; // 联合类型
+
+const b: string | number = 2;
+
+type StringOrNumber = string | number;
+
+const c: StringOrNumber = 'string';
+
+
+// MayBe 类型
+const gender1: ?number = null;
+const gender2: ?number = undefined;
+const gender3: ?number | null | void = undefined;
+```
+
+### Flow Mixed 与 Array
+
+```js
+// @flow
+
+// Mixied 类型，可以接收任意类型的值，Mixied 代表所有类型联合类型
+function passMixied (value: mixed) {}
+
+passMixied('string');
+passMixied(1);
+passMixied(false);
+
+
+// Any 类型也可以接收任意类型数据
+function passAny (value: any) {}
+
+passAny('string');
+passAny(1);
+passAny(false);
+```
+
+Any 是弱类型，Mixied 是强类型。相比来说，Any 是不安全的，开发中，尽量不要使用 Any 类型。
+
+Any 类型存在的意义主要是为了兼容旧代码，很多陈旧代码可能会借助 JS 动态类型做一些特殊处理。
+
+```js
+// @flow
+
+// Mixied 类型，可以接收任意类型的值，Mixied 代表所有类型联合类型
+function passMixied (value: mixed) {
+  value.substr(1); //语法报错
+}
+
+passMixied('string');
+passMixied(1);
+passMixied(false);
+
+
+// Any 类型也可以接收任意类型数据
+function passAny (value: any) {
+  value.substr(1); // 语法不会报错
+}
+
+passAny('string');
+passAny(1);
+passAny(false);
+```
+
+使用 typeof 判断，可以使 Mixied 不发生语法错误，兼容多种类型。
+
+```js
+// @flow
+
+function passMixied (value: mixed) {
+  if (typeof value === 'string') {
+    value.substr(1);
+  }
+  if (typeof value === 'number') {
+    value * value;
+  }
+}
+
+passMixied('string');
+passMixied(1);
+passMixied(false);
+```
+
+### Flow 类型总结
+
+除了上面列举的类型外，Flow 还有很多类型，这里就不一一介绍了。
+
+Flow 官网类型描述文档： https://flow.org/en/docs/types/
+
+第三方类型手册：https://www.saltycrane.com/cheat-sheets/flow-type/latest/
+
+### 运行环境 API
+
+```js
+// @flow
+
+// HTMLElement 类型 存在 flow 创建临时目录中
+
+const element: HTMLElement | null = document.getElementById('app'); // 浏览器环境 API 类型限制
+```
+
+JavaScript 标准库： https://github.com/facebook/flow/blob/master/lib/core.js
+
+https://github.com/facebook/flow/blob/master/lib/dom.js
+
+https://github.com/facebook/flow/blob/master/lib/bom.js
+
+https://github.com/facebook/flow/blob/master/lib/cssom.js
+
+https://github.com/facebook/flow/blob/master/lib/node.js
+
+## TypeScipt 概述
+
+TypeScript 是一门基于

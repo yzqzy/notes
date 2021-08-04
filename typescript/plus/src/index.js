@@ -1,11 +1,5 @@
 // @flow
 
-function sum (a: number, b: number) {
-  return a + b;
-}
+// HTMLElement 类型 存在 flow 创建临时目录中
 
-sum(100, 100);
-
-sum('100', '100');
-
-sum('100', 100);
+const element: HTMLElement | null = document.getElementById('app'); // 浏览器环境 API 类型限制
