@@ -45,8 +45,7 @@
   + [react-hooks](https://git.yueluo.club/heora/notes/src/master/react/react_hooks) 已完成
   + [react组件库](https://git.yueluo.club/heora/notes/src/master/react/react_components) 已终止
   + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 暂停中...
-* TypeScipt
-  + [TypeScipt进阶](https://git.yueluo.club/heora/notes/src/master/typescript/plus)  更新中...
+* [TypeScipt](https://git.yueluo.club/heora/notes/src/master/typescript) 更新中...
 * NodeJS
   + [Node基础](https://git.yueluo.club/heora/notes/src/master/node/base) 已完成
   + [Node进阶](https://git.yueluo.club/heora/notes/src/master/node/plus) 已完成

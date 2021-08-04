@@ -476,6 +476,33 @@ https://github.com/facebook/flow/blob/master/lib/cssom.js
 
 https://github.com/facebook/flow/blob/master/lib/node.js
 
-## TypeScipt 概述
+## TypeScript
 
-TypeScript 是一门基于
+### TypeScipt 概述
+
+TypeScript 是一门基于 JavaScript 基础之上的编程语言，是 JavaScript 的超集（扩展特性）。
+
+Angular / Vue 3.0 都已经使用 TypeScript。
+
+#### 优点
+
+* 避免开发过程中可能出现的类型异常、提高编码效率以及代码可靠程度
+* TypeScript 可以用来转换 ES 的新特性，而不是使用 babel 进行转换，最低可以编译 ES3 版本代码
+* 任何一种 JavaScript 运行环境都支持，TypeScript 最终也会编译成 JavaScript 代码
+* 相对于 Flow，TypeScript 的功能更为强大，生态也更健全、更完善
+* TypeScript 属于渐进式，可以随着学习进一步使用
+
+#### 缺点
+
+* 语言本身多了很多概念，接口、泛型、枚举等
+* 项目初期，TypeScript 会增加成本，早期会编写很多类型声明
+
+### TypeScipt 环境配置
+
+```js
+yarn init --yes
+```
+
+```js
+```
+
