@@ -241,3 +241,18 @@ VS - 查看 - 扩展 - Flow Language Support（Flow 官方提供的插件）。
 
 插件支持情况：https://flow.org/en/docs/editors/
 
+```js
+// @flow
+
+function sum (a: number, b: number) {
+  return a + b;
+}
+
+sum(100, 100);
+
+sum('100', '100');
+
+sum('100', 100);
+```
+
+安装插件后直接在代码中就会提示错误，不用使用命令进行检测。代码保存后就会进行检测。
