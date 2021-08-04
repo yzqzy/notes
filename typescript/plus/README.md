@@ -150,7 +150,9 @@ function sum (a, b) {
 }
 ```
 
-## Flow 概述
+## Flow
+
+### Flow 概述
 
 Flow 是一个 JavaScript 的静态类型检查器。2014 年由 FaceBook 推出的一款工具。
 
@@ -180,7 +182,7 @@ function sum (a: number, b :number) {
 
 Flow 并不要求给每一个变量添加类型注解，我们完全可以根据需求添加注解。相比较于 TypeScipt ，Flow 只是一个小工具，很简单。
 
-## Flow 环境配置
+### Flow 环境配置
 
 ```js
 npm init -y
@@ -203,9 +205,9 @@ sum(100, 100);
 sum('100', '100');
 ```
 
-## Flow 编译移除注解
+### Flow 编译移除注解
 
-### 官方推荐
+#### 官方推荐
 
 ```js
 yarn add flow-remove-types --dev
@@ -215,7 +217,7 @@ yarn add flow-remove-types --dev
 yarn flow-remove-types . -d dist
 ```
 
-### babel 配合 flow 转换插件
+#### babel 配合 flow 转换插件
 
 ```js
 yarn add @babel/core @babel/cli @babel/preset-flow --dev
@@ -233,5 +235,9 @@ yarn add @babel/core @babel/cli @babel/preset-flow --dev
 yarn babel src -d dist
 ```
 
-## Flow 开发工具插件
+### Flow 开发工具插件
+
+VS - 查看 - 扩展 - Flow Language Support（Flow 官方提供的插件）。
+
+插件支持情况：https://flow.org/en/docs/editors/
 
