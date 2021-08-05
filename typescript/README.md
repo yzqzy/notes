@@ -152,7 +152,7 @@ function sum (a, b) {
 
 ## Flow
 
-### Flow 概述
+### 概述
 
 Flow 是一个 JavaScript 的静态类型检查器。2014 年由 FaceBook 推出的一款工具。
 
@@ -182,7 +182,7 @@ function sum (a: number, b :number) {
 
 Flow 并不要求给每一个变量添加类型注解，我们完全可以根据需求添加注解。相比较于 TypeScipt ，Flow 只是一个小工具，很简单。
 
-### Flow 环境配置
+### 环境配置
 
 ```js
 npm init -y
@@ -205,7 +205,7 @@ sum(100, 100);
 sum('100', '100');
 ```
 
-### Flow 编译移除注解
+### 编译移除注解
 
 #### 官方推荐
 
@@ -235,7 +235,7 @@ yarn add @babel/core @babel/cli @babel/preset-flow --dev
 yarn babel src -d dist
 ```
 
-### Flow 开发工具插件
+### 开发工具插件
 
 VS - 查看 - 扩展 - Flow Language Support（Flow 官方提供的插件）。
 
@@ -257,7 +257,7 @@ sum('100', 100);
 
 安装插件后直接在代码中就会提示错误，不用使用命令进行检测。代码保存后就会进行检测。
 
-### Flow 类型推断
+### 类型推断
 
 flow 插件可以进检测出类型，给予提示。
 
@@ -271,7 +271,7 @@ function square (n) {
 square('100');
 ```
 
-### Flow 类型注解
+### 类型注解
 
 ```js
 // @flow
@@ -299,7 +299,7 @@ function foo (): number {
 function foo (): void {}
 ```
 
-### Flow 原始类型
+### 原始类型
 
 ```js
 // @flow
@@ -319,7 +319,7 @@ const e: void = undefined;
 const f: symbol = Symbol();
 ```
 
-### Flow 数组类型
+### 数组类型
 
 ```js
 // @flow
@@ -331,7 +331,7 @@ const arr2: string[] = ['1', '2', '3', '4'];
 const arr3: [string, number] = ['foo', 1]; // 固定长度的数组一般叫做元组
 ```
 
-### Flow 对象类型
+### 对象类型
 
 ```js
 // @flow
@@ -347,7 +347,7 @@ obj3.key2 = 100;
 obj3.key3 = false;
 ```
 
-### Flow 函数类型
+### 函数类型
 
 ```js
 // @flow
@@ -359,7 +359,7 @@ function foo (callback: (string,number) => void) {
 foo(function (a, b) { });
 ```
 
-### Flow 特殊类型
+### 特殊类型
 
 ```js
 // @flow
@@ -381,7 +381,7 @@ const gender2: ?number = undefined;
 const gender3: ?number | null | void = undefined;
 ```
 
-### Flow Mixed 与 Array
+### Mixed 与 Array
 
 ```js
 // @flow
@@ -448,7 +448,7 @@ passMixied(1);
 passMixied(false);
 ```
 
-### Flow 类型总结
+### 类型总结
 
 除了上面列举的类型外，Flow 还有很多类型，这里就不一一介绍了。
 
@@ -478,7 +478,7 @@ https://github.com/facebook/flow/blob/master/lib/node.js
 
 ## TypeScript
 
-### TypeScipt 概述
+### 概述
 
 TypeScript 是一门基于 JavaScript 基础之上的编程语言，是 JavaScript 的超集（扩展特性）。
 
@@ -497,12 +497,199 @@ Angular / Vue 3.0 都已经使用 TypeScript。
 * 语言本身多了很多概念，接口、泛型、枚举等
 * 项目初期，TypeScript 会增加成本，早期会编写很多类型声明
 
-### TypeScipt 环境配置
+### 环境配置
+
+初始化项目
 
 ```js
 yarn init --yes
 ```
 
+安装 typescript 模块，提供 tsc 命令
+
 ```js
+yarn add typescript --dev
 ```
+
+```js
+const hello = name => {
+  console.log(`Hello ${name}`)
+}
+
+hello('TypeScript');
+```
+
+执行编译命令
+
+```js
+yarn tsc index.ts
+```
+
+
+
+VsCode 自带类型检查
+
+```js
+const hello = (name: string) => {
+  console.log(`Hello ${name}`)
+}
+
+hello(123);
+```
+
+### 配置文件
+
+生成配置文件
+
+```js
+yarn tsc --init
+```
+
+修改配置文件
+
+```js
+{
+  "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig.json to read more about this file */
+
+    /* Basic Options */
+    // "incremental": true,                         /* Enable incremental compilation */
+    "target": "es5",                                /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', 'ES2021', or 'ESNEXT'. */
+    "module": "commonjs",                           /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+    // "lib": [],                                   /* Specify library files to be included in the compilation. */
+    // "allowJs": true,                             /* Allow javascript files to be compiled. */
+    // "checkJs": true,                             /* Report errors in .js files. */
+    // "jsx": "preserve",                           /* Specify JSX code generation: 'preserve', 'react-native', 'react', 'react-jsx' or 'react-jsxdev'. */
+    // "declaration": true,                         /* Generates corresponding '.d.ts' file. */
+    // "declarationMap": true,                      /* Generates a sourcemap for each corresponding '.d.ts' file. */
+    "sourceMap": true,                           /* Generates corresponding '.map' file. */
+    // "outFile": "./",                             /* Concatenate and emit output to single file. */
+    "outDir": "dist",                              /* Redirect output structure to the directory. */
+    "rootDir": "src",                             /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    // "composite": true,                           /* Enable project compilation */
+    // "tsBuildInfoFile": "./",                     /* Specify file to store incremental compilation information */
+    // "removeComments": true,                      /* Do not emit comments to output. */
+    // "noEmit": true,                              /* Do not emit outputs. */
+    // "importHelpers": true,                       /* Import emit helpers from 'tslib'. */
+    // "downlevelIteration": true,                  /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
+    // "isolatedModules": true,                     /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+
+    /* Strict Type-Checking Options */
+    "strict": true,                                 /* Enable all strict type-checking options. */
+    // "noImplicitAny": true,                       /* Raise error on expressions and declarations with an implied 'any' type. */
+    // "strictNullChecks": true,                    /* Enable strict null checks. */
+    // "strictFunctionTypes": true,                 /* Enable strict checking of function types. */
+    // "strictBindCallApply": true,                 /* Enable strict 'bind', 'call', and 'apply' methods on functions. */
+    // "strictPropertyInitialization": true,        /* Enable strict checking of property initialization in classes. */
+    // "noImplicitThis": true,                      /* Raise error on 'this' expressions with an implied 'any' type. */
+    // "alwaysStrict": true,                        /* Parse in strict mode and emit "use strict" for each source file. */
+
+    /* Additional Checks */
+    // "noUnusedLocals": true,                      /* Report errors on unused locals. */
+    // "noUnusedParameters": true,                  /* Report errors on unused parameters. */
+    // "noImplicitReturns": true,                   /* Report error when not all code paths in function return a value. */
+    // "noFallthroughCasesInSwitch": true,          /* Report errors for fallthrough cases in switch statement. */
+    // "noUncheckedIndexedAccess": true,            /* Include 'undefined' in index signature results */
+    // "noImplicitOverride": true,                  /* Ensure overriding members in derived classes are marked with an 'override' modifier. */
+    // "noPropertyAccessFromIndexSignature": true,  /* Require undeclared properties from index signatures to use element accesses. */
+
+    /* Module Resolution Options */
+    // "moduleResolution": "node",                  /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
+    // "baseUrl": "./",                             /* Base directory to resolve non-absolute module names. */
+    // "paths": {},                                 /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+    // "rootDirs": [],                              /* List of root folders whose combined content represents the structure of the project at runtime. */
+    // "typeRoots": [],                             /* List of folders to include type definitions from. */
+    // "types": [],                                 /* Type declaration files to be included in compilation. */
+    // "allowSyntheticDefaultImports": true,        /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
+    "esModuleInterop": true,                        /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
+    // "preserveSymlinks": true,                    /* Do not resolve the real path of symlinks. */
+    // "allowUmdGlobalAccess": true,                /* Allow accessing UMD globals from modules. */
+
+    /* Source Map Options */
+    // "sourceRoot": "",                            /* Specify the location where debugger should locate TypeScript files instead of source locations. */
+    // "mapRoot": "",                               /* Specify the location where debugger should locate map files instead of generated locations. */
+    // "inlineSourceMap": true,                     /* Emit a single file with source maps instead of having a separate file. */
+    // "inlineSources": true,                       /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
+
+    /* Experimental Options */
+    // "experimentalDecorators": true,              /* Enables experimental support for ES7 decorators. */
+    // "emitDecoratorMetadata": true,               /* Enables experimental support for emitting type metadata for decorators. */
+
+    /* Advanced Options */
+    "skipLibCheck": true,                           /* Skip type checking of declaration files. */
+    "forceConsistentCasingInFileNames": true        /* Disallow inconsistently-cased references to the same file. */
+  }
+}
+```
+
+运行命令
+
+```js
+yarn tsc
+```
+
+### 原始类型
+
+```js
+// 相比较于 Flow，ts 这三种原始类型允许为空，可以赋值为 null 或者 undefined
+const a: string = 'foo';
+const b: number = 100; // NaN、Infinity
+const c: boolean = false; // true
+
+// 严格模式下不能赋值为空
+const d: string = null;
+
+// 严格模式下只能是 undefined
+const e: void = undefined; // null、undefined
+
+const f: null = null;
+
+const g: undefined = undefined;
+
+// 直接声明会报错
+const h: symbol = Symbol();
+```
+
+### 标准库声明
+
+Symbol 是 JavaScript 内置的标准对象，是 ES6 新增的。
+
+```js
+const h: symbol = Symbol(); // 直接声明会报错
+```
+
+对于配置文件 target 是 es5 的情况，只有引入 es5 的标准库，只有将 target 设置为 es6，才会引入 es6 的标准库。
+
+任何一个在 ES6 新增的对象，直接使用也会报错，比如 Promise。解决这个问题的方法有两种。
+
+* 修改 target 为 es2015，默认标准库会引入 es6 标准库
+* 配置 lib 选项，手动引入 es6 标准库和其他标准库
+
+```js
+{
+  "compilerOptions": {
+    "target": "es5",                                /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', 'ES2021', or 'ESNEXT'. */
+    "module": "commonjs",                           /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+    "lib": ["ES2015", "DOM"],                                      /* Specify library files to be included in the compilation. */
+  }
+}
+```
+
+标准库就是内置对象所对应的声明文件。
+
+### 中文错误消息
+
+ts 可以显示中文错误信息，默认支持多语言。
+
+```js
+yarn tsc --locale zh-CN
+```
+
+vscode 中的错误消息，可以配置 typescript locale，设置为 zh-CN。
+
+
+
+虽然 ts 和 vscode 都可以设置中文错误消息，但是并不推荐这样做，很多情况下对于一些不理解错误，我们会使用 chrome 这类的搜索引擎搜索相关错误，如果使用中文提示的内容，很难搜索到相关问题。
+
+### 作用域问题
 
