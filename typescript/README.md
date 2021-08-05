@@ -693,3 +693,298 @@ vscode 中的错误消息，可以配置 typescript locale，设置为 zh-CN。
 
 ### 作用域问题
 
+两个文件定义同一变量会报错。有两种方式可以解决。
+
+第一种
+
+```js
+(function () {
+  const a: string = "foo";
+})();
+```
+
+第二种
+
+```js
+const a = 123;
+
+export {};
+```
+
+### Object 类型
+
+TypeScript 中的 Object 类型并不仅指对象类型，而是泛指所有的非原始对象，即对象、数组、函数。
+
+```js
+const foo: object = {}; // {}、array、function () {}
+```
+
+对象的定义可以使用字面量的方式，更好的方式是使用接口。
+
+```js
+const obj: { foo: number, bar: number } = { foo: 1, bar: 2 }; // 对象类型，类型结构完全一致
+```
+
+### 数组类型
+
+```js
+const arr: Array<number> = [1, 2, 3, 4];
+
+const arr2: number[] = [1, 2, 3];
+
+function sum (...args: number[]) {
+  return args.reduce((prev, curr) => prev + curr, 0);
+}
+
+sum(1, 2, 3, 4);
+```
+
+### 元组类型
+
+元组类型是一种特殊的数据结构，元组就是一个明确元素数量及元素类型的数组。
+
+```js
+const tuple: [number, string] = [18, 'foo'];
+
+const tuple2: [number, string] = [18, 'foo', 1]; // 报错
+
+
+const age = tuple[0];
+const name = tuple[1];
+
+const [v1, v2] = tuple;
+
+export {}; // 确保跟其他实例没有成员冲突
+```
+
+### 枚举类型
+
+* 枚举类型可以给一组数据分别起一个别名
+* 一个枚举中只会存在固定的值，不存在超出范围的可能性
+
+```js
+// const PostStatus = {
+//   Draft: 0,
+//   Uppublished: 1,
+//   Published: 2
+// }
+
+// enum PostStatus {
+//   Draft =  0,
+//   Uppublished = 1,
+//   Published = 2
+// }
+
+// 数字枚举会自动在前者基础上加一
+// enum PostStatus {
+//   Draft = 0,
+//   Uppublished,
+//   Published
+// }
+
+enum PostStatus {
+  Draft = 'foo',
+  Uppublished = 'bar',
+  Published = 'ccc'
+}
+
+const post = {
+  title: 'Hello TypeScript',
+  content: 'TypeScript is a typed superset of JavaScript.',
+  status: PostStatus.Draft
+}
+```
+
+枚举类型会入侵运行时代码，影响编译结果，不会被移除掉
+
+```js
+enum PostStatus {
+  Draft = 'foo',
+  Uppublished = 'bar',
+  Published = 'ccc'
+}
+
+const post = {
+  title: 'Hello TypeScript',
+  content: 'TypeScript is a typed superset of JavaScript.',
+  status: PostStatus.Draft
+}
+```
+
+=> 
+
+```js
+var PostStatus;
+(function (PostStatus) {
+    PostStatus["Draft"] = "foo";
+    PostStatus["Uppublished"] = "bar";
+    PostStatus["Published"] = "ccc";
+})(PostStatus || (PostStatus = {}));
+var post = {
+    title: 'Hello TypeScript',
+    content: 'TypeScript is a typed superset of JavaScript.',
+    status: PostStatus.Draft
+};
+//# sourceMappingURL=index.js.map
+```
+
+常量枚举不能使用下标访问，编译后会被移除掉
+
+```js
+// 枚举，可以用下标访问
+enum PostStatus {
+  Draft = 'foo',
+  Uppublished = 'bar',
+  Published = 'ccc'
+}
+
+// 常量枚举不能使用下标访问
+const enum PostStatus2 {
+  Draft = 'foo',
+  Uppublished = 'bar',
+  Published = 'ccc'
+}
+
+PostStatus[0];
+PostStatus2[0];
+```
+
+### 函数类型
+
+```js
+function func1 (a: number, b: number): string {
+  return  'func';
+}
+
+function func2 (a: number, b?: number): string {
+  return  'func';
+}
+
+function func3 (a: number, b: number = 2): string {
+  return  'func';
+}
+
+function func4 (a: number, b: number = 2, ...rest: number[]): string {
+  return  'func';
+}
+
+
+const func5: (a: number, b: number) => string = function (a: number, b: number): string {
+  return 'func';
+}
+```
+
+### 任意类型
+
+any 类型属于动态类型，特点和普通 JavaScript 对象是一致的。
+
+```js
+function stringify (value: any) {
+  return JSON.stringify(value);
+}
+
+stringify('string'); 
+stringify(0); 
+stringify(true); 
+```
+
+typescript 不会对 any 进行类型检查，这也意味着我们仍然可以像原生 JS 那样调用任意成员，语法上不会报错。
+
+```js
+let foo: any = 'string';
+
+foo = 100;
+```
+
+### 隐式类型推断
+
+不推荐使用，尽可能添加类型。
+
+```js
+let age = 18; // 类型推断为 number 类型
+
+age = 'string'; // 报错，age 为 number 类型
+
+
+let foo; // 如果 typescript 无法推断出类型，就会标记为 any
+```
+
+### 类型断言
+
+类型断言并不会类型转换，类型转换是代码运行时的概念，类型断言是代码编译时的概念，编译后会移除。
+
+```js
+const nums = [110, 120, 119, 112];
+
+const res = nums.find(i => i > 0);
+
+// const sequare = res * res;
+
+const num1 = res as number;
+const num2 = <number>res; // 类型断言的另一种方式，编写 JSX 时会与标签产生冲突，推荐使用第一种
+```
+
+### 接口
+
+规范或者契约，用来约定对象结构。
+
+```js
+interface Post {
+  title: string;
+  content: string;
+}
+
+function printPost (post: Post) {
+  console.log(post.title);
+  console.log(post.content);
+}
+
+printPost({
+  title: 'Hello TypeScript',
+  content: 'a javascript superset'
+})
+```
+
+可选成员、只读成员
+
+```js
+interface Post {
+  title: string;
+  content: string;
+  subtitle?: string; // 可选
+  readonly summary: string; // 定义后不能再次修改
+}
+
+function printPost (post: Post) {
+  console.log(post.title);
+  console.log(post.content);
+}
+
+const hello = {
+  title: 'Hello TypeScript',
+  content: 'a javascript superset',
+  summary: ''
+};
+
+const hello2 = {
+  title: 'Hello TypeScript',
+  content: 'a javascript superset',
+  subtitle: 'typescipt',
+  summary: ''
+};
+```
+
+动态成员
+
+```js
+interface $Cache {
+  [key: string]: string;
+}
+
+const cache: $Cache = {};
+
+cache.foo = 'foo';
+```
+
+### 类
+
