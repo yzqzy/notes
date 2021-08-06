@@ -1092,5 +1092,110 @@ const tom = new Person('tom', 23);
 #### 类与接口
 
 ```js
+interface Eat {
+  eat (food: string): void;
+}
+
+interface Run {
+  run (distance: number): void;
+}
+
+class Person implements Eat, Run {
+  eat (food: string): void {
+    console.log(`进餐：${ food }`);
+  }
+
+  run (distance: number) {
+    console.log(`直立行走：${ distance }`);
+  }
+}
+
+class Animal implements Eat, Run {
+  eat (food: string): void {
+    console.log(`吃：${ food }`);
+  }
+
+  run (distance: number) {
+    console.log(`爬行：${ distance }`);
+  }
+}
+```
+
+#### 抽象类
+
+某种程序上和 interface 一致。
+
+```js
+abstract class Animal {
+  eat (food: string): void {
+    console.log(`吃：${ food }`);
+  };
+
+  abstract run (distance: number): void;
+}
+
+class Dog extends Animal {
+  run (distance: number): void {
+    console.log(`爬行：${distance}`);
+  }
+}
+
+const dog = new Dog();
+
+dog.eat('');
+dog.run(20);
+```
+
+#### 泛型
+
+定义函数、类时没有指定具体类型，调用时传递具体类型
+
+```js
+function createNumberArray (length: number, value: number): number[] {
+  const arr = Array<number>(length).fill(value);
+  return arr;
+}
+
+function createArray<T> (length: number, value: T): T[] {
+  const arr = Array<T>(length).fill(value);
+  return arr;
+}
+
+const res = createNumberArray(3, 100);
+const res2 = createArray<string>(3, 'foo');
+```
+
+#### 类型声明
+
+```js
+yarn add lodash
+```
+
+兼容常用模块。
+
+```js
+import { camelCase } from 'lodash';
+
+declare function camelCase (val: string): string;
+
+const res = camelCase('hello typed');
+
+console.log(res);
+```
+
+一般常用包，在社区中已经由专门的包，可以尝试安装 @types/xxxx 类型声明。
+
+```js
+yarn add @types/lodash --dev
+```
+
+```js
+import { camelCase } from 'lodash';
+
+// declare function camelCase (val: string): string;
+
+const res = camelCase('hello typed');
+
+console.log(res);
 ```
 

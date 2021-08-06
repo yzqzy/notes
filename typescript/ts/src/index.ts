@@ -1,17 +1,7 @@
-class Person {
-  public name: string;
-  private age: number;
-  protected readonly gender: boolean; // 只读，不可修改
+import { camelCase } from 'lodash';
 
-  constructor (name: string, age: number) {
-    this.name = name;
-    this.age = age;
-    this.gender = true;
-  }
+// declare function camelCase (val: string): string;
 
-  say (msg: string) {
-    console.log(`I am ${this.name}, ${msg}`);
-  }
-}
+const res = camelCase('hello typed');
 
-const tom = new Person('tom', 23);
+console.log(res);
