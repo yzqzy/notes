@@ -1,35 +1,17 @@
-interface Post {
-  title: string;
-  content: string;
-  subtitle?: string; // 可选属性
-  readonly summary: string; // 定义后不能再次修改
+class Person {
+  public name: string;
+  private age: number;
+  protected readonly gender: boolean; // 只读，不可修改
+
+  constructor (name: string, age: number) {
+    this.name = name;
+    this.age = age;
+    this.gender = true;
+  }
+
+  say (msg: string) {
+    console.log(`I am ${this.name}, ${msg}`);
+  }
 }
 
-function printPost (post: Post) {
-  console.log(post.title);
-  console.log(post.content);
-}
-
-const hello = {
-  title: 'Hello TypeScript',
-  content: 'a javascript superset',
-  summary: ''
-};
-
-const hello2 = {
-  title: 'Hello TypeScript',
-  content: 'a javascript superset',
-  subtitle: 'typescipt',
-  summary: ''
-};
-
-
-// 动态成员
-
-interface $Cache {
-  [key: string]: string;
-}
-
-const cache: $Cache = {};
-
-cache.foo = 'foo';
+const tom = new Person('tom', 23);

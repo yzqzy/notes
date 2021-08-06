@@ -988,3 +988,109 @@ cache.foo = 'foo';
 
 ### 类
 
+描述一类具体事务的抽象特征。用来描述一类具体对象的抽象成员。
+
+ES6 以前，函数 + 原型 模拟实现类，ES6 开始 JavaScript 有了 class 关键字。
+
+TypeScript 增强了 class 的相关用法。
+
+#### 基本使用
+
+类初始化之前，类的属性必须先定义。
+
+```js
+class Person {
+  name: string;
+  age: number;
+
+  constructor (name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+
+  say (msg: string) {
+    console.log(`I am ${this.name}, ${msg}`);
+  }
+}
+```
+
+#### 访问修饰符
+
+public、private、protected
+
+```js
+class Person {
+  public name: string;
+  private age: number;
+  protected gender: boolean;
+
+  constructor (name: string, age: number) {
+    this.name = name;
+    this.age = age;
+    this.gender = true;
+  }
+
+  say (msg: string) {
+    console.log(`I am ${this.name}, ${msg}`);
+  }
+}
+
+class Student extends Person {
+  constructor(name: string, age: number) {
+    super(name, age);
+
+    console.log(this.gender); // protected 属性只允许在子类中访问
+  }
+}
+
+const tom = new Person('yueluo', 23);
+
+tom.name; 
+tom.age; // 访问不到
+tom.gender; // 访问不到，只允许在子类中访问
+```
+
+构造函数的访问修饰符默认也是 public，如何设置为 private 就不能被实例化。
+
+```js
+
+class Student extends Person {
+  private constructor(name: string, age: number) {
+    super(name, age);
+  }
+
+  static create (name: string, age: number) {
+    return new Student(name, age);
+  }
+}
+
+const jack = Student.create('jack', 18);
+```
+
+#### 只读属性
+
+```js
+class Person {
+  public name: string;
+  private age: number;
+  protected readonly gender: boolean; // 只读，不可修改
+
+  constructor (name: string, age: number) {
+    this.name = name;
+    this.age = age;
+    this.gender = true;
+  }
+
+  say (msg: string) {
+    console.log(`I am ${this.name}, ${msg}`);
+  }
+}
+
+const tom = new Person('tom', 23);
+```
+
+#### 类与接口
+
+```js
+```
+
