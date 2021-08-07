@@ -21,7 +21,8 @@
   + [网络基础](https://git.yueluo.club/heora/notes/src/master/network/base) 已完成
   + [网络进阶](https://git.yueluo.club/heora/notes/src/master/network/plus) 暂停中...
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
-* [Yeoman](https://git.yueluo.club/heora/notes/src/master/yeoman) 已完成
+* [Yeoman](https://git.yueluo.club/heora/notes/src/master/engineering/yeoman) 已完成
+* [Gulp](https://git.yueluo.club/heora/notes/src/master/engineering/gulp) 更新中...
 * webpack
   * [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
   * [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 更新中...
