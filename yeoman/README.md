@@ -151,6 +151,127 @@ yo node:cli
 链接到全局
 
 ```js
-yarn link
+npm link
 ```
 
+## Yeoman 使用步骤
+
+1. 明确需求；
+2. 找到合适的 Generator；
+3. 全局范围安装找到的 Generator；
+4. 通过 Yo 运行对应的 Generator；
+5. 通过命令行交互填写选项；
+6. 生成你的所需要的项目结构；
+
+
+
+例如创建一个网页应用
+
+1. 通过 yeoman 官网（https://yeoman.io/generators/）找到 webapp
+2. `npm install generator-webapp`
+3. `yo webapp`
+
+## 自定义 Generator
+
+我们可以基于 Yeoman 搭建自己的脚手架。
+
+Generator 本质上就是一个 NPM 模块。
+
+### Generator 基本结构
+
+generator
+
+
+
+<img src="./images/generator.png" style="zoom: 60%" />
+
+
+
+sub generator
+
+
+
+<img src="./images/sub_generator.png" style="zoom: 60%" />
+
+
+
+### `generator-<name>`
+
+名称必须是 `generator-<name>` 格式。如果不按照格式开发，yeoman 使用 generator 会找不到模块。
+
+```js
+npm init -y
+```
+
+```js
+npm install yeoman-generator --save-dev
+```
+
+generators/app/index.js
+
+```js
+// Generator 核心入口
+
+// 需要导出一个继承自 Yeoman Generator 的类型，Yeoman Generator 工作时会自动调用在此类型中的生命周期方法
+// 我们在这些方法中可以通过调用父类提供的一些工具方法实现一些功能，例如文件写入等
+
+const Generator = require('yeoman-generator');
+
+module.exports = class extends Generator {
+  writing () {
+    // Yeoman 在生成文件阶段会自动调用次方法，我们这里尝试往项目目录中写入文件
+    this.fs.write(
+      this.destinationPath('test.txt'),
+      Math.random().toString()
+    );
+  }
+}
+```
+
+链接命令到全局
+
+```js
+npm link
+```
+
+使用 generator
+
+```js
+yo sample
+```
+
+## 根据模板创建文件
+
+generators/app/templates/foo.txt
+
+```js
+模板文件，内部使用 EJS 模板标记输出数据
+例如：<%= title %>
+ 
+其他的 EJS 语法也支持
+
+<% if (success) { %>
+  Hello Foo.
+<% } %>
+```
+
+generators/app/index.js
+
+```js
+const Generator = require('yeoman-generator');
+
+module.exports = class extends Generator {
+  writing () {
+    // 通过模板方式写入文件到目标目录
+    const tmpl = this.templatePath('foo.txt');
+    // 输出目录
+    const output = this.destinationPath('foo.txt');
+    // 模板数据上下文
+    const context = { title: 'Hello ~', success: false };
+
+    this.fs.copyTpl(tmpl, output, context);
+  }
+}
+```
+
+相对于手动创建每一个文件，模板的方式可以大大提高效率。
