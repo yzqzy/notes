@@ -21,14 +21,13 @@
   + [网络基础](https://git.yueluo.club/heora/notes/src/master/network/base) 已完成
   + [网络进阶](https://git.yueluo.club/heora/notes/src/master/network/plus) 暂停中...
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
-* 工程化
-  + [Yeoman](https://git.yueluo.club/heora/notes/src/master/yeoman) 更新中...
-  + webpack
-    - [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
-    - [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 更新中...
-    - [webpack进阶](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
-    - [自定义loader、plugins](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
-    - [webpack源码实现](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
+* [Yeoman](https://git.yueluo.club/heora/notes/src/master/yeoman) 更新中...
+* webpack
+  * [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
+  * [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 更新中...
+  * [webpack进阶](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
+  * [自定义loader、plugins](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
+  * [webpack源码实现](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
 * vue
   + [vue基础](https://git.yueluo.club/heora/notes/src/master/vue/vue_base) 更新中...
   + [vue3自定义渲染器](https://git.yueluo.club/heora/notes/src/master/vue/vue3_renderer) 已完成
