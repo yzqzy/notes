@@ -1,0 +1,10 @@
+$body-bg: #f8f9fb;
+$body-color: #333;
+
+body {
+  margin: 0 auto;
+  padding: 20px;
+  max-width: 800px;
+  background-color: $body-bg;
+  color: $body-color;
+}
