@@ -645,5 +645,85 @@ yarn grunt
 
 ## Gulp
 
+Gulp 作为当下最流行的前端构建系统，其核心特点就是高效、易用。
+
 ### 基本使用
+
+```js
+yarn init -y
+```
+
+```js
+yarn add gulp --dev
+```
+
+```js
+code gulpfile.js
+```
+
+Gulp 最新版需要使用 done 标识任务结束。
+
+```js
+// gulp 入口文件
+
+exports.foo = done => {
+  console.log('foo task working');
+
+  done(); // 标识任务完成
+}
+
+exports.default = done => {
+  console.log('default task working');
+  done();
+}
+```
+
+gulp 4.0 之前注册 Gulp 任务需要通过 Gulp 模块内部的方法实现。Gulp 4.0 以后保留了这种方式。
+
+```js
+const gulp = require('gulp');
+
+gulp.task('bar', done => {
+  console.log('bar task working');
+
+  done();
+});
+```
+
+### 组合任务
+
+```js
+const { series, parallel } = require('gulp');
+
+const task1 = done => {
+  setTimeout(() => {
+    console.log('task1 working');
+    done();
+  }, 1000);
+}
+
+const task2 = done => {
+  setTimeout(() => {
+    console.log('task2 working');
+    done();
+  }, 1000);
+}
+
+const task3 = done => {
+  setTimeout(() => {
+    console.log('task3 working');
+    done();
+  }, 1000);
+}
+
+exports.foo = series(task1, task2, task3); // 串行执行
+exports.bar = parallel(task1, task2, task3); // 并行执行
+```
+
+构建 JS、CSS 时可以使用 parallel。代码部署可以使用 series，部署前必须构建完毕。
+
+### 异步任务
+
+```js
+```
 
