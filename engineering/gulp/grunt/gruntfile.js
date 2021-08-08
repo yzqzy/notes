@@ -1,18 +1,43 @@
+const sass = require('sass');
+const loadGruntTasks = require('load-grunt-tasks');
+
 module.exports = grunt => {
-  grunt.registerTask('bad', () => {
-    console.log('bad working~');
-    return false;
+  grunt.initConfig({
+    sass: {
+      options: {
+        sourceMap: true,
+        implementation: sass
+      },
+      main: {
+        files: {
+          'dist/css/main.css': 'src/scss/main.scss'
+        }
+      }
+    },
+    babel: {
+      options: {
+        sourceMap: true,
+        presets: ['@babel/preset-env']
+      },
+      main: {
+        files: {
+          'dist/js/app.js': 'src/js/app.js'
+        }
+      }
+    },
+    watch: {
+      js: {
+        files: ['src/js/*.js'],
+        tasks: ['babel']
+      },
+      css: {
+        files: ['src/scss/*.scss'],
+        tasks: ['sass']
+      },
+    }
   });
-  grunt.registerTask('foo', () => {
-    console.log('foo working~');
-  });
-  grunt.registerTask('default', ['bad', 'foo']);
 
-  grunt.registerTask('bad-async', function () {
-    const done = this.async();
+  loadGruntTasks(grunt); // 自动加载所有的 grunt 插件任务
 
-    setTimeout(() => {
-      done(false);
-    }, 1000);
-  });
+  grunt.registerTask('default', ['sass', 'babel', 'watch']);
 }

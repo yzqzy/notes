@@ -379,3 +379,271 @@ grunt.registerTask('bad-async', function () {
 
 ### 配置方法
 
+```js
+module.exports = grunt => {
+  grunt.initConfig({
+    foo: {
+      bar: 123
+    }
+  });
+
+  grunt.registerTask('foo', () => {
+    console.log(grunt.config('foo'));
+    console.log(grunt.config('foo.bar'));
+  });
+}
+```
+
+```js
+yarn grunt foo
+```
+
+### 多目标任务
+
+```js
+module.exports = grunt => {
+  grunt.initConfig({
+    build: {
+      options: {
+        foo: 'bar'
+      },
+      css: {
+        options: {
+          foo: 'baz'
+        }
+      },
+      js: '2'
+    }
+  });
+
+  // 多目标模式，可以让任务根据配置形成多个子任务
+  grunt.registerMultiTask('build', function () {
+    console.log('build task');
+    console.log(this.options());
+    console.log(`target: ${ this.target }, data: ${ this.data }`)
+  });
+}
+```
+
+运行目标任务
+
+```js
+yarn grunt build
+```
+
+运行指定目标任务
+
+```js
+yarn grunt build:css
+```
+
+### 插件使用
+
+插件机制时 Grunt 机制的核心。很多构建任务都是通用的，所有由很多预设插件，插件内部封装了通用的构建任务。
+
+一般来说，我们的构建过程都是由通用的构建任务组成。
+
+
+
+安装 grunt-contrib-clean
+
+```js
+yarn add grunt-contrib-clean
+```
+
+```js
+module.exports = grunt => {
+  grunt.initConfig({
+    clean: {
+      temp: 'temp/app.js'
+    }
+  });
+  grunt.loadNpmTasks('grunt-contrib-clean');
+}
+```
+
+```js
+yarn grunt clean	
+```
+
+
+
+通配符配置
+
+```js
+module.exports = grunt => {
+  grunt.initConfig({
+    clean: {
+      temp: 'temp/*.txt'
+    }
+  });
+  grunt.loadNpmTasks('grunt-contrib-clean');
+}
+```
+
+```js
+module.exports = grunt => {
+  grunt.initConfig({
+    clean: {
+      // 清除所有子目录以及子目录下的文件
+      temp: 'temp/**'
+    }
+  });
+  grunt.loadNpmTasks('grunt-contrib-clean');
+}
+```
+
+
+
+使用 Grunt 插件
+
+* 找到可使用插件，进行安装
+* 加载插件任务（loadNpmTasks）
+* initConfig 中为任务增加配置选项
+
+### 常用插件
+
+#### grunt-sass
+
+```js
+yarn add grunt-sass sass --dev
+```
+
+```js
+const sass = require('sass');
+
+module.exports = grunt => {
+  grunt.initConfig({
+    sass: {
+      options: {
+        sourceMap: true,
+        implementation: sass
+      },
+      main: {
+        files: {
+          'dist/css/main.css': 'src/scss/main.scss'
+        }
+      }
+    }
+  });
+  grunt.loadNpmTasks('grunt-sass');
+}
+```
+
+```js
+yarn grunt sass 
+```
+
+#### grunt-babel
+
+新特性支持，代码转化
+
+```js
+yarn add grunt-babel @babel/core @babel/preset-env --dev
+```
+
+减少 loadNpmTasks 使用
+
+```js
+yarn add load-grunt-tasks --dev
+```
+
+```js
+const sass = require('sass');
+const loadGruntTasks = require('load-grunt-tasks');
+
+module.exports = grunt => {
+  grunt.initConfig({
+    sass: {
+      options: {
+        sourceMap: true,
+        implementation: sass
+      },
+      main: {
+        files: {
+          'dist/css/main.css': 'src/scss/main.scss'
+        }
+      }
+    },
+    babel: {
+      options: {
+        sourceMap: true,
+        presets: ['@babel/preset-env']
+      },
+      main: {
+        files: {
+          'dist/js/app.js': 'src/js/app.js'
+        }
+      }
+    }
+  });
+
+  // grunt.loadNpmTasks('grunt-sass');
+  loadGruntTasks(grunt); // 自动加载所有的 grunt 插件任务
+}
+```
+
+```js
+yarn grunt babel
+```
+
+#### grunt-contrib-watch
+
+```js
+yarn add grunt-contrib-watch --dev
+```
+
+```js
+const sass = require('sass');
+const loadGruntTasks = require('load-grunt-tasks');
+
+module.exports = grunt => {
+  grunt.initConfig({
+    sass: {
+      options: {
+        sourceMap: true,
+        implementation: sass
+      },
+      main: {
+        files: {
+          'dist/css/main.css': 'src/scss/main.scss'
+        }
+      }
+    },
+    babel: {
+      options: {
+        sourceMap: true,
+        presets: ['@babel/preset-env']
+      },
+      main: {
+        files: {
+          'dist/js/app.js': 'src/js/app.js'
+        }
+      }
+    },
+    watch: {
+      js: {
+        files: ['src/js/*.js'],
+        tasks: ['babel']
+      },
+      css: {
+        files: ['src/scss/*.scss'],
+        tasks: ['sass']
+      },
+    }
+  });
+
+  loadGruntTasks(grunt); // 自动加载所有的 grunt 插件任务
+
+  grunt.registerTask('default', ['sass', 'babel', 'watch']);
+}
+```
+
+```js
+yarn grunt
+```
+
+## Gulp
+
+### 基本使用
+
