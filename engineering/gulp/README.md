@@ -210,7 +210,172 @@ npm scripts 可以解决一定的自动化任务，但是针对于复杂的过�
 
 ### 基本使用
 
+初始化项目
+
+```js
+yarn init -y
+```
+
+安装 grunt 包
+
+```js
+yarn add grunt
+```
+
+创建 gruntfile 文件
+
+```js
+code gruntfile.js
+```
+
+定义 grunt 任务
+
+```js
+// Grunt 的入口文件
+// 用于定义一些需要 Grunt 自动执行的任务
+// 需要导出一个函数，该函数接收一个 grunt 的形参，内部提供一些创建任务的 API
+
+module.exports = grunt => {
+  grunt.registerTask('foo', () => {
+    console.log('hello grunt');
+  });
+}
+```
+
+执行 foo 任务，任务可以存在多个
+
+```js
+yarn grunt foo
+```
 
 
 
+任务描述信息，registerTask 第二个参数
+
+```js
+// Grunt 的入口文件
+// 用于定义一些需要 Grunt 自动执行的任务
+// 需要导出一个函数，该函数接收一个 grunt 的形参，内部提供一些创建任务的 API
+
+module.exports = grunt => {
+  grunt.registerTask('foo', () => {
+    console.log('hello grunt');
+  });
+  grunt.registerTask('bar', '任务描述', () => {
+    console.log('other task~');
+  });
+}
+```
+
+```js
+yarn grunt --help
+```
+
+
+
+如果注册任务的名称为 default，那么运行任务时，就不需要写任务抿成
+
+```js
+// Grunt 的入口文件
+// 用于定义一些需要 Grunt 自动执行的任务
+// 需要导出一个函数，该函数接收一个 grunt 的形参，内部提供一些创建任务的 API
+
+module.exports = grunt => {
+  grunt.registerTask('foo', () => {
+    console.log('hello grunt');
+  });
+  grunt.registerTask('bar', '任务描述', () => {
+    console.log('other task~');
+  });
+  grunt.registerTask('default', () => {
+    console.log('default task~');
+  });
+}
+```
+
+```js
+yarn grunt 
+```
+
+
+
+default 一般用来依次执行其他任务
+
+```js
+module.exports = grunt => {
+  grunt.registerTask('foo', () => {
+    console.log('hello grunt');
+  });
+  grunt.registerTask('bar', '任务描述', () => {
+    console.log('other task~');
+  });
+  // grunt.registerTask('default', () => {
+  //   console.log('default task~');
+  // });
+
+  grunt.registerTask('default', ['foo', 'bar']);
+}
+```
+
+```js
+yarn grunt
+```
+
+ 
+
+grunt 异步任务
+
+```js
+grunt.registerTask('async-task', function () {
+  const done = this.async();
+
+  setTimeout(() => {
+    console.log('async task working~');
+    done();
+  }, 1000);
+});
+```
+
+```js
+yarn grunt async-task
+```
+
+### 标记任务失败
+
+return false 即可标记为任务失败
+
+```js
+module.exports = grunt => {
+  grunt.registerTask('bad', () => {
+    console.log('bad working~');
+    return false;
+  });
+  grunt.registerTask('foo', () => {
+    console.log('foo working~');
+  });
+  grunt.registerTask('default', ['bad', 'foo']);
+}
+```
+
+任务失败后，后续任务不会执行。我们可以通过 --force 强制后续任务继续执行。
+
+```js
+yarn grunt --force
+```
+
+ 
+
+异步任务也可以标记失败，使用 done(false)
+
+```js
+grunt.registerTask('bad-async', function () {
+  const done = this.async();
+
+  setTimeout(() => {
+    done(false);
+  }, 1000);
+});
+```
+
+### 配置方法
 
