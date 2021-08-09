@@ -2,6 +2,8 @@
   "name": "demo",
   "version": "0.1.0",
   "main": "index.js",
+  "repository": "https://git.yueluo.club/heore/notes.git",
+  "author": "yueluo <yueluo.yang@qq.com> (https://yueluo.club)",
   "license": "MIT",
   "scripts": {
     "clean": "gulp clean",

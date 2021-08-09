@@ -1234,5 +1234,243 @@ module.exports = {
 #### 脚本编译
 
 ```js
+yarn add gulp-babel @babel/core @babel/preset-env --dev
 ```
+
+babel 只是一个转换平台，提供环境，具体起到转换作用的是 babel 内部的插件，preset 是插件集合。
+
+preset-env 就是最新的所有特性的整体打包，使用它可以把所有特性都做转换。
+
+```js
+const { src, dest } = require('gulp');
+const sass = require('gulp-sass');
+const babel = require('gulp-babel');
+
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(sass({ outputStyle: 'expanded' }))
+    .pipe(dest('dist'))
+}
+
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('dist'));
+}
+
+module.exports = {
+  style,
+  script
+}
+```
+
+```js
+yarn gulp script
+```
+
+#### 页面模板编译
+
+```js
+yarn add gulp-swig --dev
+```
+
+```js
+const { src, dest } = require('gulp');
+const sass = require('gulp-sass');
+const babel = require('gulp-babel');
+const swig = require('gulp-swig');
+
+const data = require('./src/data');
+
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(sass({ outputStyle: 'expanded' }))
+    .pipe(dest('dist'))
+}
+
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('dist'));
+}
+
+const page = () => {
+  return src('src/*.html', { base: 'src' })
+    .pipe(swig({ data }))
+    .pipe(dest('dist'));
+}
+
+module.exports = {
+  style,
+  script,
+  page
+}
+```
+
+```js
+yarn gulp page
+```
+
+组合任务
+
+```js
+const { src, dest, parallel } = require('gulp');
+const sass = require('gulp-sass');
+const babel = require('gulp-babel');
+const swig = require('gulp-swig');
+
+const data = require('./src/data');
+
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(sass({ outputStyle: 'expanded' }))
+    .pipe(dest('dist'))
+}
+
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('dist'));
+}
+
+const page = () => {
+  return src('src/*.html', { base: 'src' })
+    .pipe(swig({ data }))
+    .pipe(dest('dist'));
+}
+
+const compile = parallel(style, script, page);
+
+module.exports = {
+  compile
+};
+```
+
+```js
+yarn gulp compile
+```
+
+#### 图片和字体文件转换
+
+```js
+yarn add gulp-imagemin --dev
+```
+
+```js
+const { src, dest, parallel } = require('gulp');
+const sass = require('gulp-sass');
+const babel = require('gulp-babel');
+const swig = require('gulp-swig');
+const imagemin = require('gulp-imagemin');
+
+const data = require('./src/data');
+
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(sass({ outputStyle: 'expanded' }))
+    .pipe(dest('dist'))
+}
+
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('dist'));
+}
+
+const page = () => {
+  return src('src/*.html', { base: 'src' })
+    .pipe(swig({ data }))
+    .pipe(dest('dist'));
+}
+
+const image = () => {
+  return src('src/assets/images/**', { base: 'src' })
+    .pipe(imagemin())
+    .pipe(dest('dist'))
+}
+
+const font = () => {
+  return src('src/assets/fonts/**', { base: 'src' })
+    .pipe(imagemin())
+    .pipe(dest('dist'))
+}
+
+const compile = parallel(style, script, page, image, font);
+
+module.exports = {
+  compile
+};
+```
+
+```js
+yarn gulp compile
+```
+
+#### 其他文件及文件清除
+
+```js
+yarn add del --dev
+```
+
+```js
+const { src, dest, parallel, series } = require('gulp');
+
+const del = require('del');
+
+const sass = require('gulp-sass');
+const babel = require('gulp-babel');
+const swig = require('gulp-swig');
+const imagemin = require('gulp-imagemin');
+
+const data = require('./src/data');
+
+const clean = () => {
+  return del(['dist']);
+}
+
+const style = () => {
+  return src('src/assets/styles/*.scss', { base: 'src' })
+    .pipe(sass({ outputStyle: 'expanded' }))
+    .pipe(dest('dist'))
+}
+
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('dist'));
+}
+
+const page = () => {
+  return src('src/*.html', { base: 'src' })
+    .pipe(swig({ data }))
+    .pipe(dest('dist'));
+}
+
+const image = () => {
+  return src('src/assets/images/**', { base: 'src' })
+    .pipe(imagemin())
+    .pipe(dest('dist'))
+}
+
+const font = () => {
+  return src('src/assets/fonts/**', { base: 'src' })
+    .pipe(imagemin())
+    .pipe(dest('dist'))
+}
+
+const extra = () => {
+  return src('public/**', { base: 'public' })
+    .pipe(dest('dist'));
+}
+
+const compile = parallel(style, script, page, image, font);
+
+const build = series(clean, parallel(compile, extra));
+
+module.exports = {
+  build
+};
+```
+
+#### 自动加载插件
 
