@@ -1,13 +1,13 @@
-const { src, dest, parallel, series } = require('gulp');
+const { src, dest, parallel, series, watch } = require('gulp');
 
 const del = require('del');
-
-const sass = require('gulp-sass');
-const babel = require('gulp-babel');
-const swig = require('gulp-swig');
-const imagemin = require('gulp-imagemin');
+const browserSync = require('browser-sync');
+const loadPlugins = require('gulp-load-plugins');
 
 const data = require('./src/data');
+
+const plugins = loadPlugins();
+const bs = browserSync.create();
 
 const clean = () => {
   return del(['dist']);
@@ -15,32 +15,32 @@ const clean = () => {
 
 const style = () => {
   return src('src/assets/styles/*.scss', { base: 'src' })
-    .pipe(sass({ outputStyle: 'expanded' }))
-    .pipe(dest('dist'))
+    .pipe(plugins.sass({ outputStyle: 'expanded' }))
+    .pipe(dest('dist'));
 }
 
 const script = () => {
   return src('src/assets/scripts/*.js', { base: 'src' })
-    .pipe(babel({ presets: ['@babel/preset-env'] }))
+    .pipe(plugins.babel({ presets: ['@babel/preset-env'] }))
     .pipe(dest('dist'));
 }
 
 const page = () => {
   return src('src/*.html', { base: 'src' })
-    .pipe(swig({ data }))
+    .pipe(plugins.swig({ data, defaults: { cache: false } }))
     .pipe(dest('dist'));
 }
 
 const image = () => {
   return src('src/assets/images/**', { base: 'src' })
-    .pipe(imagemin())
-    .pipe(dest('dist'))
+    .pipe(plugins.imagemin())
+    .pipe(dest('dist'));
 }
 
 const font = () => {
   return src('src/assets/fonts/**', { base: 'src' })
-    .pipe(imagemin())
-    .pipe(dest('dist'))
+    .pipe(plugins.imagemin())
+    .pipe(dest('dist'));
 }
 
 const extra = () => {
@@ -48,10 +48,41 @@ const extra = () => {
     .pipe(dest('dist'));
 }
 
-const compile = parallel(style, script, page, image, font);
+const serve = () => {
+  watch('src/assets/styles/*.scss', style);
+  watch('src/assets/scripts/*.js', script);
+  watch('src/*.html', page);
 
-const build = series(clean, parallel(compile, extra));
+  watch([
+    'src/assets/images/**',
+    'src/assets/fonts/**',
+    'public/**'
+  ], bs.reload);
+
+  bs.init({
+    notify: false,
+    port: 3000,
+    // open: false,
+    files: 'dist/**',
+    
+    server: {
+      baseDir: [
+        'dist',
+        'src',
+        'public'
+      ],
+      routes: {
+        '/node_modules': 'node_modules'
+      }
+    }
+  });
+}
+
+const compile = parallel(style, script, page);
+const build = series(clean, parallel(compile, extra, image, font));
+const dev = series(compile, serve);
 
 module.exports = {
-  build
+  build,
+  dev
 };
