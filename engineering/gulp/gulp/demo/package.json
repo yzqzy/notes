@@ -8,7 +8,7 @@
   "scripts": {
     "clean": "gulp clean",
     "build": "gulp build",
-    "develop": "gulp develop"
+    "dev": "gulp develop"
   },
   "dependencies": {
     "bootstrap": "^4.3.1",
