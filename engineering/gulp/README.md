@@ -2057,3 +2057,9 @@ package.json
 }
 ```
 
+### 封装工作流
+
+Gulpfile + Gulp = 构建工作流。
+
+Gulpfile + Gulp CLI = gulp-pages。
+
