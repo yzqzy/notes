@@ -2063,3 +2063,212 @@ Gulpfile + Gulp = 构建工作流。
 
 Gulpfile + Gulp CLI = gulp-pages。
 
+```js
+const path = require('path');
+const { src, dest, parallel, series, watch } = require('gulp');
+
+const del = require('del');
+const browserSync = require('browser-sync');
+const loadPlugins = require('gulp-load-plugins');
+
+const cwd = process.cwd();
+
+let config = {
+  build: {
+    src: 'src',
+    dist: 'dist',
+    temp: 'temp',
+    public: 'public',
+    paths: {
+      styles: 'assets/styles/*.scss',
+      scripts: 'assets/scripts/*.js',
+      pages: '*.html',
+      images: 'assets/images/**',
+      fonts: 'assets/fonts/**'
+    }
+  }
+};
+
+try {
+  const loadConfig = require(path.join(cwd, 'pages.config.js'));
+  config = Object.assign({}, config, loadConfig);
+} catch (error) {
+  throw new Error(error.message || error);
+}
+
+
+const plugins = loadPlugins();
+const bs = browserSync.create();
+
+const clean = () => {
+  return del([config.build.dist, config.build.temp]);
+}
+
+const style = () => {
+  return src(config.build.paths.styles, { base: config.build.src, cwd: config.build.src })
+    .pipe(plugins.sass({ outputStyle: 'expanded' }))
+    .pipe(dest(config.build.temp))
+    .pipe(bs.reload({ stream: true }));
+}
+
+const script = () => {
+  return src(config.build.paths.scripts, { base: config.build.src, cwd: config.build.src })
+    .pipe(plugins.babel({ presets: [ require('@babel/preset-env') ] }))
+    .pipe(dest(config.build.temp))
+    .pipe(bs.reload({ stream: true }));
+}
+
+const page = () => {
+  return src(config.build.paths.pages, { base: config.build.src, cwd: config.build.src })
+    .pipe(plugins.swig({ data: config.data, defaults: { cache: false } }))
+    .pipe(dest(config.build.temp))
+    .pipe(bs.reload({ stream: true }));
+}
+
+const image = () => {
+  return src(config.build.paths.images, { base: config.build.src, cwd: config.build.src })
+    .pipe(plugins.imagemin())
+    .pipe(dest(config.build.dist));
+}
+
+const font = () => {
+  return src(config.build.paths.fonts, { base: config.build.src, cwd: config.build.src })
+    .pipe(plugins.imagemin())
+    .pipe(dest(config.build.dist));
+}
+
+const extra = () => {
+  return src('**', { base: config.build.public, cwd: config.build.public })
+    .pipe(dest(config.build.dist));
+}
+
+const serve = () => {
+  watch(config.build.paths.styles, { cwd: config.build.src }, style);
+  watch(config.build.paths.scripts, { cwd: config.build.src },script);
+  watch(config.build.paths.pages, { cwd: config.build.src }, page);
+
+  watch([
+    config.build.paths.images,
+    config.build.paths.fonts,
+  ], { cwd: config.build.src }, bs.reload);
+
+  watch([
+    '**'
+  ], { cwd: config.build.public }, bs.reload);
+
+  bs.init({
+    notify: false,
+    port: 3000,
+    open: false,
+    
+    server: {
+      baseDir: [
+        config.build.temp,
+        config.build.src,
+        config.build.public
+      ],
+      routes: {
+        '/node_modules': 'node_modules'
+      }
+    }
+  });
+}
+
+const useref = () => {
+  return src(config.build.paths.pages, { base: config.build.temp, cwd: config.build.temp })
+    .pipe(plugins.useref({ searchPath: [config.build.temp, '.'] }))
+    .pipe(plugins.if(/\.js$/, plugins.uglify()))
+    .pipe(plugins.if(/\.css$/, plugins.cleanCss()))
+    .pipe(plugins.if(/\.html$/, plugins.htmlmin({
+      collapseWhitespace: true,
+      minifyCSS: true,
+      minifyJS: true
+    })))
+    .pipe(dest(config.build.dist));
+}
+
+const compile = parallel(style, script, page);
+
+const build = series(
+  clean,
+  parallel(
+    series(compile, useref),
+    extra,
+    image,
+    font
+  )
+);
+const develop = series(compile, serve);
+
+module.exports = {
+  clean,
+  build,
+  develop
+};
+```
+
+```js
+#! /usr/bin/env node
+
+process.argv.push('--cwd');
+process.argv.push(process.cwd());
+process.argv.push('--gulpfile');
+process.argv.push(require.resolve('..'));
+
+require('gulp/bin/gulp');
+```
+
+```js
+{
+  "name": "gulp-pages",
+  "version": "0.1.0",
+  "description": "static web app workflow",
+  "keywords": [
+    "gulp-pages",
+    "yueluo"
+  ],
+  "homepage": "http://git.yueluo.club/tools/gulp-pages#readme",
+  "license": "MIT",
+  "author": "yueluo <yueluo@qq.com> (https://yueluo.club)",
+  "files": [
+    "lib",
+    "bin"
+  ],
+  "main": "lib/index.js",
+  "bin": "bin/gulp-page.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+http://git.yueluo.club/tools/gulp-pages.git"
+  },
+  "scripts": {
+    "lint": "standard --fix"
+  },
+  "dependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "browser-sync": "^2.26.7",
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-clean-css": "^4.2.0",
+    "gulp-htmlmin": "^5.0.1",
+    "gulp-if": "^3.0.0",
+    "gulp-imagemin": "^6.1.0",
+    "gulp-load-plugins": "^2.0.1",
+    "gulp-sass": "^4.0.2",
+    "gulp-swig": "^0.9.1",
+    "gulp-uglify": "^3.0.2",
+    "gulp-useref": "^3.1.6"
+  },
+  "devDependencies": {
+    "standard": "^13.1.0"
+  },
+  "engines": {
+    "node": ">=6"
+  }
+}
+```
+

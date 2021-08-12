@@ -6,15 +6,16 @@
   "author": "yueluo <yueluo.yang@qq.com> (https://yueluo.club)",
   "license": "MIT",
   "scripts": {
-    "clean": "gulp clean",
-    "build": "gulp build",
-    "dev": "gulp develop"
+    "clean": "gulp-pages clean",
+    "build": "gulp-pages build",
+    "dev": "gulp-pages develop"
   },
   "dependencies": {
     "bootstrap": "^4.3.1",
-    "gulp": "^4.0.2",
     "jquery": "^3.4.1",
     "popper.js": "^1.15.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "gulp-pages": "^0.1.0"
+  }
 }
