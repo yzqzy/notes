@@ -2592,8 +2592,75 @@ npm i gulp-pages
 
 相对于 Gulp 和 Grunt，FIS 的核心特点是高度集成，它把常用的配置集成在内部。
 
+> 目前逐步退出历史舞台，不常用，了解为主。
+
 ### 基本使用
 
+```js
+npm i fis3 -g
+```
 
+```js
+fis3 release -d dist
+```
+
+匹配路径，配置输出目录
+
+```js
+fis.match('*.{js,scss,png}', {
+  release: '/assets/$0'
+})
+```
+
+> 高版本 nodejs 会报错，建议安装 nvm，使用 node 版本 10.16.3
 
 ### 编译与压缩
+
+编译 sass
+
+```js
+npm i fis-parser-node-sass --dev
+```
+
+编译 ES6
+
+```js
+npm i fis-parser-babel-6.x --dev
+```
+
+配置文件
+
+```js
+// fis-conf.js
+
+fis.match('*.{js,scss,png}', {
+  release: '/assets/$0'
+});
+
+fis.match('**/*.scss', {
+  rExt: '.css',
+  parser: fis.plugin('node-sass')
+});
+
+fis.match('**/*.js', {
+  parser: fis.plugin('babel-6.x'),
+  optimizer: fis.plugin('clean-css')
+});
+
+fis.match('**/*.js', {
+  parser: fis.plugin('babel-6.x'),
+  optimizer: fis.plugin('uglify-js')
+});
+```
+
+ 运行
+
+```js
+fis3 release -d output
+```
+
+查看配置文件
+
+```js
+fis3 inspect
+```
