@@ -1375,3 +1375,132 @@ function * $flat (arr) {
 
 ## Array.prototype.flatMap
 
+ES2020。
+
+
+
+flatMap 提供遍历和扁平化。效率比 flat + map 要高。
+
+ ECMA 262 / MDN 都有提到。
+
+```js
+const arr = ['123', '456', '789'];
+
+arr.map(function (item) {
+  return item.split('');
+}).flat(); // ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+arr.flatMap(function (item) {
+  return item.split('');
+}); // ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+```
+
+
+
+返回值是一个新数组
+
+```js
+const arr = ['123', '456', '789'];
+
+const newArr = arr.flatMap(function (item) {
+  return item.split('');
+});
+
+arr === newArr // false
+```
+
+
+
+回调函数参数分别为当前遍历的元素、当前遍历的元素在数组中对应的下标、数组本身
+
+```js
+arr.flatMap(function (item, index, arr) {
+  console.log(item, index, arr);
+});
+```
+
+
+
+this 指向，回调中 this 默认指向 window，严格模式下 this 为 undefined。
+
+```js
+arr.flatMap(function (item, index, arr) {
+  console.log(item, index, arr);
+});
+```
+
+第二个参数可以更改回调内的 this 指向
+
+```js
+arr.flatMap(function (item, index, arr) {
+  console.log(this);
+}, { a: 1 });
+```
+
+
+
+应用场景
+
+```js
+const arr = ['my name\'s yueluo', 'i\'m 23', 'years old'];
+
+arr.flatMap(function (item) {
+  return item.split(' ');
+});
+
+//  ["my", "name's", "yueluo", "i'm", "23", "years", "old"]
+```
+
+```js
+const arr = [1, -2, -3, 5, 8, -9, 6, 7, 0];
+
+arr.flatMap(function (item, index) {
+  if (item < 0 && index >= 1) {
+    return [item, `${item} + ${arr[index - 1]} = ${item + arr[index-1]}`];
+  }
+  
+  return item;
+});
+
+// [1, -2, "-2 + 1 = -1", -3, "-3 + -2 = -5", 5, 8, -9, "-9 + 8 = -1", 6, 7, 0]
+```
+
+
+
+实现
+
+```js
+Array.prototype.$flatMap = function (callback) {
+	if (typeof callback !== 'function') {
+    throw new TypeError('callback must be a function.');
+  }
+  
+  var arr = this,
+      arg2 = arguments[1],
+      res = [],
+      item;
+  
+  for (var i = 0; i < arr.length; i++) {
+    item = callback.apply(arg2, [arr[i], i, arr]);
+    console.log(item);
+    item && res.push(item);
+  }
+  
+  console.log(res);
+  
+  return res.$flat();
+}
+```
+
+
+
+```js
+const arr = ['123', '456', '789'];
+
+arr.$flatMap(function (item) {
+  return item.split('');
+}); // ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+```
+
+## Array.prototype.from
+
