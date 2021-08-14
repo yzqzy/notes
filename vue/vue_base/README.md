@@ -4471,3 +4471,142 @@ setTimeout(() => {
 }, 2 * 2000);
 ```
 
+## 条件渲染 v-show/v-if
+
+v-if、v-else-if、v-show
+
+指令表达式返回 truthy 时，视图渲染。
+
+v-show display 属性控制，none/block。
+
+
+
+v-if、v-else-if、v-else 需要同级使用。
+
+```js
+const App = {
+  data () {
+    return {
+      list: [],
+      listStatus: 'loading'
+    }
+  },
+  template: `
+    <table
+      border="1"
+      width="300"
+      align="center"
+    >
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+        </tr>
+      </thead>
+      <tbody align="center" v-if="listStatus === 'loading'">
+        <tr>
+          <td colspan="2">Loading ...</td>
+        </tr>
+      </tbody>
+      <tbody align="center" v-else-if="listStatus === 'noData'">
+        <tr>
+          <td colspan="2">- No Data -</td>
+        </tr>
+      </tbody>
+      <tbody align="center" v-else>
+        <tr
+          v-for="item of list"
+          :key="item.id"
+        >
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+        </tr>
+      </tbody>
+    </table>
+  `,
+  mounted () {
+    const random = Math.random();
+
+    setTimeout(() => {
+      if (random <= 0.5) {
+        this.list = [
+          {
+            id: 1,
+            name: 'Mike'
+          },
+          {
+            id: 2,
+            name: 'Tom'
+          },
+        ];
+        this.listStatus = 'show';
+      } else {
+        this.listStatus = 'noData';
+      }
+
+      console.log(this.listStatus)
+    }, 1000);
+  },
+};
+
+Vue.createApp(App).mount('#app');
+```
+
+
+
+v-if 是对 DOM 的移除和添加，移除时会用注释节点占位。对内部子组件与事件监听都会销毁与重建。
+
+v-if 只有条件是 truthy 时，才会被渲染，惰性渲染。v-show 总是会被渲染，使用 style display 属性控制显示和隐藏。
+
+v-if 切换时开销很大，初始化渲染时不会被渲染。v-show 切换时切换时开销较低，但是初始化渲染时无论显示与否都会被渲染。
+
+如果切换频繁使用 v-show；如果切换不频繁，首次加载不需要渲染，可以使用 v-if。
+
+```js
+const App = {
+  data () {
+    return {
+      isLogin: true,
+      username: 'yueluo',
+      listShow: false
+    }
+  },
+  template: `
+    <div>
+      <div class="user">
+        <template v-if="isLogin">
+          <span>Welcome， {{ username }}</span>
+          <div>
+            <a href="javascript:;" @click="changeListShow">个人中心</a>
+            <ul v-show="listShow">
+              <li>
+                <a href="#">我的资料</a>
+              </li>
+              <li>
+                <a href="#">我的账号</a>
+              </li>
+              <li>
+                <a href="#">我的钱包</a>
+              </li>
+            </ul>
+          </div>
+        </template>
+        <template v-else>
+          <a href="#">登录</a>
+          <a href="#">注册</a>
+        </template>
+      </div>
+    </div>
+  `,
+  methods: {
+    changeListShow () {
+      this.listShow = !this.listShow;
+    }
+  },
+};
+
+Vue.createApp(App).mount('#app');
+```
+
+## 列表渲染 v-for
+
