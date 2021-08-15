@@ -4610,3 +4610,11 @@ Vue.createApp(App).mount('#app');
 
 ## 列表渲染 v-for
 
+v-for 列表渲染。指令表达式 => (item, index) of/in list
+
+in/of 都可以使用，数组、对象等。Vue 中两者都是一套定义方法。
+
+JavaScript 中 for in 一般都是对象属性枚举，for of  用来遍历可迭代对象。
+
+建议遍历可迭代对象时，使用 for of，(item, index)；枚举对象属性时，建议使用 for in，(value, key,  index)。
+
