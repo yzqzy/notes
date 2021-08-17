@@ -454,5 +454,426 @@ IEEE 754 规范，JavaScript 采用 64 位双精度浮点数方式存储数字�
 
 npm 仓库 搜索 js 精度。
 
+## 前端模块化
 
+模块化开发是当下最重要的前端开发范式之一。
+
+模块化是一种最主流的代码组织方式。通过把复杂代码按照功能不同划分为不同模块单独维护，去提高开发效率，降低维护成本。
+
+模块化只是思想，并不包括具体实现。
+
+### 模块化演进过程
+
+#### 1. 基于文件划分模块
+
+web 中最原始的模块系统。将每个功能以及相关状态数据存放到不同文件中，约定每个文件就是独立的模块。
+
+使用模块时，将模块引入到页面中，一个 script 标签对应一个模块。
+
+```js
+// module a 相关状态数据和功能函数
+
+var name = 'module-a'
+
+function method1 () {
+  console.log(name + '#method1')
+}
+
+function method2 () {
+  console.log(name + '#method2')
+}
+
+```
+
+```js
+// module b 相关状态数据和功能函数
+
+var name = 'module-b'
+
+function method1 () {
+  console.log(name + '#method1')
+}
+
+function method2 () {
+  console.log(name + '#method2')
+}
+
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Modular evolution stage 1</title>
+</head>
+<body>
+  <script src="module-a.js"></script>
+  <script src="module-b.js"></script>
+  <script>
+    // 命名冲突
+    method1()
+    // 模块成员可以被修改
+    name = 'foo'
+  </script>
+</body>
+</html>
+
+```
+
+缺点十分明显，所有模块都直接在全局工作，没有私有空间，所有成员都可以在模块外部被访问或者修改，而且模块一段多了过后，容易产生命名冲突，另外无法管理模块与模块之间的依赖关系
+
+* 污染全局作用域
+* 命名冲突问题
+* 无法管理模块依赖关系
+
+早期模块化完全依赖约定。
+
+#### 2. 命名空间方式
+
+每个模块只暴露一个全局对象，所有模块成员都挂载到这个对象中。具体做法就是在第一阶段的基础上，通过将每个模块「包裹」为一个全局对象的形式实现，有点类似于为模块内的成员添加了「命名空间」的感觉。
+
+```js
+// module a 相关状态数据和功能函数
+
+var moduleA = {
+  name: 'module-a',
+
+  method1: function () {
+    console.log(this.name + '#method1')
+  },
+
+  method2: function () {
+    console.log(this.name + '#method2')
+  }
+}
+```
+
+```js
+// module b 相关状态数据和功能函数
+
+var moduleB = {
+  name: 'module-b',
+
+  method1: function () {
+    console.log(this.name + '#method1')
+  },
+
+  method2: function () {
+    console.log(this.name + '#method2')
+  }
+}
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Modular evolution stage 2</title>
+</head>
+<body>
+  <script src="module-a.js"></script>
+  <script src="module-b.js"></script>
+  <script>
+    moduleA.method1()
+    moduleB.method1()
+    // 模块成员可以被修改
+    moduleA.name = 'foo'
+  </script>
+</body>
+</html>
+```
+
+通过「命名空间」减小了命名冲突的可能，但是同样没有私有空间，所有模块成员也可以在模块外部被访问或者修改，而且也无法管理模块之间的依赖关系。
+
+#### 3. IIFE 方式
+
+使用立即执行函数表达式（IIFE：Immediately-Invoked Function Expression）为模块提供私有空间。
+具体做法就是将每个模块成员都放在一个函数提供的私有作用域中，对于需要暴露给外部的成员，通过挂在到全局对象上的方式实现。
+
+```js
+// module a 相关状态数据和功能函数
+
+;(function () {
+  var name = 'module-a'
+  
+  function method1 () {
+    console.log(name + '#method1')
+  }
+  
+  function method2 () {
+    console.log(name + '#method2')
+  }
+
+  window.moduleA = {
+    method1: method1,
+    method2: method2
+  }
+})()
+```
+
+```js
+// module a 相关状态数据和功能函数
+
+;(function ($) {
+  var name = 'module-a'
+  
+  function method1 () {
+    console.log(name + '#method1')
+    $('body').animate({ margin: '200px' })
+  }
+  
+  function method2 () {
+    console.log(name + '#method2')
+  }
+
+  window.moduleA = {
+    method1: method1,
+    method2: method2
+  }
+})(jQuery)
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Modular evolution stage 3</title>
+</head>
+<body>
+  <script src="module-a.js"></script>
+  <script src="module-b.js"></script>
+  <script>
+    moduleA.method1()
+    moduleB.method1()
+    // 模块私有成员无法访问
+    console.log(moduleA.name) // => undefined
+  </script>
+</body>
+</html>
+```
+
+有了私有成员的概念，私有成员只能在模块成员内通过闭包的形式访问。确保私有变量安全。
+
+还可以用自执行函数的参数作为依赖声明使用，具体做法就是在第三阶段的基础上，利用立即执行函数的参数传递模块依赖项。可以使模块依赖关系更加明显。这使得每一个模块之间的关系变得更加明显。
+
+```js
+// module a 相关状态数据和功能函数
+
+;(function ($) {
+  var name = 'module-a'
+  
+  function method1 () {
+    console.log(name + '#method1')
+    $('body').animate({ margin: '200px' })
+  }
+  
+  function method2 () {
+    console.log(name + '#method2')
+  }
+
+  window.moduleA = {
+    method1: method1,
+    method2: method2
+  }
+})(jQuery)
+```
+
+#### 4. 总结
+
+以上这几种方式就是早期没有工具和规范的情况下，对模块化的落地方式。
+
+模块加载方式都是通过 `<script></script>` 标签去引入每一个模块，这也就意味着模块加载不受代码控制。
+
+如果开发时间跨度很长，维护非常麻烦。
+
+如果代码中依赖一个模块，但是 `html` 中未引用模块，这时就会出现问题。
+
+如果在模块中移除了某个模块的引用，但是未在 `html` 中删除引用，就会产生问题。
+
+### 模块化规范的出现
+
+模块化标准 + 模块加载器。
+
+#### CommonJS 规范
+
+NodeJS 所提出的一套标准，NodeJS 中所有的模块代码必须遵循 CommonJS 规范。
+
+* 每一个文件就是一个模块
+* 每个模块都有单独的作用域
+* 通过 module.exports 导出成员
+* 通过 require 函数载入模块
+
+CommonJS 约定以同步方式加载模块。NodeJS 的执行机制是在启动时加载模块，执行过程中不需要加载，只会使用模块。
+
+CommonJS 规范在浏览器端使用，必然会导致效率低下，因为每次页面加载都会导致大量的同步模块请求出现。
+
+所以说在早期的浏览器前端模块化规范中，并没有选择 CommonJS 规范，而是专门为浏览器新定义了规范，AMD 规范。同时还推出了一个非常出名的库，Require.js。Require.js 实现了 AMD 规范，其本身也是非常强大的模块加载器。
+
+#### AMD 规范
+
+AMD（Asynchronous Module Definition），即异步模块定义规范。
+
+Require.js 提供了 AMD 模块化规范，以及一个自动化模块加载器。
+
+```js
+// 因为 jQuery 中定义的是一个名为 jquery 的 AMD 模块
+// 所以使用时必须通过 'jquery' 这个名称获取这个模块
+// 但是 jQuery.js 并不在同级目录下，所以需要指定路径
+define('module1', ['jquery', './module2'], function ($, module2) {
+  return {
+    start: function () {
+      $('body').animate({ margin: '200px' })
+      module2()
+    }
+  }
+})
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Modular evolution stage 5</title>
+</head>
+<body>
+  <script src="lib/require.js" data-main="main"></script>
+</body>
+</html>
+```
+
+```js
+require.config({
+  paths: {
+    // 因为 jQuery 中定义的是一个名为 jquery 的 AMD 模块
+    // 所以使用时必须通过 'jquery' 这个名称获取这个模块
+    // 但是 jQuery.js 并不一定在同级目录下，所以需要指定路径
+    jquery: './lib/jquery'
+  }
+})
+
+require(['./modules/module1'], function (module1) {
+  module1.start()
+}) 
+```
+
+目前绝大多数第三方库都支持 AMD 规范。但是使用起来相对比较复杂，模块 JS 文件请求频繁（根据文件划分模块）。
+
+AMD 只能算是前端模块化演进过程中的一步，是一种妥协的实现方式，并不是最终的解决方案。在当时的环境背景下，还是很有意义的，它为前端模块化提供了一个标准。
+
+```js
+require(['./modules'], function (module1) {
+	module1.start();
+})
+```
+
+```js
+// 兼容 CMD 规范（类似 CommonJS 规范）
+define(function (require, exports, module) {
+	// 通过 require 引入依赖
+  var $ = require('jquery')
+  // 通过 exports 或者 module.exports 对外暴露成员
+  module.exports = function () {
+    console.log('module 2~')
+    $('body').append('<p>module2</p>')
+  }
+})
+```
+
+#### CMD 规范
+
+Sea.js 和 CMD（Common Module Definition） 规范。
+
+```js
+define(function (require, exports, module) {
+  var a = [1, 2, 3, 4, 5];
+
+  return {
+    a: a.reverse()
+  }
+});
+```
+
+```js
+seajs.use(['module_a.js'], function (moduleA) {
+  console.log(moduleA.a);
+});
+```
+
+```html
+<script type="text/javascript" src="js/sea.js" />
+<script type="text/javascript" src="js/index.js" />
+```
+
+CMD 是依赖就近，按需加载模块，与 CommonJS、AMD 有本质区别; AMD 是依赖前置，CMD 是需要的时候去加载模块；
+
+### 模块化标准规范
+
+NodeJS 开发中遵循 CommonJS 规范去组织模块。浏览器环境中会采用 ES Module 规范。
+
+ES Module 是 ECMAScript 2015（ES6）中定义的最新的模块系统，它是最近几年定义的标准，所以也存在环境兼容问题。
+
+各浏览器支持情况：https://caniuse.com/#feat=es6-module
+
+### ES Module
+
+#### 基本特性
+
+通过给 script 标签添加 `type = module` 的属性，就可以直接使用 ES Module 的标准执行 JS 代码。
+
+```html
+<script type="module">
+	console.log('this is es module')
+</script>
+```
+
+ES Module 自动采用严格模式，忽略 `'use strict'`，每个 ES Module 都由自己的私有作用域。
+
+```html
+<script type="module">
+	console.log('this is es module')
+  
+  var foo = 100;
+  
+  console.log(foo); // 100
+</script>
+
+<script type="module">
+	console.log('this is es module')
+  
+  console.log(foo); // 报错
+</script>
+```
+
+ES Module 通过 CORS 的方式请求外部 JS 模块
+
+```html
+<script type="module" src="https://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script> 报错
+```
+
+```html
+<script type="module" src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+```
+
+ES Module 的 script 标签会自动延迟执行脚本，等同于 script 的 defer 属性
+
+
+
+* 自动采用严格模式，忽略 `use strict`
+* 每个 ES Module 模块都是单独的私有作用域
+* ES Module 通过 CORS 去请求外部 JS 模块
+* ES Module 的 script 标签会延迟执行脚本，等同于 defer 属性
+
+#### 导入、导出
 
