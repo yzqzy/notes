@@ -1,6 +1,6 @@
 # 碎片知识
 
-## 同步与异步加载
+## 一、同步与异步加载
 
 ### 异步加载
 
@@ -161,7 +161,7 @@ async_exec('js/index.js', 'test1');
 微信的 SDK 是放在最上边的，所以每次加载都会由一定的延迟，页面阻塞产生白屏现象（同步加载）。
 PC 端可以放在上面，移动端移动不要把 script 引入写在最上面，2.5 s 之内如果用户看不到页面，就是失败的。
 
-  ## 放大模式、宽放大模式
+  ## 二、放大模式、宽放大模式
 
 window.frameElement 返回当前window对象的元素，chrome没有反应，IE、火狐有反应。
 
@@ -329,7 +329,7 @@ mod.test2();
 
 模块化外层一般是存在全局变量的，可以注入全局变量。
 
-## JS 精度丢失、解决方法
+## 三、JS 精度丢失、解决方法
 
 ### 精度丢失原因
 
@@ -454,7 +454,7 @@ IEEE 754 规范，JavaScript 采用 64 位双精度浮点数方式存储数字�
 
 npm 仓库 搜索 js 精度。
 
-## 前端模块化
+## 四、前端模块化
 
 模块化开发是当下最重要的前端开发范式之一。
 
@@ -876,4 +876,305 @@ ES Module 的 script 标签会自动延迟执行脚本，等同于 script 的 de
 * ES Module 的 script 标签会延迟执行脚本，等同于 defer 属性
 
 #### 导入、导出
+
+**基本使用**
+
+```js
+const foo = 'e module';
+
+export { foo };
+```
+
+```js
+import { foo } from './module.js';
+
+console.log(foo);
+```
+
+
+
+module.js
+
+```js
+export var name = 'foo module';
+
+export function hello () {
+  console.log('hello');
+}
+
+class Person { }
+
+export {
+	name as fooName,
+  hello,
+  Person
+}
+```
+
+app.js
+
+```js
+import { fooName } from './module.js';
+
+console.log(fooName);
+```
+
+index.html
+
+```html
+<script type="module" src="./app.js"></script>
+```
+
+**注意事项**
+
+export {} 不等于对象字面量的简写形式，两者含义是不同的。
+
+export default {} 和 对象字面量的简写形式一致。 
+
+export {} 导出的是对象引用，修改内部值，会影响到导出值。导入的成员是只读的成员，不能修改。
+
+```js
+var name = 'jack';
+
+var obj = { name };
+
+export { name };
+
+setTimeout(function () {
+  name = 'ben';
+}, 1000);
+```
+
+import {} 也不是对象解构形式，就是固定用法。
+
+```js
+import { name } from './module.js';
+
+name = 'tom'; // 报错
+
+setTimeout(function () {
+  console.log(name);
+}, 1500)
+```
+
+#### 导入注意事项
+
+```js
+// import { name } from './module'
+// import { name } from './module.js'
+// console.log(name)
+
+// import { lowercase } from './utils'
+// import { lowercase } from './utils/index.js'
+// console.log(lowercase('HHH'))
+
+// import { name } from 'module.js'
+// import { name } from './module.js'
+// import { name } from '/04-import/module.js'
+// import { name } from 'http://localhost:3000/04-import/module.js'
+// console.log(name)
+
+// --------------
+
+// import {} from './module.js'
+// import './module.js'
+
+// ---------------
+
+// import * as mod from './module.js'
+// console.log(mod)
+
+// ---------------
+
+// var modulePath = './module.js'
+// import { name } from modulePath
+// console.log(name) // 报错
+
+// if (true) {
+//   import { name } from './module.js' // 报错
+// }
+
+// import('./module.js').then(function (module) {
+//   console.log(module)
+// })
+
+// ----------------
+
+// import { name, age, default as title } from './module.js'
+import abc, { name, age } from './module.js'
+console.log(name, age, abc)
+```
+
+import 只能出现在最顶层。
+
+ES Module 提供了 import 函数，支持异步加载，模块内部数据可以通过参数获取到。
+
+#### 导入、导入成员
+
+```js
+var foo = 'hello'
+var bar = 'world'
+
+export { foo, bar }
+```
+
+```js
+// import { Button } from './button.js'
+// import { Avatar } from './avatar.js'
+
+// export { Button, Avatar }
+
+export { default as Button } from './button.js'
+export { Avatar } from './avatar.js'
+```
+
+```js
+// export { foo, bar } from './module.js'
+
+// console.log(foo, bar)
+
+import { Button, Avatar } from './components/index.js'
+
+console.log(Button)
+console.log(Avatar)
+```
+
+#### 浏览器环境 Polyfill
+
+ES Module 存在兼容性问题。同样代码 Chrome 可以正常使用，IE 浏览器则不行。
+
+```js
+export var foo = 'bar'
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>ES Module 浏览器环境 Polyfill</title>
+</head>
+<body>
+  <script nomodule src="https://unpkg.com/promise-polyfill@8.1.3/dist/polyfill.min.js"></script>
+  <script nomodule src="https://unpkg.com/browser-es-module-loader@0.4.1/dist/babel-browser-build.js"></script>
+  <script nomodule src="https://unpkg.com/browser-es-module-loader@0.4.1/dist/browser-es-module-loader.js"></script>
+  <script type="module">
+    import { foo } from './module.js'
+    console.log(foo)
+  </script>
+</body>
+</html>
+```
+
+通过 es-module-loader 读取代码交由 babel 转换。不支持的特性通过 polyfill 进行兼容。
+
+这种兼容 ES Module 的方式，只适合本地测试。
+
+### ES Module 兼容 Node.js
+
+#### 支持情况
+
+module.mjs
+
+```js
+export const foo = 'hello'
+
+export const bar = 'world'
+```
+
+bar.txt
+
+```js
+es module working~
+```
+
+foo.txt
+
+```js
+es module working~
+```
+
+index.mjs
+
+```js
+// 第一，将文件的扩展名由 .js 改为 .mjs；
+// 第二，启动时需要额外添加 `--experimental-modules` 参数；
+//      es module in node 目前还是实验特性，不建议在生产环境使用
+
+import { foo, bar } from './module.mjs'
+
+console.log(foo, bar)
+
+// 此时我们也可以通过 esm 加载内置模块了
+import fs from 'fs'
+fs.writeFileSync('./foo.txt', 'es module working')
+
+// 也可以直接提取模块内的成员，内置模块兼容了 ESM 的提取成员方式
+import { writeFileSync } from 'fs'
+writeFileSync('./bar.txt', 'es module working')
+
+// 对于第三方的 NPM 模块也可以通过 esm 加载
+import _ from 'lodash'
+_.camelCase('ES Module')
+
+// 不支持，因为第三方模块都是导出默认成员
+// import { camelCase } from 'lodash'
+// console.log(camelCase('ES Module'))
+
+// 内置模块兼容 ESM 的提取成员方式
+import { wirteFileSync } from 'fs';
+wirteFileSync('./bar.txt', 'es module working~');
+```
+
+运行脚本
+
+```js
+node --experimental-modules index.mjs
+```
+
+#### 与 CommonJS 交互
+
+```js
+// CommonJS 模块始终只会导出一个默认成员
+
+// module.exports = {
+//   foo: 'commonjs exports value'
+// }
+
+// exports.foo = 'commonjs exports value'
+
+// 不能在 CommonJS 模块中通过 require 载入 ES Module
+
+// const mod = require('./es-module.mjs')
+// console.log(mod)
+```
+
+```js
+// ES Module 中可以导入 CommonJS 模块
+
+// import mod from './commonjs.js'
+// console.log(mod)
+
+// 不能直接提取成员，注意 import 不是解构导出对象
+
+// import { foo } from './commonjs.js'
+// console.log(foo)
+
+// export const foo = 'es module export value'
+```
+
+* ES Modules 中可以导入 CommonJS 模块
+* CommonJS 中不能导入 ES Modules 模块
+* CommonJS 始终只会导出一个默认成员
+* 注意 import 不是解构导出对象
+
+#### 与 CommonJS 差异
+
+
+
+#### 新版本进一步支持
+
+#### Babel 兼容方案
 
