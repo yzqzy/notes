@@ -7,6 +7,7 @@
   + [Promise源码实现](https://git.yueluo.club/heora/notes/src/master/ecmascript/promise) 已完成
   + [内置对象](https://git.yueluo.club/heora/notes/src/master/ecmascript/Built_in_objects) 更新中...
   + [函数式编程](https://git.yueluo.club/heora/notes/src/master/ecmascript/functional) 已完成
+  + [JavaScript性能优化](https://git.yueluo.club/heora/notes/src/master/ecmascript/optimize)更新中...
 * [DOM](https://git.yueluo.club/heora/notes/src/master/dom) 已完成
 * [BOM](https://git.yueluo.club/heora/notes/src/master/bom) 已完成
 * [HTML5](https://git.yueluo.club/heora/notes/src/master/html5/base) 已完成
@@ -24,8 +25,8 @@
 * [Yeoman/Grunt/Gulp/FIS](https://git.yueluo.club/heora/notes/src/master/engineering) 已完成
 * webpack
   * [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
-  * [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 更新中...
-  * [webpack进阶](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
+  * [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
+  * [webpack进阶](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_plus) 更新中...
   * [自定义loader、plugins](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
   * [webpack源码实现](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_write) 已完成
 * vue
@@ -57,7 +58,7 @@
 * 微前端
   + [single-spa源码实现](https://git.yueluo.club/heora/notes/src/master/micro_frontends) 已完成
 * [Superset](https://git.yueluo.club/heora/notes/src/master/superset) 已完成
-* [Nginx](https://git.yueluo.club/heora/notes/src/master/nginx) 更新中...
+* [Nginx](https://git.yueluo.club/heora/notes/src/master/nginx) 暂停中...
 * jenkins
   + [react项目构建部署](https://git.yueluo.club/heora/notes/src/master/jenkins/practice) 已完成
   + [Jenkins2.x实践指南](https://git.yueluo.club/heora/notes/src/master/jenkins/jenkins2.x) 暂停中...
