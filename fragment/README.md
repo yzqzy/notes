@@ -1,6 +1,6 @@
 # 碎片知识
 
-## 一、同步与异步加载
+## 1、同步与异步加载
 
 ### 异步加载
 
@@ -161,7 +161,7 @@ async_exec('js/index.js', 'test1');
 微信的 SDK 是放在最上边的，所以每次加载都会由一定的延迟，页面阻塞产生白屏现象（同步加载）。
 PC 端可以放在上面，移动端移动不要把 script 引入写在最上面，2.5 s 之内如果用户看不到页面，就是失败的。
 
-  ## 二、放大模式、宽放大模式
+  ## 2、放大模式、宽放大模式
 
 window.frameElement 返回当前window对象的元素，chrome没有反应，IE、火狐有反应。
 
@@ -329,7 +329,7 @@ mod.test2();
 
 模块化外层一般是存在全局变量的，可以注入全局变量。
 
-## 三、JS 精度丢失、解决方法
+## 3、JS 精度丢失、解决方法
 
 ### 精度丢失原因
 
@@ -454,7 +454,7 @@ IEEE 754 规范，JavaScript 采用 64 位双精度浮点数方式存储数字�
 
 npm 仓库 搜索 js 精度。
 
-## 四、前端模块化
+## 4、模块化
 
 模块化开发是当下最重要的前端开发范式之一。
 
@@ -1172,9 +1172,158 @@ node --experimental-modules index.mjs
 
 #### 与 CommonJS 差异
 
+cjs
 
+```js
+// 加载模块函数
+console.log(require)
+
+// 模块对象
+console.log(module)
+
+// 导出对象别名
+console.log(exports)
+
+// 当前文件的绝对路径
+console.log(__filename)
+
+// 当前文件所在目录
+console.log(__dirname)
+```
+
+esm
+
+```js
+// ESM 中没有模块全局成员
+
+// // 加载模块函数
+// console.log(require)
+
+// // 模块对象
+// console.log(module)
+
+// // 导出对象别名
+// console.log(exports)
+
+// // 当前文件的绝对路径
+// console.log(__filename)
+
+// // 当前文件所在目录
+// console.log(__dirname)
+
+// -------------
+
+// require, module, exports 可以通过 import 和 export 代替
+
+// __filename 和 __dirname 通过 import 对象的 meta 属性获取
+// const currentUrl = import.meta.url
+// console.log(currentUrl)
+
+// 通过 url 模块的 fileURLToPath 方法转换为路径
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+console.log(__filename)
+console.log(__dirname)
+```
 
 #### 新版本进一步支持
 
+common.cjs
+
+```js
+// 如果需要在 type=module 的情况下继续使用 CommonJS，
+// 需要将文件扩展名修改为 .cjs
+
+const path = require('path')
+
+console.log(path.join(__dirname, 'foo'))
+```
+
+module.js
+
+```js
+export const foo = 'hello'
+
+export const bar = 'world'
+```
+
+index.js
+
+```js
+// Node v12 之后的版本，可以通过 package.json 中添加 type 字段为 module，
+// 将默认模块系统修改为 ES Module
+// 此时就不需要修改文件扩展名为 .mjs 了
+
+import { foo, bar } from './module.js'
+
+console.log(foo, bar)
+```
+
+package.json
+
+```js
+{
+  "type": "module"
+}
+```
+
 #### Babel 兼容方案
+
+Babel 是目前最主流的一款 JavaScript 编译器，它可以将一些新特性代码编译成当前环境支持的代码。
+
+
+
+<img src="./images/babel_core.png" style="zoom: 50%" />
+
+
+
+module.js
+
+```js
+export const foo = 'hello'
+
+export const bar = 'world'
+```
+
+index.js
+
+```js
+// 对于早期的 Node.js 版本，可以使用 Babel 实现 ES Module 的兼容
+
+import { foo, bar } from './module.js'
+
+console.log(foo, bar)
+```
+
+.babelrc
+
+```js
+{
+  "plugins": [
+    "@babel/plugin-transform-modules-commonjs"
+  ]
+}
+```
+
+package.json
+
+```js
+{
+  "devDependencies": {
+    "@babel/core": "^7.6.0",
+    "@babel/node": "^7.6.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.6.0"
+  }
+}
+```
+
+运行命令
+
+```js
+yarn babel-node index.js
+```
+
+## 5、
 
