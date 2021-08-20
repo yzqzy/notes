@@ -357,17 +357,28 @@ V8 采用分代回收的思想实现垃圾回收，将内存分为新生代和�
 #### 任务管理器监控内存
 
 ```html
-<button id="J-btn">
-  
-</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
 
-<script>
-	const oBtn = document.getElementId('J-btn');
+  <button id="J-btn">Button</button>
   
-  oBtn.onclick = function () {
-    let arrList = new Array(1000000);
-  }
-</script>
+  <script>
+    const oBtn = document.getElementId('J-btn');
+    
+    oBtn.onclick = function () {
+      let arrList = new Array(1000000);
+    }
+  </script>
+  
+</body>
+</html>
 ```
 
 shift + esc 打开浏览器任务管理器。任务管理器只能说明存在问题，但是不能很准确的定位问题。
@@ -378,3 +389,93 @@ shift + esc 打开浏览器任务管理器。任务管理器只能说明存在�
 
 #### Timeline 记录内存
 
+```html
+<button id="J-btn">Add</button>
+
+<script>
+	const oBtn = document.getElementById('J-btn');
+  
+  oBtn.onclick = function () {
+    let arrList = new Array(1000000);
+  }
+</script>
+```
+
+
+
+<img src="./images/memory02.png" style="zoom: 60%" />
+
+#### 堆快照查找分离 DOM
+
+分离 DOM
+
+* 界面元素存活在 DOM 树上
+* 垃圾对象时的 DOM 节点
+* 分离状态的 DOM 节点（界面已经不存在，但是存在 JS 引用）
+
+
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <button id="J-btn">Add</button>
+  
+  <script>
+    const oBtn = document.getElementById('J-btn');
+  
+    let tempElem;
+
+    function test () {
+      for (let i = 0; i < 100000; i++) {
+        const ul = document.createElement('ul');
+
+        for (let i = 0; i < 10; i++) {
+          const li = document.createElement('li');
+
+          ul.appendChild(ul);
+        }
+
+        tempElem = ul;
+      }
+    }
+
+    oBtn.addEventListener('click', test);
+  </script>
+  
+</body>
+</html>
+```
+
+
+
+<img src="./images/memory03.png" style="zoom: 60%" />
+
+#### 判断是否存在频繁 GC
+
+频繁垃圾回收现象
+
+* GC 工作时应用程序是停止的
+* 频繁且过长的 GC 会导致应用假死
+* 用户使用中感知应用卡顿
+
+如何确定频繁地垃圾回收
+
+* Timeline 中频繁的上升下降
+* 任务管理器中数据频繁的增加或者减小
+
+#### Performance 总结
+
+Performance 使用
+
+* Performance 使用流程
+* 内存问题的相关分析
+* Performance 时序图监控内存变化
+* 

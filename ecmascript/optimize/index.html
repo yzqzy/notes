@@ -8,14 +8,28 @@
 </head>
 <body>
 
-  <button id="J-btn">Button</button>
+  <button id="J-btn">Add</button>
   
   <script>
-    const oBtn = document.getElementId('J-btn');
-    
-    oBtn.onclick = function () {
-      let arrList = new Array(1000000);
+    const oBtn = document.getElementById('J-btn');
+  
+    let tempElem;
+
+    function test () {
+      for (let i = 0; i < 100000; i++) {
+        const ul = document.createElement('ul');
+
+        for (let i = 0; i < 10; i++) {
+          const li = document.createElement('li');
+
+          ul.appendChild(li);
+        }
+
+        tempElem = ul;
+      }
     }
+
+    oBtn.addEventListener('click', test);
   </script>
   
 </body>
