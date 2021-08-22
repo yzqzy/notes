@@ -12,7 +12,6 @@
 * [BOM](https://git.yueluo.club/heora/notes/src/master/bom) 已完成
 * [HTML5](https://git.yueluo.club/heora/notes/src/master/html5/base) 已完成
 * [CSS3](https://git.yueluo.club/heora/notes/src/master/css3) 已完成
-* [碎片知识](https://git.yueluo.club/heora/notes/src/master/fragment) 已完成
 * [工具函数](https://git.yueluo.club/heora/notes/src/master/utils) 已完成
 * NPM
   + [NPM基础](https://git.yueluo.club/heora/notes/src/master/npm/base) 已完成
@@ -22,7 +21,9 @@
   + [网络基础](https://git.yueluo.club/heora/notes/src/master/network/base) 已完成
   + [网络进阶](https://git.yueluo.club/heora/notes/src/master/network/plus) 暂停中...
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
+* [碎片知识](https://git.yueluo.club/heora/notes/src/master/fragment) 已完成
 * [Yeoman/Grunt/Gulp/FIS](https://git.yueluo.club/heora/notes/src/master/engineering) 已完成
+* [ESLint](https://git.yueluo.club/heora/notes/src/master/eslint) 更新中...
 * webpack
   * [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
   * [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
