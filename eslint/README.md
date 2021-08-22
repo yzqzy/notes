@@ -55,3 +55,55 @@ yarn eslint -v
 
 ## ESLint 快速上手
 
+ESLint 检查步骤
+
+* 编写 “问题” 代码
+* 使用 eslint 执行检测
+* 完成 eslint 配置
+
+index.js
+
+```js
+const foo = 123;
+
+function fn () {
+  console.log('hello');
+
+    console.log('eslint');
+}
+
+fn(;
+
+syy();
+```
+
+初始化 eslint 配置，命令行交互的方式进行选择。
+
+```js
+npx eslint --init
+```
+
+使用 eslint 检查代码
+
+```js
+npx eslint .\index.js
+```
+
+修正后代码
+
+```js
+const foo = 123
+
+console.log(foo)
+
+function fn () {
+  console.log('hello')
+  console.log('eslint')
+}
+
+fn()
+
+```
+
+## ESLint 配置文件解析
+
