@@ -7,7 +7,7 @@
   + [Promise源码实现](https://git.yueluo.club/heora/notes/src/master/ecmascript/promise) 已完成
   + [内置对象](https://git.yueluo.club/heora/notes/src/master/ecmascript/Built_in_objects) 更新中...
   + [函数式编程](https://git.yueluo.club/heora/notes/src/master/ecmascript/functional) 已完成
-  + [JavaScript性能优化](https://git.yueluo.club/heora/notes/src/master/ecmascript/optimize)更新中...
+  + [JavaScript性能优化](https://git.yueluo.club/heora/notes/src/master/ecmascript/optimize) 已完成
 * [DOM](https://git.yueluo.club/heora/notes/src/master/dom) 已完成
 * [BOM](https://git.yueluo.club/heora/notes/src/master/bom) 已完成
 * [HTML5](https://git.yueluo.club/heora/notes/src/master/html5/base) 已完成

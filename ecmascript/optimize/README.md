@@ -479,3 +479,382 @@ Performance 使用
 * 内存问题的相关分析
 * Performance 时序图监控内存变化
 * 任务管理器监控内存变化
+
+## 二、代码优化
+
+精准测试 JavaScript 性能
+
+* 本质上就是采集大量的执行样本进行数学统计和分析
+* 使用基于 Benchmark.js 的 https://jsperf.com/ 完成，在线脚本性能测试
+
+Jsperf 使用流程
+
+* GitHub 账号登录
+* 填写个人信息（非必须）
+* 填写详细的测试用例信息（title、slug）
+* 填写准备代码（DOM 操作经常使用）
+* 填写必要的 setup 和 teardown 代码
+* 填写代码测试片段
+
+### 慎用全局变量
+
+程序运行过程中，如果需要对某些数据进行存储，需要尽可能的放到局部作用域中，使用局部变量。
+
+* 全局变量定义在全局执行上下文，是所有作用域链的顶端
+* 全局执行上下文一直存在于上下文执行栈，直到程序退出
+* 如果某个局部作用域出现同名变量则会遮蔽或污染全局
+
+### 缓存全局变量
+
+将使用中无法避免的全局变量缓存到局部
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <input type="button" value="btn" id="J-btn1" />
+  <input type="button" value="btn" id="J-btn2" />
+  <input type="button" value="btn" id="J-btn3" />
+  <input type="button" value="btn" id="J-btn4" />
+  <p>1111</p>
+  <input type="button" value="btn" id="J-btn5" />
+  <input type="button" value="btn" id="J-btn6" />
+  <p>2222</p>
+  <input type="button" value="btn" id="J-btn7" />
+  <input type="button" value="btn" id="J-btn8" />
+  <p>3333</p>
+  <input type="button" value="btn" id="J-btn9" />
+  <input type="button" value="btn" id="J-btn10" />
+  
+  <script>
+    function getBtn () {
+      let oBtn1 = document.getElementById('J-btn1');
+      let oBtn3 = document.getElementById('J-btn3');
+      let oBtn5 = document.getElementById('J-btn5');
+      let oBtn7 = document.getElementById('J-btn7');
+      let oBtn9 = document.getElementById('J-btn9');
+    }
+
+    function getBtn2 () {
+      const _doc = document;
+
+      let oBtn1 = _doc.getElementById('J-btn1');
+      let oBtn3 = _doc.getElementById('J-btn3');
+      let oBtn5 = _doc.getElementById('J-btn5');
+      let oBtn7 = _doc.getElementById('J-btn7');
+      let oBtn9 = _doc.getElementById('J-btn9');
+    }
+  </script>
+  
+</body>
+</html>
+```
+
+### 通过原型添加方法
+
+在原型对象上新增实例对象需要的方法 。
+
+```js
+var Fn1 = function () {
+  this.foo = function () {
+    console.log(1111);
+  }
+}
+
+let f1 = new Fn1();
+```
+
+```js
+var Fn2 = function () {}
+
+fn2.prototype.foo = function () {
+  console.log(1111);
+}
+
+let f2 = new Fn2();
+```
+
+### 避开闭包陷阱
+
+闭包特点
+
+* 外部具有指向内部的引用
+* 在 “外” 部作用域访问 “内” 部作用域的数据 
+
+关于闭包
+
+* 闭包是一种强大的语法。
+* 闭包使用不当很容易出现内存泄漏
+* 不要为了闭包而闭包
+
+```js
+function foo () {
+  var name = 'yueluo';
+  
+  function fn () {
+    console.log(name);
+  }
+  
+  return fn;
+}
+
+var a = foo();
+
+a();
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <input type="button" id="J-btn" />
+  
+  <script>
+    function foo () {
+      var el = document.getElementById('J-btn');
+
+      el.onclick = function () {
+        console.log(el.id);
+      }
+    }
+
+    foo();
+  </script>
+  
+</body>
+</html>
+```
+
+存在内存泄漏。
+
+```js
+function foo () {
+  var el = document.getElementById('J-btn');
+
+  el.onclick = function () {
+    console.log(el.id);
+  }
+
+  el = null;
+}
+
+foo();
+```
+
+### 避免属性访问方法使用
+
+JavaScript 中的面向对象
+
+* JS 不需属性的访问方法，所有属性都是外部可见的
+* 使用属性访问方法只会增加一层重定义，没有访问的控制力
+
+```js
+function Person () {
+  this.name = 'coder';
+  this.age = 23;
+  
+  this.getAge = function () {
+    return this.age;
+  }
+}
+
+const p = new Person();
+const age = p.getAge();
+```
+
+```js
+function Person () {
+  this.name = 'coder';
+  this.age = 23;
+  
+  this.getAge = function () {
+    return this.age;
+  }
+}
+
+const p = new Person();
+const age = p.age;
+```
+
+提供成员方法在执行效率上比直接访问效率低。
+
+### For 循环优化
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+  <p class="btn">add</p>
+
+  <script>
+    var oBtns = document.getElementsByClassName('btn');
+    
+    for (var i = 0; i < oBtns.length; i++) {
+      console.log(i);
+    }
+    
+    for (var i = 0, len = oBtns.length; i < len; i++) {
+      console.log(i);
+    }
+  </script>
+  
+</body>
+</html>
+```
+
+### 选择最优的循环方法
+
+```js
+var arr = new Array(1, 2, 3, 4, 5);
+
+console.time();
+arr.forEach(function (item) {
+  console.log(item);
+});
+console.timeEnd();
+
+console.time();
+arr.map(function (item) {
+  console.log(item);
+});
+console.timeEnd();
+
+console.time();
+for (var i = arr.length; i; i--) {
+  console.log(arr[i]);
+}
+console.timeEnd();
+
+console.time();
+for (var i in arr) {
+  console.log(arr[i]);
+}
+console.timeEnd();
+```
+
+效率对比： for > for in > map > forEach。
+
+浏览器可能对 forEach 有优化操作，所以差距也不明显。
+
+### 文档碎片优化
+
+节点的添加操作必然会有回流和重绘，建议使用 DocumentFragment。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <script>
+    for (var i = 0; i < 10; i++) {
+      var oP = document.createElement('p');
+
+      oP.innerHTML = i;
+
+      document.body.appendChild(oP);
+    }
+  </script>
+  <script>
+    const oFrag = document.createDocumentFragment();
+
+    for (var i = 0; i < 10; i++) {
+      var oP = document.createElement('p');
+
+      oP.innerHTML = i;
+  
+      oFrag.appendChild(oP);
+    }
+
+    document.body.appendChild(oFrag);
+  </script>
+  
+</body>
+</html>
+```
+
+### 克隆优化节点操作
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <p id="J-box">old</p>
+
+  <script>
+    for (var i = 0; i < 10; i++) {
+      var oP = document.createElement('p');
+
+      oP.innerHTML = i;
+
+      document.body.appendChild(oP);
+    }
+  </script>
+  
+  <script>
+    const oldP = document.getElementById('J-box');
+
+    for (var i = 0; i < 10; i++) {
+      var oP = oldP.cloneNode(false);
+
+      oP.innerHTML = i;
+
+      document.body.appendChild(oP);
+    }
+  </script>
+  
+</body>
+</html>
+```
+
+### 直接量替换 new Object
+
+```js
+var arr = [1, 2, 3];
+
+var arr2 = new Array(1, 2, 3);
+```
+
+。。。

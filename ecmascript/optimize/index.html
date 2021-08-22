@@ -8,29 +8,30 @@
 </head>
 <body>
 
-  <button id="J-btn">Add</button>
+  <p id="J-box">old</p>
+
+  <script>
+    for (var i = 0; i < 10; i++) {
+      var oP = document.createElement('p');
+
+      oP.innerHTML = i;
+
+      document.body.appendChild(oP);
+    }
+  </script>
   
   <script>
-    const oBtn = document.getElementById('J-btn');
-  
-    let tempElem;
+    const oldP = document.getElementById('J-box');
 
-    function test () {
-      for (let i = 0; i < 100000; i++) {
-        const ul = document.createElement('ul');
+    for (var i = 0; i < 10; i++) {
+      var oP = oldP.cloneNode(false);
 
-        for (let i = 0; i < 10; i++) {
-          const li = document.createElement('li');
+      oP.innerHTML = i;
 
-          ul.appendChild(li);
-        }
-
-        tempElem = ul;
-      }
+      document.body.appendChild(oP);
     }
-
-    oBtn.addEventListener('click', test);
   </script>
+  
   
 </body>
 </html>
