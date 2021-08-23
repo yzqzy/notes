@@ -105,5 +105,54 @@ fn()
 
 ```
 
+```js
+module.exports = {
+  env: {
+    browser: true,
+    es2021: true
+  },
+  extends: [
+    'standard'
+  ],
+  parserOptions: {
+    ecmaVersion: 12
+  },
+  rules: {
+  }
+}
+
+```
+
 ## ESLint 配置文件解析
+
+可以同时设置多个属性，以下属性不是互斥的。
+
+| 属性                | 描述                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| browser             | 浏览器中的全局变量                                           |
+| node                | Node.js 全局变量和 Node.js 作用域                            |
+| common.js           | CommonJS 全局变量和 CommonJS 作用域（用于 Broserify/Webpack 打包的只在浏览器运行的代码） |
+| shared_node_browser | Node.js 和 Browser 通用全局变量                              |
+| es6                 | 启动除了 modules 以外的所有 ECMAScript 6 特性（该选项会自动设置 ecmaVersion 解析器选项为 6） |
+| worker              | Web Workers 全局变量                                         |
+| amd                 | 将 requre() 和 define() 定义为像 amd 一样的全局变量          |
+| mocha               | 添加所有的 Mocha 测试全局变量                                |
+| jasmine             | 添加所有的 Jasmine 版本 1.3 和 2.0 的测试全局变量            |
+| jest                | Jest 全局变量                                                |
+| protractor          | Protractor 全局变量                                          |
+| qunit               | Quint 全局变量                                               |
+| jquery              | Jquery 全局变量                                              |
+| prototype.js        | Prototype.js 全局变量                                        |
+| shelljs             | ShellJS全局变量                                              |
+| meteor              | Meteor 全局变量                                              |
+| mongo               | MongoDB 全局变量                                             |
+| applescript         | AppleScript 全局变量                                         |
+| nashorn             | Java 8 Nashron 全局变量                                      |
+| serviceworker       | Service Worker 全局变量                                      |
+| atomtest            | Atom 全局变量                                                |
+| embertest           | Ember 全局变量                                               |
+| webextensions       | WebExtensions 全局变量                                       |
+| greasemonkey        | GreaseMonkey 全局变量                                        |
+
+## ESLint 配置注释
 
