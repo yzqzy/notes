@@ -425,11 +425,11 @@ package.json
 ```js
 {
   "scripts": {
-    "precommit": "lint-staged"
+    "lint": "lint-staged"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run precommit"
+      "pre-commit": "npm run lint"
     }
   },
   "lint-staged": {
@@ -439,5 +439,11 @@ package.json
     ]
   }
 }
+```
+
+推荐使用 husky 配合 lint-staged，可以在 commit 之前验证代码，还可以在验证前后完后其他的操作。
+
+```js
+git commit -m 'perf: test'
 ```
 
