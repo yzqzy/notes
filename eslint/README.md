@@ -156,3 +156,60 @@ module.exports = {
 
 ## ESLint 配置注释
 
+http://eslint.cn/docs/user-guide/configuring#configuring-rules
+
+```js
+const str = '${name} is a coder'; // eslint-disable-line no-template-curly-in-string
+
+console.log(str);
+```
+
+```js
+npx eslint ./index.js
+```
+
+## ESLint 结合自动化工具
+
+* 集成之后，ESLint 一定会工作
+* 项目统一，管理更加方便
+
+```js
+const script = () => {
+  return src('src/assets/scripts/*.js', { base: 'src' })
+    .pipe(plugins.eslint())
+    .pipe(plugins.eslint.format())
+    .pipe(plugins.eslint.failAfterError())
+    .pipe(plugins.babel({ presets: ['@babel/preset-env'] }))
+    .pipe(dest('temp'));
+}
+
+module.exports = {
+  script
+};
+```
+
+```js
+module.exports = {
+  env: {
+    browser: true,
+    es2020: true
+  },
+  extends: [
+    'standard'
+  ],
+  parserOptions: {
+    ecmaVersion: 12
+  },
+  rules: {
+  },
+  globals: {
+    '$': 'readonly' 
+  }
+}
+
+```
+
+```js
+npx eslint --init
+```
+

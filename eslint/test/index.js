@@ -1,10 +1,3 @@
-const foo = 123
+const str = '${name} is a coder'; // eslint-disable-line no-template-curly-in-string
 
-console.log(foo)
-
-function fn () {
-  console.log('hello')
-  console.log('eslint')
-}
-
-fn()
+console.log(str);
