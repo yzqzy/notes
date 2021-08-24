@@ -23,7 +23,7 @@
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
 * [碎片知识](https://git.yueluo.club/heora/notes/src/master/fragment) 已完成
 * [Yeoman/Grunt/Gulp/FIS](https://git.yueluo.club/heora/notes/src/master/engineering) 已完成
-* [ESLint](https://git.yueluo.club/heora/notes/src/master/eslint) 更新中...
+* [ESLint](https://git.yueluo.club/heora/notes/src/master/eslint) 已完成
 * webpack
   * [webpack基础](https://git.yueluo.club/heora/notes/src/master/webpack/webpack) 已完成
   * [webpack提升](https://git.yueluo.club/heora/notes/src/master/webpack/webpack_tencent) 已完成
