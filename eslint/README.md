@@ -189,6 +189,10 @@ module.exports = {
 ```
 
 ```js
+npx eslint --init
+```
+
+```js
 module.exports = {
   env: {
     browser: true,
@@ -209,7 +213,231 @@ module.exports = {
 
 ```
 
+## ESLint 结合 webpack
+
+```js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /.js$/,
+        exlcude: /node_modules/,
+        use: 'eslint-loader',
+        enforce: 'pre'
+      }
+    ]
+  }
+}
+```
+
+```js
+npm i eslint eslint-loader --sav-dev
+npm i eslint-plugin-react --save-dev
+```
+
 ```js
 npx eslint --init
+```
+
+```js
+module.exports = {
+  env: {
+    browser: true,
+    es2020: true
+  },
+  extends: [
+    'standard',
+    'plugin:react/recommended' // 使用共享配置
+  ],
+  parserOptions: {
+    ecmaVersion: 12
+  },
+  rules: {
+    // 'react/jsx-uses-react': 2, // 避免 React 引入不使用，JSX 编译后需要
+    // 'react/jsx-uses-vars': 2
+  },
+ 	// plugins: [
+  //  'react'
+  // ]
+}
+```
+
+```js
+npx webpack
+```
+
+## 现代化项目集成 ESLint
+
+现代化项目基本都已经集成 ESLint，这里以 vue-cli 进行演示。
+
+```js
+npm install @vue/cli -g
+```
+
+```js
+vue create vue-app-demo
+
+// Lint on save：webpack 构建时校验，保存时校验
+// Lint and fix on commit: 利用 git 钩子，提交代码前校验
+```
+
+## ESLint 检查 TypeScript
+
+typescript lint，你可能还使用过 ts-lint，不过目前官方已经不再维护 ts-lint，建议使用 ESLint 配合 typescript 插件进行代码校验。
+
+```js
+npx eslint --int 
+
+// 选择 eslint
+```
+
+```js
+module.exports = {
+  env: {
+    browser: true,
+    es2020: true
+  },
+  extends: [
+    'standard'
+  ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 12
+  },
+  plugins: [
+    '@typescript-eslint'
+  ],
+  rules: {
+  }
+}
+```
+
+## Stylelint 使用
+
+css lint
+
+*  提供默认的代码检查规则
+* 提供 CLI 工具，可以快速调用
+* 可以通过插件支持 Sass、Less、Postcss
+* 支持 Gulp 或 webpack 集成
+
+```js
+npm install stylelint -D
+npm install stylelint-config-standard -D
+npm install stylelint-config-sass-guidelines -D
+```
+
+.stylelintrc.js
+
+```js
+module.exports = {
+  extends: [
+    'stylelint-config-standard',
+    'stylelint-config-sass-guidelines'
+  ]
+}
+```
+
+```js
+npx stylelint ./index.css
+npx stylelint ./index.sass
+```
+
+## Prettier 使用
+
+近两年，使用频率特别高的一款通用的、前端代码格式化工具。
+
+它的功能很强大，几乎可以完成所有类型代码文件的格式化工作，我们可以使用它完成代码的自动格式化，还可以针对 Markdown 这一类的文档进行格式化操作。通过 Prettier，我们可以很容易的落实前端的规范化标准。
+
+**css**
+
+```js
+npm i prettier -D
+```
+
+```js
+npx prettier ./style.css
+```
+
+默认情况下会把格式化之后的代码输出到控制台中，如果想将格式化后的代码覆盖到源文件中
+
+```js
+npx prettier ./style.css --write
+```
+
+**所有文件**
+
+```js
+npx prettier . --write
+```
+
+不要过于依赖工具写出格式良好的代码，我们应该严格遵守格式，这是作为开发者的基本素质。
+
+## Git Hooks 工具机制
+
+通过 Git Hooks 在代码提交前强制 lint。
+
+* Git Hook 也成称为 git 钩子，每个钩子都对应一个任务
+* 通过 shell 脚本可以编写钩子任务触发时要具体执行的操作
+
+.git/hooks/pre-commit
+
+```js
+#!/bin/sh
+echo "before commit"
+```
+
+```js
+git commit -m "perf: test"
+```
+
+## ESLint 结合 Git Hooks
+
+很多前端开发者并不擅长使用 shell 脚本编写功能，我们可以使用 husky 实现 Git Hooks 的使用需求。
+
+```js
+npm install husky -D
+```
+
+package.json
+
+```js
+{
+  "scripts": {
+  	"lint": "eslint index.js"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
+  }
+}
+```
+
+我们还可以使用 lint-stage 模块
+
+```js
+npm install lint-staged -D
+```
+
+package.json
+
+```js
+{
+  "scripts": {
+    "precommit": "lint-staged"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run precommit"
+    }
+  },
+  "lint-staged": {
+    "*.json": [
+    	"eslint",
+      'git add'
+    ]
+  }
+}
 ```
 
