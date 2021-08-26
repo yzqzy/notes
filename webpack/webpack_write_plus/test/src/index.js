@@ -1,3 +1,6 @@
-console.log('index.js');
+const obj = require('./login');
 
-module.exports = 'main entry file';
+console.log('index.js');
+console.log(obj.default, '---', obj.age);
+
+export default 'main entry file';
