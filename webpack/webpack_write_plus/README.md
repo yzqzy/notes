@@ -326,8 +326,6 @@ dist/build.js
 
 ## CommonJS 模块打包
 
-### common js
-
 webpack 默认支持的就是 common.js 规范，建议日常开发也使用 common.js 规范。
 
 ```js
@@ -451,9 +449,7 @@ module.exports = 'education';
 });
 ```
 
-### es module
-
-es module 
+## ES Module 模块打包 
 
 ```js
 // es module 规范
@@ -472,5 +468,145 @@ export default 'main entry file';
 ```
 
 ```js
+(function(modules) { // webpackBootstrap
+	// The module cache
+	var installedModules = {};
+	// The require function
+	function __webpack_require__(moduleId) {
+		// Check if module is in cache
+		if(installedModules[moduleId]) {
+			return installedModules[moduleId].exports;
+		}
+		// Create a new module (and put it into the cache)
+		var module = installedModules[moduleId] = {
+			i: moduleId,
+			l: false,
+			exports: {}
+		};
+		// Execute the module function
+		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+		// Flag the module as loaded
+		module.l = true;
+		// Return the exports of the module
+		return module.exports;
+	}
+	// expose the modules object (__webpack_modules__)
+	__webpack_require__.m = modules;
+	// expose the module cache
+	__webpack_require__.c = installedModules;
+	// define getter function for harmony exports
+	__webpack_require__.d = function(exports, name, getter) {
+		if(!__webpack_require__.o(exports, name)) {
+			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+		}
+	};
+	// define __esModule on exports
+	__webpack_require__.r = function(exports) {
+		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+		}
+		Object.defineProperty(exports, '__esModule', { value: true });
+	};
+	// create a fake namespace object
+	// mode & 1: value is a module id, require it
+	// mode & 2: merge all properties of value into the ns
+	// mode & 4: return value when already ns object
+	// mode & 8|1: behave like require
+	__webpack_require__.t = function(value, mode) {
+		if(mode & 1) value = __webpack_require__(value);
+		if(mode & 8) return value;
+		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+		var ns = Object.create(null);
+		__webpack_require__.r(ns);
+		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+		return ns;
+	};
+	// getDefaultExport function for compatibility with non-harmony modules
+	__webpack_require__.n = function(module) {
+		var getter = module && module.__esModule ?
+			function getDefault() { return module['default']; } :
+			function getModuleExports() { return module; };
+		__webpack_require__.d(getter, 'a', getter);
+		return getter;
+	};
+	// Object.prototype.hasOwnProperty.call
+	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+	// __webpack_public_path__
+	__webpack_require__.p = "";
+	// Load entry module and return exports
+	return __webpack_require__(__webpack_require__.s = "./src/index.js");
+})
+
+({
+
+ "./src/index.js":
+ (function(module, __webpack_exports__, __webpack_require__) {
+
+  "use strict";
+  __webpack_require__.r(__webpack_exports__);
+  const obj = __webpack_require__(/*! ./login */ "./src/login.js");
+
+  console.log('index.js');
+  console.log(obj.default, '---', obj.age);
+
+  __webpack_exports__["default"] = ('main entry file');
+
+ }),
+
+ "./src/login.js":
+ (function(module, __webpack_exports__, __webpack_require__) {
+
+  "use strict";
+  __webpack_require__.r(__webpack_exports__);
+  __webpack_require__.d(__webpack_exports__, "age", function() { return age; });
+  // es module 规范
+
+  __webpack_exports__["default"] = ('yueluo');
+  const age = 23;
+
+ })
+
+});
+```
+
+对于 webpack 打包操作来说，我们可以使用 commonjs 规范，也可以使用 esmodule 规范。不过在最终打包处理时，针对于产出内容，采用 commonjs 规范，加载 commonjs 规范导出的内容生成的代码是最少的。不过也要看实际情况，推荐使用 commonjs 规范进行打包处理。
+
+## 功能函数手写实现
+
+src/login.js
+
+```js
+module.exports = 'education';
+```
+
+src/index.js
+
+```js
+const name = require('./login');
+
+console.log('index：', name);
+```
+
+shared/build.js
+
+```js
+```
+
+dist/index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test</title>
+</head>
+<body>
+  
+<script src="../shared/build.js"></script></body>
+</html>
 ```
 
