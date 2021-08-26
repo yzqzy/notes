@@ -1,6 +1,13 @@
-const obj = require('./login');
+const oBtn = document.getElementById('J-btn');
 
-console.log('index.js');
-console.log(obj.default, '---', obj.age);
+console.log('index');
 
-export default 'main entry file';
+oBtn.addEventListener('click', () => {
+  import(/*webpackChunkName: 'login'*/'./login.js')
+    .then(login => {
+      console.log(login);
+    })
+    .catch(err => {
+      console.log(err);
+    })
+});
