@@ -35,7 +35,7 @@
 
   // 定义 o 方法用于对象身上是否存在指定属性
   __webpack_require__.o = function (object, property) {
-    return Object.prototype.hasOwnProperty(object, property);
+    return Object.prototype.hasOwnProperty.call(object, property);
   }
 
   // 定义 d 方法用于在对象身上添加指定属性及 getter
@@ -66,6 +66,42 @@
     return getter;
   }
 
+  // 定义 t 方法用于加载指定 value 的模块内容，对内容进行处理并返回
+  __webpack_require__.t = function (value, mode) {
+    // 加载 value 对应的模块内容（value 通常是模块 ID）
+
+    if (mode & 1) {
+      value = __webpack_require__(value);
+    }
+
+    // commonjs
+    if (mode & 8) {
+      return value;
+    }
+
+    // esmodule
+    if ((mode & 4 && typeof value === 'object' && value && value.__esModule)) {
+      return value;
+    }
+
+    // 如果 8 和 4 都不成立，则需要自定义 ns，通过 default 属性返回内容
+    const ns = Object.create(null);
+
+    __webpack_require__.r(ns);
+
+    Object.defineProperty(ns, 'default', { enumerable: true, value });
+
+    if (mode & 2 && typeof value !== 'string') {
+      for (const k in value) {
+        __webpack_require__.d(ns, k, function (key) {
+          return value[key];
+        }.bind(null, k));
+      }
+    }
+
+    return ns;
+  }
+
   // 定义 p 属性用于保存资源访问路径
   __webpack_require__.p = "";
 
@@ -78,14 +114,20 @@
     // console.log('index：', name);
 
     "use strict";
-    __webpack_require__.r(exports);
-    var _login__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./src/login.js");
-    var _login__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(_login__WEBPACK_IMPORTED_MODULE_0__);
+    // __webpack_require__.r(exports);
+    // var _login__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./src/login.js");
+    // var _login__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(_login__WEBPACK_IMPORTED_MODULE_0__);
     // const name = require('./login');
+    const name = __webpack_require__.t("./src/login.js", 0b0111);
 
-    console.log('index：', _login__WEBPACK_IMPORTED_MODULE_0___default.a);
+    console.log(name);
+
+    // console.log('index：', _login__WEBPACK_IMPORTED_MODULE_0___default.a);
   }),
   "./src/login.js": (function (module, exports) {
-    module.exports = 'education';
+    module.exports = {
+      name: 'yueluo',
+      age: 23
+    };
   })
 });
