@@ -1,2 +1,1 @@
-export default 'yueluo';
-export const age = 23;
+module.exports  = 'education';

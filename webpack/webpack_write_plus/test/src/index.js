@@ -1,13 +1,5 @@
-const oBtn = document.getElementById('J-btn');
+const name = require('./login');
 
 console.log('index');
+console.log(name);
 
-oBtn.addEventListener('click', () => {
-  import(/*webpackChunkName: 'login'*/'./login.js')
-    .then(login => {
-      console.log(login);
-    })
-    .catch(err => {
-      console.log(err);
-    })
-});

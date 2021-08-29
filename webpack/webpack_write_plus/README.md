@@ -1,4 +1,4 @@
-# Webpack 源码
+#  Webpack 源码
 
 webpack 本质就是一个模块打包器，loader 与 plugin 是打包过程中额外完成的事情。
 
@@ -970,4 +970,121 @@ import 可以实现指定模块的懒加载操作，懒加载的核心原理就�
 t 方法可以针对内容进行不同的处理，处理方式取决于传入的数值（8，6，3，7，2，1）。
 
 ## t 方法分析及实现
+
+### 方法分析
+
+```js
+(function(modules) { // webpackBootstrap
+	// The module cache
+	var installedModules = {};
+	// The require function
+	function __webpack_require__(moduleId) {
+		// Check if module is in cache
+		if(installedModules[moduleId]) {
+			return installedModules[moduleId].exports;
+		}
+		// Create a new module (and put it into the cache)
+		var module = installedModules[moduleId] = {
+			i: moduleId,
+			l: false,
+			exports: {}
+		};
+		// Execute the module function
+		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+		// Flag the module as loaded
+		module.l = true;
+		// Return the exports of the module
+		return module.exports;
+	}
+	// expose the modules object (__webpack_modules__)
+	__webpack_require__.m = modules;
+	// expose the module cache
+	__webpack_require__.c = installedModules;
+	// define getter function for harmony exports
+	__webpack_require__.d = function(exports, name, getter) {
+		if(!__webpack_require__.o(exports, name)) {
+			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+		}
+	};
+	// define __esModule on exports
+	__webpack_require__.r = function(exports) {
+		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+		}
+		Object.defineProperty(exports, '__esModule', { value: true });
+	};
+	// create a fake namespace object
+	// mode & 1: value is a module id, require it
+	// mode & 2: merge all properties of value into the ns
+	// mode & 4: return value when already ns object
+	// mode & 8|1: behave like require
+	__webpack_require__.t = function(value, mode) {
+    // 接收两个参数，value 是被加载的模块 ID，第二个值是二进制的数值
+    // t 方法内部做的第一件事就是调用自定义 require 方法，加载对应内容重新赋值给 value
+    // 当获取到 value 值之后，余下的 8、4、2 都是对当前的内容进行加工处理，然后返回使用
+    //  1. 当 mode & 8 成立，直接将 value 返回（1、8 同时成立，相当于加载 commonjs 规范内容）
+    //  2. 当 mode & 4 成立，直接将 value 返回（1、3 同时成立，相当于加载 esmodule 规范内容）
+    //  3. 上述条件不成立，首先定义 ns 空对象
+    //     3.1 如果 value 是一个可以用直接使用的值，例如字符串，将 value 挂载到 default 属性上
+    //     3.2 如果 value 是一个对象，遍历对象，调用 d 方法，将对象属性定义到 ns 上
+    //     3.3 返回 ns 对象
+		if(mode & 1) value = __webpack_require__(value);
+		if(mode & 8) return value;
+		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+		var ns = Object.create(null);
+		__webpack_require__.r(ns);
+		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+		return ns;
+	};
+	// getDefaultExport function for compatibility with non-harmony modules
+	__webpack_require__.n = function(module) {
+		var getter = module && module.__esModule ?
+			function getDefault() { return module['default']; } :
+			function getModuleExports() { return module; };
+		__webpack_require__.d(getter, 'a', getter);
+		return getter;
+	};
+	// Object.prototype.hasOwnProperty.call
+	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+	// __webpack_public_path__
+	__webpack_require__.p = "";
+	// Load entry module and return exports
+	return __webpack_require__(__webpack_require__.s = "./src/index.js");
+})
+/************************************************************************/
+({
+
+  "./src/index.js":
+  (function(module, exports, __webpack_require__) {
+
+    const name = __webpack_require__(/*! ./login */ "./src/login.js");
+
+    console.log('index');
+    console.log(name);
+  }),
+
+  "./src/login.js":
+  (function(module, exports) {
+
+    module.exports  = 'education';
+
+  })
+
+});
+```
+
+```js
+let mode = 0b1001;
+
+if (mode & 1) {
+  console.log('第四位上的值是 1');
+}
+
+if (mode & 8) {
+  console.log('第一位上的值是 1');
+}
+```
+
+### 方法实现
 
