@@ -1,4 +1,4 @@
-#  Webpack 源码
+# Webpack 源码
 
 webpack 本质就是一个模块打包器，loader 与 plugin 是打包过程中额外完成的事情。
 
