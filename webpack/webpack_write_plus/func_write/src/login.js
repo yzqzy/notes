@@ -1,1 +1,1 @@
-module.exports = 'education';
+module.exports  = 'lazy load';

@@ -1,4 +1,9 @@
-// const name = require('./login');
-import name from './login';
+const oBtn = document.getElementById('J-btn');
 
-console.log('index：', name);
+oBtn.addEventListener('click', function () {
+  import(/* webpackChunkName: "login" */ './login.js').then(content => {
+    console.log(content);
+  })
+});
+
+console.log('index');

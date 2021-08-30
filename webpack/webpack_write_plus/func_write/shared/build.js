@@ -1,6 +1,45 @@
 (function (modules) {
+  // 定义 webpackJsonpCallback：合并模块定义、改变 Promise 状态，执行后续行为
+  function webpackJsonpCallback (data) {
+    // 获取需要被加载的模块 ID
+    const chunkIds = data[0];
+    // 获取需要被动态加载的模块依赖关系对象
+    const moreModules = data[1];
+
+    let chunkId, resolves = [];
+
+    // 循环判断 chunkIds 里对应的模块内容是否已经完成加载
+    for (let i = 0; i < chunkIds.length; i++) {
+      chunkId = chunkIds[i];
+
+      if (Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+        resolves.push(installedChunks[chunkId][0]);
+      }
+
+      // 更新当前 chunk 状态
+      installedChunks[chunkId] = 0;
+    }
+
+    for (moduleId in moreModules) {
+      if (Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+        modules[moduleId] = moreModules[moduleId];
+      }
+    }
+
+    while (resolves.length) {
+      resolves.shift()();
+    }
+  }
+
+
   // 缓存被加载的模块
   const installedModules = {};
+
+  // 定义 installedChunks 对于用于标识某个 chunkId 对应 chunk 是否完成加载
+  // 0 已加载过、promises 正在加载、null/undefiend 未加载
+  var installedChunks = {
+    main: 0 
+  }
 
   // 定义 __webpack_require__ 方法替换 require
   function __webpack_require__ (moduleId) {
@@ -66,6 +105,44 @@
     return getter;
   }
 
+  // 定义 jsonpScriptSrc 实现 src 的处理
+  function jsonpScriptSrc (chunkId) {
+    return __webpack_require__.p + "" + chunkId + '.build.js';
+  }
+
+  // 定义 e 方法用于实现 jsonp 来加载内容，利用 promise 实现异步加载操作
+  __webpack_require__.e = function (chunkId) {
+    // 定义一个数组用于存放 promise
+    let promises = [];
+
+    // 获取 chunkId 对应的 chunk 是否已经完成加载
+    let installedChunkData = installedChunks[chunkId];
+
+    // 根据当前是否已完成加载的状态来执行后续逻辑
+    if (installedChunkData !== 0) {
+      if (installedChunkData) {
+        promises.push(installedChunkData[2]); 
+      } else {
+        const promise = new Promise((resolve, reject) => {
+          installedChunkData = installedChunks[chunkId] = [resolve, reject];
+        });
+        promises.push(installedChunkData[2] = promise);
+
+        // 创建标签
+        const script = document.createElement('script');
+
+        // 设置 src
+        script.src = jsonpScriptSrc(chunkId);
+
+        // 写入 scrpit 标签
+        document.head.appendChild(script);
+      }
+    }
+
+    // 执行 promise
+    return Promise.all(promises);
+  }
+
   // 定义 t 方法用于加载指定 value 的模块内容，对内容进行处理并返回
   __webpack_require__.t = function (value, mode) {
     // 加载 value 对应的模块内容（value 通常是模块 ID）
@@ -105,29 +182,33 @@
   // 定义 p 属性用于保存资源访问路径
   __webpack_require__.p = "";
 
+  // 定义变量存放数组
+  const jsonpArray = window['webpackJsonp'] = window['webpackJsonp'] || [];
+
+  // 保存原生的 push 方法
+  const oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+
+  // 重写原生的 push 方法
+  jsonpArray.push = webpackJsonpCallback;
+
   // 调用 __webpack_require__ 方法执行模块导入与加载操作
   return __webpack_require__(__webpack_require__.s = './src/index.js');
 })
 ({
-  "./src/index.js": (function (module, exports, __webpack_require__) {
-    // const name = __webpack_require__("./src/login.js");
-    // console.log('index：', name);
 
-    "use strict";
-    // __webpack_require__.r(exports);
-    // var _login__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./src/login.js");
-    // var _login__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(_login__WEBPACK_IMPORTED_MODULE_0__);
-    // const name = require('./login');
-    const name = __webpack_require__.t("./src/login.js", 0b0111);
+  "./src/index.js":
+  (function(module, exports, __webpack_require__) {
 
-    console.log(name);
+    const oBtn = document.getElementById('J-btn');
 
-    // console.log('index：', _login__WEBPACK_IMPORTED_MODULE_0___default.a);
-  }),
-  "./src/login.js": (function (module, exports) {
-    module.exports = {
-      name: 'yueluo',
-      age: 23
-    };
+    oBtn.addEventListener('click', function () {
+      __webpack_require__.e(/*! import() | login */ "login").then(__webpack_require__.t.bind(null, /*! ./login.js */ "./src/login.js", 7)).then(content => {
+        console.log(content);
+      })
+    });
+
+    console.log('index');
+
   })
+
 });
