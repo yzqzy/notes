@@ -1731,3 +1731,55 @@ shared/build.js
 
 ## webpack 与 tapable
 
+### webpack 编译过程
+
+* 配置初始化
+* 内容编译
+* 输出编译后内容
+
+这三个过程的整体执行过程可以看作是一种事件驱动型的事件工作流机制，这个机制可以将不同的插件串联起来，最后完成所有的工作。
+其中最核心的两个部分就是负责编译的 compiler 和负责创建 bundles 的 compilation。
+
+### tapable
+
+tapable 本身是一个独立的库。
+
+#### 工作流程
+
+* 实例化 hook 注册事件监听
+* 通过 hook 触发事件监听
+* 执行懒编译生成的可执行代码
+
+hook 本质是 tapable 实例对象，也成为钩子。
+
+hook 执行机制可以分为同步和异步，异步的钩子也可以分为并行和串行两种模式。
+
+#### hook 执行特点
+
+* Hook：普通钩子，监听器之间互相独立互不干扰
+* BailHook：熔断钩子，某个钩子监听返回非 undefiend 时，后续监听的钩子不执行
+* WaterfallHook：瀑布钩子，上一个监听的返回值可传递至下一个
+* LoopHook：循环钩子，如果当前未返回 false 则一直执行
+
+#### tapable 库同步钩子
+
+* SynckHook
+* SyncBailHook
+* SyncWaterfallHook
+* SyncLoopHook
+
+#### tapable 库异步串行钩子
+
+* AsyncSeriesHook
+* AsyncSeriesBailHook
+* AsyncSeriesWaterfallHook
+
+#### tapable 库异步钩子
+
+* AsyncParalleHook
+* AsyncParalleBailhook
+
+## 同步钩子使用
+
+
+
