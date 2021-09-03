@@ -1781,5 +1781,304 @@ hook 执行机制可以分为同步和异步，异步的钩子也可以分为并
 
 ## 同步钩子使用
 
+### SyncHook
 
+```js
+const { SyncHook } = require('tapable');
+
+const hook = new SyncHook(['name', 'age']);
+
+hook.tap('fn1', function (name, age) {
+  console.log('fn1--> ', name, age);
+});
+
+hook.tap('fn2', function (name, age) {
+  console.log('fn2--> ', name, age);
+
+});
+
+hook.tap('fn3', function (name, age) {
+  console.log('fn3--> ', name, age);
+});
+
+hook.call('yueluo', 18);
+
+// yueluo 18
+// yueluo 18
+// yueluo 18
+```
+
+### SyncBailHook
+
+```js
+const { SyncBailHook } = require('tapable');
+
+const hook = new SyncBailHook(['name', 'age']);
+
+hook.tap('fn1', function (name, age) {
+  console.log('fn1--> ', name, age);
+});
+
+hook.tap('fn2', function (name, age) {
+  console.log('fn2--> ', name, age);
+  return 'result 2';
+});
+
+hook.tap('fn3', function (name, age) {
+  console.log('fn3--> ', name, age);
+});
+
+hook.call('heora', 100);
+
+// heora 100
+// hrora 100
+```
+
+熔断钩子，如果某一个事件监听是非 undefined，后续逻辑不会使用
+
+### SyncWaterfallHook
+
+```js
+const { SyncWaterfallHook } = require('tapable');
+
+const hook = new SyncWaterfallHook(['name', 'age']);
+
+hook.tap('fn1', function (name, age) {
+  console.log('fn1--> ', name, age);
+  return 'ret1';
+});
+
+hook.tap('fn2', function (name, age) {
+  console.log('fn2--> ', name, age);
+  return 'ret2';
+});
+
+hook.tap('fn3', function (name, age) {
+  console.log('fn3--> ', name, age);
+  return 'ret3';
+});
+
+hook.call('heora', 33);
+
+// fn1-->  heora 33
+// fn2-->  ret1 33
+// fn3-->  ret2 33
+```
+
+可以在上一个钩子返回某个值，交给下一个钩子使用。
+
+### SyncLoopHook
+
+```js
+const { SyncLoopHook } = require('tapable');
+
+const hook = new SyncLoopHook(['name', 'age']);
+
+let count1 = 0;
+let count2 = 0;
+let count3 = 0;
+
+hook.tap('fn1', function (name, age) {
+  console.log('fn1--> ', name, age);
+
+  if (++count1 === 1) {
+    count1 = 0;
+    return undefined;
+  } else {
+    return true;
+  }
+});
+
+hook.tap('fn2', function (name, age) {
+  console.log('fn2--> ', name, age);
+
+  if (++count2 === 2) {
+    count2 = 0;
+    return undefined;
+  } else {
+    return true;
+  }
+});
+
+hook.tap('fn3', function (name, age) {
+  console.log('fn3--> ', name, age);
+});
+
+hook.call('heora', 33);
+```
+
+如果钩子内部返回非 undefined 值，就会从新开始循环执行钩子。
+
+根据其实就是 do while 循环，如果返回非 undefined，会循环执行钩子函数。
+
+## 异步钩子使用
+
+### AsyncParallelHook
+
+```js
+const { AsyncParallelHook } = require('tapable');
+
+const hook = new AsyncParallelHook(['name']);
+
+// 对于异步钩子使用，添加事件时存在三种方式：tap/tapAsync/tapPromise
+
+// hook.tap('fn1', function (name) {
+//   console.log('fn1--> ', name);
+// });
+
+// hook.tap('fn2', function (name) {
+//   console.log('fn2--> ', name);
+// });
+
+// hook.callAsync('yueluo', function () {
+//   console.log('callback exec')
+// });
+
+
+// console.time('time');
+// hook.tapAsync('fn1', function (name, callback) {
+//   setTimeout(() => {
+//     console.log('fn1--> ', name);
+//     callback();
+//   }, 1000)
+// });
+
+// hook.tapAsync('fn2', function (name, callback) {
+//   setTimeout(() => {
+//     console.log('fn2--> ', name);
+//     callback();
+//   }, 2000)
+// });
+
+// hook.callAsync('yueluo', function () {
+//   console.log('callback exec')
+//   console.timeEnd('time');
+// });
+
+
+console.time('time');
+hook.tapPromise('fn1', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn1--> ', name);
+      resolve();
+    }, 1000)
+  })
+});
+
+hook.tapPromise('fn2', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn2--> ', name);
+      resolve();
+    }, 2000)
+  })
+});
+
+hook.promise('yueluo').then(() => {
+  console.log('callback exec')
+  console.timeEnd('time');
+});
+
+// fn1-->  yueluo
+// fn2-->  yueluo
+// callback exec
+// time: 2017.780ms
+```
+
+### AsyncParallelBailHook
+
+```js
+const { AsyncParallelBailHook } = require('tapable');
+
+const hook = new AsyncParallelBailHook(['name']);
+
+console.time('time');
+hook.tapPromise('fn1', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn1--> ', name);
+      resolve();
+    }, 1000)
+  })
+});
+
+hook.tapPromise('fn2', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn2--> ', name);
+      resolve(false);
+    }, 2000)
+  })
+});
+
+hook.tapPromise('fn3', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn3--> ', name);
+      resolve();
+    }, 3000)
+  })
+});
+
+hook.promise('yueluo').then(() => {
+  console.log('callback exec')
+  console.timeEnd('time');
+});
+
+// fn1-->  yueluo
+// fn2-->  yueluo
+// callback exec
+// time: 2016.021ms
+// fn3-->  yueluo
+```
+
+### AsyncSeriesHook
+
+```js
+const { AsyncSeriesHook } = require('tapable');
+
+const hook = new AsyncSeriesHook(['name']);
+
+console.time('time');
+hook.tapPromise('fn1', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn1--> ', name);
+      resolve();
+    }, 1000)
+  })
+});
+
+hook.tapPromise('fn2', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn2--> ', name);
+      resolve(false);
+    }, 2000)
+  })
+});
+
+hook.tapPromise('fn3', function (name) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('fn3--> ', name);
+      resolve();
+    }, 3000)
+  })
+});
+
+hook.promise('yueluo').then(() => {
+  console.log('~~~~~~')
+  console.timeEnd('time');
+});
+
+// fn1-->  yueluo
+// fn2-->  yueluo
+// fn3-->  yueluo
+// ~~~~~~
+// time: 6050.305ms
+```
+
+## SyncHook 源码分析
 
