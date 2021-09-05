@@ -1779,9 +1779,9 @@ hook 执行机制可以分为同步和异步，异步的钩子也可以分为并
 * AsyncParalleHook
 * AsyncParalleBailhook
 
-## 同步钩子使用
+### 同步钩子使用
 
-### SyncHook
+#### SyncHook
 
 ```js
 const { SyncHook } = require('tapable');
@@ -1807,7 +1807,7 @@ hook.call('yueluo', 18);
 // yueluo 18
 ```
 
-### SyncBailHook
+#### SyncBailHook
 
 ```js
 const { SyncBailHook } = require('tapable');
@@ -1835,7 +1835,7 @@ hook.call('heora', 100);
 
 熔断钩子，如果某一个事件监听是非 undefined，后续逻辑不会使用
 
-### SyncWaterfallHook
+#### SyncWaterfallHook
 
 ```js
 const { SyncWaterfallHook } = require('tapable');
@@ -1866,7 +1866,7 @@ hook.call('heora', 33);
 
 可以在上一个钩子返回某个值，交给下一个钩子使用。
 
-### SyncLoopHook
+#### SyncLoopHook
 
 ```js
 const { SyncLoopHook } = require('tapable');
@@ -1910,9 +1910,9 @@ hook.call('heora', 33);
 
 根据其实就是 do while 循环，如果返回非 undefined，会循环执行钩子函数。
 
-## 异步钩子使用
+### 异步钩子使用
 
-### AsyncParallelHook
+#### AsyncParallelHook
 
 ```js
 const { AsyncParallelHook } = require('tapable');
@@ -1985,7 +1985,7 @@ hook.promise('yueluo').then(() => {
 // time: 2017.780ms
 ```
 
-### AsyncParallelBailHook
+#### AsyncParallelBailHook
 
 ```js
 const { AsyncParallelBailHook } = require('tapable');
@@ -2032,7 +2032,7 @@ hook.promise('yueluo').then(() => {
 // fn3-->  yueluo
 ```
 
-### AsyncSeriesHook
+#### AsyncSeriesHook
 
 ```js
 const { AsyncSeriesHook } = require('tapable');
@@ -2079,9 +2079,9 @@ hook.promise('yueluo').then(() => {
 // time: 6050.305ms
 ```
 
-## SyncHook 源码
+### SyncHook 源码
 
-### 测试代码
+#### 测试代码
 
 ```js
 const { SyncHook } = require('tapable');
@@ -2103,7 +2103,7 @@ hook.tap('fn3', function (name, age) {
 hook.call('yueluo', 18);
 ```
 
-### 源码分析
+#### 源码分析
 
 SyncHook.js
 
@@ -2812,7 +2812,7 @@ module.exports = HookCodeFactory;
 
 Hook 提供所有内容，HookCodeFactory 进行代码拼接的工厂，SyncHook 是一个 Hook 之上的特定普通钩子。
 
-### 源码实现
+#### 源码实现
 
 Hook、SyncHook、HookCodeFactory
 
@@ -2940,9 +2940,9 @@ class Hook {
 module.exports = Hook;
 ```
 
-## AsyncParallelHook 源码
+### AsyncParallelHook 源码
 
-### 测试代码
+#### 测试代码
 
 ```js
 const AsyncParallelHook = require('./lib/AsyncParallelHook.js')
@@ -2969,7 +2969,7 @@ hook.callAsync('yueluo', 18, function () {
 });
 ```
 
-### 源码实现
+#### 源码实现
 
 lib/AsyncParallelHook.js
 
