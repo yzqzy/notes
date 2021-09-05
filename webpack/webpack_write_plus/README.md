@@ -2079,7 +2079,7 @@ hook.promise('yueluo').then(() => {
 // time: 6050.305ms
 ```
 
-## SyncHook 源码分析
+## SyncHook 源码
 
 ### 测试代码
 
@@ -2813,4 +2813,132 @@ module.exports = HookCodeFactory;
 Hook 提供所有内容，HookCodeFactory 进行代码拼接的工厂，SyncHook 是一个 Hook 之上的特定普通钩子。
 
 ### 源码实现
+
+Hook、SyncHook、HookCodeFactory
+
+测试代码
+
+```js
+const SyncHook = require('./shared/SyncHook');
+
+const hook = new SyncHook(['name', 'age']);
+
+hook.tap('fn1', function (name, age) {
+  console.log('fn1--> ', name, age);
+});
+
+hook.tap('fn2', function (name, age) {
+  console.log('fn2--> ', name, age);
+});
+
+hook.tap('fn3', function (name, age) {
+  console.log('fn3--> ', name, age);
+});
+
+hook.call('yueluo', 18);
+```
+
+shared/SyncHook
+
+```js
+const Hook = require('./Hook.js');
+
+class HookCodeFactory {
+  // 准备后续需要使用的数据
+  setup (instance, options) {
+    this.options = options; // 源码中是通过 init 方法实现
+    instance._x = options.taps.map(o => o.fn);
+  }
+
+  args () {
+    return this.options.args.join(',');
+  }
+
+  head () {
+    return `var _x = this._x;`;
+  }
+
+  content () {
+    let code = '';
+
+    for (var i = 0; i < this.options.taps.length; i++) {
+      code += `var _fn${i} = _x[${i}]; _fn${i}(${this.args()});`;
+    }
+
+    return code;
+  }
+
+  // 创建一段可执行的代码体并返回
+  create (options) {
+    let fn = undefined;
+
+    fn = new Function(
+      this.args(),
+      this.head() + this.content()
+    )
+
+    return fn;
+  }
+}
+
+const factory = new HookCodeFactory();
+
+class SyncHook extends Hook {
+  constructor (args) {
+    super(args);
+  }
+
+  compile (options) { // { taps: [], args: [name, age] }
+    factory.setup(this, options);
+    return factory.create(options);
+  }
+}
+
+module.exports = SyncHook;
+```
+
+shared/Hook.js
+
+```js
+class Hook {
+  constructor (args = []) {
+    this.args = args;
+    this.taps = []; // 用于存放组装好的对象信息
+    this._x = undefined; // 用于在代码工厂函数中使用
+  }
+
+  tap (options, fn) {
+    if (typeof options === 'string') {
+      options = { name: options }
+    }
+    options = Object.assign({ fn }, options); // { fn, name: fn1 }
+
+    // 将组装好的 options 添加至数组中
+    this._insert(options);
+  }
+
+  _insert (options) {
+    this.taps[this.taps.length] = options;
+  }
+
+  call (...args) {
+    // 创建具体要执行的函数代码结构
+    let callFn = this._createCall();
+
+    // 调用上述函数，传参
+    return callFn.apply(this, args);    
+  }
+
+  _createCall () {
+    return this.compile({
+      taps: this.taps,
+      args: this.args
+    });
+  }
+}
+
+module.exports = Hook;
+```
+
+## AsyncParallelHook 源码
 
