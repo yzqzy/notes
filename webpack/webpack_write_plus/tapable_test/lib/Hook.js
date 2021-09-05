@@ -11,7 +11,15 @@ class Hook {
     }
     options = Object.assign({ fn }, options); // { fn, name: fn1 }
 
-    // 将组装好的 options 添加至数组中
+    this._insert(options);
+  }
+
+  tapAsync (options, fn) {
+    if (typeof options === 'string') {
+      options = { name: options }
+    }
+    options = Object.assign({ fn }, options);
+
     this._insert(options);
   }
 
@@ -24,6 +32,12 @@ class Hook {
     let callFn = this._createCall();
 
     // 调用上述函数，传参
+    return callFn.apply(this, args);    
+  }
+
+  callAsync (...args) {
+    let callFn = this._createCall();
+
     return callFn.apply(this, args);    
   }
 

@@ -2942,3 +2942,169 @@ module.exports = Hook;
 
 ## AsyncParallelHook 源码
 
+### 测试代码
+
+```js
+const AsyncParallelHook = require('./lib/AsyncParallelHook.js')
+
+const hook = new AsyncParallelHook(['name', 'age']);
+
+hook.tapAsync('fn1', function (name, age, callback) {
+  console.log('fn1--> ', name, age);
+  callback();
+});
+
+hook.tapAsync('fn2', function (name, age, callback) {
+  console.log('fn2--> ', name, age);
+  callback();
+});
+
+hook.tapAsync('fn3', function (name, age, callback) {
+  console.log('fn3--> ', name, age);
+  callback();
+});
+
+hook.callAsync('yueluo', 18, function () {
+  console.log('end');
+});
+```
+
+### 源码实现
+
+lib/AsyncParallelHook.js
+
+```js
+const Hook = require('./Hook.js');
+
+class HookCodeFactory {
+  setup (instance, options) {
+    this.options = options;
+    instance._x = options.taps.map(o => o.fn);
+  }
+
+  args ({ after, before } = {}) {
+    let allArgs = this.options.args;
+
+    if (before) allArgs = [before].concat(allArgs);
+    if (after) allArgs = allArgs.concat(after);
+
+    return allArgs.join(',');
+  }
+
+  head () {
+    return `"use strict"; var _context; var _x = this._x;`;
+  }
+
+  content () {
+    let code = '';
+
+    code += `
+      var _counter = ${ this.options.taps.length };
+      var _done = (function () {
+        _callback();
+      });
+    `
+
+    for (var i = 0; i < this.options.taps.length; i++) {
+      code += `
+        var _fn${i} = _x[${i}];
+        
+        _fn${i}(name, age, (function () {
+          if (--_counter === 0) _done();
+        }))
+      `;
+    }
+
+    return code;
+  }
+
+  // 创建一段可执行的代码体并返回
+  create (options) {
+    let fn = undefined;
+
+    fn = new Function(
+      this.args({
+        after: '_callback'
+      }),
+      this.head() + this.content()
+    )
+
+    return fn;
+  }
+}
+
+const factory = new HookCodeFactory();
+
+class AsyncParallelHook extends Hook {
+  constructor (args) {
+    super(args);
+  }
+
+  compile (options) {
+    factory.setup(this, options);
+    return factory.create(options);
+  }
+}
+
+module.exports = AsyncParallelHook;
+```
+
+lib/Hook.js
+
+```js
+class Hook {
+  constructor (args = []) {
+    this.args = args;
+    this.taps = []; // 用于存放组装好的对象信息
+    this._x = undefined; // 用于在代码工厂函数中使用
+  }
+
+  tap (options, fn) {
+    if (typeof options === 'string') {
+      options = { name: options }
+    }
+    options = Object.assign({ fn }, options); // { fn, name: fn1 }
+
+    this._insert(options);
+  }
+
+  tapAsync (options, fn) {
+    if (typeof options === 'string') {
+      options = { name: options }
+    }
+    options = Object.assign({ fn }, options);
+
+    this._insert(options);
+  }
+
+  _insert (options) {
+    this.taps[this.taps.length] = options;
+  }
+
+  call (...args) {
+    // 创建具体要执行的函数代码结构
+    let callFn = this._createCall();
+
+    // 调用上述函数，传参
+    return callFn.apply(this, args);    
+  }
+
+  callAsync (...args) {
+    let callFn = this._createCall();
+
+    return callFn.apply(this, args);    
+  }
+
+  _createCall () {
+    return this.compile({
+      taps: this.taps,
+      args: this.args
+    });
+  }
+}
+
+module.exports = Hook;
+```
+
+## 定位 webpack 打包入口
+

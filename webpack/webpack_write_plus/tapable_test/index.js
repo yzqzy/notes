@@ -1,17 +1,22 @@
-const SyncHook = require('./shared/SyncHook');
+const AsyncParallelHook = require('./lib/AsyncParallelHook.js')
 
-const hook = new SyncHook(['name', 'age']);
+const hook = new AsyncParallelHook(['name', 'age']);
 
-hook.tap('fn1', function (name, age) {
+hook.tapAsync('fn1', function (name, age, callback) {
   console.log('fn1--> ', name, age);
+  callback();
 });
 
-hook.tap('fn2', function (name, age) {
+hook.tapAsync('fn2', function (name, age, callback) {
   console.log('fn2--> ', name, age);
+  callback();
 });
 
-hook.tap('fn3', function (name, age) {
+hook.tapAsync('fn3', function (name, age, callback) {
   console.log('fn3--> ', name, age);
+  callback();
 });
 
-hook.call('yueluo', 18);
+hook.callAsync('yueluo', 18, function () {
+  console.log('end~~');
+});
