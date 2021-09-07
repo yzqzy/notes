@@ -3108,3 +3108,16 @@ module.exports = Hook;
 
 ## 定位 webpack 打包入口
 
+```js
+const webpack = require('webpack');
+const options = require('./webpack.config.js');
+
+let compiler = webpack(options);
+
+compiler.run(function (err, stats) {
+  console.log(err);
+  console.log(stats.toJson());
+});
+```
+
+定义 webpack.config.js 文件，执行 npx webpack 和手动引入会产生一样的效果。
