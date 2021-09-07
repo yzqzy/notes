@@ -3121,3 +3121,1473 @@ compiler.run(function (err, stats) {
 ```
 
 定义 webpack.config.js 文件，执行 npx webpack 和手动引入会产生一样的效果。
+
+执行 npx webpack 会找 node_modules 下 bin 目录下的 webpack 命令。
+
+
+
+webpack.cmd
+
+```js
+#!/bin/sh
+basedir=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+
+case `uname` in
+    *CYGWIN*) basedir=`cygpath -w "$basedir"`;;
+esac
+
+if [ -x "$basedir/node" ]; then
+  "$basedir/node"  "$basedir/../webpack/bin/webpack.js" "$@"
+  ret=$?
+else 
+  node  "$basedir/../webpack/bin/webpack.js" "$@"
+  ret=$?
+fi
+exit $ret
+```
+
+=>  node webpack/bin/webpack.js
+
+cmd 文件核心作用就是使用 node 命令执行 webpack/bin/webpack.js 文件。
+
+
+
+webpack/bin/webpack.js
+
+```js
+#!/usr/bin/env node
+
+// @ts-ignore
+process.exitCode = 0;
+
+/**
+ * @param {string} command process to run
+ * @param {string[]} args commandline arguments
+ * @returns {Promise<void>} promise
+ */
+const runCommand = (command, args) => {
+	const cp = require("child_process");
+	return new Promise((resolve, reject) => {
+		const executedCommand = cp.spawn(command, args, {
+			stdio: "inherit",
+			shell: true
+		});
+
+		executedCommand.on("error", error => {
+			reject(error);
+		});
+
+		executedCommand.on("exit", code => {
+			if (code === 0) {
+				resolve();
+			} else {
+				reject();
+			}
+		});
+	});
+};
+
+/**
+ * @param {string} packageName name of the package
+ * @returns {boolean} is the package installed?
+ */
+const isInstalled = packageName => {
+	try {
+		require.resolve(packageName);
+
+		return true;
+	} catch (err) {
+		return false;
+	}
+};
+
+/**
+ * @typedef {Object} CliOption
+ * @property {string} name display name
+ * @property {string} package npm package name
+ * @property {string} binName name of the executable file
+ * @property {string} alias shortcut for choice
+ * @property {boolean} installed currently installed?
+ * @property {boolean} recommended is recommended
+ * @property {string} url homepage
+ * @property {string} description description
+ */
+
+/** @type {CliOption[]} */
+const CLIs = [
+	{
+		name: "webpack-cli",
+		package: "webpack-cli",
+		binName: "webpack-cli",
+		alias: "cli",
+		installed: isInstalled("webpack-cli"),
+		recommended: true,
+		url: "https://github.com/webpack/webpack-cli",
+		description: "The original webpack full-featured CLI."
+	},
+	{
+		name: "webpack-command",
+		package: "webpack-command",
+		binName: "webpack-command",
+		alias: "command",
+		installed: isInstalled("webpack-command"),
+		recommended: false,
+		url: "https://github.com/webpack-contrib/webpack-command",
+		description: "A lightweight, opinionated webpack CLI."
+	}
+];
+
+const installedClis = CLIs.filter(cli => cli.installed);
+
+if (installedClis.length === 0) {
+	const path = require("path");
+	const fs = require("fs");
+	const readLine = require("readline");
+
+	let notify =
+		"One CLI for webpack must be installed. These are recommended choices, delivered as separate packages:";
+
+	for (const item of CLIs) {
+		if (item.recommended) {
+			notify += `\n - ${item.name} (${item.url})\n   ${item.description}`;
+		}
+	}
+
+	console.error(notify);
+
+	const isYarn = fs.existsSync(path.resolve(process.cwd(), "yarn.lock"));
+
+	const packageManager = isYarn ? "yarn" : "npm";
+	const installOptions = [isYarn ? "add" : "install", "-D"];
+
+	console.error(
+		`We will use "${packageManager}" to install the CLI via "${packageManager} ${installOptions.join(
+			" "
+		)}".`
+	);
+
+	const question = `Do you want to install 'webpack-cli' (yes/no): `;
+
+	const questionInterface = readLine.createInterface({
+		input: process.stdin,
+		output: process.stderr
+	});
+	questionInterface.question(question, answer => {
+		questionInterface.close();
+
+		const normalizedAnswer = answer.toLowerCase().startsWith("y");
+
+		if (!normalizedAnswer) {
+			console.error(
+				"You need to install 'webpack-cli' to use webpack via CLI.\n" +
+					"You can also install the CLI manually."
+			);
+			process.exitCode = 1;
+
+			return;
+		}
+
+		const packageName = "webpack-cli";
+
+		console.log(
+			`Installing '${packageName}' (running '${packageManager} ${installOptions.join(
+				" "
+			)} ${packageName}')...`
+		);
+
+		runCommand(packageManager, installOptions.concat(packageName))
+			.then(() => {
+				require(packageName); //eslint-disable-line
+			})
+			.catch(error => {
+				console.error(error);
+				process.exitCode = 1;
+			});
+	});
+} else if (installedClis.length === 1) {
+	const path = require("path");
+  // 取出数据第一项，即 webpack-cli/package.json
+	const pkgPath = require.resolve(`${installedClis[0].package}/package.json`);
+	// eslint-disable-next-line node/no-missing-require
+	const pkg = require(pkgPath);
+	// eslint-disable-next-line node/no-missing-require
+	require(path.resolve(
+		path.dirname(pkgPath), // webpack-cli
+		pkg.bin[installedClis[0].binName] // bin/cli.js
+	));
+} else {
+	console.warn(
+		`You have installed ${installedClis
+			.map(item => item.name)
+			.join(
+				" and "
+			)} together. To work with the "webpack" command you need only one CLI package, please remove one of them or use them directly via their binary.`
+	);
+
+	// @ts-ignore
+	process.exitCode = 1;
+}
+```
+
+webpack.js 核心作用就是 require 了 node_modules/webapck-cli/bin/cli.js。
+
+
+
+webpack-cli/bin/cli.js
+
+```js
+#!/usr/bin/env node
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+
+const { NON_COMPILATION_ARGS } = require("./utils/constants");
+
+(function() {
+	// wrap in IIFE to be able to use return
+
+	const importLocal = require("import-local");
+	// Prefer the local installation of webpack-cli
+	if (importLocal(__filename)) {
+		return;
+	}
+
+	require("v8-compile-cache");
+
+	const ErrorHelpers = require("./utils/errorHelpers");
+
+	const NON_COMPILATION_CMD = process.argv.find(arg => {
+		if (arg === "serve") {
+			global.process.argv = global.process.argv.filter(a => a !== "serve");
+			process.argv = global.process.argv;
+		}
+		return NON_COMPILATION_ARGS.find(a => a === arg);
+	});
+
+	if (NON_COMPILATION_CMD) {
+		return require("./utils/prompt-command")(NON_COMPILATION_CMD, ...process.argv);
+	}
+
+	const yargs = require("yargs").usage(`webpack-cli ${require("../package.json").version}
+
+Usage: webpack-cli [options]
+       webpack-cli [options] --entry <entry> --output <output>
+       webpack-cli [options] <entries...> --output <output>
+       webpack-cli <command> [options]
+
+For more information, see https://webpack.js.org/api/cli/.`);
+
+	require("./config/config-yargs")(yargs);
+
+	// yargs will terminate the process early when the user uses help or version.
+	// This causes large help outputs to be cut short (https://github.com/nodejs/node/wiki/API-changes-between-v0.10-and-v4#process).
+	// To prevent this we use the yargs.parse API and exit the process normally
+	yargs.parse(process.argv.slice(2), (err, argv, output) => {
+		Error.stackTraceLimit = 30;
+
+		// arguments validation failed
+		if (err && output) {
+			console.error(output);
+			process.exitCode = 1;
+			return;
+		}
+
+		// help or version info
+		if (output) {
+			console.log(output);
+			return;
+		}
+
+		if (argv.verbose) {
+			argv["display"] = "verbose";
+		}
+
+		let options;
+		try {
+			options = require("./utils/convert-argv")(argv);
+		} catch (err) {
+			if (err.code === "MODULE_NOT_FOUND") {
+				const moduleName = err.message.split("'")[1];
+				let instructions = "";
+				let errorMessage = "";
+
+				if (moduleName === "webpack") {
+					errorMessage = `\n${moduleName} not installed`;
+					instructions = `Install webpack to start bundling: \u001b[32m\n  $ npm install --save-dev ${moduleName}\n`;
+
+					if (process.env.npm_execpath !== undefined && process.env.npm_execpath.includes("yarn")) {
+						instructions = `Install webpack to start bundling: \u001b[32m\n $ yarn add ${moduleName} --dev\n`;
+					}
+					Error.stackTraceLimit = 1;
+					console.error(`${errorMessage}\n\n${instructions}`);
+					process.exitCode = 1;
+					return;
+				}
+			}
+
+			if (err.name !== "ValidationError") {
+				throw err;
+			}
+
+			const stack = ErrorHelpers.cleanUpWebpackOptions(err.stack, err.message);
+			const message = err.message + "\n" + stack;
+
+			if (argv.color) {
+				console.error(`\u001b[1m\u001b[31m${message}\u001b[39m\u001b[22m`);
+			} else {
+				console.error(message);
+			}
+
+			process.exitCode = 1;
+			return;
+		}
+
+		/**
+		 * When --silent flag is present, an object with a no-op write method is
+		 * used in place of process.stout
+		 */
+		const stdout = argv.silent ? { write: () => {} } : process.stdout;
+
+		function ifArg(name, fn, init) {
+			if (Array.isArray(argv[name])) {
+				if (init) init();
+				argv[name].forEach(fn);
+			} else if (typeof argv[name] !== "undefined") {
+				if (init) init();
+				fn(argv[name], -1);
+			}
+		}
+
+		function processOptions(options) {
+			// process Promise
+			if (typeof options.then === "function") {
+				options.then(processOptions).catch(function(err) {
+					console.error(err.stack || err);
+					// eslint-disable-next-line no-process-exit
+					process.exit(1);
+				});
+				return;
+			}
+
+			const firstOptions = [].concat(options)[0];
+			const statsPresetToOptions = require("webpack").Stats.presetToOptions;
+
+			let outputOptions = options.stats;
+			if (typeof outputOptions === "boolean" || typeof outputOptions === "string") {
+				outputOptions = statsPresetToOptions(outputOptions);
+			} else if (!outputOptions) {
+				outputOptions = {};
+			}
+
+			ifArg("display", function(preset) {
+				outputOptions = statsPresetToOptions(preset);
+			});
+
+			outputOptions = Object.create(outputOptions);
+			if (Array.isArray(options) && !outputOptions.children) {
+				outputOptions.children = options.map(o => o.stats);
+			}
+			if (typeof outputOptions.context === "undefined") outputOptions.context = firstOptions.context;
+
+			// ...
+	
+      // 引入 webpack
+			const webpack = require("webpack");
+
+			let lastHash = null;
+			let compiler;
+			try {
+				compiler = webpack(options);
+			} catch (err) {
+				if (err.name === "WebpackOptionsValidationError") {
+					if (argv.color) console.error(`\u001b[1m\u001b[31m${err.message}\u001b[39m\u001b[22m`);
+					else console.error(err.message);
+					// eslint-disable-next-line no-process-exit
+					process.exit(1);
+				}
+
+				throw err;
+			}
+
+			if (argv.progress) {
+				const ProgressPlugin = require("webpack").ProgressPlugin;
+				new ProgressPlugin({
+					profile: argv.profile
+				}).apply(compiler);
+			}
+			if (outputOptions.infoVerbosity === "verbose") {
+				if (argv.w) {
+					compiler.hooks.watchRun.tap("WebpackInfo", compilation => {
+						const compilationName = compilation.name ? compilation.name : "";
+						console.error("\nCompilation " + compilationName + " starting…\n");
+					});
+				} else {
+					compiler.hooks.beforeRun.tap("WebpackInfo", compilation => {
+						const compilationName = compilation.name ? compilation.name : "";
+						console.error("\nCompilation " + compilationName + " starting…\n");
+					});
+				}
+				compiler.hooks.done.tap("WebpackInfo", compilation => {
+					const compilationName = compilation.name ? compilation.name : "";
+					console.error("\nCompilation " + compilationName + " finished\n");
+				});
+			}
+
+			function compilerCallback(err, stats) {
+				if (!options.watch || err) {
+					// Do not keep cache anymore
+					compiler.purgeInputFileSystem();
+				}
+				if (err) {
+					lastHash = null;
+					console.error(err.stack || err);
+					if (err.details) console.error(err.details);
+					process.exitCode = 1;
+					return;
+				}
+				if (outputOptions.json) {
+					stdout.write(JSON.stringify(stats.toJson(outputOptions), null, 2) + "\n");
+				} else if (stats.hash !== lastHash) {
+					lastHash = stats.hash;
+					if (stats.compilation && stats.compilation.errors.length !== 0) {
+						const errors = stats.compilation.errors;
+						if (errors[0].name === "EntryModuleNotFoundError") {
+							console.error("\n\u001b[1m\u001b[31mInsufficient number of arguments or no entry found.");
+							console.error(
+								"\u001b[1m\u001b[31mAlternatively, run 'webpack(-cli) --help' for usage info.\u001b[39m\u001b[22m\n"
+							);
+						}
+					}
+					const statsString = stats.toString(outputOptions);
+					const delimiter = outputOptions.buildDelimiter ? `${outputOptions.buildDelimiter}\n` : "";
+					if (statsString) stdout.write(`${statsString}\n${delimiter}`);
+				}
+				if (!options.watch && stats.hasErrors()) {
+					process.exitCode = 2;
+				}
+			}
+			if (firstOptions.watch || options.watch) {
+				const watchOptions =
+					firstOptions.watchOptions || options.watchOptions || firstOptions.watch || options.watch || {};
+				if (watchOptions.stdin) {
+					process.stdin.on("end", function(_) {
+						process.exit(); // eslint-disable-line
+					});
+					process.stdin.resume();
+				}
+				compiler.watch(watchOptions, compilerCallback);
+				if (outputOptions.infoVerbosity !== "none") console.error("\nwebpack is watching the files…\n");
+			} else {
+        // compiler.run 
+				compiler.run((err, stats) => {
+					if (compiler.close) {
+						compiler.close(err2 => {
+							compilerCallback(err || err2, stats);
+						});
+					} else {
+						compilerCallback(err, stats);
+					}
+				});
+			}
+		}
+		processOptions(options);
+	});
+})();
+```
+
+cli.js 
+
+* 当前文件一般存在两个操作，处理参数，将参数交给不同的逻辑（业务分发）
+* options 处理 options
+* compiler 加载 webpack 配置
+* compiler.run() 执行
+
+## webpack 主流程分析
+
+测试代码
+
+```js
+const webpack = require('webpack');
+const options = require('./webpack.config.js');
+
+let compiler = webpack(options);
+
+compiler.run(function (err, stats) {
+  console.log(err);
+  console.log(stats.toJson());
+});
+```
+
+
+
+node_modules/webpack/lib/webpack.js
+
+```js
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+"use strict";
+
+const Compiler = require("./Compiler");
+const MultiCompiler = require("./MultiCompiler");
+const NodeEnvironmentPlugin = require("./node/NodeEnvironmentPlugin");
+const WebpackOptionsApply = require("./WebpackOptionsApply");
+const WebpackOptionsDefaulter = require("./WebpackOptionsDefaulter");
+const validateSchema = require("./validateSchema");
+const WebpackOptionsValidationError = require("./WebpackOptionsValidationError");
+const webpackOptionsSchema = require("../schemas/WebpackOptions.json");
+const RemovedPluginError = require("./RemovedPluginError");
+const version = require("../package.json").version;
+
+/** @typedef {import("../declarations/WebpackOptions").WebpackOptions} WebpackOptions */
+
+/**
+ * @param {WebpackOptions} options options object
+ * @param {function(Error=, Stats=): void=} callback callback
+ * @returns {Compiler | MultiCompiler} the compiler object
+ */
+const webpack = (options, callback) => {
+	const webpackOptionsValidationErrors = validateSchema(
+		webpackOptionsSchema,
+		options
+	);
+	if (webpackOptionsValidationErrors.length) {
+		throw new WebpackOptionsValidationError(webpackOptionsValidationErrors);
+	}
+  
+	let compiler; // 定义 compiler 变量
+  
+  // 用户传入的 options
+	if (Array.isArray(options)) {
+		compiler = new MultiCompiler(
+			Array.from(options).map(options => webpack(options))
+		);
+	} else if (typeof options === "object") {
+    // 通过 process 方法合并默认配置
+		options = new WebpackOptionsDefaulter().process(options);
+		// 实例化 Compiler
+		compiler = new Compiler(options.context);
+    // 缓存 options
+		compiler.options = options;
+    	
+    // 使用插件，调用 apply 方法
+    // 经过 NodeEnvironmentPlugin 处理后，compiler 具备文件读写能力
+		new NodeEnvironmentPlugin({
+			infrastructureLogging: options.infrastructureLogging
+		}).apply(compiler);
+    
+    // 获取用户自定义配置的 plugins 
+		if (options.plugins && Array.isArray(options.plugins)) {
+      // 循环执行 plugin
+			for (const plugin of options.plugins) {
+				if (typeof plugin === "function") {
+					plugin.call(compiler, compiler);
+				} else {
+					plugin.apply(compiler);
+				}
+			}
+		}
+    // 触发事件监听
+		compiler.hooks.environment.call();
+		compiler.hooks.afterEnvironment.call();
+    // 对默认插件进行挂载，同时可以确认打包入口
+		compiler.options = new WebpackOptionsApply().process(options, compiler);
+	} else {
+		throw new Error("Invalid argument: options");
+	}
+  
+	if (callback) {
+		if (typeof callback !== "function") {
+			throw new Error("Invalid argument: callback");
+		}
+		if (
+			options.watch === true ||
+			(Array.isArray(options) && options.some(o => o.watch))
+		) {
+			const watchOptions = Array.isArray(options)
+				? options.map(o => o.watchOptions || {})
+				: options.watchOptions || {};
+			return compiler.watch(watchOptions, callback);
+		}
+		compiler.run(callback);
+	}
+  
+  // 返回 compiler 对象
+	return compiler;
+};
+
+exports = module.exports = webpack;
+exports.version = version;
+
+webpack.WebpackOptionsDefaulter = WebpackOptionsDefaulter;
+webpack.WebpackOptionsApply = WebpackOptionsApply;
+webpack.Compiler = Compiler;
+webpack.MultiCompiler = MultiCompiler;
+webpack.NodeEnvironmentPlugin = NodeEnvironmentPlugin;
+// @ts-ignore Global @this directive is not supported
+webpack.validate = validateSchema.bind(this, webpackOptionsSchema);
+webpack.validateSchema = validateSchema;
+webpack.WebpackOptionsValidationError = WebpackOptionsValidationError;
+
+const exportPlugins = (obj, mappings) => {
+	for (const name of Object.keys(mappings)) {
+		Object.defineProperty(obj, name, {
+			configurable: false,
+			enumerable: true,
+			get: mappings[name]
+		});
+	}
+};
+
+exportPlugins(exports, {
+	AutomaticPrefetchPlugin: () => require("./AutomaticPrefetchPlugin"),
+	BannerPlugin: () => require("./BannerPlugin"),
+	CachePlugin: () => require("./CachePlugin"),
+	ContextExclusionPlugin: () => require("./ContextExclusionPlugin"),
+	ContextReplacementPlugin: () => require("./ContextReplacementPlugin"),
+	DefinePlugin: () => require("./DefinePlugin"),
+	Dependency: () => require("./Dependency"),
+	DllPlugin: () => require("./DllPlugin"),
+	DllReferencePlugin: () => require("./DllReferencePlugin"),
+	EnvironmentPlugin: () => require("./EnvironmentPlugin"),
+	EvalDevToolModulePlugin: () => require("./EvalDevToolModulePlugin"),
+	EvalSourceMapDevToolPlugin: () => require("./EvalSourceMapDevToolPlugin"),
+	ExtendedAPIPlugin: () => require("./ExtendedAPIPlugin"),
+	ExternalsPlugin: () => require("./ExternalsPlugin"),
+	HashedModuleIdsPlugin: () => require("./HashedModuleIdsPlugin"),
+	HotModuleReplacementPlugin: () => require("./HotModuleReplacementPlugin"),
+	IgnorePlugin: () => require("./IgnorePlugin"),
+	LibraryTemplatePlugin: () => require("./LibraryTemplatePlugin"),
+	LoaderOptionsPlugin: () => require("./LoaderOptionsPlugin"),
+	LoaderTargetPlugin: () => require("./LoaderTargetPlugin"),
+	MemoryOutputFileSystem: () => require("./MemoryOutputFileSystem"),
+	Module: () => require("./Module"),
+	ModuleFilenameHelpers: () => require("./ModuleFilenameHelpers"),
+	NamedChunksPlugin: () => require("./NamedChunksPlugin"),
+	NamedModulesPlugin: () => require("./NamedModulesPlugin"),
+	NoEmitOnErrorsPlugin: () => require("./NoEmitOnErrorsPlugin"),
+	NormalModuleReplacementPlugin: () =>
+		require("./NormalModuleReplacementPlugin"),
+	PrefetchPlugin: () => require("./PrefetchPlugin"),
+	ProgressPlugin: () => require("./ProgressPlugin"),
+	ProvidePlugin: () => require("./ProvidePlugin"),
+	SetVarMainTemplatePlugin: () => require("./SetVarMainTemplatePlugin"),
+	SingleEntryPlugin: () => require("./SingleEntryPlugin"),
+	SourceMapDevToolPlugin: () => require("./SourceMapDevToolPlugin"),
+	Stats: () => require("./Stats"),
+	Template: () => require("./Template"),
+	UmdMainTemplatePlugin: () => require("./UmdMainTemplatePlugin"),
+	WatchIgnorePlugin: () => require("./WatchIgnorePlugin")
+});
+exportPlugins((exports.dependencies = {}), {
+	DependencyReference: () => require("./dependencies/DependencyReference")
+});
+exportPlugins((exports.optimize = {}), {
+	AggressiveMergingPlugin: () => require("./optimize/AggressiveMergingPlugin"),
+	AggressiveSplittingPlugin: () =>
+		require("./optimize/AggressiveSplittingPlugin"),
+	ChunkModuleIdRangePlugin: () =>
+		require("./optimize/ChunkModuleIdRangePlugin"),
+	LimitChunkCountPlugin: () => require("./optimize/LimitChunkCountPlugin"),
+	MinChunkSizePlugin: () => require("./optimize/MinChunkSizePlugin"),
+	ModuleConcatenationPlugin: () =>
+		require("./optimize/ModuleConcatenationPlugin"),
+	OccurrenceOrderPlugin: () => require("./optimize/OccurrenceOrderPlugin"),
+	OccurrenceModuleOrderPlugin: () =>
+		require("./optimize/OccurrenceModuleOrderPlugin"),
+	OccurrenceChunkOrderPlugin: () =>
+		require("./optimize/OccurrenceChunkOrderPlugin"),
+	RuntimeChunkPlugin: () => require("./optimize/RuntimeChunkPlugin"),
+	SideEffectsFlagPlugin: () => require("./optimize/SideEffectsFlagPlugin"),
+	SplitChunksPlugin: () => require("./optimize/SplitChunksPlugin")
+});
+exportPlugins((exports.web = {}), {
+	FetchCompileWasmTemplatePlugin: () =>
+		require("./web/FetchCompileWasmTemplatePlugin"),
+	JsonpTemplatePlugin: () => require("./web/JsonpTemplatePlugin")
+});
+exportPlugins((exports.webworker = {}), {
+	WebWorkerTemplatePlugin: () => require("./webworker/WebWorkerTemplatePlugin")
+});
+exportPlugins((exports.node = {}), {
+	NodeTemplatePlugin: () => require("./node/NodeTemplatePlugin"),
+	ReadFileCompileWasmTemplatePlugin: () =>
+		require("./node/ReadFileCompileWasmTemplatePlugin")
+});
+exportPlugins((exports.debug = {}), {
+	ProfilingPlugin: () => require("./debug/ProfilingPlugin")
+});
+exportPlugins((exports.util = {}), {
+	createHash: () => require("./util/createHash")
+});
+
+const defineMissingPluginError = (namespace, pluginName, errorMessage) => {
+	Object.defineProperty(namespace, pluginName, {
+		configurable: false,
+		enumerable: true,
+		get() {
+			throw new RemovedPluginError(errorMessage);
+		}
+	});
+};
+
+// TODO remove in webpack 5
+defineMissingPluginError(
+	exports.optimize,
+	"UglifyJsPlugin",
+	"webpack.optimize.UglifyJsPlugin has been removed, please use config.optimization.minimize instead."
+);
+
+// TODO remove in webpack 5
+defineMissingPluginError(
+	exports.optimize,
+	"CommonsChunkPlugin",
+	"webpack.optimize.CommonsChunkPlugin has been removed, please use config.optimization.splitChunks instead."
+);
+```
+
+
+
+node_modules/webpack/lib/Compiler.js
+
+```js
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+"use strict";
+
+const parseJson = require("json-parse-better-errors");
+const asyncLib = require("neo-async");
+const path = require("path");
+const { Source } = require("webpack-sources");
+const util = require("util");
+const {
+	Tapable,
+	SyncHook,
+	SyncBailHook,
+	AsyncParallelHook,
+	AsyncSeriesHook
+} = require("tapable");
+
+const Compilation = require("./Compilation");
+const Stats = require("./Stats");
+const Watching = require("./Watching");
+const NormalModuleFactory = require("./NormalModuleFactory");
+const ContextModuleFactory = require("./ContextModuleFactory");
+const ResolverFactory = require("./ResolverFactory");
+
+const RequestShortener = require("./RequestShortener");
+const { makePathsRelative } = require("./util/identifier");
+const ConcurrentCompilationError = require("./ConcurrentCompilationError");
+const { Logger } = require("./logging/Logger");
+
+/** @typedef {import("../declarations/WebpackOptions").Entry} Entry */
+/** @typedef {import("../declarations/WebpackOptions").WebpackOptions} WebpackOptions */
+
+/**
+ * @typedef {Object} CompilationParams
+ * @property {NormalModuleFactory} normalModuleFactory
+ * @property {ContextModuleFactory} contextModuleFactory
+ * @property {Set<string>} compilationDependencies
+ */
+
+class Compiler extends Tapable {
+	constructor(context) {
+		super();
+		this.hooks = {
+			/** @type {SyncBailHook<Compilation>} */
+			shouldEmit: new SyncBailHook(["compilation"]),
+			/** @type {AsyncSeriesHook<Stats>} */
+			done: new AsyncSeriesHook(["stats"]),
+			/** @type {AsyncSeriesHook<>} */
+			additionalPass: new AsyncSeriesHook([]),
+			/** @type {AsyncSeriesHook<Compiler>} */
+			beforeRun: new AsyncSeriesHook(["compiler"]),
+			/** @type {AsyncSeriesHook<Compiler>} */
+			run: new AsyncSeriesHook(["compiler"]),
+			/** @type {AsyncSeriesHook<Compilation>} */
+			emit: new AsyncSeriesHook(["compilation"]),
+			/** @type {AsyncSeriesHook<string, Buffer>} */
+			assetEmitted: new AsyncSeriesHook(["file", "content"]),
+			/** @type {AsyncSeriesHook<Compilation>} */
+			afterEmit: new AsyncSeriesHook(["compilation"]),
+
+			/** @type {SyncHook<Compilation, CompilationParams>} */
+			thisCompilation: new SyncHook(["compilation", "params"]),
+			/** @type {SyncHook<Compilation, CompilationParams>} */
+			compilation: new SyncHook(["compilation", "params"]),
+			/** @type {SyncHook<NormalModuleFactory>} */
+			normalModuleFactory: new SyncHook(["normalModuleFactory"]),
+			/** @type {SyncHook<ContextModuleFactory>}  */
+			contextModuleFactory: new SyncHook(["contextModulefactory"]),
+
+			/** @type {AsyncSeriesHook<CompilationParams>} */
+			beforeCompile: new AsyncSeriesHook(["params"]),
+			/** @type {SyncHook<CompilationParams>} */
+			compile: new SyncHook(["params"]),
+			/** @type {AsyncParallelHook<Compilation>} */
+			make: new AsyncParallelHook(["compilation"]),
+			/** @type {AsyncSeriesHook<Compilation>} */
+			afterCompile: new AsyncSeriesHook(["compilation"]),
+
+			/** @type {AsyncSeriesHook<Compiler>} */
+			watchRun: new AsyncSeriesHook(["compiler"]),
+			/** @type {SyncHook<Error>} */
+			failed: new SyncHook(["error"]),
+			/** @type {SyncHook<string, string>} */
+			invalid: new SyncHook(["filename", "changeTime"]),
+			/** @type {SyncHook} */
+			watchClose: new SyncHook([]),
+
+			/** @type {SyncBailHook<string, string, any[]>} */
+			infrastructureLog: new SyncBailHook(["origin", "type", "args"]),
+
+			// TODO the following hooks are weirdly located here
+			// TODO move them for webpack 5
+			/** @type {SyncHook} */
+			environment: new SyncHook([]),
+			/** @type {SyncHook} */
+			afterEnvironment: new SyncHook([]),
+			/** @type {SyncHook<Compiler>} */
+			afterPlugins: new SyncHook(["compiler"]),
+			/** @type {SyncHook<Compiler>} */
+			afterResolvers: new SyncHook(["compiler"]),
+			/** @type {SyncBailHook<string, Entry>} */
+			entryOption: new SyncBailHook(["context", "entry"])
+		};
+		// TODO webpack 5 remove this
+		this.hooks.infrastructurelog = this.hooks.infrastructureLog;
+
+		this._pluginCompat.tap("Compiler", options => {
+			switch (options.name) {
+				case "additional-pass":
+				case "before-run":
+				case "run":
+				case "emit":
+				case "after-emit":
+				case "before-compile":
+				case "make":
+				case "after-compile":
+				case "watch-run":
+					options.async = true;
+					break;
+			}
+		});
+
+		/** @type {string=} */
+		this.name = undefined;
+		/** @type {Compilation=} */
+		this.parentCompilation = undefined;
+		/** @type {string} */
+		this.outputPath = "";
+
+		this.outputFileSystem = null;
+		this.inputFileSystem = null;
+
+		/** @type {string|null} */
+		this.recordsInputPath = null;
+		/** @type {string|null} */
+		this.recordsOutputPath = null;
+		this.records = {};
+		this.removedFiles = new Set();
+		/** @type {Map<string, number>} */
+		this.fileTimestamps = new Map();
+		/** @type {Map<string, number>} */
+		this.contextTimestamps = new Map();
+		/** @type {ResolverFactory} */
+		this.resolverFactory = new ResolverFactory();
+
+		this.infrastructureLogger = undefined;
+
+		// TODO remove in webpack 5
+		this.resolvers = {
+			normal: {
+				plugins: util.deprecate((hook, fn) => {
+					this.resolverFactory.plugin("resolver normal", resolver => {
+						resolver.plugin(hook, fn);
+					});
+				}, "webpack: Using compiler.resolvers.normal is deprecated.\n" + 'Use compiler.resolverFactory.plugin("resolver normal", resolver => {\n  resolver.plugin(/* … */);\n}); instead.'),
+				apply: util.deprecate((...args) => {
+					this.resolverFactory.plugin("resolver normal", resolver => {
+						resolver.apply(...args);
+					});
+				}, "webpack: Using compiler.resolvers.normal is deprecated.\n" + 'Use compiler.resolverFactory.plugin("resolver normal", resolver => {\n  resolver.apply(/* … */);\n}); instead.')
+			},
+			loader: {
+				plugins: util.deprecate((hook, fn) => {
+					this.resolverFactory.plugin("resolver loader", resolver => {
+						resolver.plugin(hook, fn);
+					});
+				}, "webpack: Using compiler.resolvers.loader is deprecated.\n" + 'Use compiler.resolverFactory.plugin("resolver loader", resolver => {\n  resolver.plugin(/* … */);\n}); instead.'),
+				apply: util.deprecate((...args) => {
+					this.resolverFactory.plugin("resolver loader", resolver => {
+						resolver.apply(...args);
+					});
+				}, "webpack: Using compiler.resolvers.loader is deprecated.\n" + 'Use compiler.resolverFactory.plugin("resolver loader", resolver => {\n  resolver.apply(/* … */);\n}); instead.')
+			},
+			context: {
+				plugins: util.deprecate((hook, fn) => {
+					this.resolverFactory.plugin("resolver context", resolver => {
+						resolver.plugin(hook, fn);
+					});
+				}, "webpack: Using compiler.resolvers.context is deprecated.\n" + 'Use compiler.resolverFactory.plugin("resolver context", resolver => {\n  resolver.plugin(/* … */);\n}); instead.'),
+				apply: util.deprecate((...args) => {
+					this.resolverFactory.plugin("resolver context", resolver => {
+						resolver.apply(...args);
+					});
+				}, "webpack: Using compiler.resolvers.context is deprecated.\n" + 'Use compiler.resolverFactory.plugin("resolver context", resolver => {\n  resolver.apply(/* … */);\n}); instead.')
+			}
+		};
+
+		/** @type {WebpackOptions} */
+		this.options = /** @type {WebpackOptions} */ ({});
+
+		this.context = context;
+
+		this.requestShortener = new RequestShortener(context);
+
+		/** @type {boolean} */
+		this.running = false;
+
+		/** @type {boolean} */
+		this.watchMode = false;
+
+		/** @private @type {WeakMap<Source, { sizeOnlySource: SizeOnlySource, writtenTo: Map<string, number> }>} */
+		this._assetEmittingSourceCache = new WeakMap();
+		/** @private @type {Map<string, number>} */
+		this._assetEmittingWrittenFiles = new Map();
+	}
+
+	/**
+	 * @param {string | (function(): string)} name name of the logger, or function called once to get the logger name
+	 * @returns {Logger} a logger with that name
+	 */
+	getInfrastructureLogger(name) {
+		if (!name) {
+			throw new TypeError(
+				"Compiler.getInfrastructureLogger(name) called without a name"
+			);
+		}
+		return new Logger((type, args) => {
+			if (typeof name === "function") {
+				name = name();
+				if (!name) {
+					throw new TypeError(
+						"Compiler.getInfrastructureLogger(name) called with a function not returning a name"
+					);
+				}
+			}
+			if (this.hooks.infrastructureLog.call(name, type, args) === undefined) {
+				if (this.infrastructureLogger !== undefined) {
+					this.infrastructureLogger(name, type, args);
+				}
+			}
+		});
+	}
+
+	watch(watchOptions, handler) {
+		if (this.running) return handler(new ConcurrentCompilationError());
+
+		this.running = true;
+		this.watchMode = true;
+		this.fileTimestamps = new Map();
+		this.contextTimestamps = new Map();
+		this.removedFiles = new Set();
+		return new Watching(this, watchOptions, handler);
+	}
+
+	run(callback) {
+		if (this.running) return callback(new ConcurrentCompilationError());
+
+		const finalCallback = (err, stats) => {
+			this.running = false;
+
+			if (err) {
+				this.hooks.failed.call(err);
+			}
+
+			if (callback !== undefined) return callback(err, stats);
+		};
+
+		const startTime = Date.now();
+
+		this.running = true;
+
+		const onCompiled = (err, compilation) => {
+			if (err) return finalCallback(err);
+
+			if (this.hooks.shouldEmit.call(compilation) === false) {
+				const stats = new Stats(compilation);
+				stats.startTime = startTime;
+				stats.endTime = Date.now();
+				this.hooks.done.callAsync(stats, err => {
+					if (err) return finalCallback(err);
+					return finalCallback(null, stats);
+				});
+				return;
+			}
+
+			this.emitAssets(compilation, err => {
+				if (err) return finalCallback(err);
+
+				if (compilation.hooks.needAdditionalPass.call()) {
+					compilation.needAdditionalPass = true;
+
+					const stats = new Stats(compilation);
+					stats.startTime = startTime;
+					stats.endTime = Date.now();
+					this.hooks.done.callAsync(stats, err => {
+						if (err) return finalCallback(err);
+
+						this.hooks.additionalPass.callAsync(err => {
+							if (err) return finalCallback(err);
+							this.compile(onCompiled);
+						});
+					});
+					return;
+				}
+
+				this.emitRecords(err => {
+					if (err) return finalCallback(err);
+
+					const stats = new Stats(compilation);
+					stats.startTime = startTime;
+					stats.endTime = Date.now();
+					this.hooks.done.callAsync(stats, err => {
+						if (err) return finalCallback(err);
+						return finalCallback(null, stats);
+					});
+				});
+			});
+		};
+
+		this.hooks.beforeRun.callAsync(this, err => {
+			if (err) return finalCallback(err);
+
+			this.hooks.run.callAsync(this, err => {
+				if (err) return finalCallback(err);
+
+				this.readRecords(err => {
+					if (err) return finalCallback(err);
+
+					this.compile(onCompiled);
+				});
+			});
+		});
+	}
+
+	runAsChild(callback) {
+		this.compile((err, compilation) => {
+			if (err) return callback(err);
+
+			this.parentCompilation.children.push(compilation);
+			for (const { name, source, info } of compilation.getAssets()) {
+				this.parentCompilation.emitAsset(name, source, info);
+			}
+
+			const entries = Array.from(
+				compilation.entrypoints.values(),
+				ep => ep.chunks
+			).reduce((array, chunks) => {
+				return array.concat(chunks);
+			}, []);
+
+			return callback(null, entries, compilation);
+		});
+	}
+
+	purgeInputFileSystem() {
+		if (this.inputFileSystem && this.inputFileSystem.purge) {
+			this.inputFileSystem.purge();
+		}
+	}
+
+	emitAssets(compilation, callback) {
+		let outputPath;
+		const emitFiles = err => {
+			if (err) return callback(err);
+
+			asyncLib.forEachLimit(
+				compilation.getAssets(),
+				15,
+				({ name: file, source }, callback) => {
+					let targetFile = file;
+					const queryStringIdx = targetFile.indexOf("?");
+					if (queryStringIdx >= 0) {
+						targetFile = targetFile.substr(0, queryStringIdx);
+					}
+
+					const writeOut = err => {
+						if (err) return callback(err);
+						const targetPath = this.outputFileSystem.join(
+							outputPath,
+							targetFile
+						);
+						// TODO webpack 5 remove futureEmitAssets option and make it on by default
+						if (this.options.output.futureEmitAssets) {
+							// check if the target file has already been written by this Compiler
+							const targetFileGeneration = this._assetEmittingWrittenFiles.get(
+								targetPath
+							);
+
+							// create an cache entry for this Source if not already existing
+							let cacheEntry = this._assetEmittingSourceCache.get(source);
+							if (cacheEntry === undefined) {
+								cacheEntry = {
+									sizeOnlySource: undefined,
+									writtenTo: new Map()
+								};
+								this._assetEmittingSourceCache.set(source, cacheEntry);
+							}
+
+							// if the target file has already been written
+							if (targetFileGeneration !== undefined) {
+								// check if the Source has been written to this target file
+								const writtenGeneration = cacheEntry.writtenTo.get(targetPath);
+								if (writtenGeneration === targetFileGeneration) {
+									// if yes, we skip writing the file
+									// as it's already there
+									// (we assume one doesn't remove files while the Compiler is running)
+
+									compilation.updateAsset(file, cacheEntry.sizeOnlySource, {
+										size: cacheEntry.sizeOnlySource.size()
+									});
+
+									return callback();
+								}
+							}
+
+							// TODO webpack 5: if info.immutable check if file already exists in output
+							// skip emitting if it's already there
+
+							// get the binary (Buffer) content from the Source
+							/** @type {Buffer} */
+							let content;
+							if (typeof source.buffer === "function") {
+								content = source.buffer();
+							} else {
+								const bufferOrString = source.source();
+								if (Buffer.isBuffer(bufferOrString)) {
+									content = bufferOrString;
+								} else {
+									content = Buffer.from(bufferOrString, "utf8");
+								}
+							}
+
+							// Create a replacement resource which only allows to ask for size
+							// This allows to GC all memory allocated by the Source
+							// (expect when the Source is stored in any other cache)
+							cacheEntry.sizeOnlySource = new SizeOnlySource(content.length);
+							compilation.updateAsset(file, cacheEntry.sizeOnlySource, {
+								size: content.length
+							});
+
+							// Write the file to output file system
+							this.outputFileSystem.writeFile(targetPath, content, err => {
+								if (err) return callback(err);
+
+								// information marker that the asset has been emitted
+								compilation.emittedAssets.add(file);
+
+								// cache the information that the Source has been written to that location
+								const newGeneration =
+									targetFileGeneration === undefined
+										? 1
+										: targetFileGeneration + 1;
+								cacheEntry.writtenTo.set(targetPath, newGeneration);
+								this._assetEmittingWrittenFiles.set(targetPath, newGeneration);
+								this.hooks.assetEmitted.callAsync(file, content, callback);
+							});
+						} else {
+							if (source.existsAt === targetPath) {
+								source.emitted = false;
+								return callback();
+							}
+							let content = source.source();
+
+							if (!Buffer.isBuffer(content)) {
+								content = Buffer.from(content, "utf8");
+							}
+
+							source.existsAt = targetPath;
+							source.emitted = true;
+							this.outputFileSystem.writeFile(targetPath, content, err => {
+								if (err) return callback(err);
+								this.hooks.assetEmitted.callAsync(file, content, callback);
+							});
+						}
+					};
+
+					if (targetFile.match(/\/|\\/)) {
+						const dir = path.dirname(targetFile);
+						this.outputFileSystem.mkdirp(
+							this.outputFileSystem.join(outputPath, dir),
+							writeOut
+						);
+					} else {
+						writeOut();
+					}
+				},
+				err => {
+					if (err) return callback(err);
+
+					this.hooks.afterEmit.callAsync(compilation, err => {
+						if (err) return callback(err);
+
+						return callback();
+					});
+				}
+			);
+		};
+
+		this.hooks.emit.callAsync(compilation, err => {
+			if (err) return callback(err);
+			outputPath = compilation.getPath(this.outputPath);
+			this.outputFileSystem.mkdirp(outputPath, emitFiles);
+		});
+	}
+
+	emitRecords(callback) {
+		if (!this.recordsOutputPath) return callback();
+		const idx1 = this.recordsOutputPath.lastIndexOf("/");
+		const idx2 = this.recordsOutputPath.lastIndexOf("\\");
+		let recordsOutputPathDirectory = null;
+		if (idx1 > idx2) {
+			recordsOutputPathDirectory = this.recordsOutputPath.substr(0, idx1);
+		} else if (idx1 < idx2) {
+			recordsOutputPathDirectory = this.recordsOutputPath.substr(0, idx2);
+		}
+
+		const writeFile = () => {
+			this.outputFileSystem.writeFile(
+				this.recordsOutputPath,
+				JSON.stringify(this.records, undefined, 2),
+				callback
+			);
+		};
+
+		if (!recordsOutputPathDirectory) {
+			return writeFile();
+		}
+		this.outputFileSystem.mkdirp(recordsOutputPathDirectory, err => {
+			if (err) return callback(err);
+			writeFile();
+		});
+	}
+
+	readRecords(callback) {
+		if (!this.recordsInputPath) {
+			this.records = {};
+			return callback();
+		}
+		this.inputFileSystem.stat(this.recordsInputPath, err => {
+			// It doesn't exist
+			// We can ignore this.
+			if (err) return callback();
+
+			this.inputFileSystem.readFile(this.recordsInputPath, (err, content) => {
+				if (err) return callback(err);
+
+				try {
+					this.records = parseJson(content.toString("utf-8"));
+				} catch (e) {
+					e.message = "Cannot parse records: " + e.message;
+					return callback(e);
+				}
+
+				return callback();
+			});
+		});
+	}
+
+	createChildCompiler(
+		compilation,
+		compilerName,
+		compilerIndex,
+		outputOptions,
+		plugins
+	) {
+		const childCompiler = new Compiler(this.context);
+		if (Array.isArray(plugins)) {
+			for (const plugin of plugins) {
+				plugin.apply(childCompiler);
+			}
+		}
+		for (const name in this.hooks) {
+			if (
+				![
+					"make",
+					"compile",
+					"emit",
+					"afterEmit",
+					"invalid",
+					"done",
+					"thisCompilation"
+				].includes(name)
+			) {
+				if (childCompiler.hooks[name]) {
+					childCompiler.hooks[name].taps = this.hooks[name].taps.slice();
+				}
+			}
+		}
+		childCompiler.name = compilerName;
+		childCompiler.outputPath = this.outputPath;
+		childCompiler.inputFileSystem = this.inputFileSystem;
+		childCompiler.outputFileSystem = null;
+		childCompiler.resolverFactory = this.resolverFactory;
+		childCompiler.fileTimestamps = this.fileTimestamps;
+		childCompiler.contextTimestamps = this.contextTimestamps;
+
+		const relativeCompilerName = makePathsRelative(this.context, compilerName);
+		if (!this.records[relativeCompilerName]) {
+			this.records[relativeCompilerName] = [];
+		}
+		if (this.records[relativeCompilerName][compilerIndex]) {
+			childCompiler.records = this.records[relativeCompilerName][compilerIndex];
+		} else {
+			this.records[relativeCompilerName].push((childCompiler.records = {}));
+		}
+
+		childCompiler.options = Object.create(this.options);
+		childCompiler.options.output = Object.create(childCompiler.options.output);
+		for (const name in outputOptions) {
+			childCompiler.options.output[name] = outputOptions[name];
+		}
+		childCompiler.parentCompilation = compilation;
+
+		compilation.hooks.childCompiler.call(
+			childCompiler,
+			compilerName,
+			compilerIndex
+		);
+
+		return childCompiler;
+	}
+
+	isChild() {
+		return !!this.parentCompilation;
+	}
+
+	createCompilation() {
+		return new Compilation(this);
+	}
+
+	newCompilation(params) {
+		const compilation = this.createCompilation();
+		compilation.fileTimestamps = this.fileTimestamps;
+		compilation.contextTimestamps = this.contextTimestamps;
+		compilation.name = this.name;
+		compilation.records = this.records;
+		compilation.compilationDependencies = params.compilationDependencies;
+		this.hooks.thisCompilation.call(compilation, params);
+		this.hooks.compilation.call(compilation, params);
+		return compilation;
+	}
+
+	createNormalModuleFactory() {
+		const normalModuleFactory = new NormalModuleFactory(
+			this.options.context,
+			this.resolverFactory,
+			this.options.module || {}
+		);
+		this.hooks.normalModuleFactory.call(normalModuleFactory);
+		return normalModuleFactory;
+	}
+
+	createContextModuleFactory() {
+		const contextModuleFactory = new ContextModuleFactory(this.resolverFactory);
+		this.hooks.contextModuleFactory.call(contextModuleFactory);
+		return contextModuleFactory;
+	}
+
+	newCompilationParams() {
+		const params = {
+			normalModuleFactory: this.createNormalModuleFactory(),
+			contextModuleFactory: this.createContextModuleFactory(),
+			compilationDependencies: new Set()
+		};
+		return params;
+	}
+
+	compile(callback) {
+		const params = this.newCompilationParams();
+		this.hooks.beforeCompile.callAsync(params, err => {
+			if (err) return callback(err);
+
+			this.hooks.compile.call(params);
+
+			const compilation = this.newCompilation(params);
+
+			this.hooks.make.callAsync(compilation, err => {
+				if (err) return callback(err);
+
+				compilation.finish(err => {
+					if (err) return callback(err);
+
+					compilation.seal(err => {
+						if (err) return callback(err);
+
+						this.hooks.afterCompile.callAsync(compilation, err => {
+							if (err) return callback(err);
+
+							return callback(null, compilation);
+						});
+					});
+				});
+			});
+		});
+	}
+}
+
+module.exports = Compiler;
+
+class SizeOnlySource extends Source {
+	constructor(size) {
+		super();
+		this._size = size;
+	}
+
+	_error() {
+		return new Error(
+			"Content and Map of this Source is no longer available (only size() is supported)"
+		);
+	}
+
+	size() {
+		return this._size;
+	}
+
+	/**
+	 * @param {any} options options
+	 * @returns {string} the source
+	 */
+	source(options) {
+		throw this._error();
+	}
+
+	node() {
+		throw this._error();
+	}
+
+	listMap() {
+		throw this._error();
+	}
+
+	map() {
+		throw this._error();
+	}
+
+	listNode() {
+		throw this._error();
+	}
+
+	updateHash() {
+		throw this._error();
+	}
+}
+```
+
