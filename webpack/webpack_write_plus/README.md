@@ -3898,6 +3898,8 @@ const { Logger } = require("./logging/Logger");
 class Compiler extends Tapable {
 	constructor(context) {
 		super();
+    // compiler.hooks.
+    // 默认初始化很多钩子
 		this.hooks = {
 			/** @type {SyncBailHook<Compilation>} */
 			shouldEmit: new SyncBailHook(["compilation"]),
@@ -4545,49 +4547,205 @@ class Compiler extends Tapable {
 
 module.exports = Compiler;
 
-class SizeOnlySource extends Source {
-	constructor(size) {
-		super();
-		this._size = size;
-	}
+// ...
+```
 
-	_error() {
-		return new Error(
-			"Content and Map of this Source is no longer available (only size() is supported)"
-		);
-	}
+hooks 执行顺序
 
-	size() {
-		return this._size;
-	}
+```js
+shouldEmit
+done
+additionalPass
+beforeRun
+run
+emit
+assetEmitted
+afterEmit
+thisCompilation
+compilation
+normalModuleFactory
+contextModuleFactory
+beforeCompile
+compile
+make
+afterCompile
+watchRun
+failed
+invalid
+watchClose
+infrastructureLog
+```
 
-	/**
-	 * @param {any} options options
-	 * @returns {string} the source
-	 */
-	source(options) {
-		throw this._error();
-	}
+webpack 初始化的时候，就已经定义好一系列钩子供我们使用。
 
-	node() {
-		throw this._error();
-	}
+beforeRun、run、thisCompilation、compilation、beforeCompile、compile、make、afterCompile 等。
 
-	listMap() {
-		throw this._error();
-	}
+```js
+开始 -> 配置合并 -> 实例化 compiler -> 初始化 node 文件读写能力 -> 挂载 plugins -> 处理 wbepack 内部插件（入口文件处理）
+```
 
-	map() {
-		throw this._error();
-	}
+```js
+开始 -> compiler.beforeRun -> compiler.run -> compiler.beforeComile -> compiler.compile -> compiler.make
+```
 
-	listNode() {
-		throw this._error();
-	}
+## webpack.js 实现
 
-	updateHash() {
-		throw this._error();
-	}
+主要分为 pack 目录和测试文件 run.js 以及 webpack.config.js。
+
+
+
+webpack.config.js
+
+```js
+const path = require('path');
+
+module.exports = {
+  devtool: 'none',
+  mode: 'development',
+  entry: './src/index.js',
+  context: process.cwd(),
+  output: {
+    filename: 'index.js',
+    path: path.resolve(__dirname, 'dist')
+  }
 }
 ```
+
+run.js
+
+```js
+// const webpack = require('webpack');
+// const options = require('./webpack.config.js');
+
+// let compiler = webpack(options);
+
+// compiler.run(function (err, stats) {
+//   console.log(err);
+//   console.log(stats.toJson());
+// }); 
+
+const webpack = require('./pack');
+const options = require('./webpack.config.js');
+
+let compiler = webpack(options);
+
+compiler.run(function (err, stats) {
+  console.log(err);
+  console.log(stats.toJson());
+}); 
+```
+
+
+
+pack/package.json
+
+```js
+{
+  "name": "pack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/webpack.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "tapable": "1"
+  }
+}
+```
+
+pack/lib/webpack.js
+
+```js
+const Compiler = require('./Compiler');
+const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
+
+const webpack = function (options) {
+  // 实例化 compiler 对象
+  const compiler = new Compiler(options.context);
+  compiler.options = options;
+
+  // 初始化 NodeEnvironmentPlugin
+  new NodeEnvironmentPlugin().apply(compiler);
+
+  // 挂载所有的 plugins 插件至 compiler 对象身上
+  if (options.plugins && Array.isArray(options.plugins)) {
+    for (const plugin of options.plugins) {
+      plugin.apply(compiler);
+    }
+  }
+
+  // 挂载所有的 webpack 内置插件
+  // compiler.options = new WebpackOptionApply().process(options, compiler);
+
+  // 返回 compiler 对象
+  return compiler;
+}
+
+module.exports = webpack;
+```
+
+pack/lib/Compiler.js
+
+```js
+const {
+  Tapable,
+  AsyncSeriesHook
+} = require('tapable');
+
+class Compiler extends Tapable {
+  constructor (context) {
+    super();
+    this.context = context;
+    this.hooks = {
+      done: new AsyncSeriesHook(['stats'])
+    }
+  }
+
+  run (callback) {
+    callback && callback(null, {
+      toJson () {
+        return {
+          entries: [], // 入口信息
+          chunks: [], // chunk 信息
+          modules: [], // 模块信息
+          assets: [], // 最终生成资源
+        }
+      }
+    });
+  }
+}
+
+module.exports = Compiler;
+```
+
+pack/lib/node/NodeEnvironmentPlugin.js
+
+> 简单实现，了解逻辑即可。
+
+```js
+const fs = require('fs');
+
+class NodeEnvironmentPlugin {
+  constructor (options) {
+    this.options = options || {};
+  }
+
+  apply (compiler) {
+    compiler.inputFileSystem = fs;
+    compiler.outputFileSystem = fs;
+  }
+}
+
+module.exports = NodeEnvironmentPlugin;
+```
+
+## EntryOptionPlugin 分析
 
