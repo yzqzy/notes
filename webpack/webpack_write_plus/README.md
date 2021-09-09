@@ -4588,7 +4588,7 @@ beforeRun、run、thisCompilation、compilation、beforeCompile、compile、make
 开始 -> compiler.beforeRun -> compiler.run -> compiler.beforeComile -> compiler.compile -> compiler.make
 ```
 
-## webpack.js 实现
+## webpack.js 主流程实现
 
 主要分为 pack 目录和测试文件 run.js 以及 webpack.config.js。
 
@@ -4748,4 +4748,245 @@ module.exports = NodeEnvironmentPlugin;
 ```
 
 ## EntryOptionPlugin 分析
+
+new WebpackOptionsApply().process(options, compiler)，对 webpack 默认插件进行挂载
+
+
+
+webpack/lib/WebpackOptionsApply
+
+```js
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+"use strict";
+
+// ...
+
+const { cachedCleverMerge } = require("./util/cleverMerge");
+
+/** @typedef {import("../declarations/WebpackOptions").WebpackOptions} WebpackOptions */
+/** @typedef {import("./Compiler")} Compiler */
+
+class WebpackOptionsApply extends OptionsApply {
+	constructor() {
+		super();
+	}
+
+	/**
+	 * @param {WebpackOptions} options options object
+	 * @param {Compiler} compiler compiler object
+	 * @returns {WebpackOptions} options object
+	 */
+	process(options, compiler) {
+		let ExternalsPlugin;
+		compiler.outputPath = options.output.path;
+		compiler.recordsInputPath = options.recordsInputPath || options.recordsPath;
+		compiler.recordsOutputPath =
+			options.recordsOutputPath || options.recordsPath;
+		compiler.name = options.name;
+		// TODO webpack 5 refactor this to MultiCompiler.setDependencies() with a WeakMap
+		// @ts-ignore TODO
+		compiler.dependencies = options.dependencies;
+		
+    // ...
+
+		let noSources;
+		let legacy;
+		let modern;
+		let comment;
+		if (
+			options.devtool &&
+			(options.devtool.includes("sourcemap") ||
+				options.devtool.includes("source-map"))
+		) {
+			const hidden = options.devtool.includes("hidden");
+			const inline = options.devtool.includes("inline");
+			const evalWrapped = options.devtool.includes("eval");
+			const cheap = options.devtool.includes("cheap");
+			const moduleMaps = options.devtool.includes("module");
+			noSources = options.devtool.includes("nosources");
+			legacy = options.devtool.includes("@");
+			modern = options.devtool.includes("#");
+			comment =
+				legacy && modern
+					? "\n/*\n//@ source" +
+					  "MappingURL=[url]\n//# source" +
+					  "MappingURL=[url]\n*/"
+					: legacy
+					? "\n/*\n//@ source" + "MappingURL=[url]\n*/"
+					: modern
+					? "\n//# source" + "MappingURL=[url]"
+					: null;
+			const Plugin = evalWrapped
+				? EvalSourceMapDevToolPlugin
+				: SourceMapDevToolPlugin;
+			new Plugin({
+				filename: inline ? null : options.output.sourceMapFilename,
+				moduleFilenameTemplate: options.output.devtoolModuleFilenameTemplate,
+				fallbackModuleFilenameTemplate:
+					options.output.devtoolFallbackModuleFilenameTemplate,
+				append: hidden ? false : comment,
+				module: moduleMaps ? true : cheap ? false : true,
+				columns: cheap ? false : true,
+				lineToLine: options.output.devtoolLineToLine,
+				noSources: noSources,
+				namespace: options.output.devtoolNamespace
+			}).apply(compiler);
+		} else if (options.devtool && options.devtool.includes("eval")) {
+			legacy = options.devtool.includes("@");
+			modern = options.devtool.includes("#");
+			comment =
+				legacy && modern
+					? "\n//@ sourceURL=[url]\n//# sourceURL=[url]"
+					: legacy
+					? "\n//@ sourceURL=[url]"
+					: modern
+					? "\n//# sourceURL=[url]"
+					: null;
+			new EvalDevToolModulePlugin({
+				sourceUrlComment: comment,
+				moduleFilenameTemplate: options.output.devtoolModuleFilenameTemplate,
+				namespace: options.output.devtoolNamespace
+			}).apply(compiler);
+		}
+
+		new JavascriptModulesPlugin().apply(compiler);
+		new JsonModulesPlugin().apply(compiler);
+		new WebAssemblyModulesPlugin({
+			mangleImports: options.optimization.mangleWasmImports
+		}).apply(compiler);
+
+    // 
+		new EntryOptionPlugin().apply(compiler);
+		compiler.hooks.entryOption.call(options.context, options.entry);
+
+	 // ...
+}
+
+module.exports = WebpackOptionsApply;
+```
+
+webpack/lib/EntryOptionPlugin
+
+```js
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+"use strict";
+
+const SingleEntryPlugin = require("./SingleEntryPlugin");
+const MultiEntryPlugin = require("./MultiEntryPlugin");
+const DynamicEntryPlugin = require("./DynamicEntryPlugin");
+
+/** @typedef {import("../declarations/WebpackOptions").EntryItem} EntryItem */
+/** @typedef {import("./Compiler")} Compiler */
+
+/**
+ * @param {string} context context path
+ * @param {EntryItem} item entry array or single path
+ * @param {string} name entry key name
+ * @returns {SingleEntryPlugin | MultiEntryPlugin} returns either a single or multi entry plugin
+ */
+const itemToPlugin = (context, item, name) => {
+	if (Array.isArray(item)) {
+		return new MultiEntryPlugin(context, item, name);
+	}
+  // 返回实例对象
+	return new SingleEntryPlugin(context, item, name);
+};
+
+module.exports = class EntryOptionPlugin {
+	/**
+	 * @param {Compiler} compiler the compiler instance one is tapping into
+	 * @returns {void}
+	 */
+	apply(compiler) {
+    // tap EntryOptionPlugin，注册事件监听
+		compiler.hooks.entryOption.tap("EntryOptionPlugin", (context, entry) => {
+			if (typeof entry === "string" || Array.isArray(entry)) {
+				itemToPlugin(context, entry, "main").apply(compiler);
+			} else if (typeof entry === "object") {
+				for (const name of Object.keys(entry)) {
+					itemToPlugin(context, entry[name], name).apply(compiler);
+				}
+			} else if (typeof entry === "function") {
+				new DynamicEntryPlugin(context, entry).apply(compiler);
+			}
+			return true;
+		});
+	}
+};
+```
+
+webpack/lib/SingleEntryPlugin
+
+```js
+"use strict";
+const SingleEntryDependency = require("./dependencies/SingleEntryDependency");
+
+/** @typedef {import("./Compiler")} Compiler */
+
+class SingleEntryPlugin {
+	/**
+	 * An entry plugin which will handle
+	 * creation of the SingleEntryDependency
+	 *
+	 * @param {string} context context path
+	 * @param {string} entry entry path
+	 * @param {string} name entry key name
+	 */
+	constructor(context, entry, name) {
+		this.context = context;
+		this.entry = entry;
+		this.name = name;
+	}
+
+	/**
+	 * @param {Compiler} compiler the compiler instance
+	 * @returns {void}
+	 */
+	apply(compiler) {
+		compiler.hooks.compilation.tap(
+			"SingleEntryPlugin",
+			(compilation, { normalModuleFactory }) => {
+				compilation.dependencyFactories.set(
+					SingleEntryDependency,
+					normalModuleFactory
+				);
+			}
+		);
+	
+		compiler.hooks.make.tapAsync(
+			"SingleEntryPlugin",
+			(compilation, callback) => {
+				const { entry, name, context } = this;
+
+				const dep = SingleEntryPlugin.createDependency(entry, name);
+        
+        // 开始执行编译，交由 comilation
+        // compiler 主要是做编译前的准备，比如订阅钩子
+				compilation.addEntry(context, dep, name, callback);
+			}
+		);
+	}
+
+	/**
+	 * @param {string} entry entry request
+	 * @param {string} name entry name
+	 * @returns {SingleEntryDependency} the dependency
+	 */
+	static createDependency(entry, name) {
+		const dep = new SingleEntryDependency(entry);
+		dep.loc = { name };
+		return dep;
+	}
+}
+
+module.exports = SingleEntryPlugin;
+```
+
+## EntryOptionPlugin 实现
 
