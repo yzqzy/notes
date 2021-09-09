@@ -6,7 +6,7 @@ const itemToPlugin = function (context, item, name) {
 
 class EntryOptionPlugin {
   apply (compiler) {
-    compiler.hooks.entryOptions.tap('EntryOptionPlugin', (context, entry) => {
+    compiler.hooks.entryOption.tap('EntryOptionPlugin', (context, entry) => {
       itemToPlugin(context, entry, 'main').apply(compiler);
     });
   }

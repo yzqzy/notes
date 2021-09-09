@@ -4990,3 +4990,304 @@ module.exports = SingleEntryPlugin;
 
 ## EntryOptionPlugin 实现
 
+pack/lib/Compiler.js
+
+```js
+const {
+  Tapable,
+  AsyncSeriesHook,
+  SyncBailHook,
+  SyncHook,
+  AsyncParallelBailHook
+} = require('tapable');
+
+class Compiler extends Tapable {
+  constructor (context) {
+    super();
+    this.context = context;
+    this.hooks = {
+      done: new AsyncSeriesHook(['stats']),
+      entryOption: new SyncBailHook(['context', 'entry']),
+      beforeCompile: new AsyncSeriesHook(['params']),
+      compile: new SyncHook(['params']),
+      make: new AsyncParallelBailHook(['compilation']),
+      afterCompile: new AsyncSeriesHook(['compilation'])
+    }
+  }
+
+  run (callback) {
+    callback && callback(null, {
+      toJson () {
+        return {
+          entries: [], // 入口信息
+          chunks: [], // chunk 信息
+          modules: [], // 模块信息
+          assets: [], // 最终生成资源
+        }
+      }
+    });
+  }
+}
+
+module.exports = Compiler;
+```
+
+pack/lib/EntryOptionPlugin.js
+
+```js
+const SingleEntryPlugin = require('./SingleEntryPlugin');
+
+const itemToPlugin = function (context, item, name) {
+  return new SingleEntryPlugin(context, item, name);
+}
+
+class EntryOptionPlugin {
+  apply (compiler) {
+    compiler.hooks.entryOption.tap('EntryOptionPlugin', (context, entry) => {
+      itemToPlugin(context, entry, 'main').apply(compiler);
+    });
+  }
+}
+
+module.exports = EntryOptionPlugin;
+```
+
+pack/lib/SingleEntryPlugin.js
+
+```js
+class SingleEntryPlugin {
+  constructor (context, entry, name) {
+    this.context = context;
+    this.entry = entry;
+    this.name = name;
+  }
+
+  apply (compiler) {
+    compiler.hooks.make.tapAsync('SingleEntryPlugin', (compilation, callback) => {
+      const { context, entry, name } = this;
+
+      console.log('make tap trigger.');
+      // compilation.addEntry(context, entry, name, callback);
+    });
+  }
+}
+
+module.exports = SingleEntryPlugin;
+```
+
+pack/lib/webpack.js
+
+```js
+const Compiler = require('./Compiler');
+const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin');
+const WebpackOptionApply = require('./WebpackOptionApply');
+
+const webpack = function (options) {
+  // 实例化 compiler 对象
+  const compiler = new Compiler(options.context);
+  compiler.options = options;
+
+  // 初始化 NodeEnvironmentPlugin
+  new NodeEnvironmentPlugin().apply(compiler);
+
+  // 挂载所有的 plugins 插件至 compiler 对象身上
+  if (options.plugins && Array.isArray(options.plugins)) {
+    for (const plugin of options.plugins) {
+      plugin.apply(compiler);
+    }
+  }
+
+  // 挂载所有的 webpack 内置插件
+  compiler.options = new WebpackOptionApply().process(options, compiler);
+
+  // 返回 compiler 对象
+  return compiler;
+}
+
+module.exports = webpack;
+```
+
+pack/lib/WebpackOptionApply.js
+
+```js
+const EntryOptionPlugin = require('./EntryOptionPlugin');
+
+class WebpackOptionApply {
+  process (options, compiler) {
+    new EntryOptionPlugin().apply(compiler);
+    compiler.hooks.entryOption.call(options.context, options.entry);
+  }
+}
+
+module.exports = WebpackOptionApply;
+```
+
+run.js
+
+```js
+const webpack = require('./pack');
+const options = require('./webpack.config.js');
+
+let compiler = webpack(options);
+
+compiler.run(function (err, stats) {
+  console.log(err);
+  console.log(stats.toJson());
+}); 
+```
+
+## run 方法分析及实现
+
+### 源码分析
+
+```js
+run(callback) {
+  if (this.running) return callback(new ConcurrentCompilationError());
+
+  const finalCallback = (err, stats) => {
+    this.running = false;
+
+    if (err) {
+      this.hooks.failed.call(err);
+    }
+
+    if (callback !== undefined) return callback(err, stats);
+  };
+
+  const startTime = Date.now();
+
+  this.running = true;
+
+  const onCompiled = (err, compilation) => {
+    if (err) return finalCallback(err);
+
+    if (this.hooks.shouldEmit.call(compilation) === false) {
+      const stats = new Stats(compilation);
+      stats.startTime = startTime;
+      stats.endTime = Date.now();
+      this.hooks.done.callAsync(stats, err => {
+        if (err) return finalCallback(err);
+        return finalCallback(null, stats);
+      });
+      return;
+    }
+
+    this.emitAssets(compilation, err => {
+      if (err) return finalCallback(err);
+
+      if (compilation.hooks.needAdditionalPass.call()) {
+        compilation.needAdditionalPass = true;
+
+        const stats = new Stats(compilation);
+        stats.startTime = startTime;
+        stats.endTime = Date.now();
+        this.hooks.done.callAsync(stats, err => {
+          if (err) return finalCallback(err);
+
+          this.hooks.additionalPass.callAsync(err => {
+            if (err) return finalCallback(err);
+            this.compile(onCompiled);
+          });
+        });
+        return;
+      }
+
+      this.emitRecords(err => {
+        if (err) return finalCallback(err);
+
+        const stats = new Stats(compilation);
+        stats.startTime = startTime;
+        stats.endTime = Date.now();
+        this.hooks.done.callAsync(stats, err => {
+          if (err) return finalCallback(err);
+          return finalCallback(null, stats);
+        });
+      });
+    });
+  };
+
+  this.hooks.beforeRun.callAsync(this, err => {
+    if (err) return finalCallback(err);
+
+    this.hooks.run.callAsync(this, err => {
+      if (err) return finalCallback(err);
+
+      this.readRecords(err => {
+        if (err) return finalCallback(err);
+
+        this.compile(onCompiled);
+      });
+    });
+  });
+}
+```
+
+### 代码实现
+
+```js
+const {
+  Tapable,
+  AsyncSeriesHook,
+  SyncBailHook,
+  SyncHook,
+  AsyncParallelBailHook
+} = require('tapable');
+
+class Compiler extends Tapable {
+  constructor (context) {
+    super();
+    this.context = context;
+    this.hooks = {
+      done: new AsyncSeriesHook(['stats']),
+      entryOption: new SyncBailHook(['context', 'entry']),
+
+      beforeRun: new AsyncSeriesHook(["compiler"]),
+			run: new AsyncSeriesHook(["compiler"]),
+
+      thisCompilation: new SyncHook(["compilation", "params"]),
+      compilation: new SyncHook(["compilation", "params"]),
+
+      beforeCompile: new AsyncSeriesHook(['params']),
+      compile: new SyncHook(['params']),
+      make: new AsyncParallelBailHook(['compilation']),
+      afterCompile: new AsyncSeriesHook(['compilation'])
+    }
+  }
+
+  compile () {
+    console.log('compile');
+  }
+
+  run (callback) {
+    const finalCallback = function (err, status) {
+      callback(err, status);
+    }
+
+    const onCompiled = function (err, compilation) {
+      console.log('onCompiled');
+
+      finalCallback(err, {
+        toJson () {
+          return {
+            entries: [],
+            chunks: [],
+            module: [],
+            assets: []
+          }
+        }
+      })
+    }
+
+    this.hooks.beforeRun.callAsync(this, (err) => {
+      this.hooks.run.callAsync(this, (err) => {
+        this.compile(onCompiled);
+      });
+    });
+  }
+}
+
+module.exports = Compiler;
+```
+
+## compie 方法分析及实现
+

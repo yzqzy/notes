@@ -1,6 +1,9 @@
 const {
   Tapable,
-  AsyncSeriesHook
+  AsyncSeriesHook,
+  SyncBailHook,
+  SyncHook,
+  AsyncParallelBailHook
 } = require('tapable');
 
 class Compiler extends Tapable {
@@ -8,20 +11,50 @@ class Compiler extends Tapable {
     super();
     this.context = context;
     this.hooks = {
-      done: new AsyncSeriesHook(['stats'])
+      done: new AsyncSeriesHook(['stats']),
+      entryOption: new SyncBailHook(['context', 'entry']),
+
+      beforeRun: new AsyncSeriesHook(["compiler"]),
+			run: new AsyncSeriesHook(["compiler"]),
+
+      thisCompilation: new SyncHook(["compilation", "params"]),
+      compilation: new SyncHook(["compilation", "params"]),
+
+      beforeCompile: new AsyncSeriesHook(['params']),
+      compile: new SyncHook(['params']),
+      make: new AsyncParallelBailHook(['compilation']),
+      afterCompile: new AsyncSeriesHook(['compilation'])
     }
   }
 
+  compile () {
+    console.log('compile');
+  }
+
   run (callback) {
-    callback && callback(null, {
-      toJson () {
-        return {
-          entries: [], // 入口信息
-          chunks: [], // chunk 信息
-          modules: [], // 模块信息
-          assets: [], // 最终生成资源
+    const finalCallback = function (err, status) {
+      callback(err, status);
+    }
+
+    const onCompiled = function (err, compilation) {
+      console.log('onCompiled');
+
+      finalCallback(err, {
+        toJson () {
+          return {
+            entries: [],
+            chunks: [],
+            module: [],
+            assets: []
+          }
         }
-      }
+      })
+    }
+
+    this.hooks.beforeRun.callAsync(this, (err) => {
+      this.hooks.run.callAsync(this, (err) => {
+        this.compile(onCompiled);
+      });
     });
   }
 }
