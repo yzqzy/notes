@@ -5357,3 +5357,322 @@ compile(callback) {
 
 ### 代码实现
 
+lib/Compiler.js
+
+```js
+const {
+  Tapable,
+  AsyncSeriesHook,
+  SyncBailHook,
+  SyncHook,
+  AsyncParallelBailHook
+} = require('tapable');
+const NormalModuleFactory = require('./NormalModuleFactory');
+const Compilation = require('./Compilation');
+
+class Compiler extends Tapable {
+  constructor (context) {
+    super();
+    this.context = context;
+    this.hooks = {
+      done: new AsyncSeriesHook(['stats']),
+      entryOption: new SyncBailHook(['context', 'entry']),
+
+      beforeRun: new AsyncSeriesHook(["compiler"]),
+			run: new AsyncSeriesHook(["compiler"]),
+
+      thisCompilation: new SyncHook(["compilation", "params"]),
+      compilation: new SyncHook(["compilation", "params"]),
+
+      beforeCompile: new AsyncSeriesHook(['params']),
+      compile: new SyncHook(['params']),
+      make: new AsyncParallelBailHook(['compilation']),
+      afterCompile: new AsyncSeriesHook(['compilation'])
+    }
+  }
+
+  newCompilationParams () {
+    const params = {
+      normalModuleFactory: new NormalModuleFactory()
+    }
+    return params;
+  }
+
+  createCompilation () {
+    return new Compilation(this);
+  }
+
+  newCompilation (params) {
+    const compilation = this.createCompilation();
+  }
+
+  compile (callback) {
+    const params = this.newCompilationParams();
+
+    this.hooks.beforeRun.callAsync(params, (err) => {
+      this.hooks.compile.call(params);
+
+      const compilation = this.newCompilation(params);
+
+      this.hooks.make.callAsync(compilation, (err) => {
+        console.log('make trigger', callback)
+
+        callback && callback();
+      });
+    });
+  }
+
+  run (callback) {
+    const finalCallback = function (err, status) {
+      callback(err, status);
+    }
+
+    const onCompiled = function (err, compilation) {
+      console.log('onCompiled');
+
+      finalCallback(err, {
+        toJson () {
+          return {
+            entries: [],
+            chunks: [],
+            module: [],
+            assets: []
+          }
+        }
+      })
+    }
+
+    this.hooks.beforeRun.callAsync(this, (err) => {
+      this.hooks.run.callAsync(this, (err) => {
+        this.compile(onCompiled);
+      });
+    });
+  }
+}
+
+module.exports = Compiler;
+```
+
+## make 前流程分析
+
+* 实例化 compiler 对象（贯穿整个 webpack 工作过程）、由 compiler 调用 run 方法
+
+* compiler 实例化操作
+
+  * compiler 继承 tapable，因此它具备钩子的操作能力（监听事件、触发事件、webpack 是一个事件流）
+  * 实例化 compiler 对象之后向它的身上挂载很多属性，其中 NodeEnvironmentPlugin 这个操作让它具备了文件读写能力
+  * 具备文件读写能力之后，然后将 plugins 中的插件挂载到 compiler 对象上
+  * 将内部默认的插件与 compiler 建立关系，其中 EntryOptionPlugin 用来处理模块 ID
+  * 在实例化 compiler 的时候，只是监听 make 钩子（SingleEntryPlugin）
+    *  SingleEntryPlugin 模块的 apply 中存在二个钩子的监听
+    * 其中 compilation 钩子就是 compilation 具备了利用 normalModuleFactory 工厂创建一个普通模块的能力，因为它就是利用一个自己创建的模块来加载需要被打包的模块
+    * 其中 make 钩子在 compiler.run 时会被触发，意味着某个模块打包之前的准备工作就完成了
+    * addEntry 方法调用
+
+* run 方法执行
+
+  * run 方法里就是一堆钩子按照顺序触发（beforeRun、run、compile）
+  * compile 方法执行
+  
+    * 准备参数（其中 normalModuleFactory 是后续用于创建模块）
+    * 触发 beforeCompile
+    * 将第一个参数传给一个函数，创建一个 compilation（newCompilation）
+    * 在调用 newCompilation 的内部
+    
+      * 调用了 createCompilation
+      * 触发 this.compilation 钩子和 compilation 的监听
+    * 当创建 compilation 对象之后，触发 make 钩子
+    * 当触发 make 钩子监听时，将 comilation 对象传递作为参数传递进
+  
+
+
+
+总结
+
+* 实例化 Compiler
+
+* 调用 compile 方法
+
+* newCompilation
+
+* 实例化 Compilation 对象（和 compiler 存在关系）
+
+* 触发 make 钩子，调用 addEntry 方法（将 context、name、entry 等）进行编译
+
+## addEntry 流程分析
+
+* make 钩子在被触发时，接收 compilation 实例，它由很多属性。
+
+* 从 compilation 解构三个值
+  * entry：当前需要被打包的模块的相对路径（./src/index.js）
+  * name：main
+  * context：当前项目的根路径
+
+* dep 是对当前入口模块的依赖关系进行处理
+
+* 调用 addEntry 方法。
+* 在 compilation 实例身上存在一个 addEntry 方法，然后内部调用 _addModuleChain 方法去处理依赖
+* 在 compilation 中可以通过 NormalModuleFactory 工厂来创建一个普通的模块对象
+* 在 webpack 内部默认开启了一个 100 并发量的打包操作，我们看到的是 normalModule.create()
+* 在 beforeResolve 内部会触发一个 factory 钩子监听（这部分操作用来处理 loader，不会重点分析）
+* 上述操作完成之后，获取到一个函数存在 factory 中，然后对它进行立即调用，在这个函数调用里又触发了一个 resolver 的钩子（处理 loader，拿到 resolver 方法之后意味着所有的 loader 处理完毕）
+* 调用 resolver() 方法之后，就会进入到 afterResolve 这个钩子里，然后就会触发 new NormalModule
+
+
+
+lib/compilation.js
+
+```js
+_addModuleChain(context, dependency, onModule, callback) {
+	const start = this.profile && Date.now();
+	const currentProfile = this.profile && {};
+
+	const errorAndCallback = this.bail
+		? err => {
+				callback(err);
+			}
+		: err => {
+				err.dependencies = [dependency];
+				this.errors.push(err);
+				callback();
+			};
+
+	if (
+		typeof dependency !== "object" ||
+		dependency === null ||
+		!dependency.constructor
+	) {
+		throw new Error("Parameter 'dependency' must be a Dependency");
+	}
+	const Dep = /** @type {DepConstructor} */ (dependency.constructor);
+	const moduleFactory = this.dependencyFactories.get(Dep);
+	if (!moduleFactory) {
+		throw new Error(
+			`No dependency factory available for this dependency type: ${dependency.constructor.name}`
+		);
+	}
+
+	this.semaphore.acquire(() => {
+		moduleFactory.create(
+			{
+				contextInfo: {
+					issuer: "",
+					compiler: this.compiler.name
+				},
+				context: context,
+				dependencies: [dependency]
+			},
+			(err, module) => {
+				if (err) {
+					this.semaphore.release();
+					return errorAndCallback(new EntryModuleNotFoundError(err));
+				}
+
+				let afterFactory;
+
+				if (currentProfile) {
+					afterFactory = Date.now();
+					currentProfile.factory = afterFactory - start;
+				}
+
+				const addModuleResult = this.addModule(module);
+				module = addModuleResult.module;
+
+				onModule(module);
+
+				dependency.module = module;
+				module.addReason(null, dependency);
+
+				const afterBuild = () => {
+					if (addModuleResult.dependencies) {
+						this.processModuleDependencies(module, err => {
+							if (err) return callback(err);
+							callback(null, module);
+						});
+					} else {
+						return callback(null, module);
+					}
+				};
+
+				if (addModuleResult.issuer) {
+					if (currentProfile) {
+						module.profile = currentProfile;
+					}
+				}
+
+				if (addModuleResult.build) {
+					this.buildModule(module, false, null, null, err => {
+						if (err) {
+							this.semaphore.release();
+							return errorAndCallback(err);
+						}
+
+						if (currentProfile) {
+							const afterBuilding = Date.now();
+							currentProfile.building = afterBuilding - afterFactory;
+						}
+
+						this.semaphore.release();
+						afterBuild();
+					});
+				} else {
+					this.semaphore.release();
+					this.waitForBuildingFinished(module, afterBuild);
+				}
+			}
+		);
+	});
+}
+
+addEntry(context, entry, name, callback) {
+	this.hooks.addEntry.call(entry, name);
+
+	const slot = {
+		name: name,
+		// TODO webpack 5 remove `request`
+		request: null,
+		module: null
+	};
+
+	if (entry instanceof ModuleDependency) {
+		slot.request = entry.request;
+	}
+
+	// TODO webpack 5: merge modules instead when multiple entry modules are supported
+	const idx = this._preparedEntrypoints.findIndex(slot => slot.name === name);
+	if (idx >= 0) {
+		// Overwrite existing entrypoint
+		this._preparedEntrypoints[idx] = slot;
+	} else {
+		this._preparedEntrypoints.push(slot);
+	}
+	// 
+	this._addModuleChain(
+		context,
+		entry,
+		module => {
+			this.entries.push(module);
+		},
+		(err, module) => {
+			if (err) {
+				this.hooks.failedEntry.call(entry, name, err);
+				return callback(err);
+			}
+
+			if (module) {
+				slot.module = module;
+			} else {
+				const idx = this._preparedEntrypoints.indexOf(slot);
+				if (idx >= 0) {
+					this._preparedEntrypoints.splice(idx, 1);
+				}
+			}
+			this.hooks.succeedEntry.call(entry, name, module);
+			return callback(null, module);
+		}
+	);
+}
+```
+
+
+
