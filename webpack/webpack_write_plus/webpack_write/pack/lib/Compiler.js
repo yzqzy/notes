@@ -5,6 +5,8 @@ const {
   SyncHook,
   AsyncParallelBailHook
 } = require('tapable');
+const NormalModuleFactory = require('./NormalModuleFactory');
+const Compilation = require('./Compilation');
 
 class Compiler extends Tapable {
   constructor (context) {
@@ -27,8 +29,35 @@ class Compiler extends Tapable {
     }
   }
 
-  compile () {
-    console.log('compile');
+  newCompilationParams () {
+    const params = {
+      normalModuleFactory: new NormalModuleFactory()
+    }
+    return params;
+  }
+
+  createCompilation () {
+    return new Compilation(this);
+  }
+
+  newCompilation (params) {
+    const compilation = this.createCompilation();
+  }
+
+  compile (callback) {
+    const params = this.newCompilationParams();
+
+    this.hooks.beforeRun.callAsync(params, (err) => {
+      this.hooks.compile.call(params);
+
+      const compilation = this.newCompilation(params);
+
+      this.hooks.make.callAsync(compilation, (err) => {
+        console.log('make trigger', callback)
+
+        callback && callback();
+      });
+    });
   }
 
   run (callback) {

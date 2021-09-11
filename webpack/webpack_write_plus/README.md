@@ -5289,5 +5289,71 @@ class Compiler extends Tapable {
 module.exports = Compiler;
 ```
 
-## compie 方法分析及实现
+## compier 方法分析及实现
+
+### 源码分析
+
+Compiler.js
+
+```js
+createCompilation() {
+	return new Compilation(this);
+}
+
+newCompilation(params) {
+	const compilation = this.createCompilation();
+	compilation.fileTimestamps = this.fileTimestamps;
+	compilation.contextTimestamps = this.contextTimestamps;
+	compilation.name = this.name;
+	compilation.records = this.records;
+	compilation.compilationDependencies = params.compilationDependencies;
+	this.hooks.thisCompilation.call(compilation, params);
+	this.hooks.compilation.call(compilation, params);
+	return compilation;
+}
+
+newCompilationParams() {
+	const params = {
+		normalModuleFactory: this.createNormalModuleFactory(),
+		contextModuleFactory: this.createContextModuleFactory(),
+		compilationDependencies: new Set()
+	};
+	return params;
+}
+
+compile(callback) {
+	const params = this.newCompilationParams();
+	this.hooks.beforeCompile.callAsync(params, err => {
+		if (err) return callback(err);
+
+		this.hooks.compile.call(params);
+
+		const compilation = this.newCompilation(params);
+
+		this.hooks.make.callAsync(compilation, err => {
+			if (err) return callback(err);
+
+			compilation.finish(err => {
+				if (err) return callback(err);
+
+				compilation.seal(err => {
+					if (err) return callback(err);
+
+					this.hooks.afterCompile.callAsync(compilation, err => {
+						if (err) return callback(err);
+
+						return callback(null, compilation);
+					});
+				});
+			});
+		});
+	});
+}
+```
+
+调用 newCompilationParams ，返回 params
+
+调用 beforeCompile 钩子：回调中触发 compile 钩子，调用 newCompilationfan 方法返回 compliation， 触发 make 钩子。
+
+### 代码实现
 
