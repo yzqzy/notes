@@ -26,8 +26,15 @@ class Compilation extends Tapable {
     module.build(this, (err) => {
       // module 编译完成
       this.hooks.successModule.call(module);
-      callback(err);
+      callback(err, module);
     });
+  }
+
+  processDependcies (module, callback) {
+    // 当前的函数的功能就是实现一个被依赖模块的递归加载
+    // 加载模块的思路都是创建一个模块，然后将加载到的模块内容拿进来
+    // 当前并不知道 module 需要依赖几个模块，此时需要想办法让所有被依赖的模块都加载完成之后再执行 callback（neo-async）
+    
   }
 
   _addModuleChain (context, entry, name, callback) {
@@ -39,8 +46,16 @@ class Compilation extends Tapable {
       parser
     });
 
-    const afterBuild = function (err) {
-      callback(err, entryModule);
+    const afterBuild = function (err, module) {
+      // 我们需要判断当前 module 存在依赖 
+      if (module.dependencies.length > 0) {
+        // 当前逻辑表示存在需要依赖加载的模块，我们可以单独定义一个方法实现
+        this.processDependcies(module, (err) => {
+          callback(err, module);
+        });
+      } else {
+        callback(err, module);
+      }
     }
 
     this.buildModule(entryModule, afterBuild);
