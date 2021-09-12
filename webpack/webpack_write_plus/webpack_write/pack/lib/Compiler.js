@@ -5,6 +5,7 @@ const {
   SyncHook,
   AsyncParallelBailHook
 } = require('tapable');
+const Stats = require('./Stats');
 const NormalModuleFactory = require('./NormalModuleFactory');
 const Compilation = require('./Compilation');
 
@@ -42,6 +43,9 @@ class Compiler extends Tapable {
 
   newCompilation (params) {
     const compilation = this.createCompilation();
+    this.hooks.thisCompilation.call(compilation, params);
+    this.hooks.compilation.call(compilation, params);
+    return compilation;
   }
 
   compile (callback) {
@@ -53,9 +57,7 @@ class Compiler extends Tapable {
       const compilation = this.newCompilation(params);
 
       this.hooks.make.callAsync(compilation, (err) => {
-        console.log('make trigger', callback)
-
-        callback && callback();
+        callback(err, compilation);
       });
     });
   }
@@ -68,16 +70,7 @@ class Compiler extends Tapable {
     const onCompiled = function (err, compilation) {
       console.log('onCompiled');
 
-      finalCallback(err, {
-        toJson () {
-          return {
-            entries: [],
-            chunks: [],
-            module: [],
-            assets: []
-          }
-        }
-      })
+      finalCallback(err, new Stats(compilation));
     }
 
     this.hooks.beforeRun.callAsync(this, (err) => {

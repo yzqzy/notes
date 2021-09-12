@@ -5773,3 +5773,237 @@ class Compilation extends Tapable {
 module.exports = Compilation;
 ```
 
+## buildModule 实现
+
+lib/Compilation.js
+
+```js
+const path = require('path');
+const { Tapable, SyncHook } = require('tapable');
+const NormalModuleFactory = require('./NormalModuleFactory');
+const Parser = require('./Parser');
+
+const normalModuleFactory = new NormalModuleFactory();
+const parser = new Parser();
+
+class Compilation extends Tapable {
+  constructor (compiler) {
+    super();
+    this.compiler = compiler;
+    this.context = compiler.context;
+    this.options = compiler.options;
+    this.inputFileSystem = compiler.inputFileSystem;
+    this.outputFileSystem = compiler.outputFileSystem;
+    this.entries = []; // 存放所有入口模块数组
+    this.modules = []; // 存放所有模块数组
+    this.hooks = {
+      successModule: new SyncHook(['module'])
+    }
+  }
+
+  // 完成具体的 build 行为
+  buildModule (module, callback) {
+    module.build(this, (err) => {
+      // module 编译完成
+      this.hooks.successModule.call(module);
+      callback(err);
+    });
+  }
+
+  _addModuleChain (context, entry, name, callback) {
+    let entryModule = normalModuleFactory.create({
+      name,
+      context,
+      rawRequest: entry,
+      resource: path.posix.join(context, entry), // 返回 entry 入口的绝对路径
+      parser
+    });
+
+    const afterBuild = function (err) {
+      callback(err, entryModule);
+    }
+
+    this.buildModule(entryModule, afterBuild);
+
+    // 完成本次 build 之后，将 Module 进行保存
+    this.entries.push(entryModule);
+    this.modules.push(entryModule);
+  } 
+
+  // 完成模块编译操作
+  addEntry (context, entry, name, callback) {
+    this._addModuleChain(context, entry, name, (err, module) => {
+      callback(err, module);
+    });
+  }
+}
+
+module.exports = Compilation;
+```
+
+lib/Compiler.js
+
+```js
+const {
+  Tapable,
+  AsyncSeriesHook,
+  SyncBailHook,
+  SyncHook,
+  AsyncParallelBailHook
+} = require('tapable');
+const Stats = require('./Stats');
+const NormalModuleFactory = require('./NormalModuleFactory');
+const Compilation = require('./Compilation');
+
+class Compiler extends Tapable {
+  constructor (context) {
+    super();
+    this.context = context;
+    this.hooks = {
+      done: new AsyncSeriesHook(['stats']),
+      entryOption: new SyncBailHook(['context', 'entry']),
+
+      beforeRun: new AsyncSeriesHook(["compiler"]),
+			run: new AsyncSeriesHook(["compiler"]),
+
+      thisCompilation: new SyncHook(["compilation", "params"]),
+      compilation: new SyncHook(["compilation", "params"]),
+
+      beforeCompile: new AsyncSeriesHook(['params']),
+      compile: new SyncHook(['params']),
+      make: new AsyncParallelBailHook(['compilation']),
+      afterCompile: new AsyncSeriesHook(['compilation'])
+    }
+  }
+
+  newCompilationParams () {
+    const params = {
+      normalModuleFactory: new NormalModuleFactory()
+    }
+    return params;
+  }
+
+  createCompilation () {
+    return new Compilation(this);
+  }
+
+  newCompilation (params) {
+    const compilation = this.createCompilation();
+    this.hooks.thisCompilation.call(compilation, params);
+    this.hooks.compilation.call(compilation, params);
+    return compilation;
+  }
+
+  compile (callback) {
+    const params = this.newCompilationParams();
+
+    this.hooks.beforeRun.callAsync(params, (err) => {
+      this.hooks.compile.call(params);
+
+      const compilation = this.newCompilation(params);
+
+      this.hooks.make.callAsync(compilation, (err) => {
+        callback(err, compilation);
+      });
+    });
+  }
+
+  run (callback) {
+    const finalCallback = function (err, status) {
+      callback(err, status);
+    }
+
+    const onCompiled = function (err, compilation) {
+      console.log('onCompiled');
+
+      finalCallback(err, new Stats(compilation));
+    }
+
+    this.hooks.beforeRun.callAsync(this, (err) => {
+      this.hooks.run.callAsync(this, (err) => {
+        this.compile(onCompiled);
+      });
+    });
+  }
+}
+
+module.exports = Compiler;
+```
+
+lib/NormalModule
+
+```js
+class NormalModule {
+  constructor (data) {
+    this.name = data.name;
+    this.entry = data.entry;
+    this.rawRequest = data.rawRequest;
+    this.parser = data.parser;
+    this.resource = data.resource;
+    this._source = undefined; // 模块源代码
+    this._ast = undefined; // 模块源代码对应的 AST
+  }
+
+  getSource (compilation, callback) {
+    compilation.inputFileSystem.readFile(this.resource, 'utf-8', callback);
+  }
+
+  doBuild (compilation, callback) {
+    this.getSource(compilation, (err, source) => {
+      this._source = source;
+      callback();
+    });
+  }
+
+  build (compilation, callback) {
+    // 从文件中读取需要被加载的 module 内容
+    // 如果当前不是 js 模块，则需要 loader 进行处理，最终也是返回 js 模块
+    // 上述操作完成之后，就可以将 js 代码转换为 ast 语法树
+    // 当且 js 模块内部可能又引用很多其他模块，需要递归处理
+    this.doBuild(compilation, (err) => {
+      this._ast = this.parser.parse(this._source);
+      callback(err);
+    });
+  }
+}
+
+module.exports = NormalModule;
+```
+
+lib/Parser.js
+
+```js
+const babylon = require('babylon');
+const { Tapable } = require('tapable');
+
+class Parser extends Tapable {
+  parse (source) {
+    return babylon.parse(source, {
+      sourceType: 'module',
+      plugins: ['dynamicImport'], // 支持 import 动态导入的语法
+    });
+  }
+}
+
+module.exports = Parser;
+```
+
+lib/Stats.js
+
+```js
+class Stats {
+  constructor (compilation) {
+    this.entries = compilation.entries;
+    this.modules = compilation.modules;
+  }
+
+  toJson () {
+    return this;
+  }
+}
+
+module.exports = Stats;
+```
+
+## 依赖模块处理
+
