@@ -7,6 +7,7 @@ class NormalModule {
   constructor (data) {
     this.name = data.name;
     this.context = data.context;
+    this.moduleId = data.moduleId;
     this.rawRequest = data.rawRequest;
     this.parser = data.parser;
     this.resource = data.resource;

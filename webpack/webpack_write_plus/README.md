@@ -6683,5 +6683,480 @@ module.exports = Compiler;
 
 ## 生成 chunk 代码
 
+```js
+yarn add ejs -D
+```
 
+
+
+lib/temp/main.ejs
+
+```js
+(function (modules) {
+  // 定义 webpackJsonpCallback：合并模块定义、改变 Promise 状态，执行后续行为
+  function webpackJsonpCallback (data) {
+    // 获取需要被加载的模块 ID
+    const chunkIds = data[0];
+    // 获取需要被动态加载的模块依赖关系对象
+    const moreModules = data[1];
+
+    let chunkId, resolves = [];
+
+    // 循环判断 chunkIds 里对应的模块内容是否已经完成加载
+    for (let i = 0; i < chunkIds.length; i++) {
+      chunkId = chunkIds[i];
+
+      if (Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+        resolves.push(installedChunks[chunkId][0]);
+      }
+
+      // 更新当前 chunk 状态
+      installedChunks[chunkId] = 0;
+    }
+
+    for (moduleId in moreModules) {
+      if (Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+        modules[moduleId] = moreModules[moduleId];
+      }
+    }
+
+    while (resolves.length) {
+      resolves.shift()();
+    }
+  }
+
+
+  // 缓存被加载的模块
+  const installedModules = {};
+
+  // 定义 installedChunks 对于用于标识某个 chunkId 对应 chunk 是否完成加载
+  // 0 已加载过、promises 正在加载、null/undefiend 未加载
+  var installedChunks = {
+    main: 0 
+  }
+
+  // 定义 __webpack_require__ 方法替换 require
+  function __webpack_require__ (moduleId) {
+    // 判断当前缓存中是否存在要被加载的模块内容，如果存在，直接返回
+    if (installedModules[moduleId]) {
+      return installedModules[moduleId].exports;
+    }
+
+    // 如果当前缓存中不存在，定义对象
+    const module = installedModules[moduleId] = {
+      i: moduleId,
+      l: false,
+      exports: {}
+    };
+
+    // 调用当前 moduleId 对应的函数，完成内容加载
+    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+    // 当上述方法调用完成之后，就可以修改 l 的值用于表示当前模块内容已加载完成
+    module.l = true;
+
+    // 加载完成之后，将模块内容返回至调用位置
+
+    return module.exports;
+  }
+
+  // 定义 m 属性保存 modules
+  __webpack_require__.m = modules;
+
+  // 定义 c 属性保存 cache
+  __webpack_require__.c = installedModules;
+
+  // 定义 o 方法用于对象身上是否存在指定属性
+  __webpack_require__.o = function (object, property) {
+    return Object.prototype.hasOwnProperty.call(object, property);
+  }
+
+  // 定义 d 方法用于在对象身上添加指定属性及 getter
+  __webpack_require__.d = function (exports, name, getter) {
+    if (!__webpack_require__.o(exports, name)) {
+      Object.defineProperty(exports, name, { enumerable: true, get: getter });
+    }
+  }
+
+  // 定义 r 方法用于标识当前模块是 ES6 类型
+  __webpack_require__.r = function (exports) {
+    if (typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+      Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+    }
+    Object.defineProperty(exports, '__esModule', { value: true })
+  }
+
+  // 定义 n 方法用于设置具体 getter
+  __webpack_require__.n = function (module) {
+    let getter = module && module.__esModule ? (
+      function getDefault () { return module['default'] }
+    ) : (
+      function getModuleExports () { return module }
+    );
+
+    __webpack_require__.d(getter, 'a', getter);
+
+    return getter;
+  }
+
+  // 定义 jsonpScriptSrc 实现 src 的处理
+  function jsonpScriptSrc (chunkId) {
+    return __webpack_require__.p + "" + chunkId + '.build.js';
+  }
+
+  // 定义 e 方法用于实现 jsonp 来加载内容，利用 promise 实现异步加载操作
+  __webpack_require__.e = function (chunkId) {
+    // 定义一个数组用于存放 promise
+    let promises = [];
+
+    // 获取 chunkId 对应的 chunk 是否已经完成加载
+    let installedChunkData = installedChunks[chunkId];
+
+    // 根据当前是否已完成加载的状态来执行后续逻辑
+    if (installedChunkData !== 0) {
+      if (installedChunkData) {
+        promises.push(installedChunkData[2]); 
+      } else {
+        const promise = new Promise((resolve, reject) => {
+          installedChunkData = installedChunks[chunkId] = [resolve, reject];
+        });
+        promises.push(installedChunkData[2] = promise);
+
+        // 创建标签
+        const script = document.createElement('script');
+
+        // 设置 src
+        script.src = jsonpScriptSrc(chunkId);
+
+        // 写入 scrpit 标签
+        document.head.appendChild(script);
+      }
+    }
+
+    // 执行 promise
+    return Promise.all(promises);
+  }
+
+  // 定义 t 方法用于加载指定 value 的模块内容，对内容进行处理并返回
+  __webpack_require__.t = function (value, mode) {
+    // 加载 value 对应的模块内容（value 通常是模块 ID）
+
+    if (mode & 1) {
+      value = __webpack_require__(value);
+    }
+
+    // commonjs
+    if (mode & 8) {
+      return value;
+    }
+
+    // esmodule
+    if ((mode & 4 && typeof value === 'object' && value && value.__esModule)) {
+      return value;
+    }
+
+    // 如果 8 和 4 都不成立，则需要自定义 ns，通过 default 属性返回内容
+    const ns = Object.create(null);
+
+    __webpack_require__.r(ns);
+
+    Object.defineProperty(ns, 'default', { enumerable: true, value });
+
+    if (mode & 2 && typeof value !== 'string') {
+      for (const k in value) {
+        __webpack_require__.d(ns, k, function (key) {
+          return value[key];
+        }.bind(null, k));
+      }
+    }
+
+    return ns;
+  }
+
+  // 定义 p 属性用于保存资源访问路径
+  __webpack_require__.p = "";
+
+  // 定义变量存放数组
+  const jsonpArray = window['webpackJsonp'] = window['webpackJsonp'] || [];
+
+  // 保存原生的 push 方法
+  const oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+
+  // 重写原生的 push 方法
+  jsonpArray.push = webpackJsonpCallback;
+
+  // 调用 __webpack_require__ 方法执行模块导入与加载操作
+  return __webpack_require__(__webpack_require__.s = '<%-entryModuleId%>');
+})
+({
+  <% for (let module of modules) { %>
+    "<%- module.moduleId %>":
+    (function(module, exports, __webpack_require__) {
+      <%- module._source %>      
+    }),
+  <% } %>
+});
+```
+
+lib/Compilation.js
+
+```js
+const path = require('path');
+const async = require('neo-async');
+const ejs = require('ejs');
+const { Tapable, SyncHook } = require('tapable');
+const Chunk = require('./Chunk');
+const NormalModuleFactory = require('./NormalModuleFactory');
+const Parser = require('./Parser');
+
+const normalModuleFactory = new NormalModuleFactory();
+const parser = new Parser();
+
+class Compilation extends Tapable {
+  constructor (compiler) {
+    super();
+    this.compiler = compiler;
+    this.context = compiler.context;
+    this.options = compiler.options;
+    this.inputFileSystem = compiler.inputFileSystem;
+    this.outputFileSystem = compiler.outputFileSystem;
+    this.entries = []; // 存放所有入口模块数组
+    this.modules = []; // 存放所有模块数组
+    this.chunks = []; // 存放打包过程中产出的 chunk
+    this.assets = [];
+    this.files = [];
+    this.hooks = {
+      successModule: new SyncHook(['module']),
+      seal: new SyncHook(),
+      beforeChunks: new SyncHook(),
+      afterChunks: new SyncHook()
+    }
+  }
+
+  // 完成具体的 build 行为
+  buildModule (module, callback) {
+    module.build(this, (err) => {
+      // module 编译完成
+      this.hooks.successModule.call(module);
+      callback(err, module);
+    });
+  }
+
+  processDependcies (module, callback) {
+    // 当前的函数的功能就是实现一个被依赖模块的递归加载
+    // 加载模块的思路都是创建一个模块，然后将加载到的模块内容拿进来
+    // 当前并不知道 module 需要依赖几个模块，此时需要想办法让所有被依赖的模块都加载完成之后再执行 callback（neo-async）
+    const dependencies = module.dependencies;
+
+    async.forEach(dependencies, (dependency, done) => {
+      this.createModule({
+        parser,
+        name: dependency.name,
+        context: dependency.context,
+        rawRequest: dependency.rawRequest,
+        moduleId: dependency.moduleId,
+        resource: dependency.resource
+      }, null, done);
+    }, callback);
+  }
+
+  _addModuleChain (context, entry, name, callback) {
+    this.createModule({
+      name,
+      context,
+      parser,
+      rawRequest: entry,
+      resource: path.posix.join(context, entry),
+      moduleId: './' + path.posix.relative(context, path.posix.join(context, entry))
+    }, (entryModule) => {
+      this.entries.push(entryModule);
+    }, callback);
+  }
+
+  /**
+   * @description 定义一个创建模块的方法，复用
+   * @param {*} data 创建模块时所需要的一些配置 
+   * @param {*} doAddEntry 可选参数，加载入口模块时，将入口模块的 id 写入 this.entries
+   * @param {*} callback 
+   */
+  createModule (data, doAddEntry, callback) {
+    let module = normalModuleFactory.create(data);
+
+    const afterBuild = (err, module) => {
+      // 我们需要判断当前 module 存在依赖 
+      if (module.dependencies.length > 0) {
+        // 当前逻辑表示存在需要依赖加载的模块，我们可以单独定义一个方法实现
+        this.processDependcies(module, (err) => {
+          callback(err, module);
+        });
+      } else {
+        callback(err, module);
+      }
+    }
+
+    this.buildModule(module, afterBuild);
+
+    // 完成本次 build 之后，将 Module 进行保存
+    doAddEntry && doAddEntry(module);
+    this.modules.push(module);
+  }
+
+  // 完成模块编译操作
+  addEntry (context, entry, name, callback) {
+    this._addModuleChain(context, entry, name, (err, module) => {
+      callback(err, module);
+    });
+  }
+
+  // 封装 chunk 
+  seal (callback) {
+    this.hooks.seal.call();
+    this.hooks.beforeChunks.call();
+
+    // 所有的入口模块都被存放在 compilation 对象的 entries 数组中
+    // 封装 chunk 指的就是根据某个入口，找到它的所有依赖，将它们的源代码放到一起，之后再进行合并
+
+    for (const entryModule of this.entries) {
+      // 创建模块，加载已有模块内容，同时记录模块信息
+      const chunk = new Chunk(entryModule);
+
+      // 保存 chunk 信息
+      this.chunks.push(chunk);
+
+      // 给 chunk 属性赋值
+      chunk.modules = this.modules.filter(module => module.name === chunk.name);
+    }
+
+    // chunk 代码处理环节（模板文件 + 模块内的源代码 => chunk.js）
+    this.hooks.afterChunks.call(this.chunks);
+
+    // 生成代码内容
+    this.createChunkAssets();
+
+    callback();
+  }
+
+  createChunkAssets () {
+    for (let i = 0; i < this.chunks.length; i++) {
+      const chunk = this.chunks[i];
+      const fileName = chunk.name + '.js';
+
+      chunk.files.push(fileName);
+
+      // 获取模板文件路径
+      const tempPath = path.posix.join(__dirname, 'temp/main.ejs');
+      // 读取模块文件中的内容
+      const tempCode = this.inputFileSystem.readFileSync(tempPath, 'utf8');
+      // 获取渲染函数
+      const tempRender = ejs.compile(tempCode);
+      // 使用 ejs 语法渲染数据
+      let source  = tempRender({
+        entryModuleId: chunk.entryModule.moduleId,
+        modules: chunk.modules
+      });
+      // 输出文件
+      this.emitAssets(fileName, source);
+    }
+  }
+
+  emitAssets (fileName, source) {
+    this.assets[fileName] = source;
+    this.files.push(fileName);
+  }
+}
+
+module.exports = Compilation;
+```
+
+lib/NormalModule.js
+
+```js
+const path = require('path');
+const types = require('@babel/types');
+const generator = require('@babel/generator').default;
+const traverse = require('@babel/traverse').default;
+
+class NormalModule {
+  constructor (data) {
+    this.name = data.name;
+    this.context = data.context;
+    this.moduleId = data.moduleId;
+    this.rawRequest = data.rawRequest;
+    this.parser = data.parser;
+    this.resource = data.resource;
+    this._source = undefined; // 模块源代码
+    this._ast = undefined; // 模块源代码对应的 AST
+    this.dependencies = []; // 定义空数组，用于保存被依赖加载的模块信息
+  }
+
+  getSource (compilation, callback) {
+    compilation.inputFileSystem.readFile(this.resource, 'utf-8', callback);
+  }
+
+  doBuild (compilation, callback) {
+    this.getSource(compilation, (err, source) => {
+      this._source = source;
+      callback();
+    });
+  }
+
+  build (compilation, callback) {
+    // 从文件中读取需要被加载的 module 内容
+    // 如果当前不是 js 模块，则需要 loader 进行处理，最终也是返回 js 模块
+    // 上述操作完成之后，就可以将 js 代码转换为 ast 语法树
+    // 当且 js 模块内部可能又引用很多其他模块，需要递归处理
+    this.doBuild(compilation, (err) => {
+      this._ast = this.parser.parse(this._source);
+
+      // _ast 就是当前 module 的语法树，我们可以对它进行修改，最后再将 ast 树转换为 code
+      // https://astexplorer.net
+      traverse(this._ast, {
+        CallExpression: (nodePath) => {
+          const node = nodePath.node;
+
+          // 定位 require 所在的节点
+          if (node.callee.name === 'require') {
+            // 获取原始请求路径
+            const modulePath = node.arguments[0].value; // './title'
+            // 获取当前被加载的模块名称
+            let moduleName = modulePath.split(path.posix.sep).pop(); // title
+            // 当前只处理 js，只考虑 js 文件处理
+            const extName = moduleName.indexOf('.') === -1 ? '.js' : '';
+            // 拼接路径
+            moduleName += extName; // title.js
+            // 拼接绝对路径
+            const depResource = path.posix.join(path.posix.dirname(this.resource), moduleName);
+            // 将当前模块的 ID 定义 ok
+            const depModuleId = './' + path.posix.relative(this.context, depResource); // ./src/title.js
+
+            // 保存当前被依赖模块的信息，方便后续递归加载
+            this.dependencies.push({
+              name: this.name, // TODO
+              context: this.context,
+              rawRequest: moduleName,
+              moduleId: depModuleId,
+              resource: depResource
+            });
+            
+            // 替换内容
+            node.callee.name = '__webpack_require__';
+            node.arguments = [types.stringLiteral(depModuleId)];
+          }
+        }
+      });
+
+      // 利用 ast 修改代码后，然后需要将修改后的 ast 树转会可执行 code
+      const { code } = generator(this._ast);
+
+      this._source = code;
+
+      callback(err);
+    });
+  }
+}
+
+module.exports = NormalModule;
+```
+
+## 生成打包文件
 

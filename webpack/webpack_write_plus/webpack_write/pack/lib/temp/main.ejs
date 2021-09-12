@@ -1,0 +1,204 @@
+(function (modules) {
+  // 定义 webpackJsonpCallback：合并模块定义、改变 Promise 状态，执行后续行为
+  function webpackJsonpCallback (data) {
+    // 获取需要被加载的模块 ID
+    const chunkIds = data[0];
+    // 获取需要被动态加载的模块依赖关系对象
+    const moreModules = data[1];
+
+    let chunkId, resolves = [];
+
+    // 循环判断 chunkIds 里对应的模块内容是否已经完成加载
+    for (let i = 0; i < chunkIds.length; i++) {
+      chunkId = chunkIds[i];
+
+      if (Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+        resolves.push(installedChunks[chunkId][0]);
+      }
+
+      // 更新当前 chunk 状态
+      installedChunks[chunkId] = 0;
+    }
+
+    for (moduleId in moreModules) {
+      if (Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+        modules[moduleId] = moreModules[moduleId];
+      }
+    }
+
+    while (resolves.length) {
+      resolves.shift()();
+    }
+  }
+
+
+  // 缓存被加载的模块
+  const installedModules = {};
+
+  // 定义 installedChunks 对于用于标识某个 chunkId 对应 chunk 是否完成加载
+  // 0 已加载过、promises 正在加载、null/undefiend 未加载
+  var installedChunks = {
+    main: 0 
+  }
+
+  // 定义 __webpack_require__ 方法替换 require
+  function __webpack_require__ (moduleId) {
+    // 判断当前缓存中是否存在要被加载的模块内容，如果存在，直接返回
+    if (installedModules[moduleId]) {
+      return installedModules[moduleId].exports;
+    }
+
+    // 如果当前缓存中不存在，定义对象
+    const module = installedModules[moduleId] = {
+      i: moduleId,
+      l: false,
+      exports: {}
+    };
+
+    // 调用当前 moduleId 对应的函数，完成内容加载
+    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+    // 当上述方法调用完成之后，就可以修改 l 的值用于表示当前模块内容已加载完成
+    module.l = true;
+
+    // 加载完成之后，将模块内容返回至调用位置
+
+    return module.exports;
+  }
+
+  // 定义 m 属性保存 modules
+  __webpack_require__.m = modules;
+
+  // 定义 c 属性保存 cache
+  __webpack_require__.c = installedModules;
+
+  // 定义 o 方法用于对象身上是否存在指定属性
+  __webpack_require__.o = function (object, property) {
+    return Object.prototype.hasOwnProperty.call(object, property);
+  }
+
+  // 定义 d 方法用于在对象身上添加指定属性及 getter
+  __webpack_require__.d = function (exports, name, getter) {
+    if (!__webpack_require__.o(exports, name)) {
+      Object.defineProperty(exports, name, { enumerable: true, get: getter });
+    }
+  }
+
+  // 定义 r 方法用于标识当前模块是 ES6 类型
+  __webpack_require__.r = function (exports) {
+    if (typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+      Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+    }
+    Object.defineProperty(exports, '__esModule', { value: true })
+  }
+
+  // 定义 n 方法用于设置具体 getter
+  __webpack_require__.n = function (module) {
+    let getter = module && module.__esModule ? (
+      function getDefault () { return module['default'] }
+    ) : (
+      function getModuleExports () { return module }
+    );
+
+    __webpack_require__.d(getter, 'a', getter);
+
+    return getter;
+  }
+
+  // 定义 jsonpScriptSrc 实现 src 的处理
+  function jsonpScriptSrc (chunkId) {
+    return __webpack_require__.p + "" + chunkId + '.build.js';
+  }
+
+  // 定义 e 方法用于实现 jsonp 来加载内容，利用 promise 实现异步加载操作
+  __webpack_require__.e = function (chunkId) {
+    // 定义一个数组用于存放 promise
+    let promises = [];
+
+    // 获取 chunkId 对应的 chunk 是否已经完成加载
+    let installedChunkData = installedChunks[chunkId];
+
+    // 根据当前是否已完成加载的状态来执行后续逻辑
+    if (installedChunkData !== 0) {
+      if (installedChunkData) {
+        promises.push(installedChunkData[2]); 
+      } else {
+        const promise = new Promise((resolve, reject) => {
+          installedChunkData = installedChunks[chunkId] = [resolve, reject];
+        });
+        promises.push(installedChunkData[2] = promise);
+
+        // 创建标签
+        const script = document.createElement('script');
+
+        // 设置 src
+        script.src = jsonpScriptSrc(chunkId);
+
+        // 写入 scrpit 标签
+        document.head.appendChild(script);
+      }
+    }
+
+    // 执行 promise
+    return Promise.all(promises);
+  }
+
+  // 定义 t 方法用于加载指定 value 的模块内容，对内容进行处理并返回
+  __webpack_require__.t = function (value, mode) {
+    // 加载 value 对应的模块内容（value 通常是模块 ID）
+
+    if (mode & 1) {
+      value = __webpack_require__(value);
+    }
+
+    // commonjs
+    if (mode & 8) {
+      return value;
+    }
+
+    // esmodule
+    if ((mode & 4 && typeof value === 'object' && value && value.__esModule)) {
+      return value;
+    }
+
+    // 如果 8 和 4 都不成立，则需要自定义 ns，通过 default 属性返回内容
+    const ns = Object.create(null);
+
+    __webpack_require__.r(ns);
+
+    Object.defineProperty(ns, 'default', { enumerable: true, value });
+
+    if (mode & 2 && typeof value !== 'string') {
+      for (const k in value) {
+        __webpack_require__.d(ns, k, function (key) {
+          return value[key];
+        }.bind(null, k));
+      }
+    }
+
+    return ns;
+  }
+
+  // 定义 p 属性用于保存资源访问路径
+  __webpack_require__.p = "";
+
+  // 定义变量存放数组
+  const jsonpArray = window['webpackJsonp'] = window['webpackJsonp'] || [];
+
+  // 保存原生的 push 方法
+  const oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+
+  // 重写原生的 push 方法
+  jsonpArray.push = webpackJsonpCallback;
+
+  // 调用 __webpack_require__ 方法执行模块导入与加载操作
+  return __webpack_require__(__webpack_require__.s = '<%-entryModuleId%>');
+})
+({
+  <% for (let module of modules) { %>
+    "<%- module.moduleId %>":
+    (function(module, exports, __webpack_require__) {
+      <%- module._source %>      
+    }),
+  <% } %>
+});

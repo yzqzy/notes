@@ -1,5 +1,6 @@
 const path = require('path');
 const async = require('neo-async');
+const ejs = require('ejs');
 const { Tapable, SyncHook } = require('tapable');
 const Chunk = require('./Chunk');
 const NormalModuleFactory = require('./NormalModuleFactory');
@@ -19,6 +20,8 @@ class Compilation extends Tapable {
     this.entries = []; // 存放所有入口模块数组
     this.modules = []; // 存放所有模块数组
     this.chunks = []; // 存放打包过程中产出的 chunk
+    this.assets = [];
+    this.files = [];
     this.hooks = {
       successModule: new SyncHook(['module']),
       seal: new SyncHook(),
@@ -121,7 +124,41 @@ class Compilation extends Tapable {
       chunk.modules = this.modules.filter(module => module.name === chunk.name);
     }
 
+    // chunk 代码处理环节（模板文件 + 模块内的源代码 => chunk.js）
+    this.hooks.afterChunks.call(this.chunks);
+
+    // 生成代码内容
+    this.createChunkAssets();
+
     callback();
+  }
+
+  createChunkAssets () {
+    for (let i = 0; i < this.chunks.length; i++) {
+      const chunk = this.chunks[i];
+      const fileName = chunk.name + '.js';
+
+      chunk.files.push(fileName);
+
+      // 获取模板文件路径
+      const tempPath = path.posix.join(__dirname, 'temp/main.ejs');
+      // 读取模块文件中的内容
+      const tempCode = this.inputFileSystem.readFileSync(tempPath, 'utf8');
+      // 获取渲染函数
+      const tempRender = ejs.compile(tempCode);
+      // 使用 ejs 语法渲染数据
+      let source  = tempRender({
+        entryModuleId: chunk.entryModule.moduleId,
+        modules: chunk.modules
+      });
+      // 输出文件
+      this.emitAssets(fileName, source);
+    }
+  }
+
+  emitAssets (fileName, source) {
+    this.assets[fileName] = source;
+    this.files.push(fileName);
   }
 }
 
