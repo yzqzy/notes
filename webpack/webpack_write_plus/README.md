@@ -5511,14 +5511,24 @@ module.exports = Compiler;
 * dep 是对当前入口模块的依赖关系进行处理
 
 * 调用 addEntry 方法。
+
 * 在 compilation 实例身上存在一个 addEntry 方法，然后内部调用 _addModuleChain 方法去处理依赖
+
 * 在 compilation 中可以通过 NormalModuleFactory 工厂来创建一个普通的模块对象
+
 * 在 webpack 内部默认开启了一个 100 并发量的打包操作，我们看到的是 normalModule.create()
+
 * 在 beforeResolve 内部会触发一个 factory 钩子监听（这部分操作用来处理 loader，不会重点分析）
+
 * 上述操作完成之后，获取到一个函数存在 factory 中，然后对它进行立即调用，在这个函数调用里又触发了一个 resolver 的钩子（处理 loader，拿到 resolver 方法之后意味着所有的 loader 处理完毕）
+
 * 调用 resolver() 方法之后，就会进入到 afterResolve 这个钩子里，然后就会触发 new NormalModule
 
+* 完成上述操作之后就将 module 进行保存和一些其他属性参加
 
+* 调用 buildModule 方法开始编译，内部调用 build 方法，内部返回并调用 doBuild 
+
+  
 
 lib/compilation.js
 
@@ -5674,5 +5684,92 @@ addEntry(context, entry, name, callback) {
 }
 ```
 
+## addEntry 实现
 
+lib/NormalModule.js
+
+ ```js
+ class NormalModule {
+   constructor (data) {
+     this.name = data.name;
+     this.entry = data.entry;
+     this.rawRequest = data.rawRequest;
+     this.parser = data.parser;
+     this.resource = data.resource;
+     this._source = undefined; // 模块源代码
+     this._ast = undefined; // 模块源代码对应的 AST
+   }
+ }
+ 
+ module.exports = NormalModule;
+ ```
+
+lib/NormalModuleFactory.js
+
+```js
+const NormalModule = require('./NormalModule');
+
+class NormalModuleFactory {
+  create (data) {
+    return new NormalModule(data);
+  }
+}
+
+module.exports = NormalModuleFactory;
+```
+
+lib/Compilation
+
+```js
+const path = require('path');
+const { Tapable, SyncHook } = require('tapable');
+const NormalModuleFactory = require('./NormalModuleFactory');
+
+const normalModuleFactory = new NormalModuleFactory();
+
+class Compilation extends Tapable {
+  constructor (compiler) {
+    super();
+    this.compiler = compiler;
+    this.context = compiler.context;
+    this.options = compiler.options;
+    this.inputFileSystem = compiler.inputFileSystem;
+    this.outputFileSystem = compiler.outputFileSystem;
+    this.entries = []; // 存放所有入口模块数组
+    this.modules = []; // 存放所有模块数组
+    this.hooks = [
+      successModule: new SyncHook(['module'])
+    ]
+  }
+
+  _addModuleChain (context, entry, name) {
+    let entryModule = normalModuleFactory.create({
+      name,
+      context,
+      rawRequest: entry,
+      resource: path.posix.join(context, entry), // 返回 entry 入口的绝对路径
+      // parser
+    });
+
+    const afterBuild = function (err) {
+      callback(err, entryModule);
+    }
+
+    this.buildModule(entryModule, afterBuild);
+
+    // 完成本次 build 之后，将 Module 进行保存
+    this.entries.push(entryModule);
+    this.modules.push(entryModule);
+  } 
+
+  // 完成模块编译操作
+  addEntry (context, entry, name, callback) {
+    this._addModuleChain(context, entry, name, (err, module) => {
+      callback(err, module);
+    });
+  }
+}
+
+module.exports = Compilation;
+```
 
