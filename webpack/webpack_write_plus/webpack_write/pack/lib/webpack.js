@@ -18,7 +18,7 @@ const webpack = function (options) {
   }
 
   // 挂载所有的 webpack 内置插件
-  compiler.options = new WebpackOptionApply().process(options, compiler);
+  new WebpackOptionApply().process(options, compiler);
 
   // 返回 compiler 对象
   return compiler;
