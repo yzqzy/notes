@@ -142,7 +142,7 @@ Virtual DOM 对象的更新和比较发生在内存中，不会在视图中渲�
 
 react 代码执行前，JSX 会被 Babel 转换为 React.createElement 方法的调用，在调用 createElement 方法时会传入元素的类型，元素的属性及元素的子元素，createElement 方法的返回值为构建好的 Virtual DOM 对象。
 
-
+### babelrc
 
 告诉 babel 将 jsx 转换为 TinyReact.creatElement，而不是 React.createElement
 
@@ -160,7 +160,7 @@ react 代码执行前，JSX 会被 Babel 转换为 React.createElement 方法的
 }
 ```
 
-测试用例
+### 测试用例
 
 ```js
 import TinyReact from './TinyReact';
@@ -183,7 +183,9 @@ const VirtualDOM = (
 console.log(VirtualDOM);
 ```
 
-代码实现：TinyReact/createElement.js
+### 代码实现
+
+src/TinyReact/createElement.js
 
 ```js
 export default function createElement (type, props, ...children) {
@@ -206,5 +208,16 @@ export default function createElement (type, props, ...children) {
 }
 ```
 
+src/TinyReact/index.js
+
+```js
+import createElement from "./CreateElement";
+
+export default {
+  createElement
+}
+```
+
 ## Virtual 对象转换为真实 DOM
 
+  
