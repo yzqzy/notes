@@ -378,3 +378,89 @@ export default function updateNodeElement (newElement, virtualDOM) {
 }
 ```
 
+## 组件渲染：区分函数组件和类组件
+
+组件的 Virtual DOM 类型值为函数，函数组件和类组件都是如此。
+
+```js
+// 函数组件
+const Heart = () => <span>&hearts;</span>
+```
+
+```js
+// 类组件
+<Heart />
+```
+
+```js
+// 组件的 virtual DOM
+{
+  type: f function() {},
+  props: {},
+  children: []
+}
+```
+
+普通的虚拟 DOM type 属性是字符串类型，组件的 type 时一个函数。
+
+
+
+代码实现：
+
+src/TinyReact/isFunction.js
+
+```js
+export default function isFunction (virtualDOM) {
+  return virtualDOM && typeof virtualDOM.type === 'function';
+}
+```
+
+src/TinyReact/isFunctionComponent.js
+
+```js
+import isFunction from "./isFunction";
+
+export default function isFunctionComponent (virtualDOM) {
+  const type = virtualDOM.type;
+  return (
+    type && isFunction(virtualDOM) && !(type.prototype && type.prototype.render)
+  );
+}
+```
+
+src/TinyReact/mountComponent.js
+
+```js
+import isFunctionComponent from "./isFunctionComponent";
+
+export default function mountComponent (virtualDOM, container) {
+  if (isFunctionComponent(virtualDOM)) {
+    // 函数组件
+    console.log('函数组件');
+  } else {
+    // 类组件
+    console.log('类组件');
+  }
+}
+```
+
+src/TinyReact/mountElement.js
+
+```js
+import isFunction from "./isFunction";
+import mountComponent from "./mountComponent";
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountElement (virtualDOM, container) {
+  if (isFunction(virtualDOM)) {
+    // Component
+    mountComponent(virtualDOM, container);
+  } else {
+    // NativeElement
+    mountNativeElement(virtualDOM, container);
+  }
+}
+```
+
+## 组件渲染：函数组件处理
+
