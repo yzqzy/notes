@@ -153,7 +153,7 @@ react 代码执行前，JSX 会被 Babel 转换为 React.createElement 方法的
     [
       "@babel/preset-react",
       {
-        "pragma": "TinyReact.creatElement"
+        "pragma": "TinyReact.createElement"
       }
     ]
   ]
@@ -163,28 +163,48 @@ react 代码执行前，JSX 会被 Babel 转换为 React.createElement 方法的
 测试用例
 
 ```js
-{
-  type: 'div',
-  props: null,
-  children: [
-   {
-      type: 'p',
-      props: null,
-      children: [
-        {
-          type: 'text',
-          props: {
-            textContent: 'Hello'
-          }
-        }
-      ]
+import TinyReact from './TinyReact';
+
+const VirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h3>观察，将要改变值</h3>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段内容</span>
+    <button>点击</button>
+  </div>
+)
+
+console.log(VirtualDOM);
+```
+
+代码实现：TinyReact/createElement.js
+
+```js
+export default function createElement (type, props, ...children) {
+  const childElements = [].concat(...children).reduce((result, child) => {
+    if (child !== false && child !== true && child !== null) {
+      if (child instanceof Object) {
+        result.push(child);
+      } else {
+        result.push(createElement("text", { textContent: child }));
+      }
     }
-  ]
+    return result;
+  }, []);
+
+  return {
+    type,
+    props: Object.assign({ children: childElements }, props),
+    children: childElements
+  }
 }
 ```
 
-代码实现
-
-```js
-```
+## Virtual 对象转换为真实 DOM
 
