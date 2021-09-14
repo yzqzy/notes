@@ -80,4 +80,111 @@ React.createElement(
 
 react 可以精准找到发生变化的 DOM 对象，只更新发生变化的部分。
 
-react 第一次创建 DOM 对象后，会为每个 DOM 对象创建其对应的 Virtual DOM 对象，在 DOM 对象发生更新之前，React 会先更新所有的 Virtual DOM 对象，然后会将更新后的 Virtual DOM 
+react 第一次创建 DOM 对象后，会为每个 DOM 对象创建其对应的 Virtual DOM 对象，在 DOM 对象发生更新之前，react 会先更新所有的 Virtual DOM 对象，然后会将更新后的 Virtual DOM 和更新前的 Virtual DOM 进行比较，从而找出发生变化的部分，react 会将发生变化的部分更新到真实 DOM 对象中，仅更新需要更新的部分。
+
+Virtual DOM 对象的更新和比较发生在内存中，不会在视图中渲染任何内容，所以这一部分的性能损耗成本是微不足道的。
+
+```html
+<div className="container">
+  <p>Hello React</p>
+</div>
+```
+
+```html
+<div className="container">
+  <p>Hello Vue</p>
+</div>
+```
+
+```jsx
+{
+  type: 'div',
+  props: { className: 'container' },
+  children: [
+    {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: 'text',
+          props: {
+            textContent: 'Hello React'
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+```jsx
+{
+  type: 'div',
+  props: { className: 'container' },
+  children: [
+    {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: 'text',
+          props: {
+            textContent: 'Hello Vue'
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 创建 Virtual DOM 对象
+
+react 代码执行前，JSX 会被 Babel 转换为 React.createElement 方法的调用，在调用 createElement 方法时会传入元素的类型，元素的属性及元素的子元素，createElement 方法的返回值为构建好的 Virtual DOM 对象。
+
+
+
+告诉 babel 将 jsx 转换为 TinyReact.creatElement，而不是 React.createElement
+
+```js
+{
+  "presets": [
+    "@babel/preset-env",
+    [
+      "@babel/preset-react",
+      {
+        "pragma": "TinyReact.creatElement"
+      }
+    ]
+  ]
+}
+```
+
+测试用例
+
+```js
+{
+  type: 'div',
+  props: null,
+  children: [
+   {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: 'text',
+          props: {
+            textContent: 'Hello'
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+代码实现
+
+```js
+```
+
