@@ -11,7 +11,7 @@ const VirtualDOM = (
     { 2 == 1 && <div>2 == 1</div> }
     { 2 == 2 && <div>2 == 2</div> }
     <span>这是一段内容</span>
-    <button>点击</button>
+    <button onClick={() => alert('你好')}>点击</button>
   </div>
 )
 

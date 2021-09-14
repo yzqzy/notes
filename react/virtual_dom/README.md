@@ -220,4 +220,161 @@ export default {
 
 ## Virtual 对象转换为真实 DOM
 
-  
+  ### 测试用例
+
+```js
+import TinyReact from './TinyReact';
+
+const VirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h3>观察，将要改变值</h3>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段内容</span>
+    <button onClick={() => alert('你好')}>点击</button>
+  </div>
+)
+
+TinyReact.render(
+  VirtualDOM,
+  document.getElementById('root')
+)
+
+console.log(VirtualDOM);
+```
+
+### 代码实现
+
+src/TinyReact/createDOMElement.js
+
+```js
+import mountElement from "./mountElement";
+
+export default function createDOMElement (virtualDOM) {
+  let newElement = null;
+
+  if (virtualDOM.type === 'text') {
+    // 文本节点
+    newElement = document.createTextNode(virtualDOM.props.textContent);
+  } else {
+    // 元素节点
+    newElement = document.createElement(virtualDOM.type);
+  }
+
+  // 递归创建子节点
+  virtualDOM.children.forEach(child => mountElement(child, newElement));
+
+  return newElement;
+}
+```
+
+src/TinyReact/mountNativeElement.js
+
+```js
+import createDOMElement from "./createDOMElement";
+
+export default function mountNativeElement (virtualDOM, container) {
+  const newElement = createDOMElement(virtualDOM);
+
+  // 将转化之后的 DOM 对象放置在页面中
+  container.appendChild(newElement);
+}
+```
+
+src/TinyReact/mountElement.js
+
+```js
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountElement (virtualDOM, container) {
+  // Component VS NativeElement
+  mountNativeElement(virtualDOM, container);
+}
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    mountElement(virtualDOM, container);
+  }
+}
+```
+
+src/TinyReact/render.js
+
+```js
+import diff from './diff';
+
+export default function render (virtualDOM, container, oldDOM) {
+  diff(virtualDOM, container, oldDOM);
+}
+```
+
+## 为 DOM 对象添加属性
+
+src/TinyReact/createDOMElement.js
+
+```js
+import mountElement from "./mountElement";
+import updateNodeElement from "./updateNodeElement";
+
+export default function createDOMElement (virtualDOM) {
+  let newElement = null;
+
+  if (virtualDOM.type === 'text') {
+    // 文本节点
+    newElement = document.createTextNode(virtualDOM.props.textContent);
+  } else {
+    // 元素节点
+    newElement = document.createElement(virtualDOM.type);
+    // 更新元素属性
+    updateNodeElement(newElement, virtualDOM);
+  }
+
+  // 递归创建子节点
+  virtualDOM.children.forEach(child => mountElement(child, newElement));
+
+  return newElement;
+}
+```
+
+src/TinyReact/updateNodeElement.js
+
+```js
+export default function updateNodeElement (newElement, virtualDOM) {
+  // 获取节点对应的属性对象
+  const newProps = virtualDOM.props;
+
+  Object.keys(newProps).forEach(propName => {
+    // 获取属性值
+    const newPropsValue = newProps[propName];
+
+    // 判断属性是否事件属性 onClick
+    if (propName.slice(0, 2) === 'on') {
+      // 事件名称
+      const eventName = propName.toLowerCase().slice(2);
+      // 为元素添加事件
+      newElement.addEventListener(eventName, newPropsValue);
+    } else if (propName === 'value' || propName === 'checked') {
+      newElement[propName] = newPropsValue;
+    } else if (propName !== 'children') {
+      if (propName === 'classname') {
+        newElement.setAttribute('class', newPropsValue);
+      } else {
+        newElement.setAttribute(propName, newPropsValue);
+      }
+    }
+  });
+}
+```
+
