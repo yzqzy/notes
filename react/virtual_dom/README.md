@@ -631,11 +631,148 @@ function buildClassComponent (virtualDOM) {
 
 ## DOM 元素更新 
 
+DOM 元素更新前需要进行 Virtual DOM 对比，从而得到需要更新的 DOM 节点。
+
+进行 Virtual DOM 对比时，需要用到更新后的 Vritual DOM 和更新前的 Virtual DOM。更新后的 Virtual DOM 我们可以通过 render 方法进行传递；对于更新前的 Virtual DOM，其实就是已经在页面中显示的真实 DOM 对象。
+
+我们在创建真实 DOM 对象时，就可以将 Virtual DOM 添加到真实 DOM 对象的属性中，在进行 Virtual DOM 对比之前，就可以通过真实 DOM 对象获取到其对应的 Virtual DOM 对象，其实就是通过 render 方法的第三个参数进行获取，container.firstChild。
+
+
+
+src/TinyReact/createDOMElement.js
+
+```js
+import mountElement from "./mountElement";
+import updateNodeElement from "./updateNodeElement";
+
+export default function createDOMElement (virtualDOM) {
+  let newElement = null;
+
+  if (virtualDOM.type === 'text') {
+    // 文本节点
+    newElement = document.createTextNode(virtualDOM.props.textContent);
+  } else {
+    // 元素节点
+    newElement = document.createElement(virtualDOM.type);
+    // 更新元素属性
+    updateNodeElement(newElement, virtualDOM);
+  }
+
+  newElement._virtualDOM = virtualDOM;
+
+  // 递归创建子节点
+  virtualDOM.children.forEach(child => mountElement(child, newElement));
+
+  return newElement;
+}
+```
+
+src/TinyReact/render.js
+
+```js
+import diff from './diff';
+
+export default function render (
+  virtualDOM,
+  container,
+  oldDOM = container.firstChild
+) {
+  diff(virtualDOM, container, oldDOM);
+}
+```
+
 ### 节点类型相同
 
+测试用例
 
+```js
+const VirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h3>观察，将要改变值</h3>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段内容</span>
+    <button onClick={() => alert('你好')}>点击</button>
+  </div>
+)
+
+const ModifyVirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test-modity">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h3>值被改变了</h3>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段被修改过的内容</span>
+    <button onClick={() => alert('你好，Modity。')}>点击</button>
+  </div>
+)
+
+TinyReact.render(
+  VirtualDOM,
+  document.getElementById('root')
+)
+
+setTimeout(() => {
+  TinyReact.render(
+    ModifyVirtualDOM,
+    document.getElementById('root')
+  )
+}, 2 * 1000);
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+import updateTextNode from './updateTextNode';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM;
+
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    // oldDOM 不存在，首次渲染
+    mountElement(virtualDOM, container);
+  } else if (oldVirtualDOM && oldVirtualDOM.type === oldVirtualDOM.type) {
+    // 节点类型相同
+
+    if (virtualDOM.type === 'text') {
+      // 文本节点，更新内容
+      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
+    } else {
+      // 元素节点，更新属性
+
+    }
+
+    // 递归判断
+    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+  }
+}
+```
+
+src/TinyReact/updateTextNode.js
+
+```js
+export default function updateTextNode (virtualDOM, oldVirtualDOM, oldDOM) {
+  if (virtualDOM.props.textContent !== oldVirtualDOM.props.textContent) {
+    oldDOM.textContent = virtualDOM.props.textContent;
+    oldDOM._virtualDOM = virtualDOM;
+  }
+}
+```
 
 ### 节点类型不同
+
+
 
 ### 删除节点
 
