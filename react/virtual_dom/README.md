@@ -539,3 +539,103 @@ function buildFunctionComponent (virtualDOM) {
 
 ## 组件渲染：类组件
 
+### 测试用例
+
+```jsx
+class Alert extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+  }
+
+  render () {
+    return (
+      <div>
+        <p>Hello React.</p>
+        <p>
+          { this.props.name }
+          { this.props.age }
+        </p>
+      </div>
+    )
+  }
+}
+
+TinyReact.render(
+  <Alert name="月落" age="23" />,
+  document.getElementById('root')
+);
+```
+
+### 代码实现
+
+src/TinyReact/Component.js
+
+```js
+export default class Component {
+  constructor (props) {
+    this.props = props;
+  }
+}
+```
+
+src/TinyReact/index.js
+
+```js
+import createElement from "./CreateElement";
+import render from './render';
+import Component from "./Component";
+
+export default {
+  createElement,
+  render,
+  Component
+}
+```
+
+src/TinyReact/mountComponent.js
+
+```js
+import isFunction from "./isFunction";
+import isFunctionComponent from "./isFunctionComponent";
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountComponent (virtualDOM, container) {
+  let nextVirtualDOM = null;
+
+  if (isFunctionComponent(virtualDOM)) {
+    // 函数组件
+    nextVirtualDOM = buildFunctionComponent(virtualDOM);
+  } else {
+    // 类组件
+    nextVirtualDOM = buildClassComponent(virtualDOM);
+  }
+
+  if (isFunction(nextVirtualDOM)) {
+    // 函数组件
+    mountComponent(nextVirtualDOM, container);
+  } else {
+    // 挂载组件
+    mountNativeElement(nextVirtualDOM, container);
+  }
+}
+
+function buildFunctionComponent (virtualDOM) {
+  return virtualDOM.type(virtualDOM.props || {});
+}
+
+function buildClassComponent (virtualDOM) {
+  const component = new virtualDOM.type(virtualDOM.props || {});
+  return component.render();
+}
+```
+
+## DOM 元素更新 
+
+### 节点类型相同
+
+
+
+### 节点类型不同
+
+### 删除节点
+
