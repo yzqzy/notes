@@ -1032,3 +1032,138 @@ export default function diff (virtualDOM, container, oldDOM) {
 }
 ```
 
+### 类组件更新
+
+测试用例
+
+```js
+
+class Alert extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+
+    this.state = {
+      title: 'Default Titie'
+    }
+    this.handeClick = this.handeClick.bind(this);
+  }
+
+  handeClick () {
+    this.setState({
+      title: 'Change Title'
+    });
+  }
+
+  render () {
+    return (
+      <div>
+        <p>Hello React.</p>
+        <p>
+          { this.props.name }
+          { this.props.age }
+        </p>
+        <p>{ this.state.title }</p>
+        <button onClick={this.handeClick}>Change Title</button>
+      </div>
+    )
+  }
+}
+
+TinyReact.render(
+  <Alert name="月落" age="23" />,
+  document.getElementById('root')
+);
+```
+
+src/TinyReact/mountComponent.js
+
+```js
+import isFunction from "./isFunction";
+import isFunctionComponent from "./isFunctionComponent";
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountComponent (virtualDOM, container) {
+  let nextVirtualDOM = null;
+
+  if (isFunctionComponent(virtualDOM)) {
+    // 函数组件
+    nextVirtualDOM = buildFunctionComponent(virtualDOM);
+  } else {
+    // 类组件
+    nextVirtualDOM = buildClassComponent(virtualDOM);
+  }
+
+  if (isFunction(nextVirtualDOM)) {
+    // 函数组件
+    mountComponent(nextVirtualDOM, container);
+  } else {
+    // 挂载组件
+    mountNativeElement(nextVirtualDOM, container);
+  }
+}
+
+function buildFunctionComponent (virtualDOM) {
+  return virtualDOM.type(virtualDOM.props || {});
+}
+
+function buildClassComponent (virtualDOM) {
+  const component = new virtualDOM.type(virtualDOM.props || {});
+  const nextVirtualDOM = component.render();
+  nextVirtualDOM.component = component;
+  return nextVirtualDOM;
+}
+```
+
+src/TinyReact/mountNativeElement.js
+
+```js
+import createDOMElement from "./createDOMElement";
+
+export default function mountNativeElement (virtualDOM, container) {
+  const newElement = createDOMElement(virtualDOM);
+
+  // 将转化之后的 DOM 对象放置在页面中
+  container.appendChild(newElement);
+
+  const component = virtualDOM.component
+
+  if (component) {
+    component.setDOM(newElement);
+  }
+}
+```
+
+src/TinyReact/Component.js
+
+```js
+import diff from "./diff";
+
+export default class Component {
+  constructor (props) {
+    this.props = props;
+  }
+
+  setState (state) {
+    this.state = Object.assign({}, this.state, state);
+    // 获取最新的需要渲染的 virtual DOM 对象
+    const virtualDOM = this.render();
+    // 获取旧的 virtual DOM 对象进行比对
+    const oldDOM = this.getDOM();
+    // 获取 container
+    const container = oldDOM.parentNode;
+    // 实现对比
+    diff(virtualDOM, container, oldDOM);
+  }
+
+  setDOM (dom) {
+    this._dom = dom;
+  }
+
+  getDOM () {
+    return this._dom;
+  }
+}
+```
+
+### 组件更新：非同组件情况
+
