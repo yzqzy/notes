@@ -1,4 +1,5 @@
 import mountElement from './mountElement';
+import updateNodeElement from './updateNodeElement';
 import updateTextNode from './updateTextNode';
 
 export default function diff (virtualDOM, container, oldDOM) {
@@ -16,7 +17,7 @@ export default function diff (virtualDOM, container, oldDOM) {
       updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
     } else {
       // 元素节点，更新属性
-
+      updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
     }
 
     // 递归判断
