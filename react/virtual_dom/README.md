@@ -629,7 +629,7 @@ function buildClassComponent (virtualDOM) {
 }
 ```
 
-## DOM 元素更新 
+## Virtual DOM 对比
 
 DOM 元素更新前需要进行 Virtual DOM 对比，从而得到需要更新的 DOM 节点。
 
@@ -729,36 +729,6 @@ setTimeout(() => {
 }, 2 * 1000);
 ```
 
-src/TinyReact/diff.js
-
-```js
-import mountElement from './mountElement';
-import updateTextNode from './updateTextNode';
-
-export default function diff (virtualDOM, container, oldDOM) {
-  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM;
-
-  // 判断 oldDOM 是否存在
-  if (!oldDOM) {
-    // oldDOM 不存在，首次渲染
-    mountElement(virtualDOM, container);
-  } else if (oldVirtualDOM && oldVirtualDOM.type === oldVirtualDOM.type) {
-    // 节点类型相同
-
-    if (virtualDOM.type === 'text') {
-      // 文本节点，更新内容
-      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
-    } else {
-      // 元素节点，更新属性
-
-    }
-
-    // 递归判断
-    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
-  }
-}
-```
-
 src/TinyReact/updateTextNode.js
 
 ```js
@@ -769,8 +739,6 @@ export default function updateTextNode (virtualDOM, oldVirtualDOM, oldDOM) {
   }
 }
 ```
-
-### 节点类型不同
 
 src/TinyReact/diff.js
 
@@ -859,5 +827,208 @@ export default function updateNodeElement (newElement, virtualDOM, oldVirtualDOM
 }
 ```
 
+
+
+Virtual DOM 比对的时候是同级比对，父元素与父元素对比，子元素和子元素对比，不会发生跨级比对。
+
+如果两个节点类型相同，需要根据节点类型进行不同处理。
+
+如果是文本节点，就比较文本内容是否相同。如果相同，不做处理；不相同，使用新的文本节点替换旧的文本节点。
+
+如果是元素节点，就比较元素节点的属性值。如果相同，不做处理；不相同，使用新节点属性值替换旧节点属性值。
+
+再查看新节点是否存在被删除的属性。使用旧节点属性的名称去新节点中取值，如果取不到，说明属性已经被删除。
+
+Virtual DOM 比对时使用的是深度优先策略。
+
+### 节点类型不同
+
+测试用例
+
+```js
+const VirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h3>观察，将要改变值</h3>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段内容</span>
+    <button onClick={() => alert('你好')}>点击</button>
+  </div>
+)
+
+const ModifyVirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test-modity">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h6>值被改变了</h6>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段被修改过的内容</span>
+    <button onClick={() => alert('你好，Modity。')}>点击</button>
+  </div>
+)
+
+TinyReact.render(
+  VirtualDOM,
+  document.getElementById('root')
+)
+
+setTimeout(() => {
+  TinyReact.render(
+    ModifyVirtualDOM,
+    document.getElementById('root')
+  )
+}, 2 * 1000);
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+import updateNodeElement from './updateNodeElement';
+import updateTextNode from './updateTextNode';
+import createDOMElement from './createDOMElement';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
+
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    // oldDOM 不存在，首次渲染
+    mountElement(virtualDOM, container);
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM !== 'function') {
+    // 节点类型不同
+    const newElement = createDOMElement(virtualDOM);    
+    // 替换老节点
+    oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
+    // 节点类型相同
+
+    if (virtualDOM.type === 'text') {
+      // 文本节点，更新内容
+      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
+    } else {
+      // 元素节点，更新属性
+      updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
+    }
+
+    // 递归判断
+    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+  }
+}
+```
+
 ### 删除节点
+
+删除节点发生在节点更新之后，并且发生在同一个父节点的所有子节点身上。
+
+在节点更新完成之后，如果旧节点对象的数量多于新的 VirtualDOM 节点的数量，就说明有节点需要被删除。
+
+测试用例
+
+```js
+const VirtualDOM = (
+  <div className="container">
+    <h1>Hello React</h1>
+    <h2 data-test="test">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h3>观察，将要改变值</h3>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段内容</span>
+    <button onClick={() => alert('你好')}>点击</button>
+  </div>
+)
+
+const ModifyVirtualDOM = (
+  <div className="container">
+    <h2 data-test="test-modity">test</h2>
+    <div>
+      嵌套 <div>嵌套 1.1</div>
+    </div>
+    <h6>值被改变了</h6>
+    { 2 == 1 && <div>2 == 1</div> }
+    { 2 == 2 && <div>2 == 2</div> }
+    <span>这是一段被修改过的内容</span>
+  </div>
+)
+
+TinyReact.render(
+  VirtualDOM,
+  document.getElementById('root')
+)
+
+setTimeout(() => {
+  TinyReact.render(
+    ModifyVirtualDOM,
+    document.getElementById('root')
+  )
+}, 2 * 1000);
+```
+
+src/TinyReact/unmountNode.js
+
+```js
+export default function unmountNode (node) {
+  node.remove();
+}
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+import updateNodeElement from './updateNodeElement';
+import updateTextNode from './updateTextNode';
+import createDOMElement from './createDOMElement';
+import unmountNode from './unmountNode';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
+
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    // oldDOM 不存在，首次渲染
+    mountElement(virtualDOM, container);
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM !== 'function') {
+    // 节点类型不同
+    const newElement = createDOMElement(virtualDOM);    
+    // 替换老节点
+    oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
+    // 节点类型相同
+
+    if (virtualDOM.type === 'text') {
+      // 文本节点，更新内容
+      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
+    } else {
+      // 元素节点，更新属性
+      updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
+    }
+
+    // 递归判断，对比子节点
+    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+
+    // 获取旧节点
+    let oldChildNodes = oldDOM.childNodes;
+    // 判断旧节点数量
+    if (oldChildNodes.length > virtualDOM.children.length) {
+      // 存在节点需要被删除
+      for (let i = oldChildNodes.length - 1; i > virtualDOM.children.length - 1; i--) {
+        unmountNode(oldChildNodes[i]);
+      }
+    }
+  }
+}
+```
 

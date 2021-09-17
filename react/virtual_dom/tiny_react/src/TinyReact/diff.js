@@ -1,15 +1,22 @@
 import mountElement from './mountElement';
 import updateNodeElement from './updateNodeElement';
 import updateTextNode from './updateTextNode';
+import createDOMElement from './createDOMElement';
+import unmountNode from './unmountNode';
 
 export default function diff (virtualDOM, container, oldDOM) {
-  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM;
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
 
   // 判断 oldDOM 是否存在
   if (!oldDOM) {
     // oldDOM 不存在，首次渲染
     mountElement(virtualDOM, container);
-  } else if (oldVirtualDOM && oldVirtualDOM.type === oldVirtualDOM.type) {
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM !== 'function') {
+    // 节点类型不同
+    const newElement = createDOMElement(virtualDOM);    
+    // 替换老节点
+    oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
     // 节点类型相同
 
     if (virtualDOM.type === 'text') {
@@ -20,7 +27,17 @@ export default function diff (virtualDOM, container, oldDOM) {
       updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
     }
 
-    // 递归判断
+    // 递归判断，对比子节点
     virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+
+    // 获取旧节点
+    let oldChildNodes = oldDOM.childNodes;
+    // 判断旧节点数量
+    if (oldChildNodes.length > virtualDOM.children.length) {
+      // 存在节点需要被删除
+      for (let i = oldChildNodes.length - 1; i > virtualDOM.children.length - 1; i--) {
+        unmountNode(oldChildNodes[i]);
+      }
+    }
   }
 }
