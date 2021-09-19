@@ -32,11 +32,53 @@ export default function diff (virtualDOM, container, oldDOM) {
       updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
     }
 
-    // 递归判断，对比子节点
-    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+
+    // 1. 将拥有 key 属性的子元素放置在一个单独的对象中
+    const keyedElements = {};
+
+    for (let i = 0, len = oldDOM.childNodes.length; i < len; i++) {
+      const domElement = oldDOM.childNodes[i];
+      
+      // 元素节点
+      if (domElement.nodeType === 1) {
+        const key = domElement.getAttribute('key');
+
+        if (key) {
+          keyedElements[key] = domElement;
+        }
+      }
+    }
+
+    let hasNoKey = Object.keys(keyedElements).length === 0;
+
+    if (hasNoKey) {
+      // 递归判断，对比子节点
+      virtualDOM.children.forEach((child, index) => {
+        diff(child, oldDOM, oldDOM.childNodes[index])
+      });
+    } else {
+      // 2. 循环 virtualDOM 的子元素，获取子元素的 key 属性
+      virtualDOM.children.forEach((child, idx) => {
+        const key = child.props.key;
+
+        if (key) {
+          const domElement = keyedElements[key];
+
+          if (domElement) {
+            // 3. 判断当前位置元素是不是期望元素
+            if (oldDOM.childNodes[idx] && oldDOM.childNodes[idx] !== domElement) {
+              oldDOM.insertBefore(domElement, oldDOM.childNodes[idx]);
+            }
+          } else {
+            // 新增元素
+            mountElement(child, oldDOM, oldDOM.childNodes[idx]);
+          }
+        }
+      });
+    }
 
     // 获取旧节点
-    let oldChildNodes = oldDOM.childNodes;
+    const oldChildNodes = oldDOM.childNodes;
     // 判断旧节点数量
     if (oldChildNodes.length > virtualDOM.children.length) {
       // 存在节点需要被删除

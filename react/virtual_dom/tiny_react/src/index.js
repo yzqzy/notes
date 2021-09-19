@@ -263,45 +263,120 @@ import TinyReact from './TinyReact';
 
 
 
-class Title extends TinyReact.Component {
+// class Title extends TinyReact.Component {
+//   constructor (props) {
+//     super(props);
+//   }
+
+//   render () {
+//     return (
+//       <div>{ this.props.title }</div>
+//     );
+//   }
+// }
+
+// class DemoRef extends TinyReact.Component {
+//   constructor (props) {
+//     super(props);
+//     this.handleClick = this.handleClick.bind(this);
+//   }
+
+//   handleClick () {
+//     console.log(this.input.value);
+//     console.log(this.alert);
+//   }
+
+//   componentDidMount () {
+//     console.log('componentDidMount');
+//   }
+
+//   render () {
+//     return (
+//       <div>
+//         <input type="text" ref={ input => this.input = input} />
+//         <button onClick={ this.handleClick }>按钮</button>
+//         <Title
+//           title="title"
+//           ref={ alert => this.alert = alert }
+//         />
+//       </div>
+//     )
+//   }
+// }
+
+// TinyReact.render(<DemoRef />, document.getElementById('root'));
+
+
+
+
+class KeyDemo extends TinyReact.Component {
   constructor (props) {
     super(props);
-  }
-
-  render () {
-    return (
-      <div>{ this.props.title }</div>
-    );
-  }
-}
-
-class DemoRef extends TinyReact.Component {
-  constructor (props) {
-    super(props);
+    
+    this.state = {
+      persons: [
+        {
+          id: 1,
+          name: '张三'
+        },
+        {
+          id: 2,
+          name: '李四'
+        },
+        {
+          id: 3,
+          name: '王五'
+        },
+        {
+          id: 4,
+          name: '赵六'
+        },
+      ]
+    }
     this.handleClick = this.handleClick.bind(this);
   }
 
   handleClick () {
-    console.log(this.input.value);
-    console.log(this.alert);
-  }
-
-  componentDidMount () {
-    console.log('componentDidMount');
+    this.setState({
+      persons: [
+        {
+          id: 1,
+          name: '张三'
+        },
+        {
+          id: 5,
+          name: '李逵'
+        },
+        {
+          id: 2,
+          name: '李四'
+        },
+        {
+          id: 3,
+          name: '王五'
+        },
+        {
+          id: 4,
+          name: '赵六'
+        },
+      ]
+    })
   }
 
   render () {
     return (
       <div>
-        <input type="text" ref={ input => this.input = input} />
-        <button onClick={ this.handleClick }>按钮</button>
-        <Title
-          title="title"
-          ref={ alert => this.alert = alert }
-        />
+        <ul>
+          {
+            this.state.persons.map(person => (
+              <li key={ person.id }>{ person.name }</li>
+            ))
+          }
+        </ul>
+        <button onClick={ this.handleClick }>改变</button>
       </div>
     )
   }
 }
 
-TinyReact.render(<DemoRef />, document.getElementById('root'));
+TinyReact.render(<KeyDemo />, document.getElementById('root'));
