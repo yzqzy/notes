@@ -46,8 +46,8 @@
 * react
   + [react基础](https://git.yueluo.club/heora/notes/src/master/react/react_base) 暂停中...
   + [react-hooks](https://git.yueluo.club/heora/notes/src/master/react/react_hooks) 已完成
-  + [react组件库](https://git.yueluo.club/heora/notes/src/master/react/react_components) 已废弃
-  + [VirtualDOM及DIFF算法](https://git.yueluo.club/heora/notes/src/master/react/virtual_dom) 更新中
+  + [VirtualDOM及DIFF算法](https://git.yueluo.club/heora/notes/src/master/react/virtual_dom) 已完成
+  + [Fiber](https://git.yueluo.club/heora/notes/src/master/react/Fiber) 更新中...
   + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 暂停中...
 * [TypeScipt](https://git.yueluo.club/heora/notes/src/master/typescript) 已完成
 * NodeJS
