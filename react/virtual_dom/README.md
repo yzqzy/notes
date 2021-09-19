@@ -2082,7 +2082,7 @@ export default function diff (virtualDOM, container, oldDOM) {
 }
 ```
 
-### 节点删除 (一)
+### 节点删除 (二)
 
 删除节点并不是将节点直接删除就可以，还需要考虑以下几种情况：
 
