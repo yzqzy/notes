@@ -1681,7 +1681,7 @@ key 属性不需要全局唯一，但是在同一个父节点的兄弟节点之�
 
 在对比同一个父节点下类型相同的子节点时需要用到 key 属性。
 
-### 属性节点对比
+### 节点对比
 
 实现思路是在两个元素进行比对时，如果类型相同，就循环旧的 DOM 对象的子元素，查看其身上是否有 key 属性，如果有将这个子元素的 DOM 对象存储在一个 JavaScript 对象中，接着循环要渲染的 Virtual DOM 对象的子元素，在循环过程中获取到这个子元素的 key 属性，然后使用这个 key 属性到 JavaScript 对象中查找 DOM 对象，如果能够找到就说明这个元素是已经存在的，是不需要重新渲染的。如果通过 key 属性找不到这个元素，就说明这个元素是新增的需要渲染的。
 
@@ -1888,5 +1888,207 @@ export default function mountNativeElement (virtualDOM, container, oldDOM) {
 }
 ```
 
-### 删除节点
+### 节点删除 (一)
+
+对比节点的过程中，如果旧节点的数量对于要渲染的新节点的数量就说明有节点被删除了，继续判断这个 keyedElements 对象中是否有元素，如果没有就使用索引方式删除，如果有就要使用 key 属性比对的方式进行删除。
+
+循环旧节点，在循环旧节点的过程中获取旧节点对应的 key 属性，然后根据 key 属性在新节点中查找这个旧节点，如果找到就说明这个节点没有被删除，如果没有找到，就说明节点被删除了，调用卸载节点的方法卸载节点即可。
+
+
+
+测试用例
+
+```js
+
+class KeyDemo extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+    
+    this.state = {
+      persons: [
+        {
+          id: 1,
+          name: '张三'
+        },
+        {
+          id: 2,
+          name: '李四'
+        },
+        {
+          id: 3,
+          name: '王五'
+        },
+        {
+          id: 4,
+          name: '赵六'
+        },
+      ]
+    }
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick () {
+    this.setState({
+      persons: [
+        {
+          id: 1,
+          name: '张三'
+        },
+        {
+          id: 2,
+          name: '李四'
+        },
+        {
+          id: 3,
+          name: '王五'
+        }
+      ]
+    })
+  }
+
+  render () {
+    return (
+      <div>
+        <ul>
+          {
+            this.state.persons.map(person => (
+              <li key={ person.id }>{ person.name }</li>
+            ))
+          }
+        </ul>
+        <button onClick={ this.handleClick }>改变</button>
+      </div>
+    )
+  }
+}
+
+TinyReact.render(<KeyDemo />, document.getElementById('root'));
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+import updateNodeElement from './updateNodeElement';
+import updateTextNode from './updateTextNode';
+import createDOMElement from './createDOMElement';
+import unmountNode from './unmountNode';
+import diffComponent from './diffComponent';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
+  const oldComponent = oldVirtualDOM.component;
+
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    // oldDOM 不存在，首次渲染
+    mountElement(virtualDOM, container);
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM.type !== 'function') {
+    // 节点类型不同
+    const newElement = createDOMElement(virtualDOM);    
+    // 替换老节点
+    oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (typeof virtualDOM.type === 'function') {
+    // 组件
+    diffComponent(virtualDOM, oldComponent, oldDOM, container);
+  } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
+    // 节点类型相同
+
+    if (virtualDOM.type === 'text') {
+      // 文本节点，更新内容
+      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
+    } else {
+      // 元素节点，更新属性
+      updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
+    }
+
+
+    // 1. 将拥有 key 属性的子元素放置在一个单独的对象中
+    const keyedElements = {};
+
+    for (let i = 0, len = oldDOM.childNodes.length; i < len; i++) {
+      const domElement = oldDOM.childNodes[i];
+      
+      // 元素节点
+      if (domElement.nodeType === 1) {
+        const key = domElement.getAttribute('key');
+
+        if (key) {
+          keyedElements[key] = domElement;
+        }
+      }
+    }
+
+    let hasNoKey = Object.keys(keyedElements).length === 0;
+
+    if (hasNoKey) {
+      // 递归判断，对比子节点
+      virtualDOM.children.forEach((child, index) => {
+        diff(child, oldDOM, oldDOM.childNodes[index])
+      });
+    } else {
+      // 2. 循环 virtualDOM 的子元素，获取子元素的 key 属性
+      virtualDOM.children.forEach((child, idx) => {
+        const key = child.props.key;
+
+        if (key) {
+          const domElement = keyedElements[key];
+
+          if (domElement) {
+            // 3. 判断当前位置元素是不是期望元素
+            if (oldDOM.childNodes[idx] && oldDOM.childNodes[idx] !== domElement) {
+              oldDOM.insertBefore(domElement, oldDOM.childNodes[idx]);
+            }
+          } else {
+            // 新增元素
+            mountElement(child, oldDOM, oldDOM.childNodes[idx]);
+          }
+        }
+      });
+    }
+
+    // 获取旧节点
+    const oldChildNodes = oldDOM.childNodes;
+
+    // 判断旧节点数量
+    if (oldChildNodes.length > virtualDOM.children.length) {
+      if (hasNoKey) {
+        // 存在节点需要被删除
+        for (let i = oldChildNodes.length - 1; i > virtualDOM.children.length - 1; i--) {
+          unmountNode(oldChildNodes[i]);
+        }
+      } else {
+        // 通过 key 属性删除节点
+        for (let i = 0; i < oldChildNodes.length; i++) {
+          const oldChild = oldChildNodes[i];
+          const oldChildKey = oldChild._virtualDOM.props.key;
+
+          let found = false;
+
+          for (let n = 0; n < virtualDOM.children.length; n++) {
+            if (oldChildKey === virtualDOM.children[n].props.key) {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            unmountNode(oldChild);
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### 节点删除 (一)
+
+删除节点并不是将节点直接删除就可以，还需要考虑以下几种情况：
+
+* 如果要删除的节点是文本节点可以直接删除；
+* 如果要删除的节点由组件生成，需要调用组件卸载生命周期函数；
+* 如果要删除的节点中包含了其他组件生成的节点，需要调用其他组件的卸载生命周期函数；
+* 如果要删除的节点身上有 ref 属性，还需要删除通过 ref 属性传递给组件的 DOM 节点对象；
+* 如果要删除的节点身上存在事件，需要删除事件对应的事件处理函数。
 
