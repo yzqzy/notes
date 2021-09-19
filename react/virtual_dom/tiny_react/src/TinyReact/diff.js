@@ -3,19 +3,24 @@ import updateNodeElement from './updateNodeElement';
 import updateTextNode from './updateTextNode';
 import createDOMElement from './createDOMElement';
 import unmountNode from './unmountNode';
+import diffComponent from './diffComponent';
 
 export default function diff (virtualDOM, container, oldDOM) {
   const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
+  const oldComponent = oldVirtualDOM.component;
 
   // 判断 oldDOM 是否存在
   if (!oldDOM) {
     // oldDOM 不存在，首次渲染
     mountElement(virtualDOM, container);
-  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM !== 'function') {
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM.type !== 'function') {
     // 节点类型不同
     const newElement = createDOMElement(virtualDOM);    
     // 替换老节点
     oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (typeof virtualDOM.type === 'function') {
+    // 组件
+    diffComponent(virtualDOM, oldComponent, oldDOM, container);
   } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
     // 节点类型相同
 

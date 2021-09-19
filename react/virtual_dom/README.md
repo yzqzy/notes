@@ -1032,7 +1032,7 @@ export default function diff (virtualDOM, container, oldDOM) {
 }
 ```
 
-### 类组件更新
+### 类组件状态更新
 
 测试用例
 
@@ -1165,5 +1165,373 @@ export default class Component {
 }
 ```
 
-### 组件更新：非同组件情况
+### 组件更新
+
+在 diff 方法中判断要更新的 Virtual DOM 是否是组件。
+
+如果是组件再判断要更新的组件和未更新前的组件是否是同一个组件，如果不是同一个组件就不需要做组件更新操作，直接调用 mountElement 方法将返回的 Virtual DOM 添加到页面中。
+
+如果是同一个组件，就执行更新操作，其实就是将最新的 props 传递到组件中，再调用组件的 render 方法获取组件返回的最新 Virtual DOM 对象，再将 Virtual DOM 对象传递给 diff 方法，让 diff 方法找出差异，从而将差异更新到真实 DOM 对象中。
+
+在更新组件的过程中还要在不同阶段调用其不同的组件生命周期函数。
+
+
+
+测试用例
+
+```js
+class Alert extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+
+    this.state = {
+      title: 'Default Titie'
+    }
+    this.handeClick = this.handeClick.bind(this);
+  }
+
+  handeClick () {
+    this.setState({
+      title: 'Change Title'
+    });
+  }
+
+  componentWillReceiveProps (nextProps) {
+    console.log('componentWillReceiveProps', nextProps);
+  }
+
+  componentWillUpdate () {
+    console.log('componentWillUpdate');
+  }
+
+  componentDidUpdate () {
+    console.log('componentDidUpdate');
+  }
+
+  render () {
+    return (
+      <div>
+        <p>Hello React.</p>
+        <p>
+          { this.props.name }
+          { this.props.age }
+        </p>
+        <p>{ this.state.title }</p>
+        <button onClick={this.handeClick}>Change Title</button>
+      </div>
+    )
+  }
+}
+
+class Title extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+  }
+
+  render () {
+    return (
+      <div>{ this.props.title }</div>
+    );
+  }
+}
+
+TinyReact.render(
+  <Alert name="月落" age="23" />,
+  document.getElementById('root')
+);
+
+setTimeout(() => {
+  TinyReact.render(
+    <Alert name="月落" age="23" />,
+    // <Title title="我是标题" />,
+    document.getElementById('root')
+  );
+}, 2000);
+```
+
+src/TinyReact/Component.js
+
+```js
+import diff from "./diff";
+
+export default class Component {
+  constructor (props) {
+    this.props = props;
+  }
+
+  setState (state) {
+    this.state = Object.assign({}, this.state, state);
+    // 获取最新的需要渲染的 virtual DOM 对象
+    const virtualDOM = this.render();
+    // 获取旧的 virtual DOM 对象进行比对
+    const oldDOM = this.getDOM();
+    // 获取 container
+    const container = oldDOM.parentNode;
+    // 实现对比
+    diff(virtualDOM, container, oldDOM);
+  }
+
+  setDOM (dom) {
+    this._dom = dom;
+  }
+
+  getDOM () {
+    return this._dom;
+  }
+
+  updateProps (props) {
+    this.props = props;
+  }
+
+  // 生命周期函数
+  componentWillMount () { }
+  componentDidMount () { }
+  componentWillReceiveProps (nextProps) {}
+  shouldComponentUpdate (nextProps, nextState) {
+    return nextProps != this.props || nextState != this.state;
+  }
+  componentWillUpdate (nextProps, nextState) { }
+  componentDidUpdate (prevPros, prevState) {}
+  componentWillUnmount () {}
+}
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+import updateNodeElement from './updateNodeElement';
+import updateTextNode from './updateTextNode';
+import createDOMElement from './createDOMElement';
+import unmountNode from './unmountNode';
+import diffComponent from './diffComponent';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
+  const oldComponent = oldVirtualDOM.component;
+
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    // oldDOM 不存在，首次渲染
+    mountElement(virtualDOM, container);
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM.type !== 'function') {
+    // 节点类型不同
+    const newElement = createDOMElement(virtualDOM);    
+    // 替换老节点
+    oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (typeof virtualDOM.type === 'function') {
+    // 组件
+    diffComponent(virtualDOM, oldComponent, oldDOM, container);
+  } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
+    // 节点类型相同
+
+    if (virtualDOM.type === 'text') {
+      // 文本节点，更新内容
+      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
+    } else {
+      // 元素节点，更新属性
+      updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
+    }
+
+    // 递归判断，对比子节点
+    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+
+    // 获取旧节点
+    let oldChildNodes = oldDOM.childNodes;
+    // 判断旧节点数量
+    if (oldChildNodes.length > virtualDOM.children.length) {
+      // 存在节点需要被删除
+      for (let i = oldChildNodes.length - 1; i > virtualDOM.children.length - 1; i--) {
+        unmountNode(oldChildNodes[i]);
+      }
+    }
+  }
+}
+```
+
+src/TinyReact/diff.js
+
+```js
+import mountElement from './mountElement';
+import updateNodeElement from './updateNodeElement';
+import updateTextNode from './updateTextNode';
+import createDOMElement from './createDOMElement';
+import unmountNode from './unmountNode';
+import diffComponent from './diffComponent';
+
+export default function diff (virtualDOM, container, oldDOM) {
+  const oldVirtualDOM = oldDOM && oldDOM._virtualDOM || {};
+  const oldComponent = oldVirtualDOM.component;
+
+  // 判断 oldDOM 是否存在
+  if (!oldDOM) {
+    // oldDOM 不存在，首次渲染
+    mountElement(virtualDOM, container);
+  } else if (virtualDOM.type !== oldVirtualDOM.type && typeof virtualDOM.type !== 'function') {
+    // 节点类型不同
+    const newElement = createDOMElement(virtualDOM);    
+    // 替换老节点
+    oldDOM.parentNode.replaceChild(newElement, oldDOM);
+  } else if (typeof virtualDOM.type === 'function') {
+    // 组件
+    diffComponent(virtualDOM, oldComponent, oldDOM, container);
+  } else if (oldVirtualDOM.type === oldVirtualDOM.type) {
+    // 节点类型相同
+
+    if (virtualDOM.type === 'text') {
+      // 文本节点，更新内容
+      updateTextNode(virtualDOM, oldVirtualDOM, oldDOM);
+    } else {
+      // 元素节点，更新属性
+      updateNodeElement(oldDOM, virtualDOM, oldVirtualDOM);
+    }
+
+    // 递归判断，对比子节点
+    virtualDOM.children.forEach((child, index) => diff(child, oldDOM, oldDOM.childNodes[index]))
+
+    // 获取旧节点
+    let oldChildNodes = oldDOM.childNodes;
+    // 判断旧节点数量
+    if (oldChildNodes.length > virtualDOM.children.length) {
+      // 存在节点需要被删除
+      for (let i = oldChildNodes.length - 1; i > virtualDOM.children.length - 1; i--) {
+        unmountNode(oldChildNodes[i]);
+      }
+    }
+  }
+}
+```
+
+src/TinyReact/diffComponent.js
+
+```js
+import mouneElement from './mountElement';
+import updateComponent from './updateComponent';
+
+export default function diffComponent (virtualDOM, oldComponent, oldDOM, container) {
+  if (isSameComponent(virtualDOM, oldComponent)) {
+    // 同组件，组件更新
+    updateComponent(virtualDOM, oldComponent, oldDOM, container);
+  } else {
+    // 非同组件
+    mouneElement(virtualDOM, container, oldDOM);
+  }
+}
+
+// 判断是否是同一个组件
+function isSameComponent (virtualDOM, oldComponent) {
+  return oldComponent && virtualDOM.type === oldComponent.constructor;
+}
+```
+
+src/TinyReact/mountComponent.js
+
+```js
+import isFunction from "./isFunction";
+import isFunctionComponent from "./isFunctionComponent";
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountComponent (virtualDOM, container, oldDOM) {
+  let nextVirtualDOM = null;
+
+  if (isFunctionComponent(virtualDOM)) {
+    // 函数组件
+    nextVirtualDOM = buildFunctionComponent(virtualDOM);
+  } else {
+    // 类组件
+    nextVirtualDOM = buildClassComponent(virtualDOM);
+  }
+
+  if (isFunction(nextVirtualDOM)) {
+    // 函数组件
+    mountComponent(nextVirtualDOM, container, oldDOM);
+  } else {
+    // 挂载组件
+    mountNativeElement(nextVirtualDOM, container, oldDOM);
+  }
+}
+
+function buildFunctionComponent (virtualDOM) {
+  return virtualDOM.type(virtualDOM.props || {});
+}
+
+function buildClassComponent (virtualDOM) {
+  const component = new virtualDOM.type(virtualDOM.props || {});
+  const nextVirtualDOM = component.render();
+  nextVirtualDOM.component = component;
+  return nextVirtualDOM;
+}
+```
+
+src/TinyReact/mountElement.js
+
+```js
+import isFunction from "./isFunction";
+import mountComponent from "./mountComponent";
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountElement (virtualDOM, container, oldDOM) {
+  if (isFunction(virtualDOM)) {
+    // Component
+    mountComponent(virtualDOM, container, oldDOM);
+  } else {
+    // NativeElement
+    mountNativeElement(virtualDOM, container, oldDOM);
+  }
+}
+```
+
+src/TinyReact/mountNativeElement.js
+
+```js
+import createDOMElement from "./createDOMElement";
+import unmountNode from './unmountNode';
+
+export default function mountNativeElement (virtualDOM, container, oldDOM) {
+  const newElement = createDOMElement(virtualDOM);
+
+  // 如果存在旧的 DOM 对象，进行删除
+  if (oldDOM) {
+    unmountNode(oldDOM);
+  }
+
+  // 将转化之后的 DOM 对象放置在页面中
+  container.appendChild(newElement);
+
+  const component = virtualDOM.component
+
+  if (component) {
+    component.setDOM(newElement);
+  }
+}
+```
+
+src/TinyReact/updateComponent.js
+
+```js
+import diff from "./diff";
+
+// 组件更新
+export default function updateComponent (virtualDOM, oldComponent, oldDOM, container) {
+  oldComponent.componentWillReceiveProps(virtualDOM.props);
+
+  if (oldComponent.shouldComponentUpdate(virtualDOM.props)) {
+    const prevProps = oldComponent.props; // 未更新前 props
+
+    oldComponent.componentWillUpdate(virtualDOM.props);
+
+    // 组件属性更新
+    oldComponent.updateProps(virtualDOM.props);
+  
+    // 获取组件返回的最新的 virtual DOM
+    const nextVirtualDOM  = oldComponent.render();
+    // 更新 component 组件实例对象
+    nextVirtualDOM.component = oldComponent;
+    
+    diff(nextVirtualDOM, container, oldDOM);
+
+    oldComponent.componentDidUpdate(prevProps);
+  }
+}
+```
 

@@ -153,6 +153,45 @@ import TinyReact from './TinyReact';
 
 
 
+// class Alert extends TinyReact.Component {
+//   constructor (props) {
+//     super(props);
+
+//     this.state = {
+//       title: 'Default Titie'
+//     }
+//     this.handeClick = this.handeClick.bind(this);
+//   }
+
+//   handeClick () {
+//     this.setState({
+//       title: 'Change Title'
+//     });
+//   }
+
+//   render () {
+//     return (
+//       <div>
+//         <p>Hello React.</p>
+//         <p>
+//           { this.props.name }
+//           { this.props.age }
+//         </p>
+//         <p>{ this.state.title }</p>
+//         <button onClick={this.handeClick}>Change Title</button>
+//       </div>
+//     )
+//   }
+// }
+
+// TinyReact.render(
+//   <Alert name="月落" age="23" />,
+//   document.getElementById('root')
+// );
+
+
+
+
 class Alert extends TinyReact.Component {
   constructor (props) {
     super(props);
@@ -167,6 +206,18 @@ class Alert extends TinyReact.Component {
     this.setState({
       title: 'Change Title'
     });
+  }
+
+  componentWillReceiveProps (nextProps) {
+    console.log('componentWillReceiveProps', nextProps);
+  }
+
+  componentWillUpdate () {
+    console.log('componentWillUpdate');
+  }
+
+  componentDidUpdate () {
+    console.log('componentDidUpdate');
   }
 
   render () {
@@ -184,7 +235,27 @@ class Alert extends TinyReact.Component {
   }
 }
 
+class Title extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+  }
+
+  render () {
+    return (
+      <div>{ this.props.title }</div>
+    );
+  }
+}
+
 TinyReact.render(
   <Alert name="月落" age="23" />,
   document.getElementById('root')
 );
+
+setTimeout(() => {
+  TinyReact.render(
+    <Alert name="月落" age="23" />,
+    // <Title title="我是标题" />,
+    document.getElementById('root')
+  );
+}, 2000);
