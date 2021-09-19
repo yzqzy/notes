@@ -1535,3 +1535,148 @@ export default function updateComponent (virtualDOM, oldComponent, oldDOM, conta
 }
 ```
 
+## Ref 属性获取元素
+
+DOM 元素 ref 的实现思路是在创建节点时判断其 Virtual DOM 对象中是否有 ref 属性，如果有就调用 ref 属性中所存储的方法并且将创建出来的 DOM 对象作为参数传递给 Ref 方法，这样在渲染组件节点的时候就可以拿到元素对象并将元素对象存储为组件属性了。
+
+类组件的实现思路是在 mountComponent 方法中，如果判断当前处理的是类组件，就通过类组件返回的 Virtual DOM 对象中获取组件实例对象，判断组件实例对象中的 props 属性中是否存在 ref 属性，如果存在就调用 ref 方法并且将组件实例对象传递给 ref 方法。
+
+### 测试用例
+
+```js
+class Title extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+  }
+
+  render () {
+    return (
+      <div>{ this.props.title }</div>
+    );
+  }
+}
+
+class DemoRef extends TinyReact.Component {
+  constructor (props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick () {
+    console.log(this.input.value);
+    console.log(this.alert);
+  }
+
+  componentDidMount () {
+    console.log('componentDidMount');
+  }
+
+  render () {
+    return (
+      <div>
+        <input type="text" ref={ input => this.input = input} />
+        <button onClick={ this.handleClick }>按钮</button>
+        <Title
+          title="title"
+          ref={ alert => this.alert = alert }
+        />
+      </div>
+    )
+  }
+}
+
+TinyReact.render(<DemoRef />, document.getElementById('root'));
+```
+
+### 代码实现
+
+src/TinyReact/createDOMElement.js
+
+```js
+import mountElement from "./mountElement";
+import updateNodeElement from "./updateNodeElement";
+
+export default function createDOMElement (virtualDOM) {
+  let newElement = null;
+
+  if (virtualDOM.type === 'text') {
+    // 文本节点
+    newElement = document.createTextNode(virtualDOM.props.textContent);
+  } else {
+    // 元素节点
+    newElement = document.createElement(virtualDOM.type);
+    // 更新元素属性
+    updateNodeElement(newElement, virtualDOM);
+  }
+
+  newElement._virtualDOM = virtualDOM;
+
+  // 递归创建子节点
+  virtualDOM.children.forEach(child => mountElement(child, newElement));
+
+  // 处理 ref 属性
+  if (virtualDOM.props && virtualDOM.props.ref) {
+    virtualDOM.props.ref(newElement);
+  }
+
+  return newElement;
+}
+```
+
+src/TinyReact/mountComponent.js
+
+```js
+import isFunction from "./isFunction";
+import isFunctionComponent from "./isFunctionComponent";
+import mountNativeElement from "./mountNativeElement";
+
+export default function mountComponent (virtualDOM, container, oldDOM) {
+  let nextVirtualDOM = null;
+  let component = null;
+
+  if (isFunctionComponent(virtualDOM)) {
+    // 函数组件
+    nextVirtualDOM = buildFunctionComponent(virtualDOM);
+  } else {
+    // 类组件
+    nextVirtualDOM = buildClassComponent(virtualDOM);
+    component = nextVirtualDOM.component;
+  }
+
+  if (isFunction(nextVirtualDOM)) {
+    // 函数组件
+    mountComponent(nextVirtualDOM, container, oldDOM);
+  } else {
+    // 挂载组件
+    mountNativeElement(nextVirtualDOM, container, oldDOM);
+  }
+
+  if (component) {
+    component.componentDidMount();
+
+    // props 属性处理
+    if (component.props && component.props.ref) {
+      component.props.ref(component);
+    }
+  }
+}
+
+function buildFunctionComponent (virtualDOM) {
+  return virtualDOM.type(virtualDOM.props || {});
+}
+
+function buildClassComponent (virtualDOM) {
+  const component = new virtualDOM.type(virtualDOM.props || {});
+  const nextVirtualDOM = component.render();
+  nextVirtualDOM.component = component;
+  return nextVirtualDOM;
+}
+```
+
+## key 属性
+
+### key 属性节点对比
+
+
+
+### 删除节点
