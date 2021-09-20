@@ -128,3 +128,99 @@ package.json
 
 ### 客户端打包配置
 
+src/index.js
+
+```js
+console.log('index');
+```
+
+server.js
+
+```js
+import express from "express";
+
+const app = express();
+
+app.use(express.static('dist'));
+
+const template = `
+  <html>
+    <head>
+      <title>React Fiber</title>
+    </head>
+    <body>
+      <div id="root"></div>
+      <script src="build.js"></script>
+    </body>
+  </html>
+`
+
+app.get("*", (req, res) => {
+  res.send(template);
+});
+
+app.listen(4000, () => console.log('server is running.'));
+```
+
+webpack.config.client.js
+
+```js
+const path = require('path');
+
+module.exports = {
+  target: 'web',
+  mode: 'development',
+  entry: './src/index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'build.js'
+  },
+  devtool: 'source-map',
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader'
+        }
+      }
+    ]
+  }
+}
+```
+
+package.json
+
+```js
+{
+  "name": "fiber",
+  "version": "1.0.0",
+  "description": "",
+  "main": "babel.config.js",
+  "scripts": {
+    "dev:client-compile": "webpack --config webpack.config.client.js --watch",
+    "dev:server-compile": "webpack --config webpack.config.server.js --watch",
+    "dev:server": "nodemon ./build/server.js",
+    "start": "npm-run-all --parallel dev:*"
+
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/preset-react": "^7.14.5",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.2.2",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.12",
+    "npm-run-all": "^4.1.5",
+    "webpack": "^5.53.0",
+    "webpack-cli": "^4.8.0",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
+```
+

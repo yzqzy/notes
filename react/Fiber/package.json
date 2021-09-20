@@ -4,9 +4,11 @@
   "description": "",
   "main": "babel.config.js",
   "scripts": {
-    "dev:serve-compile": "webpack --config webpack.config.server.js --watch",
-    "dev:serve": "nodemon ./build/server.js",
+    "dev:client-compile": "webpack --config webpack.config.client.js --watch",
+    "dev:server-compile": "webpack --config webpack.config.server.js --watch",
+    "dev:server": "nodemon ./build/server.js",
     "start": "npm-run-all --parallel dev:*"
+
   },
   "keywords": [],
   "author": "",
