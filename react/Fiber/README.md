@@ -366,7 +366,68 @@ DOM 更新操作：newFiber vs oldFiber -> Fiber[] -> DOM
 
 ## 创建任务队列并添加任务
 
+react/misc/createTaskQueue/index.js
 
+```js
+export default function createTaskQueue () {
+  const taskQueue = [];
 
+  return {
+    push: item => taskQueue.push(item),
+    pop: () => taskQueue.shift(),
+  };
+}
+```
 
+react/misc/index.js
+
+```js
+export { default as createTaskQueue }  from './createTaskQueue'; 
+```
+
+react/reconciliation/index.js
+
+```js
+import { createTaskQueue } from "../misc"
+
+const taskQueue = createTaskQueue();
+
+export const render = (element, dom) => {
+  // 1. 向任务队列中添加任务
+  taskQueue.push({
+    dom,
+    props: { children: element }
+  });
+  
+
+  // 2. 指定在浏览器空闲时执行任务
+}
+```
+
+react/index.js
+
+```js
+import createElement from "./createElement";
+export { render } from './reconciliation';
+
+export default {
+  createElement
+}
+```
+
+index.js
+
+```js
+import React, { render } from './react';
+
+const jsx = (
+  <div>
+    <p>Hello React</p>
+  </div>
+);
+
+render(jsx, document.getElementById('root'));
+```
+
+## 实现任务的调度逻辑
 
