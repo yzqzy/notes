@@ -1,4 +1,4 @@
-import { createTaskQueue } from "../misc"
+import { createTaskQueue, arrified } from "../misc";
 
 const taskQueue = createTaskQueue();
 let subTask = null;
@@ -16,8 +16,42 @@ const getFirstTask = () => {
   }
 }
 
+// 构建子级节点关系
+const reconcileChildren = (fiber, children) => {
+  const arrifiedChildren = arrified(children);
+
+  let index = 0;
+  let numberOfElements = arrifiedChildren.length;
+  let element = null;
+  let newFiber = null;
+  let prevFiber = null;
+
+  while (index < numberOfElements) {
+    element = arrifiedChildren[index];
+    newFiber = {
+      type: element.type,
+      props: element.props,
+      tag: 'host_component',
+      effects: [],
+      effectTag: 'placement',
+      stateNode: null,
+      parent: fiber
+    }
+
+    if (index === 0) {
+      fiber.child = newFiber;
+    } else {
+      prevFiber.siblint = newFiber;
+    }
+    
+    prevFiber = newFiber;
+
+    index++;
+  }
+}
+
 const executeTask = fiber => {
-  
+  reconcileChildren(fiber, fiber.props.children);
 }
 
 const workLoop = deadline => {
