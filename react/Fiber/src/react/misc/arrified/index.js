@@ -1,3 +1,3 @@
-const arrified = arg => Array.isArray(arg) ? arg : [arg];
-
-export default arrified;
+export default function arrified (arg) {
+  return Array.isArray(arg) ? arg : [arg];
+}

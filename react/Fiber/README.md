@@ -580,3 +580,5 @@ export const render = (element, dom) => {
 }
 ```
 
+##  完善 fiber 对象
+
