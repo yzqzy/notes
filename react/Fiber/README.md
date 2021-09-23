@@ -919,3 +919,33 @@ export const render = (element, dom) => {
 
 ## 构建 effect 数组
 
+src/react/reconciliation/index.js
+
+```js
+const executeTask = fiber => {
+  reconcileChildren(fiber, fiber.props.children);
+
+  if (fiber.child) {
+    return fiber.child;
+  }
+
+  let currentExecutelyFiber = fiber;
+
+  while (currentExecutelyFiber.parent) {
+    currentExecutelyFiber.parent.effects = currentExecutelyFiber.parent.effects.concat(
+      currentExecutelyFiber.effects.concat([currentExecutelyFiber])
+    );
+
+    if (currentExecutelyFiber.siblint) {
+      return currentExecutelyFiber.siblint;
+    }
+    
+    currentExecutelyFiber = currentExecutelyFiber.parent;
+  }
+
+  console.log(fiber);
+}
+```
+
+## 实现 fiber 初始渲染
+
