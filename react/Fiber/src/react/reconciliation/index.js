@@ -11,7 +11,7 @@ const commitAllWork = fiber => {
       let fiber = item;
       let parentFiber = item.parent;
 
-      while (parentFiber.tag === 'class_component') {
+      while (parentFiber.tag === 'class_component' || parentFiber.tag === 'function_component') {
         parentFiber = parentFiber.parent;
       }
 
@@ -74,6 +74,8 @@ const reconcileChildren = (fiber, children) => {
 const executeTask = fiber => {
   if (fiber.tag === 'class_component') {
     reconcileChildren(fiber, fiber.stateNode.render());
+  } else if (fiber.tag === 'function_component') {
+    reconcileChildren(fiber, fiber.stateNode(fiber.props));
   } else {
     reconcileChildren(fiber, fiber.props.children);
   }

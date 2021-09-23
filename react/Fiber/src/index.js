@@ -9,6 +9,8 @@ const jsx = (
 
 // render(jsx, document.getElementById('root'));
 
+
+
 class Greating extends Component {
   constructor (props) {
     super(props);
@@ -21,4 +23,14 @@ class Greating extends Component {
   }
 };
 
-render(<Greating />, document.getElementById('root'));
+// render(<Greating />, document.getElementById('root'));
+
+
+
+function FnComponent (props) {
+  return (
+    <div>Hello React Component：{ props.title }</div>
+  )
+}
+
+render(<FnComponent title="Hello" />, document.getElementById('root'));
