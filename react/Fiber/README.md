@@ -580,5 +580,217 @@ export const render = (element, dom) => {
 }
 ```
 
-##  完善 fiber 对象
+##  完善 fiber 对象：tag、stateNode
+
+react/dom/createDOMElement.js
+
+```js
+import updateNodeElement from "./updateNodeElement";
+
+export default function createDOMElement (virtualDOM) {
+  let newElement = null;
+
+  if (virtualDOM.type === 'text') {
+    // 文本节点
+    newElement = document.createTextNode(virtualDOM.props.textContent);
+  } else {
+    // 元素节点
+    newElement = document.createElement(virtualDOM.type);
+    // 更新元素属性
+    updateNodeElement(newElement, virtualDOM);
+  }
+
+  return newElement;
+}
+```
+
+react/dom/updateNodeElement.js
+
+```js
+export default function updateNodeElement (newElement, virtualDOM, oldVirtualDOM) {
+  // 获取节点对应的属性对象
+  const newProps = virtualDOM.props || {};
+  // 获取旧节点对应的属性对象
+  const oldProps = oldVirtualDOM && oldVirtualDOM.props || {};
+
+  Object.keys(newProps).forEach(propName => {
+    // 获取新的属性值
+    const newPropsValue = newProps[propName];
+    // 获取旧的属性值
+    const oldPropsValue = oldProps[propName];
+
+    if (newPropsValue !== oldPropsValue) {
+      // 判断属性是否事件属性 onClick
+      if (propName.slice(0, 2) === 'on') {
+        // 事件名称
+        const eventName = propName.toLowerCase().slice(2);
+        // 为元素添加事件
+        newElement.addEventListener(eventName, newPropsValue);
+        // 删除原有的事件处理函数
+        if (oldPropsValue) {
+          newElement.removeEventListener(eventName, oldPropsValue);
+        }
+      } else if (propName === 'value' || propName === 'checked') {
+        newElement[propName] = newPropsValue;
+      } else if (propName !== 'children') {
+        if (propName === 'classname') {
+          newElement.setAttribute('class', newPropsValue);
+        } else {
+          newElement.setAttribute(propName, newPropsValue);
+        }
+      }
+    }
+  });
+
+  // 判断属性被删除的情况
+  Object.keys(oldProps).forEach(propName => {
+    const newPropsValue = newProps[propName];
+    const oldPropsValue = oldProps[propName];
+
+    // 原有属性被删除
+    if (!newPropsValue) {
+      if (propName.slice(0, 2) === 'on') {
+        const eventName = propName.toLowerCase().slice(2);
+        newElement.removeListener(eventName, oldPropsValue);
+      } else if (propName !== 'children') {
+        newElement.removeAttribute(propName);
+      }
+    }
+  });
+}
+```
+
+react/dom/index.js
+
+```js
+export { default as createDOMElement } from './createDOMElement';
+export { default as updateNodeElement } from './updateNodeElement';
+```
+
+react/misc/arrified/index.js
+
+```js
+export default function arrified (arg) {
+  return Array.isArray(arg) ? arg : [arg];
+}
+```
+
+react/misc/createStateNode/index.js
+
+```js
+import { createDOMElement } from '../../dom';
+
+export default function createStateNode (fiber) {
+  if (fiber.tag === 'host_component') {
+    return createDOMElement(fiber);
+  }
+}
+```
+
+react/misc/getTag/index.js
+
+```js
+export default function getTag (vdom) {
+  if (typeof vdom.type === 'string') {
+    return 'host_component';
+  }
+}
+```
+
+react/reconciliation/index.js
+
+```js
+import { createTaskQueue, arrified, createStateNode, getTag } from "../misc";
+
+const taskQueue = createTaskQueue();
+let subTask = null;
+
+const getFirstTask = () => {
+  // 从任务队列中获取任务
+  const task = taskQueue.pop();
+  // 返回最外层节点的 fiber 对象
+  return {
+    props: task.props,
+    stateNode: task.dom,
+    tag: 'host_root',
+    effects: [],
+    child: null
+  }
+}
+
+// 构建子级节点关系
+const reconcileChildren = (fiber, children) => {
+  const arrifiedChildren = arrified(children);
+
+  let index = 0;
+  let numberOfElements = arrifiedChildren.length;
+  let element = null;
+  let newFiber = null;
+  let prevFiber = null;
+
+  while (index < numberOfElements) {
+    element = arrifiedChildren[index];
+
+    newFiber = {
+      type: element.type,
+      props: element.props,
+      tag: getTag(element),
+      effects: [],
+      effectTag: 'placement',
+      parent: fiber
+    }
+    
+    newFiber.stateNode = createStateNode(newFiber);
+
+    if (index === 0) {
+      fiber.child = newFiber;
+    } else {
+      prevFiber.siblint = newFiber;
+    }
+    
+    prevFiber = newFiber;
+
+    index++;
+  }
+}
+
+const executeTask = fiber => {
+  reconcileChildren(fiber, fiber.props.children);
+
+  console.log(fiber);
+}
+
+const workLoop = deadline => {
+  if (!subTask) {
+    subTask = getFirstTask();
+  }
+
+  // 如果任务存在并且浏览器有空闲时间就调用
+  while (subTask && deadline.timeRemaining() > 1) {
+    subTask = executeTask(subTask);
+  }
+}
+
+const performTask = deadline => {
+  // 执行任务
+  workLoop(deadline);
+  // 如果任务是否存在
+  if (subTask || !taskQueue.isEmpty()) {
+    requestIdleCallback(performTask);
+  }
+}
+
+export const render = (element, dom) => {
+  // 1. 向任务队列中添加任务
+  taskQueue.push({
+    dom,
+    props: { children: element }
+  });
+  
+  // 2. 指定在浏览器空闲时执行任务
+  requestIdleCallback(performTask);
+}
+```
+
+## 构建节点树剩余子节点 Fiber 对象
 
