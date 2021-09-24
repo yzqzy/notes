@@ -1704,6 +1704,28 @@ export const render = (element, dom) => {
 原有 updateNodeElement 方法不支持更新文本节点。
 
 ```js
+const jsx = (
+  <div>
+    <p>Hello React</p>
+    <p>Hello Fiber</p>
+  </div>
+);
+
+render(jsx, document.getElementById('root'));
+
+setTimeout(() => {
+  const newJsx = (
+    <div>
+      <div>666</div>
+      <p>Hello Fiber</p>
+    </div>
+  );
+
+  render(newJsx, document.getElementById('root'));
+}, 2000)
+```
+
+```js
 export default function updateNodeElement (newElement, virtualDOM, oldVirtualDOM) {
   // 获取节点对应的属性对象
   const newProps = virtualDOM.props || {};
@@ -1774,4 +1796,25 @@ export default function updateNodeElement (newElement, virtualDOM, oldVirtualDOM
 ```
 
 ## 实现节点删除操作
+
+```js
+const jsx = (
+  <div>
+    <p>Hello React</p>
+    <p>Hello Fiber</p>
+  </div>
+);
+
+render(jsx, document.getElementById('root'));
+
+setTimeout(() => {
+  const newJsx = (
+    <div>
+      <p>Hello Fiber</p>
+    </div>
+  );
+
+  render(newJsx, document.getElementById('root'));
+}, 2000)
+```
 

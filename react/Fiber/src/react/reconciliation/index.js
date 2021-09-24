@@ -9,7 +9,9 @@ let pendingCommit = null;
 const commitAllWork = fiber => {
   // 循环 effects 数组，构建 DOM 节点树
   fiber.effects.forEach(item => {
-    if (item.effectTag === 'update') {
+    if (item.effectTag === 'delete') {
+      item.parent.stateNode.removeChild(item.stateNode);
+    } else if (item.effectTag === 'update') {
       if (item.type === item.alternate.type) {
         // 节点类型相同
         updateNodeElement(item.stateNode, item, item.alternate);
@@ -67,11 +69,15 @@ const reconcileChildren = (fiber, children) => {
     alternate = fiber.alternate.child;
   }
 
-  while (index < numberOfElements) {
+  while (index < numberOfElements || alternate) {
     // 子级 Virtual DOM 对象
     element = arrifiedChildren[index];
 
-    if (element && alternate) {
+    if (!element && alternate) {
+      // 删除操作
+      alternate.effectTag = 'delete';
+      fiber.effects.push(alternate);
+    } else if (element && alternate) {
       // 更新操作
             
       // 子级 fiber 对象
@@ -108,14 +114,11 @@ const reconcileChildren = (fiber, children) => {
 
       // 为 fiber 节点添加 DOM 对象或组件实例对象
       newFiber.stateNode = createStateNode(newFiber);
-    } else {
-
     }
-
 
     if (index === 0) {
       fiber.child = newFiber;
-    } else {
+    } else if (element) {
       prevFiber.siblint = newFiber;
     }
 

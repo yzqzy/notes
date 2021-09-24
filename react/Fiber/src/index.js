@@ -50,7 +50,6 @@ render(jsx, document.getElementById('root'));
 setTimeout(() => {
   const newJsx = (
     <div>
-      <div>666</div>
       <p>Hello Fiber</p>
     </div>
   );
