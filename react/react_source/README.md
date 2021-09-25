@@ -30,7 +30,7 @@ resolve: {
   // We placed these paths second because we want `node_modules` to "win"
   // if there are any conflicts. This matches Node resolution mechanism.
   // https://github.com/facebook/create-react-app/issues/253
-  modules: ['node_modules', paths.appNodeModules].concat(
+  modules: ["node_modules", paths.appNodeModules].concat(
     modules.additionalModulePaths || []
   ),
   // These are the reasonable defaults supported by the Node ecosystem.
@@ -41,25 +41,20 @@ resolve: {
   // for React Native Web.
   extensions: paths.moduleFileExtensions
     .map(ext => `.${ext}`)
-    .filter(ext => useTypeScript || !ext.includes('ts')),
-  // alias: {
-  //   // Support React Native Web
-  //   // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-  //   'react-native': 'react-native-web',
-  //   // Allows for better profiling with ReactDevTools
-  //   ...(isEnvProductionProfile && {
-  //     'react-dom$': 'react-dom/profiling',
-  //     'scheduler/tracing': 'scheduler/tracing-profiling',
-  //   }),
-  //   ...(modules.webpackAliases || {}),
-  // },
+    .filter(ext => useTypeScript || !ext.includes("ts")),
   alias: {
-    'react-native': 'react-native-web',
-    react: path.resolve(__dirname, '../src/react/packages/react'),
-    'react-dom': path.resolve(__dirname, '../src/react/packages/react-dom'),
-    'shared': path.resolve(__dirname, '../src/react/packages/shared'),
-    'react-reconciler': path.resolve(__dirname, '../src/react/packages/react-reconciler'),
-    'legacy-events': path.resolve(__dirname, '../src/react/packages/legacy-events')
+    "react-native": "react-native-web",
+    react: path.resolve(__dirname, "../src/react/packages/react"),
+    "react-dom": path.resolve(__dirname, "../src/react/packages/react-dom"),
+    shared: path.resolve(__dirname, "../src/react/packages/shared"),
+    "react-reconciler": path.resolve(
+      __dirname,
+      "../src/react/packages/react-reconciler"
+    ),
+    "legacy-events": path.resolve(
+      __dirname,
+      "../src/react/packages/legacy-events"
+    )
   },
   plugins: [
     // Adds support for installing with Plug'n'Play, leading to faster installs and adding
@@ -68,6 +63,11 @@ resolve: {
     // Prevents users from importing files from outside of src/ (or node_modules/).
     // This often causes confusion because we only process files within src/ with babel.
     // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
+    // please link the files into your node_modules/ and let module-resolution kick in.
+    // Make sure your source files are compiled, as they will not be processed in any way.
+    new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson])
+  ]
+}, // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
     // please link the files into your node_modules/ and let module-resolution kick in.
     // Make sure your source files are compiled, as they will not be processed in any way.
     new ModuleScopePlugin(paths.appSrc, [
@@ -90,9 +90,9 @@ resolve: {
 //   }, {}),
 // };
 const stringified = {
-  'process.env': Object.keys(raw).reduce((env, key) => {
-    env[key] = JSON.stringify(raw[key]);
-    return env;
+  "process.env": Object.keys(raw).reduce((env, key) => {
+    env[key] = JSON.stringify(raw[key])
+    return env
   }, {}),
   __DEV__: true,
   SharedArrayBuffer: true,
@@ -100,11 +100,11 @@ const stringified = {
   spyOnDevAndProd: true,
   spyOnProd: true,
   __PROFILE__: true,
-  __UMD_: true,
-  __EXPERIMENTRL_: true,
+  __UMD__: true,
+  __EXPERIMENTAL__: true,
   __VARIANT__: true,
   gate: true,
-  trustedTypes: true    
+  trustedTypes: true
 }
 ```
 
@@ -116,50 +116,37 @@ npm install @babel/plugin-transform-flow-strip-types -D
 
 ```js
 // config/webpack.config.js	[babel-loader]
-plugins: [
-  require.resolve('@babel/plugin-transform-flow-strip-types'),
-]{
+
+{
   test: /\.(js|mjs|jsx|ts|tsx)$/,
   include: paths.appSrc,
-  loader: require.resolve('babel-loader'),
+  loader: require.resolve("babel-loader"),
   options: {
     customize: require.resolve(
-      'babel-preset-react-app/webpack-overrides'
+      "babel-preset-react-app/webpack-overrides"
     ),
-    presets: [
-      [
-        require.resolve('babel-preset-react-app'),
-        {
-          runtime: hasJsxRuntime ? 'automatic' : 'classic',
-        },
-      ],
-    ],
-    
     plugins: [
-      require.resolve('@babel/plugin-transform-flow-strip-types'),
+      require.resolve("@babel/plugin-transform-flow-strip-types"),
       [
-        require.resolve('babel-plugin-named-asset-import'),
+        require.resolve("babel-plugin-named-asset-import"),
         {
           loaderMap: {
             svg: {
               ReactComponent:
-                '@svgr/webpack?-svgo,+titleProp,+ref![path]',
-            },
-          },
-        },
-      ],
-      isEnvDevelopment &&
-        shouldUseReactRefresh &&
-        require.resolve('react-refresh/babel'),
-    ].filter(Boolean),
+                "@svgr/webpack?-svgo,+titleProp,+ref![path]"
+            }
+          }
+        }
+      ]
+    ],
     // This is a feature of `babel-loader` for webpack (not Babel itself).
     // It enables caching results in ./node_modules/.cache/babel-loader/
     // directory for faster rebuilds.
     cacheDirectory: true,
     // See #6846 for context on why cacheCompression is disabled
     cacheCompression: false,
-    compact: isEnvProduction,
-  },
+    compact: isEnvProduction
+  }
 },
 ```
 
@@ -252,19 +239,15 @@ import * as ReactDOM from 'react-dom';
 ```js
 // src/index.js
 
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import * as React from "react"
+import * as ReactDOM from "react-dom"
+import App from "./App"
 ```
 
 ```js
 // src/App.js
 
-import * as React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import * as React from "react"
 ```
 
 解决 vscode 中 flow 报错
