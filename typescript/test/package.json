@@ -1,0 +1,17 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "npx tsc ./src/index.ts --strict --alwaysStrict false --watch",
+    "start": "ts-node ./src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ts-node": "^10.2.1",
+    "typescript": "^3.9.10"
+  }
+}
