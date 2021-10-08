@@ -14,4 +14,3 @@
 * 62. [不同路径](https://gitee.com/heora/review/tree/master/leetcode/js/leetcode62)
 * 66. [加一](https://gitee.com/heora/review/tree/master/leetcode/js/leetcode66)
 * 70. [爬楼梯](https://gitee.com/heora/review/tree/master/leetcode/js/leetcode70)
-* 73. [矩阵置零](https://gitee.com/heora/review/tree/master/leetcode/js/leetcode73) 更新中
