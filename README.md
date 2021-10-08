@@ -65,9 +65,9 @@
   + [react项目构建部署](https://git.yueluo.club/heora/notes/src/master/jenkins/practice) 已完成
   + [Jenkins2.x实践指南](https://git.yueluo.club/heora/notes/src/master/jenkins/jenkins2.x) 暂停中...
 * 数据结构与算法
-  + [leetcode刷题](https://git.yueluo.club/heora/notes/src/master/leetcode) 暂停中...
-  + [JS数据结构与算法](https://git.yueluo.club/heora/notes/src/master/algorithm) 已完成
-  + [数据结构与算法](https://git.yueluo.club/heora/notes/src/master/algorithm_google) 已完成
+  + [leetcode刷题](https://git.yueluo.club/heora/notes/src/master/alg/leetcode) 暂停中...
+  + [JS数据结构与算法](https://git.yueluo.club/heora/notes/src/master/alg/algorithm) 已完成
+  + [数据结构与算法](https://git.yueluo.club/heora/notes/src/master/alg/algorithm_google) 已完成
 * 读书笔记
   + [数据结构与算法之美](https://www.yuque.com/yyne87/lcqfte) 已完成
   + [透视HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
