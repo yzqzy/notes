@@ -56,7 +56,9 @@
   + [koa架构分析与源码重写](https://git.yueluo.club/heora/notes/src/master/node/koa) 已完成
 * threejs
   + [跳一跳案例](https://git.yueluo.club/heora/notes/src/master/three.js/jump) 已完成
-* [Electron](https://git.yueluo.club/heora/notes/src/master/electron) 已完成
+* Electron
+  + [Electron基础](https://git.yueluo.club/heora/notes/src/master/electron/base) 已完成
+  + [Electron实战](https://git.yueluo.club/heora/notes/src/master/electron/combat) 已完成
 * 微前端
   + [single-spa源码实现](https://git.yueluo.club/heora/notes/src/master/micro_frontends) 已完成
 * [Superset](https://git.yueluo.club/heora/notes/src/master/superset) 已完成
