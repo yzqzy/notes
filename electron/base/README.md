@@ -220,3 +220,22 @@ function createWindow () {
 
 ## 窗口标题及环境
 
+```js
+let mainWin = new BrowserWindow({
+  x: 0,
+  y: 0,
+  show: false,
+  width: 1200,
+  height: 600,
+  maxWidth: 2400,
+  maxHeight: 800,
+  minWidth: 600,
+  minHeight: 200,
+  resizable: false,
+  frame: true, // 用于自定义 menu，设置为 false 可以将默认的菜单栏隐藏
+  autoHideMenuBar: true,
+  title: 'Electron First App', // 自定义应用标题
+  icon: 'favicon.ico', // 设置自定义当前应用的显示图标
+});
+```
+

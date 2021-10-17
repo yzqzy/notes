@@ -5,13 +5,17 @@ function createWindow () {
     x: 0,
     y: 0,
     show: false,
-    width: 800,
-    height: 400,
-    maxWidth: 1000,
-    maxHeight: 600,
+    width: 1200,
+    height: 600,
+    maxWidth: 2400,
+    maxHeight: 800,
     minWidth: 600,
     minHeight: 200,
     resizable: false,
+    frame: true,
+    autoHideMenuBar: true,
+    title: 'Electron First App',
+    icon: 'favicon.ico'
   });
 
   mainWin.loadFile('index.html');
