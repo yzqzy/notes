@@ -1,20 +1,28 @@
 const { remote } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
-  const oBtn = document.getElementById('J-btn');
+  let mainWin = remote.getCurrentWindow();
 
-  oBtn.addEventListener('click', () => {
-    // 点击按钮打开新窗口
+  let oWinTool = document.getElementsByClassName('windowTool')[0];
+  let oCloseBtn = oWinTool.getElementsByClassName('close')[0],
+      oMaxsizeBtn = oWinTool.getElementsByClassName('maxsize')[0],
+      oMinsizeBtn = oWinTool.getElementsByClassName('minisize')[0];
 
-    let newWin = new remote.BrowserWindow({
-      width: 200,
-      height: 200
-    });
-
-    newWin.loadFile('newindex.html'),
-
-    newWin.on('close', () => {
-      newWin = null
-    });
-  })
+  oCloseBtn.addEventListener('click', () => {
+    mainWin.close();
+  });
+  oMaxsizeBtn.addEventListener('click', () => {
+    if (!mainWin.isMaximized()) {
+      mainWin.maximize();
+    } else {
+      mainWin.restore();
+    }
+  });
+  oMinsizeBtn.addEventListener('click', () => {
+    if (!mainWin.isMinimized()) {
+      mainWin.minimize();
+    } else {
+      mainWin.restore();
+    }
+  });
 });

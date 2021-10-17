@@ -360,3 +360,171 @@ window.addEventListener('DOMContentLoaded', () => {
 
 ## 自定义窗口
 
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自定义窗口</title>
+  <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .box {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background-color: seashell;
+    }
+
+    .bar {
+      height: 40px;
+      box-shadow: 0 1 5px 0px #333;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .titleBar {
+      width: 190px;
+      float: left;
+      height: 40px;
+      margin-left: 10px;
+    }
+
+    .titleBar div {
+      float: left;
+      height: 40px;
+    }
+
+    .titleBar .logo {
+      width: 20px;
+      height: 20px;
+      margin-top: 10px;
+      background: url('./favicon.ico') 0 0 no-repeat;
+      background-size: cover;
+    }
+
+    .titleBar .title {
+      margin-left: 10px;
+      font: normal 14px/40px '微软雅黑'
+    }
+
+    .windowTool {
+      float: right;
+      width: 600px;
+      height: 40px;
+      position: relative;
+    }
+
+    .windowTool div {
+      float: right;
+      cursor: pointer;
+      margin-right: 20px;
+      font: normal 12px/40px '微软雅黑'
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="bar">
+      <div class="titleBar">
+        <div class="logo"></div>
+        <div class="title">月落个人博客</div>
+      </div>
+      <div class="windowTool">
+        <div class="close">
+          <i class="fa fa-window-close-o" aria-hidden="true"></i>
+        </div>
+        <div class="maxsize">
+          <i class="fa fa-window-maximize" aria-hidden="true"></i>
+        </div>
+        <div class="minisize">
+          <i class="fa fa-minus"></i>
+        </div>
+      </div>
+    </div>
+    <div>主体内容</div>
+  </div>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+main.js
+
+```js
+const { app, BrowserWindow } = require('electron');
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  console.log('all closed.');
+  app.quit();
+});
+
+app.on('quit', () => {
+  console.log('quit.');
+});
+```
+
+index.js
+
+```js
+const { remote } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  let mainWin = remote.getCurrentWindow();
+
+  let oWinTool = document.getElementsByClassName('windowTool')[0];
+  let oCloseBtn = oWinTool.getElementsByClassName('close')[0],
+      oMaxsizeBtn = oWinTool.getElementsByClassName('maxsize')[0],
+      oMinsizeBtn = oWinTool.getElementsByClassName('minisize')[0];
+
+  oCloseBtn.addEventListener('click', () => {
+    mainWin.close();
+  });
+  oMaxsizeBtn.addEventListener('click', () => {
+    if (!mainWin.isMaximized()) {
+      mainWin.maximize();
+    } else {
+      mainWin.restore();
+    }
+  });
+  oMinsizeBtn.addEventListener('click', () => {
+    if (!mainWin.isMinimized()) {
+      mainWin.minimize();
+    } else {
+      mainWin.restore();
+    }
+  });
+});
+```
+
+## 阻止窗口关闭
+
