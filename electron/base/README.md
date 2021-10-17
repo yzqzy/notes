@@ -126,3 +126,97 @@ yarn start
 
 ## Electron 生命周期
 
+### 生命周期事件
+
+* ready：app 初始化完成
+* dom-ready：一个窗口中的文本加载完成
+* did-finsh-load：导航完成时触发
+* window-all-closed：所有窗口都被关闭时触发
+  * 如果注册该回调函数，但是不调用 quit 方法，后续事件将会失效
+* before-quit：关闭窗口之前触发
+* will-quit：窗口关闭并且应用退出后触发
+* quit：当所有窗口被关闭时触发
+* closed：当窗口关闭时触发，此时应删除窗口引用
+
+```js
+const { app, BrowserWindow } = require('electron');
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    width: 600,
+    height: 400
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWin.webContents.on('did-finish-load', () => {
+    console.log('browser window did-finish-load.');
+  });
+
+  mainWin.webContents.on('dom-ready', () => {
+    console.log('browser window dom-ready.');
+  });
+
+  mainWin.on('close', () => {
+    console.log('browser window close.');
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  console.log('all closed.');
+  app.quit();
+});
+
+app.on('before-quit', () => {
+  console.log('before-quit.');
+});
+
+app.on('will-quit', () => {
+  console.log('will-quit.');
+});
+
+app.on('quit', () => {
+  console.log('quit.');
+});
+
+// browser window dom-ready.
+// browser window did-finish-load.
+// browser window close.
+// all closed.
+// before-quit.
+// will-quit.  
+// quit.  
+```
+
+## 窗口尺寸
+
+BrowserWindow
+
+```js
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    x: 0,
+    y: 0,
+    show: false, // 默认为 true，创建一个窗口对象之后会显示，设置为 false 不会显示
+    width: 800,
+    height: 400,
+    maxWidth: 1000,
+    maxHeight: 600,
+    minWidth: 600,
+    minHeight: 200,
+    resizable: false, // 窗口是否可伸缩
+  });
+
+  mainWin.loadFile('index.html');
+  
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+}
+```
+
+## 窗口标题及环境
+
