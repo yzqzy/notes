@@ -15,7 +15,11 @@ function createWindow () {
     frame: true,
     autoHideMenuBar: true,
     title: 'Electron First App',
-    icon: 'favicon.ico'
+    icon: 'favicon.ico',
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
   });
 
   mainWin.loadFile('index.html');

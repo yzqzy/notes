@@ -220,6 +220,8 @@ function createWindow () {
 
 ## 窗口标题及环境
 
+### 窗口标题
+
 ```js
 let mainWin = new BrowserWindow({
   x: 0,
@@ -238,4 +240,123 @@ let mainWin = new BrowserWindow({
   icon: 'favicon.ico', // 设置自定义当前应用的显示图标
 });
 ```
+
+### 打开子窗口
+
+remote 模块后续不建议使用，这里只是通过 remote 模块进行演示。
+
+**main.js**
+
+```js
+const { app, BrowserWindow } = require('electron');
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    x: 0,
+    y: 0,
+    show: false,
+    width: 1200,
+    height: 600,
+    maxWidth: 2400,
+    maxHeight: 800,
+    minWidth: 600,
+    minHeight: 200,
+    resizable: false,
+    frame: true,
+    autoHideMenuBar: true,
+    title: 'Electron First App',
+    icon: 'favicon.ico',
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  console.log('all closed.');
+  app.quit();
+});
+
+app.on('quit', () => {
+  console.log('quit.');
+});
+
+```
+
+**index.html**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+</head>
+<body>
+  
+  <h2>Electron</h2>
+  <button id="J-btn">打开新窗口</button>
+
+  <script src="index.js"></script>
+
+</body>
+</html>
+```
+
+**index.js**
+
+```js
+const { remote } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  const oBtn = document.getElementById('J-btn');
+
+  oBtn.addEventListener('click', () => {
+    // 点击按钮打开新窗口
+
+    let newWin = new remote.BrowserWindow({
+      width: 200,
+      height: 200
+    });
+
+    newWin.loadFile('newindex.html'),
+
+    newWin.on('close', () => {
+      newWin = null
+    });
+  })
+});
+```
+
+**newindex.html**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>子窗口</title>
+</head>
+<body>
+
+  <h3>子窗口内容</h3>
+  
+</body>
+</html>
+```
+
+## 自定义窗口
 

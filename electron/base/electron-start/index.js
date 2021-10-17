@@ -1,4 +1,4 @@
-const electron = require('electron');
+const { remote } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
   const oBtn = document.getElementById('J-btn');
