@@ -25,4 +25,23 @@ window.addEventListener('DOMContentLoaded', () => {
       mainWin.restore();
     }
   });
+
+  window.onbeforeunload = function () {
+    let oBox = document.getElementsByClassName('isClose')[0];
+
+    oBox.style.display = 'block';
+
+    let yesBtn = oBox.getElementsByTagName('span')[0],
+        noBtn = oBox.getElementsByTagName('span')[1];
+    
+    yesBtn.addEventListener('click', () => {
+      mainWin.destroy();
+    });
+    
+    noBtn.addEventListener('click', () => {
+      oBox.style.display = 'none';
+    });
+
+    return false;
+  }
 });

@@ -63,6 +63,49 @@
       margin-right: 20px;
       font: normal 12px/40px '微软雅黑'
     }
+
+    .isClose {
+      top: 50%;
+      left: 50%;
+      width: 380px;
+      height: 180px;
+      padding: 10px;
+      position: fixed;
+      display: none;
+      background: #f5f5f5;
+      box-shadow: 0px 1px 5px 0px #ccc;
+      transform: translate(-50%, -50%);
+    }
+
+    .isClose h3 {
+      text-align: center;
+      font: bold 14px/40px '微软雅黑';
+    }
+
+    .isClose p {
+      font: normal 12px/40px '微软雅黑'
+    }
+
+    .close_btn {
+      margin-top: 60px;
+      margin-left: 220px;
+    }
+
+    .close_btn span {
+      float: left;
+      width: 60px;
+      margin-left: 8px;
+      text-align: center;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font: normal 12px/26px '微软雅黑';
+    }
+
+    .close_btn span:nth-child(1) {
+      cursor: pointer;
+      color: #fff;
+      background-color: #7b8c7c;
+    }
   </style>
 </head>
 
@@ -86,6 +129,13 @@
       </div>
     </div>
     <div>主体内容</div>
+
+    <!-- 定义浮窗设置阻止窗口关闭样式 -->
+    <div class="isClose">
+      <h3>是否关闭当前应用？</h3>
+      <p>系统可能不会保存您的所有更改</p>
+      <p class="close_btn"><span>是</span><span>否</span></p>
+    </div>
   </div>
 
   <script src="index.js"></script>

@@ -528,3 +528,205 @@ window.addEventListener('DOMContentLoaded', () => {
 
 ## 阻止窗口关闭
 
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自定义窗口</title>
+  <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .box {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background-color: seashell;
+    }
+
+    .bar {
+      height: 40px;
+      box-shadow: 0 1 5px 0px #333;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .titleBar {
+      width: 190px;
+      float: left;
+      height: 40px;
+      margin-left: 10px;
+    }
+
+    .titleBar div {
+      float: left;
+      height: 40px;
+    }
+
+    .titleBar .logo {
+      width: 20px;
+      height: 20px;
+      margin-top: 10px;
+      background: url('./favicon.ico') 0 0 no-repeat;
+      background-size: cover;
+    }
+
+    .titleBar .title {
+      margin-left: 10px;
+      font: normal 14px/40px '微软雅黑'
+    }
+
+    .windowTool {
+      float: right;
+      width: 600px;
+      height: 40px;
+      position: relative;
+    }
+
+    .windowTool div {
+      float: right;
+      cursor: pointer;
+      margin-right: 20px;
+      font: normal 12px/40px '微软雅黑'
+    }
+
+    .isClose {
+      top: 50%;
+      left: 50%;
+      width: 380px;
+      height: 180px;
+      padding: 10px;
+      position: fixed;
+      display: none;
+      background: #f5f5f5;
+      box-shadow: 0px 1px 5px 0px #ccc;
+      transform: translate(-50%, -50%);
+    }
+
+    .isClose h3 {
+      text-align: center;
+      font: bold 14px/40px '微软雅黑';
+    }
+
+    .isClose p {
+      font: normal 12px/40px '微软雅黑'
+    }
+
+    .close_btn {
+      margin-top: 60px;
+      margin-left: 220px;
+    }
+
+    .close_btn span {
+      float: left;
+      width: 60px;
+      margin-left: 8px;
+      text-align: center;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font: normal 12px/26px '微软雅黑';
+    }
+
+    .close_btn span:nth-child(1) {
+      cursor: pointer;
+      color: #fff;
+      background-color: #7b8c7c;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="bar">
+      <div class="titleBar">
+        <div class="logo"></div>
+        <div class="title">月落个人博客</div>
+      </div>
+      <div class="windowTool">
+        <div class="close">
+          <i class="fa fa-window-close-o" aria-hidden="true"></i>
+        </div>
+        <div class="maxsize">
+          <i class="fa fa-window-maximize" aria-hidden="true"></i>
+        </div>
+        <div class="minisize">
+          <i class="fa fa-minus"></i>
+        </div>
+      </div>
+    </div>
+    <div>主体内容</div>
+
+    <!-- 定义浮窗设置阻止窗口关闭样式 -->
+    <div class="isClose">
+      <h3>是否关闭当前应用？</h3>
+      <p>系统可能不会保存您的所有更改</p>
+      <p class="close_btn"><span>是</span><span>否</span></p>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+index.js
+
+```js
+const { remote } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  let mainWin = remote.getCurrentWindow();
+
+  let oWinTool = document.getElementsByClassName('windowTool')[0];
+  let oCloseBtn = oWinTool.getElementsByClassName('close')[0],
+      oMaxsizeBtn = oWinTool.getElementsByClassName('maxsize')[0],
+      oMinsizeBtn = oWinTool.getElementsByClassName('minisize')[0];
+
+  oCloseBtn.addEventListener('click', () => {
+    mainWin.close();
+  });
+  oMaxsizeBtn.addEventListener('click', () => {
+    if (!mainWin.isMaximized()) {
+      mainWin.maximize();
+    } else {
+      mainWin.restore();
+    }
+  });
+  oMinsizeBtn.addEventListener('click', () => {
+    if (!mainWin.isMinimized()) {
+      mainWin.minimize();
+    } else {
+      mainWin.restore();
+    }
+  });
+
+  window.onbeforeunload = function () {
+    let oBox = document.getElementsByClassName('isClose')[0];
+
+    oBox.style.display = 'block';
+
+    let yesBtn = oBox.getElementsByTagName('span')[0],
+        noBtn = oBox.getElementsByTagName('span')[1];
+    
+    yesBtn.addEventListener('click', () => {
+      mainWin.destroy();
+    });
+    
+    noBtn.addEventListener('click', () => {
+      oBox.style.display = 'none';
+    });
+
+    return false;
+  }
+});
+```
+
