@@ -1216,3 +1216,132 @@ window.addEventListener('DOMContentLoaded', () => {
 
 ## 主进程与渲染进程通信
 
+同步消息、异步消息、互相发消息。
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+</head>
+
+<body>
+
+  <h2>右键菜单</h2>
+
+  <button>渲到主 异步操作</button>
+  <br><br>
+  <button>渲到主 同步操作</button>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+main.js
+
+```js
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  const menuItems = [
+    {
+      label: 'send',
+      click () {
+        // 3. 主进程主动推送消息
+        BrowserWindow.getFocusedWindow().webContents.send('mtp', '来自主进程的消息');
+      }
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(menuItems);
+  Menu.setApplicationMenu(menu);
+
+  mainWin.loadFile('index.html');
+  mainWin.webContents.openDevTools();
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+
+
+// 1. 主进程接收异步消息
+ipcMain.on('msg1', (ev, data) => {
+  console.log(data);
+
+  // 回复消息
+  ev.sender.send('res1', 'from main process async message');
+});
+
+// 2. 主进程接收同步消息
+ipcMain.on('msg2', (ev, data) => {
+  console.log(data);
+
+  // 回复消息
+  ev.returnValue = 'from main process message';
+});
+```
+
+index.js
+
+```js
+const { ipcRenderer } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  const oBtns = document.getElementsByTagName('button');
+
+  // 1. 异步 API 向主进程发送消息
+  oBtns[0].addEventListener('click', () => {
+    ipcRenderer.send('msg1', 'from render process async message');
+  });
+  // 接收主进程异步消息
+  ipcRenderer.on('res1', (ev, data) => {
+    console.log(data);
+  });
+
+
+  // 2. 同步 API 向主进程发送消息
+  oBtns[1].addEventListener('click', () => {
+    const ret = ipcRenderer.sendSync('msg2', 'from render process message');
+
+    console.log(ret);
+  });
+
+
+  // 3. 接收主进程主动推送的消息
+  ipcRenderer.on('mtp', (ev, data) => {
+    console.log(data);
+  });
+});
+```
+
+## 渲染进程间通信
+
