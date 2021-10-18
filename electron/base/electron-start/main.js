@@ -1,7 +1,5 @@
 const { app, BrowserWindow } = require('electron');
 
-console.log(process.platform)
-
 function createWindow () {
   let mainWin = new BrowserWindow({
     show: false,

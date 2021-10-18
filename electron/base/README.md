@@ -1126,5 +1126,93 @@ window.addEventListener('DOMContentLoaded', () => {
 
 ## 自定义右键菜单
 
+index.html
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+</head>
+
+<body>
+
+  <h2>右键菜单</h2>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+main.js
+
+```js
+const { app, BrowserWindow } = require('electron');
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+```
+
+index.js
+
+```js
+const { remote } = require('electron');
+const { Menu, MenuItem } = remote;
+
+const contextMenuItems = [
+  { label: 'Run Code' },
+  { label: '转到定义' },
+  { type: 'separator' },
+  {
+    label: '其他',
+    click () {
+      console.log('clicked.');
+    }
+  },
+]
+
+window.addEventListener('DOMContentLoaded', () => {
+  const menu = Menu.buildFromTemplate(contextMenuItems);
+
+  window.addEventListener('contextmenu', ev => {
+    ev.preventDefault();
+
+    menu.popup({
+      window: remote.getCurrentWindow()
+    });
+  });
+});
+```
+
+## 主进程与渲染进程通信
 
