@@ -1004,3 +1004,127 @@ app.on('window-all-closed', () => {
 
 ## 动态创建菜单
 
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+</head>
+
+<body>
+
+  <h2>自定义菜单</h2>
+
+  <button id="J-add-menu">创建自定义菜单</button>
+  <br>
+  <br>
+  <input type="text" placeholder="输入自定义菜单项内容" id="J-menu-con">
+  <br>
+  <br>
+  <button id="J-add-item">添加菜单项</button>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+main.js
+
+```js
+const { app, BrowserWindow } = require('electron');
+
+console.log(process.platform)
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+```
+
+index.js
+
+```js
+const { remote } = require('electron');
+const { Menu, MenuItem } = remote;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const mainWin = remote.getCurrentWindow();
+  const oAddMenu = document.getElementById('J-add-menu');
+  const oMenuCon = document.getElementById('J-menu-con');
+  const oAddItem = document.getElementById('J-add-item');
+
+  let subMenu = new Menu();
+
+  // 生成自定义菜单
+  oAddMenu.addEventListener('click', () => {
+    const menuFile = new MenuItem({
+      label: '文件',
+      type: 'normal'
+    });
+    const menuEdit = new MenuItem({
+      label: '编辑',
+      type: 'normal'
+    });
+    const customMenu = new MenuItem({
+      label: '自定义菜单项',
+      submenu: subMenu
+    });
+
+    const menu = new Menu();
+    
+    menu.append(menuFile);
+    menu.append(menuEdit);
+    menu.append(customMenu);
+
+    Menu.setApplicationMenu(menu);
+  });
+
+  // 动态添加菜单项
+  oAddItem.addEventListener('click', () => {
+    const content = oMenuCon.value.trim();
+
+    if (content) {
+      subMenu.append(new MenuItem({
+        label: content,
+        type: 'normal'
+      }));
+      oMenuCon.value = '';
+    }
+  });
+});
+```
+
+## 自定义右键菜单
+
+
+
