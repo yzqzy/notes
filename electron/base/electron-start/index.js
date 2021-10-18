@@ -1,47 +1,21 @@
 const { remote } = require('electron');
 
 window.addEventListener('DOMContentLoaded', () => {
-  let mainWin = remote.getCurrentWindow();
+  const mainWin = remote.getCurrentWindow();
+  const oBtn = document.getElementById('J-btn');
 
-  let oWinTool = document.getElementsByClassName('windowTool')[0];
-  let oCloseBtn = oWinTool.getElementsByClassName('close')[0],
-      oMaxsizeBtn = oWinTool.getElementsByClassName('maxsize')[0],
-      oMinsizeBtn = oWinTool.getElementsByClassName('minisize')[0];
-
-  oCloseBtn.addEventListener('click', () => {
-    mainWin.close();
-  });
-  oMaxsizeBtn.addEventListener('click', () => {
-    if (!mainWin.isMaximized()) {
-      mainWin.maximize();
-    } else {
-      mainWin.restore();
-    }
-  });
-  oMinsizeBtn.addEventListener('click', () => {
-    if (!mainWin.isMinimized()) {
-      mainWin.minimize();
-    } else {
-      mainWin.restore();
-    }
-  });
-
-  window.onbeforeunload = function () {
-    let oBox = document.getElementsByClassName('isClose')[0];
-
-    oBox.style.display = 'block';
-
-    let yesBtn = oBox.getElementsByTagName('span')[0],
-        noBtn = oBox.getElementsByTagName('span')[1];
-    
-    yesBtn.addEventListener('click', () => {
-      mainWin.destroy();
-    });
-    
-    noBtn.addEventListener('click', () => {
-      oBox.style.display = 'none';
+  oBtn.addEventListener('click', () => {
+    let subWin = new remote.BrowserWindow({
+      parent: mainWin,
+      modal: true,
+      width: 200,
+      height: 200
     });
 
-    return false;
-  }
+    subWin.loadFile('sub.html');
+
+    subWin.on('close', () => {
+      subWin = null;
+    })
+  })
 });

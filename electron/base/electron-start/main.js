@@ -2,7 +2,9 @@ const { app, BrowserWindow } = require('electron');
 
 function createWindow () {
   let mainWin = new BrowserWindow({
-    frame: false,
+    show: false,
+    width: 800,
+    height: 400,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true
@@ -14,15 +16,14 @@ function createWindow () {
   mainWin.on('ready-to-show', () => {
     mainWin.show();
   });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
 }
 
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  console.log('all closed.');
   app.quit();
-});
-
-app.on('quit', () => {
-  console.log('quit.');
 });

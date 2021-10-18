@@ -245,6 +245,8 @@ let mainWin = new BrowserWindow({
 
 remote 模块后续不建议使用，这里只是通过 remote 模块进行演示。
 
+> 目前最新 electron 已不再支持 remote api，可以安装  **^11.2.1** 版本体验此功能。
+
 **main.js**
 
 ```js
@@ -729,4 +731,93 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 ```
+
+## 模态窗口
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+</head>
+
+<body>
+
+  <h2>子窗口及模态窗口</h2>
+
+  <button id="J-btn">新增窗口</button>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+main.js
+
+```js
+const { app, BrowserWindow } = require('electron');
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+```
+
+index.js
+
+```js
+const { remote } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  const mainWin = remote.getCurrentWindow();
+  const oBtn = document.getElementById('J-btn');
+
+  oBtn.addEventListener('click', () => {
+    let subWin = new remote.BrowserWindow({
+      parent: mainWin,
+      modal: true,
+      width: 200,
+      height: 200
+    });
+
+    subWin.loadFile('sub.html');
+
+    subWin.on('close', () => {
+      subWin = null;
+    })
+  })
+});
+```
+
+## 自定义菜单
 
