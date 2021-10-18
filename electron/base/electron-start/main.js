@@ -16,28 +16,73 @@ function createWindow () {
   // 自定义菜单项
   const menuItems = [
     {
-      label: '文件',
+      label: '角色',
       submenu: [
         {
-          label: '打开文件',
-          click () {
-            console.log('open file.');
-          }
+          label: '复制',
+          role: 'copy'
+        },
+        {
+          label: '剪切',
+          role: 'cut'
+        },
+        {
+          label: '粘贴',
+          role: 'paste'
+        },
+        {
+          label: '最小化',
+          role: 'minimize'
+        }
+      ]
+    },
+    {
+      label: '类型',
+      submenu: [
+        {
+          label: '选项1',
+          type: 'checkbox'
+        },
+        {
+          label: '选项2',
+          type: 'checkbox'
+        },
+        {
+          label: '选项3',
+          type: 'checkbox'
         },
         {
           type: 'separator'
         },
         {
-          label: '关闭文件夹'
+          label: 'item1',
+          type: 'radio'
         },
         {
-          label: '关于',
-          role: 'about'
+          label: 'item2',
+          type: 'radio'
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'windows',
+          type: 'submenu',
+          role: 'windowMenu'
         }
       ]
     },
     {
-      label: '编辑'
+      label: '自定义快捷键',
+      submenu: [
+        {
+          label: '打开',
+          accelerator: 'ctrl + o',
+          click () {
+            console.log('process open');
+          }
+        }
+      ]
     }
   ];
   // 创建菜单
