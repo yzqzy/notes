@@ -1882,3 +1882,63 @@ app.on('window-all-closed', () => {
 
 ## 消息通知
 
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>基于 H5 实现消息通知</h2>
+
+  <button id="J-btn">触发消息</button>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+index.js
+
+```js
+window.addEventListener('DOMContentLoaded', () => {
+  const oBtn = document.getElementById('J-btn');
+
+  oBtn.addEventListener('click', () => {
+    const options = {
+      title: '提示',
+      body: '消息通知',
+      icon: './favicon.ico',
+    };
+
+    const notification = new window.Notification(options.title, options);
+
+      notification.onclick = () => {
+        console.log('click');
+      }
+  });
+});
+```
+
+## 全局快捷键
+

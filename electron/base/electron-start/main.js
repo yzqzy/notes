@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow } = require('electron');
 
 let mainWinId = null
 
@@ -12,29 +12,6 @@ function createWindow () {
       enableRemoteModule: true
     }
   });
-
-  const tmp = [
-    {
-      label: '菜单',
-      submenu: [
-        {
-          label: '关于',
-          click () {
-            shell.openExternal('https://yueluo.club')
-          }
-        },
-        {
-          label: '打开',
-          click () {
-            BrowserWindow.getFocusedWindow().webContents.send('openUrl');
-          }
-        }
-      ]
-    }
-  ];
-
-  const menuIems = Menu.buildFromTemplate(tmp);
-  Menu.setApplicationMenu(menuIems);
 
   mainWin.loadFile('index.html');
 

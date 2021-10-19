@@ -1,24 +1,17 @@
-const { shell, ipcRenderer } = require('electron');
-const path = require('path');
-
 window.addEventListener('DOMContentLoaded', () => {
-  const oBtn1 = document.getElementById('J-open-url');
-  const oBtn2 = document.getElementById('J-open-folder');
-  const oIframe = document.getElementById('J-webview');
+  const oBtn = document.getElementById('J-btn');
 
-  oBtn1.addEventListener('click', (ev) => {
-    ev.preventDefault();
+  oBtn.addEventListener('click', () => {
+    const options = {
+      title: '提示',
+      body: '消息通知',
+      icon: './favicon.ico',
+    };
 
-    const urlPath = oBtn1.getAttribute('href');
+    const notification = new window.Notification(options.title, options);
 
-    shell.openExternal(urlPath);
-  });
-
-  oBtn2.addEventListener('click', () => {
-    shell.showItemInFolder(path.resolve(__dirname));
-  });
-
-  ipcRenderer.on('openUrl', () => {
-    oIframe.src = "https://yueluo.club/about"
+      notification.onclick = () => {
+        console.log('click');
+      }
   });
 });
