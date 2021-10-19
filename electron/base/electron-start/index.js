@@ -1,37 +1,24 @@
-const { remote } = require('electron');
+const { shell, ipcRenderer } = require('electron');
+const path = require('path');
 
 window.addEventListener('DOMContentLoaded', () => {
-  const oBtn = document.getElementById('J-btn');
-  const oErrorBtn = document.getElementById('J-err-btn');
+  const oBtn1 = document.getElementById('J-open-url');
+  const oBtn2 = document.getElementById('J-open-folder');
+  const oIframe = document.getElementById('J-webview');
 
-  oBtn.addEventListener('click', () => {
-    remote.dialog.showOpenDialog({
-      defaultPath: __dirname,
-      title: '选择文件',
-      buttonLabel: '请选择',
-      properties: ['openFile', 'multiSelections'],
-      filters: [
-        {
-          name: '代码文件',
-          extensions: ['js', 'json', 'html']
-        },
-        {
-          name: '图片文件',
-          extensions: ['ico', 'jpg', 'png']
-        },
-        {
-          name: '媒体文件',
-          extensions: ['avi', 'mp4', 'mp3']
-        }
-      ]
-    })
-      .then(ret => {
-        console.log(ret);
-      })
-      .catch(err => console.log(err));
+  oBtn1.addEventListener('click', (ev) => {
+    ev.preventDefault();
+
+    const urlPath = oBtn1.getAttribute('href');
+
+    shell.openExternal(urlPath);
   });
 
-  oErrorBtn.addEventListener('click', () => {
-    remote.dialog.showErrorBox('自定义标题', '自定义内容');
+  oBtn2.addEventListener('click', () => {
+    shell.showItemInFolder(path.resolve(__dirname));
+  });
+
+  ipcRenderer.on('openUrl', () => {
+    oIframe.src = "https://yueluo.club/about"
   });
 });

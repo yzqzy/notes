@@ -5,15 +5,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>主界面</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 400px;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h2>Dialog 模块</h2>
+  <h2>shell 与 iframe</h2>
 
-  <button id="J-btn">显示对话框</button>
+  <a id="J-open-url" href="https://www.yueluo.club/">打开URL</a>
+
   <br><br>
-  <button id="J-err-btn">显示错误对话框</button>
+
+  <button id="J-open-folder">打开目录</button>
+
+
+  <iframe id="J-webview" src="https://www.yueluo.club/" frameborder="0"></iframe>
 
   <script src="index.js"></script>
 

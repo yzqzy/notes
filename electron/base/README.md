@@ -1713,5 +1713,172 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-## hell 与 iframe
+## shell 与 iframe
+
+main.js
+
+```js
+const { app, BrowserWindow, Menu, shell } = require('electron');
+
+let mainWinId = null
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  const tmp = [
+    {
+      label: '菜单',
+      submenu: [
+        {
+          label: '关于',
+          click () {
+            shell.openExternal('https://yueluo.club')
+          }
+        },
+        {
+          label: '打开',
+          click () {
+            BrowserWindow.getFocusedWindow().webContents.send('openUrl');
+          }
+        }
+      ]
+    }
+  ];
+
+  const menuIems = Menu.buildFromTemplate(tmp);
+  Menu.setApplicationMenu(menuIems);
+
+  mainWin.loadFile('index.html');
+
+  mainWinId = mainWin.id
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+```
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>shell 与 iframe</h2>
+
+  <a id="J-open-url" href="https://www.yueluo.club/">打开URL</a>
+
+  <br><br>
+
+  <button id="J-open-folder">打开目录</button>
+
+
+  <iframe id="J-webview" src="https://www.yueluo.club/" frameborder="0"></iframe>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+index.js
+
+```js
+const { app, BrowserWindow, Menu, shell } = require('electron');
+
+let mainWinId = null
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  const tmp = [
+    {
+      label: '菜单',
+      submenu: [
+        {
+          label: '关于',
+          click () {
+            shell.openExternal('https://yueluo.club')
+          }
+        },
+        {
+          label: '打开',
+          click () {
+            BrowserWindow.getFocusedWindow().webContents.send('openUrl');
+          }
+        }
+      ]
+    }
+  ];
+
+  const menuIems = Menu.buildFromTemplate(tmp);
+  Menu.setApplicationMenu(menuIems);
+
+  mainWin.loadFile('index.html');
+
+  mainWinId = mainWin.id
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+```
+
+## 消息通知
 
