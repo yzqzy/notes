@@ -1419,7 +1419,7 @@ index.html
 
   <h2>渲染进程通信</h2>
 
-  <button id="J-btn">打开窗口2</button>
+  <button id="J-btn">打开窗口1</button>
 
   <script src="index.js"></script>
 
@@ -1478,4 +1478,169 @@ window.addEventListener('DOMContentLoaded', () => {
 ```
 
 ### 基于主进程
+
+渲染进程向主进程发送消息，然后主进程进行消息转发。
+
+main.js
+
+```js
+const { app, BrowserWindow, ipcMain } = require('electron');
+
+let mainWinId = null
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 800,
+    height: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWinId = mainWin.id
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+
+// 监听渲染进程消息
+ipcMain.on('openWin1', (ev, data) => {
+  let subWin1 = new BrowserWindow({
+    width: 400,
+    height: 300,
+    parent: BrowserWindow.fromId(mainWinId),
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  subWin1.loadFile('sub1.html');
+
+  subWin1.on('close', () => {
+    subWin1 = null;
+  });
+
+  // sub 进程窗口对象，内容加载完毕后转发消息
+  subWin1.webContents.on('did-finish-load', () => {
+    subWin1.webContents.send('its', data);
+  });
+});
+
+
+ipcMain.on('stm', (ev, data) => {
+  // 信息中转，此时可以依据指定的窗口 ID 获取对应的渲染进程，进行消息发送
+  const mainWin = BrowserWindow.fromId(mainWinId);
+  mainWin.webContents.send('mti', data);
+});
+```
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+</head>
+
+<body>
+
+  <h2>渲染进程通信</h2>
+
+  <button id="J-btn">打开窗口1</button>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+index.js
+
+```js
+const { ipcRenderer } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  const oBtn = document.getElementById('J-btn');
+
+  oBtn.addEventListener('click', () => {
+    ipcRenderer.send('openWin1', 'form index render process message');
+  });
+
+  // 接口消息
+  ipcRenderer.on('mti', (ev, data) => {
+    console.log(data);
+  });
+});
+```
+
+sub1.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>窗口</title>
+</head>
+<body>
+
+  <h3>窗口 1</h3>
+
+  <input type="text" id="J-input" />
+
+  <br />
+
+  <button id="J-btn">发送数据</button>
+
+  <script src="sub1.js"></script>
+  
+</body>
+</html>
+```
+
+sub1.js
+
+```js
+const { ipcRenderer } = require('electron');
+
+window.addEventListener('DOMContentLoaded', () => {
+  const oInput = document.getElementById('J-input');
+
+  // 发送数据
+  const oBtn = document.getElementById('J-btn');
+  oBtn.addEventListener('click', () => {
+    ipcRenderer.send('stm', 'from sub process message');
+  });
+
+  // 接收数据
+  ipcRenderer.on('its', (ev, data) => {
+    oInput.value = data;
+  });
+});
+```
+
+## dialog 模块
 
