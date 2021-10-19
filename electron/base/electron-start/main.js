@@ -1,4 +1,6 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
+
+let mainWinId = null
 
 function createWindow () {
   let mainWin = new BrowserWindow({
@@ -11,21 +13,9 @@ function createWindow () {
     }
   });
 
-  const menuItems = [
-    {
-      label: 'send',
-      click () {
-        // 3. 主进程主动推送消息
-        BrowserWindow.getFocusedWindow().webContents.send('mtp', '来自主进程的消息');
-      }
-    }
-  ];
-
-  const menu = Menu.buildFromTemplate(menuItems);
-  Menu.setApplicationMenu(menu);
-
   mainWin.loadFile('index.html');
-  mainWin.webContents.openDevTools();
+
+  mainWinId = mainWin.id
 
   mainWin.on('ready-to-show', () => {
     mainWin.show();
@@ -42,19 +32,20 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
+// 监听渲染进程消息
+ipcMain.on('openWin1', () => {
+  let subWin1 = new BrowserWindow({
+    width: 400,
+    height: 300,
+    parent: BrowserWindow.fromId(mainWinId),
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
 
-// 1. 主进程接收异步消息
-ipcMain.on('msg1', (ev, data) => {
-  console.log(data);
-
-  // 回复消息
-  ev.sender.send('res1', 'from main process async message');
-});
-
-// 2. 主进程接收同步消息
-ipcMain.on('msg2', (ev, data) => {
-  console.log(data);
-
-  // 回复消息
-  ev.returnValue = 'from main process message';
+  subWin1.loadFile('sub1.html');
+  subWin1.on('close', () => {
+    subWin1 = null;
+  });
 });
