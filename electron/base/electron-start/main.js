@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut } = require('electron');
+const { app, BrowserWindow } = require('electron');
 
 let mainWinId = null
 
@@ -27,23 +27,6 @@ function createWindow () {
 }
 
 app.whenReady().then(createWindow);
-
-app.on('ready', () => {
-  const ret = globalShortcut.register('ctrl + a', () => {
-    console.log('click')
-  });
-
-  if (!ret) {
-    console.log('girst shortcut failed.');
-  }
-
-  console.log(globalShortcut.isRegistered('ctrl + a'));
-});
-
-app.on('will-quit', () => {
-  // globalShortcut.unregister('ctrl + a');
-  globalShortcut.unregisterAll();
-});
 
 app.on('window-all-closed', () => {
   app.quit();
