@@ -29,19 +29,19 @@ function createWindow () {
 app.whenReady().then(createWindow);
 
 app.on('ready', () => {
-  const ret = globalShortcut.register('ctrl + q', () => {
-    console.log('222')
+  const ret = globalShortcut.register('ctrl + a', () => {
+    console.log('click')
   });
 
   if (!ret) {
     console.log('girst shortcut failed.');
   }
 
-  console.log(globalShortcut.isRegistered('ctrl + q'));
+  console.log(globalShortcut.isRegistered('ctrl + a'));
 });
 
 app.on('will-quit', () => {
-  // globalShortcut.unregister('ctrl + q');
+  // globalShortcut.unregister('ctrl + a');
   globalShortcut.unregisterAll();
 });
 
