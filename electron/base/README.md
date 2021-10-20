@@ -1940,5 +1940,85 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-## 全局快捷键
+## 全局快捷键注册
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主界面</title>
+</head>
+
+<body>
+
+  <h2>注册快捷键</h2>
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
+```
+
+main.js
+
+```js
+const { app, BrowserWindow, globalShortcut } = require('electron');
+
+let mainWinId = null
+
+function createWindow () {
+  let mainWin = new BrowserWindow({
+    show: false,
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  });
+
+  mainWin.loadFile('index.html');
+
+  mainWinId = mainWin.id
+
+  mainWin.on('ready-to-show', () => {
+    mainWin.show();
+  });
+
+  mainWin.on('close', () => {
+    mainWin = null;
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on('ready', () => {
+  const ret = globalShortcut.register('ctrl + a', () => {
+    console.log('click')
+  });
+
+  if (!ret) {
+    console.log('girst shortcut failed.');
+  }
+
+  console.log(globalShortcut.isRegistered('ctrl + a'));
+});
+
+app.on('will-quit', () => {
+  // globalShortcut.unregister('ctrl + a');
+  globalShortcut.unregisterAll();
+});
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
+```
+
+## 剪切板模块
 
