@@ -25,7 +25,7 @@ function App() {
         <LeftBoard>
           <SearchFile
             title="我的文档"
-            onSearch={() => {}}
+            onSearch={(val) => console.log(val)}
           />
         </LeftBoard>
         <RightBoard>右侧</RightBoard>
