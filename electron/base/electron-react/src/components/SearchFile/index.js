@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
 import PropTypes from 'prop-types';
+import useKeyBoard from "../../hooks/useKeyBoard";
 
 const SearchDiv = styled.div.attrs({
   className: 'd-flex align-items-center justify-content-between'
@@ -26,31 +27,20 @@ const SearchFile = ({ title, onSearch }) => {
   const [searchActive, setSearchActive] = useState(false);
   const [value, setValue] = useState('');
   const oInputRef = useRef(null);
+  const enterPressed = useKeyBoard(13);
+  const escPressed = useKeyBoard(27);
 
   const closeSearch = () => {
     setSearchActive(false);
     setValue('');
   }
 
-  useEffect(() => {
-    const searchHandle = (e) => {
-      const { keyCode } = e;
-
-      if (keyCode === 13 && searchActive) {
-        onSearch(value);
-      }
-
-      if (keyCode === 12 && searchActive) {
-        closeSearch();
-      }
-    }
-
-    document.addEventListener('keyup', searchHandle);
-
-    return () => {
-      document.removeEventListener('keyup', searchHandle);
-    }
-  });
+  if (enterPressed && searchActive) {
+    onSearch(value);
+  }
+  if (escPressed && searchActive) {
+    closeSearch();
+  }
 
   useEffect(() => {
     if (searchActive) {

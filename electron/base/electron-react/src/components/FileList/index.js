@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faEdit, faTrashAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PropTypes from 'prop-types';
+import useKeyBoard from "../../hooks/useKeyBoard";
 
 const GroupUl = styled.ul.attrs({
   className: 'list-group list-group-flush',
@@ -17,31 +18,21 @@ const GroupUl = styled.ul.attrs({
 const FileList = ({ files, editFile, saveFile, deleteFile }) => {
   const [editItem, setEditItem] = useState(false);
   const [value, setValue] = useState('');
+  const enterPressed = useKeyBoard(13);
+  const escPressed = useKeyBoard(27);
 
   const close = () => {
     setEditItem(false);
     setValue('');
   }
 
-  useEffect(() => {
-    const keyboardHandle = (e) => {
-      const { keyCode } = e
-
-      if (keyCode === 13 && editItem) {
-        saveFile(editItem, value);
-        close();
-      }
-      if (keyCode === 27 && editItem) {
-        close();
-      }
-    }
-
-    document.addEventListener('keyup', keyboardHandle);
-
-    return () => {
-      document.removeEventListener('keyup', keyboardHandle);
-    }
-  });
+  if (enterPressed && editItem) {
+    saveFile(editItem, value);
+    close();
+  }
+  if (escPressed && editItem) {
+    close();
+  }
 
   return (
     <GroupUl>
