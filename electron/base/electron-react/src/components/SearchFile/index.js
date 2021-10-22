@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
+import PropTypes from 'prop-types';
 
 const SearchDiv = styled.div.attrs({
   className: 'd-flex align-items-center justify-content-between'
@@ -61,7 +64,9 @@ const SearchFile = ({ title, onSearch }) => {
         !searchActive && (
           <SearchDiv>
             <span>{ title }</span>
-            <span onClick={() => { setSearchActive(true) }}>搜索</span>
+            <span onClick={() => { setSearchActive(true) }}>
+              <FontAwesomeIcon icon={ faSearch }></FontAwesomeIcon>
+            </span>
           </SearchDiv>
         )
       }
@@ -73,12 +78,23 @@ const SearchFile = ({ title, onSearch }) => {
               ref={ oInputRef }
               onChange={(e) => { setValue(e.target.value) }}
             />
-            <span onClick={closeSearch}>关闭</span>
+            <span onClick={closeSearch}>
+              <FontAwesomeIcon icon={ faTimes }></FontAwesomeIcon>
+            </span>
           </SearchDiv>
         )
       }
     </>
   )
+}
+
+SearchFile.propTypes = {
+  title: PropTypes.string,
+  onSearch: PropTypes.func.isRequired
+}
+
+SearchFile.defaultProps = {
+  title: '文档列表'
 }
 
 export default SearchFile;
