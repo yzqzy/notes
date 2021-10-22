@@ -2,6 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import SearchFile from './components/SearchFile';
+import FileList from './components/FileList';
+
+import files from './shared/files';
 
 const LeftBoard = styled.div.attrs({
   className: 'col-3 left-panel',
@@ -26,6 +29,18 @@ function App() {
           <SearchFile
             title="我的文档"
             onSearch={(val) => console.log(val)}
+          />
+          <FileList
+            files={files}
+            editFile={(id) => {
+              console.log(id)
+            }}
+            deleteFile={(id) => {
+              console.log(id)
+            }}
+            saveFile={(id, value) => {
+              console.log(id, value)
+            }}
           />
         </LeftBoard>
         <RightBoard>右侧</RightBoard>
