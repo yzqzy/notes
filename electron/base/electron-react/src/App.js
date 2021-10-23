@@ -1,17 +1,43 @@
 import React from 'react';
 import styled from 'styled-components';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import { faFileImport, faPlus } from '@fortawesome/free-solid-svg-icons';
 import SearchFile from './components/SearchFile';
 import FileList from './components/FileList';
+import ButtonItem from './components/ButtonItem';
 
 import files from './shared/files';
 
 const LeftBoard = styled.div.attrs({
   className: 'col-3 left-panel',
 })`
+  position: relative;
   padding: 0;
   background-color: #7b8c7c;
   min-height: 100vh;
+
+  .btn_list {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    position: absolute;
+
+    p {
+      border: 0;
+      width: 50%;
+      color: #fff;
+      border-radius: 0;
+      margin-bottom: 0 !important;
+    }
+
+    p:nth-of-type(1) {
+      background-color: #8ba39e;
+    }
+
+    p:nth-of-type(2) {
+      background-color: #98b4b3;
+    }
+  }
 `;
 
 const RightBoard = styled.div.attrs({
@@ -42,6 +68,16 @@ function App() {
               console.log(id, value)
             }}
           />
+          <div className="btn_list">
+            <ButtonItem
+              title="新建"
+              icon={ faPlus }
+            />
+            <ButtonItem
+              title="导入"
+              icon={ faFileImport }
+            />
+          </div>
         </LeftBoard>
         <RightBoard>右侧</RightBoard>
       </div>
