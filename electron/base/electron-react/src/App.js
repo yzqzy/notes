@@ -67,7 +67,51 @@ function App() {
   ));
 
   // 正在编辑的文件信息
-  const activeFile = files.find(file => file.id === activeId)
+  const activeFile = files.find(file => file.id === activeId);
+
+  // 编辑文件
+  const openItem = (id) => {
+    setActiveId(id);
+
+    if (!openIds.includes(id)) {
+      setOpenIds([ ...openIds, id]);
+    }
+  }
+
+  // 改变激活状态
+  const changeActive = (id) => {
+    setActiveId(id);
+  }
+
+  // 关闭文件
+  const closeFile = (id) => {
+    const ids = openIds.filter(_id => _id !== id);
+
+    setOpenIds(ids);
+
+    if (ids.length) {
+      setActiveId(ids[ids.length - 1]);
+    } else {
+      setActiveId('');
+    }
+  }
+
+  // 修改文件内容
+  const changeFile = (id, newVal) => {
+    if (!unSaveIds.includes(id)) {
+      setUnSaveIds([ ...unSaveIds, id ]);
+    }
+
+    const newFiles = files.map(file => {
+      if (file.id === id) {
+        file.body = newVal;
+      }
+
+      return file;
+    });
+
+    setFiles(newFiles);
+  }
 
   return (
     <div className="App container-fluid">
@@ -79,9 +123,7 @@ function App() {
           />
           <FileList
             files={ files }
-            editFile={(id) => {
-              console.log(id)
-            }}
+            editFile={openItem}
             deleteFile={(id) => {
               console.log(id)
             }}
@@ -108,11 +150,12 @@ function App() {
                   files={ openFiles }
                   activeItem={ activeId }
                   unSaveItems={ unSaveIds }
-                  clickItem={(id) => console.log(id)}
-                  closeItem={(id) => console.log(id)}
+                  clickItem={ changeActive }
+                  closeItem={ closeFile }
                 />
                 <SimpleMDE
-                  onChange={val => console.log(val)}
+                  key={ activeFile && activeFile.id }
+                  onChange={val => changeFile(activeFile.id, val)}
                   value={activeFile.body}
                   options={{
                     autofocus: true,
