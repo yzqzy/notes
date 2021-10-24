@@ -6,6 +6,8 @@ import SearchFile from './components/SearchFile';
 import FileList from './components/FileList';
 import ButtonItem from './components/ButtonItem';
 import TabList from './components/TabList';
+import SimpleMDE from 'react-simplemde-editor';
+import 'easymde/dist/easymde.min.css';
 
 import files from './shared/files';
 
@@ -87,6 +89,15 @@ function App() {
             unSaveItems={['1', '2']}
             clickItem={(id) => console.log(id)}
             closeItem={(id) => console.log(id)}
+          />
+          <SimpleMDE
+            onChange={val => console.log(val)}
+            value={files[0].body}
+            options={{
+              autofocus: true,
+              spellChecker: false,
+              minHeight: '446px'
+            }}
           />
         </RightBoard>
       </div>
