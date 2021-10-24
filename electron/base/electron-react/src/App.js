@@ -5,6 +5,7 @@ import { faFileImport, faPlus } from '@fortawesome/free-solid-svg-icons';
 import SearchFile from './components/SearchFile';
 import FileList from './components/FileList';
 import ButtonItem from './components/ButtonItem';
+import TabList from './components/TabList';
 
 import files from './shared/files';
 
@@ -79,7 +80,15 @@ function App() {
             />
           </div>
         </LeftBoard>
-        <RightBoard>右侧</RightBoard>
+        <RightBoard>
+          <TabList
+            files={files}
+            activeItem="1"
+            unSaveItems={['1', '2']}
+            clickItem={(id) => console.log(id)}
+            closeItem={(id) => console.log(id)}
+          />
+        </RightBoard>
       </div>
     </div>
   );
