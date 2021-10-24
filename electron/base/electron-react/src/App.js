@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { faFileImport, faPlus } from '@fortawesome/free-solid-svg-icons';
@@ -8,8 +8,7 @@ import ButtonItem from './components/ButtonItem';
 import TabList from './components/TabList';
 import SimpleMDE from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
-
-import files from './shared/files';
+import filesData from './shared/files';
 
 const LeftBoard = styled.div.attrs({
   className: 'col-3 left-panel',
@@ -48,9 +47,28 @@ const RightBoard = styled.div.attrs({
 })`
   padding: 0;
   background-color: #c9d8cd;
+
+  .init-page {
+    color: #888;
+    text-align: center;
+    font: normal 28px/300px '微软雅黑';
+  }
 `;
 
 function App() {
+  const [files, setFiles] = useState(filesData);
+  const [activeId, setActiveId] = useState('');
+  const [openIds, setOpenIds] = useState([]);
+  const [unSaveIds, setUnSaveIds] = useState([]);
+
+  // 已打开的所有文件信息
+  const openFiles = openIds.map(openId => (
+    files.find(file => file.id === openId)
+  ));
+
+  // 正在编辑的文件信息
+  const activeFile = files.find(file => file.id === activeId)
+
   return (
     <div className="App container-fluid">
       <div className="row no-gutters">
@@ -60,7 +78,7 @@ function App() {
             onSearch={(val) => console.log(val)}
           />
           <FileList
-            files={files}
+            files={ files }
             editFile={(id) => {
               console.log(id)
             }}
@@ -83,22 +101,30 @@ function App() {
           </div>
         </LeftBoard>
         <RightBoard>
-          <TabList
-            files={files}
-            activeItem="1"
-            unSaveItems={['1', '2']}
-            clickItem={(id) => console.log(id)}
-            closeItem={(id) => console.log(id)}
-          />
-          <SimpleMDE
-            onChange={val => console.log(val)}
-            value={files[0].body}
-            options={{
-              autofocus: true,
-              spellChecker: false,
-              minHeight: '446px'
-            }}
-          />
+          {
+            activeFile ? (
+              <>
+                <TabList
+                  files={ openFiles }
+                  activeItem={ activeId }
+                  unSaveItems={ unSaveIds }
+                  clickItem={(id) => console.log(id)}
+                  closeItem={(id) => console.log(id)}
+                />
+                <SimpleMDE
+                  onChange={val => console.log(val)}
+                  value={activeFile.body}
+                  options={{
+                    autofocus: true,
+                    spellChecker: false,
+                    minHeight: '446px'
+                  }}
+                />
+              </>
+            ) : (
+              <div className="init-page">新建或者导入文档</div>
+            )
+          }
         </RightBoard>
       </div>
     </div>
