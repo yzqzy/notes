@@ -9,7 +9,9 @@ const BtnP = styled.p.attrs({
 
 const ButtonItem = ({ title, btnClick, icon }) => {
   return (
-    <BtnP>
+    <BtnP
+      onClick={ btnClick }
+    >
       <FontAwesomeIcon icon={icon} />
       <span className="ml-2">{ title }</span>      
     </BtnP>

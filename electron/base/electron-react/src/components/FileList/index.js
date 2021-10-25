@@ -24,10 +24,25 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
   const close = () => {
     setEditItem(false);
     setValue('');
+
+    const currentFile = files.find(file => file.id === editItem);
+
+    if (currentFile.isNew) {
+      deleteFile(currentFile.id);
+    }
   }
 
   useEffect(() => {
-    if (enterPressed && editItem) {
+    const newFile = files.find(file => file.isNew);
+
+    if (newFile) {
+      setEditItem(newFile.id);
+      setValue(newFile.title);
+    }
+  }, [ files ]);
+
+  useEffect(() => {
+    if (enterPressed && editItem && value.trim() !== '') {
       saveFile(editItem, value);
       close();
     }
@@ -45,7 +60,7 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
             key={ file.id }
           > 
            {
-             file.id !== editItem ? (
+             file.id !== editItem && !file.isNew ? (
               <>
                 <span className="mr-2">
                   <FontAwesomeIcon icon={ faFileAlt }></FontAwesomeIcon>
@@ -67,7 +82,7 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
                   <FontAwesomeIcon icon={ faTrashAlt }></FontAwesomeIcon>
                 </span>
               </>
-             ) : (
+             ) : ( 
               <>
                 <input
                   className="col-9"

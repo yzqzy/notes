@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -135,11 +136,27 @@ function App() {
     const newFiles = files.map(file => {
       if (file.id === id) {
         file.title = newTitle;
+        file.isNew = false;
       } 
       return file;
     });
 
     setFiles(newFiles);
+  }
+
+  // 新建操作
+  const createFile = () => {
+    const newId = v4()
+
+    const newFile = {
+      id: newId,
+      title: '',
+      isNew: true,
+      body: '## 初始化',
+      createTime: new Date().getTime()
+    };
+
+    setFiles([ ...files, newFile ]);
   }
 
   return (
@@ -160,6 +177,7 @@ function App() {
             <ButtonItem
               title="新建"
               icon={ faPlus }
+              btnClick={ createFile }
             />
             <ButtonItem
               title="导入"
