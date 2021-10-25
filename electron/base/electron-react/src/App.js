@@ -121,7 +121,7 @@ function App() {
   const deleteItem = (id) => {
     const newFiles = files.filter(file => file.id !== id);
 
-    setSearchFiles(newFiles);
+    setFiles(newFiles);
     closeFile(id);
   }
 
