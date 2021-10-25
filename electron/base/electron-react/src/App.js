@@ -93,8 +93,10 @@ function App() {
 
     setOpenIds(ids);
 
-    if (ids.length) {
+    if (ids.length && activeId === id) {
       setActiveId(ids[ids.length - 1]);
+    } else if (ids.length && activeId !== id) {
+      setActiveId(activeId);
     } else {
       setActiveId('');
     }
@@ -156,7 +158,11 @@ function App() {
       createTime: new Date().getTime()
     };
 
-    setFiles([ ...files, newFile ]);
+    const flag = files.find(file => file.isNew);
+
+    if (!flag) {
+      setFiles([ ...files, newFile ]);
+    }
   }
 
   return (

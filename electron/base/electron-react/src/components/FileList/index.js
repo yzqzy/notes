@@ -27,10 +27,19 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
 
     const currentFile = files.find(file => file.id === editItem);
 
-    if (currentFile.isNew) {
+    if (currentFile && currentFile.isNew) {
       deleteFile(currentFile.id);
     }
   }
+
+  useEffect(() => {
+    const newFile = files.find(file => file.isNew);
+
+    if (newFile && editItem !== newFile.id) {
+      // 新建文件过程中，点击其他文件项
+      deleteFile(newFile.id);
+    }
+  }, [ editItem ]);
 
   useEffect(() => {
     const newFile = files.find(file => file.isNew);
@@ -67,7 +76,10 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
                 </span>
                 <span
                   className="col-8"
-                  onClick={() => editFile(file.id)}
+                  onClick={() => {
+                    close();
+                    editFile(file.id);
+                  }}
                 >{ file.title }</span>
                 <span
                   className="col-1"
