@@ -10,6 +10,7 @@ import TabList from './components/TabList';
 import SimpleMDE from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
 import filesData from './shared/files';
+import { mapArr, objToArr } from './shared/helper';
 
 const LeftBoard = styled.div.attrs({
   className: 'col-3 left-panel',
@@ -57,21 +58,19 @@ const RightBoard = styled.div.attrs({
 `;
 
 function App() {
-  const [files, setFiles] = useState(filesData);
+  const [files, setFiles] = useState(mapArr(filesData));
   const [activeId, setActiveId] = useState('');
   const [openIds, setOpenIds] = useState([]);
   const [unSaveIds, setUnSaveIds] = useState([]);
   const [searchFiles, setSearchFiles] = useState([]);
 
   // 已打开的所有文件信息
-  const openFiles = openIds.map(openId => (
-    files.find(file => file.id === openId)
-  ));
+  const openFiles = openIds.map(openId => files[openId]);
 
   // 正在编辑的文件信息
-  const activeFile = files.find(file => file.id === activeId);
+  const activeFile = files[activeId];
   // 计算当前左侧列表需要展示的信息
-  const fileList = (searchFiles.length > 0) ? searchFiles : files;
+  const fileList = (searchFiles.length > 0) ? searchFiles : objToArr(files);
 
   // 编辑文件
   const openItem = (id) => {
@@ -108,42 +107,42 @@ function App() {
       setUnSaveIds([ ...unSaveIds, id ]);
     }
 
-    const newFiles = files.map(file => {
-      if (file.id === id) {
-        file.body = newVal;
-      }
+    const newFile = { ...files[id], body: newVal };
 
-      return file;
+    setFiles({
+      ...files,
+      [id]: newFile
     });
-
-    setFiles(newFiles);
   }
 
   // 删除文件项
   const deleteItem = (id) => {
-    const newFiles = files.filter(file => file.id !== id);
+    delete files[id];
 
-    setFiles(newFiles);
+    setFiles(files);
     closeFile(id);
   }
 
   // 根据关键字搜索文件
   const searchFile = (keyword) => {
-    const nameFiles = files.filter(file => file.title.includes(keyword));
+    const nameFiles = objToArr(files).filter(file => file.title.includes(keyword));
     setSearchFiles(nameFiles);
   }
 
   // 重命名
   const rename = (id, newTitle) => {
-    const newFiles = files.map(file => {
-      if (file.id === id) {
-        file.title = newTitle;
-        file.isNew = false;
-      } 
-      return file;
-    });
+    const file = objToArr(files).find(file => file.title === newTitle);
 
-    setFiles(newFiles);
+    if (file) {
+      newTitle += '_copy';
+    }
+
+    const newFile = { ...files[id], title: newTitle, isNew: false };
+
+    setFiles({
+      ...files,
+      [id]: newFile
+    })
   }
 
   // 新建操作
@@ -158,10 +157,13 @@ function App() {
       createTime: new Date().getTime()
     };
 
-    const flag = files.find(file => file.isNew);
+    const flag = objToArr(files).find(file => file.isNew);
 
     if (!flag) {
-      setFiles([ ...files, newFile ]);
+      setFiles({
+        ...files,
+        [newId]: newFile
+      });
     }
   }
 

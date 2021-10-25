@@ -24,12 +24,6 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
   const close = () => {
     setEditItem(false);
     setValue('');
-
-    const currentFile = files.find(file => file.id === editItem);
-
-    if (currentFile && currentFile.isNew) {
-      deleteFile(currentFile.id);
-    }
   }
 
   useEffect(() => {
@@ -39,6 +33,7 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
       // 新建文件过程中，点击其他文件项
       deleteFile(newFile.id);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ editItem ]);
 
   useEffect(() => {
