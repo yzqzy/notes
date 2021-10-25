@@ -60,6 +60,7 @@ function App() {
   const [activeId, setActiveId] = useState('');
   const [openIds, setOpenIds] = useState([]);
   const [unSaveIds, setUnSaveIds] = useState([]);
+  const [searchFiles, setSearchFiles] = useState([]);
 
   // 已打开的所有文件信息
   const openFiles = openIds.map(openId => (
@@ -68,6 +69,8 @@ function App() {
 
   // 正在编辑的文件信息
   const activeFile = files.find(file => file.id === activeId);
+  // 计算当前左侧列表需要展示的信息
+  const fileList = (searchFiles.length > 0) ? searchFiles : files;
 
   // 编辑文件
   const openItem = (id) => {
@@ -113,23 +116,45 @@ function App() {
     setFiles(newFiles);
   }
 
+  // 删除文件项
+  const deleteItem = (id) => {
+    const newFiles = files.filter(file => file.id !== id);
+
+    setSearchFiles(newFiles);
+    closeFile(id);
+  }
+
+  // 根据关键字搜索文件
+  const searchFile = (keyword) => {
+    const nameFiles = files.filter(file => file.title.includes(keyword));
+    setSearchFiles(nameFiles);
+  }
+
+  // 重命名
+  const rename = (id, newTitle) => {
+    const newFiles = files.map(file => {
+      if (file.id === id) {
+        file.title = newTitle;
+      } 
+      return file;
+    });
+
+    setFiles(newFiles);
+  }
+
   return (
     <div className="App container-fluid">
       <div className="row no-gutters">
         <LeftBoard>
           <SearchFile
             title="我的文档"
-            onSearch={(val) => console.log(val)}
+            onSearch={ searchFile }
           />
           <FileList
-            files={ files }
-            editFile={openItem}
-            deleteFile={(id) => {
-              console.log(id)
-            }}
-            saveFile={(id, value) => {
-              console.log(id, value)
-            }}
+            files={ fileList }
+            editFile={ openItem }
+            deleteFile={ deleteItem }
+            saveFile={ rename }
           />
           <div className="btn_list">
             <ButtonItem
@@ -155,8 +180,8 @@ function App() {
                 />
                 <SimpleMDE
                   key={ activeFile && activeFile.id }
-                  onChange={val => changeFile(activeFile.id, val)}
-                  value={activeFile.body}
+                  onChange={ val => changeFile(activeFile.id, val) }
+                  value={ activeFile.body }
                   options={{
                     autofocus: true,
                     spellChecker: false,

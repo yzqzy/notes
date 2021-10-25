@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faEdit, faTrashAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -26,14 +26,16 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
     setValue('');
   }
 
-  if (enterPressed && editItem) {
-    saveFile(editItem, value);
-    close();
-  }
-  if (escPressed && editItem) {
-    close();
-  }
-
+  useEffect(() => {
+    if (enterPressed && editItem) {
+      saveFile(editItem, value);
+      close();
+    }
+    if (escPressed && editItem) {
+      close();
+    }
+  });
+  
   return (
     <GroupUl>
       {
