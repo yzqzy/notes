@@ -10,7 +10,10 @@ import TabList from './components/TabList';
 import SimpleMDE from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
 import filesData from './shared/files';
-import { mapArr, objToArr } from './shared/helper';
+import { mapArr, objToArr, readFile, writeFile, renameFile, deleteFile } from './shared/helper';
+
+const path = window.require('path');
+const { remote } = window.require('electron');
 
 const LeftBoard = styled.div.attrs({
   className: 'col-3 left-panel',
@@ -56,6 +59,9 @@ const RightBoard = styled.div.attrs({
     font: normal 28px/300px '微软雅黑';
   }
 `;
+
+// 自定义磁盘存放地址
+const savePath = remote.app.getPath('documents') + '/electron_mkdown';
 
 function App() {
   const [files, setFiles] = useState(mapArr(filesData));
@@ -117,10 +123,13 @@ function App() {
 
   // 删除文件项
   const deleteItem = (id) => {
-    delete files[id];
-
-    setFiles(files);
-    closeFile(id);
+    deleteFile(path.join(savePath, `${ files[id].title }.md`))
+      .then(() => {
+        delete files[id];
+    
+        setFiles(files);
+        closeFile(id);
+      })
   }
 
   // 根据关键字搜索文件
@@ -129,8 +138,8 @@ function App() {
     setSearchFiles(nameFiles);
   }
 
-  // 重命名
-  const rename = (id, newTitle) => {
+  // 保存数据
+  const saveData = (id, newTitle, isNew) => {
     const file = objToArr(files).find(file => file.title === newTitle);
 
     if (file) {
@@ -138,11 +147,21 @@ function App() {
     }
 
     const newFile = { ...files[id], title: newTitle, isNew: false };
+    const newPath = path.join(savePath, `${ newTitle }.md`);
 
-    setFiles({
-      ...files,
-      [id]: newFile
-    })
+    if (isNew) {
+      // 创建操作
+      writeFile(newPath, files[id].body)
+        .then(() => {
+          setFiles({ ...files, [id]: newFile });
+        });
+    } else {
+      // 更新操作
+      renameFile(path.join(savePath, `${ files[id].title }.md`), newPath)
+        .then(() => {
+          setFiles({ ...files, [id]: newFile });
+        });
+    }
   }
 
   // 新建操作
@@ -167,6 +186,14 @@ function App() {
     }
   }
 
+  // 保存正在编辑的文件内容
+  const saveCurrentFile = () => {
+    writeFile(path.join(savePath, `${ activeFile.title }.md`), activeFile.body)
+      .then(() => {
+        setUnSaveIds(unSaveIds.filter(id => id !== activeFile.id));
+      });
+  }
+
   return (
     <div className="App container-fluid">
       <div className="row no-gutters">
@@ -179,7 +206,7 @@ function App() {
             files={ fileList }
             editFile={ openItem }
             deleteFile={ deleteItem }
-            saveFile={ rename }
+            saveFile={ saveData }
           />
           <div className="btn_list">
             <ButtonItem
@@ -194,6 +221,7 @@ function App() {
           </div>
         </LeftBoard>
         <RightBoard>
+          <button onClick={ saveCurrentFile }>保存</button>
           {
             activeFile ? (
               <>
