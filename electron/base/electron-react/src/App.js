@@ -1,19 +1,39 @@
 import { v4 } from 'uuid';
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import 'bootstrap/dist/css/bootstrap.min.css'
 import { faFileImport, faPlus } from '@fortawesome/free-solid-svg-icons';
 import SearchFile from './components/SearchFile';
 import FileList from './components/FileList';
 import ButtonItem from './components/ButtonItem';
 import TabList from './components/TabList';
 import SimpleMDE from 'react-simplemde-editor';
+import { objToArr, readFile, writeFile, renameFile, deleteFile } from './shared/helper';
+import 'bootstrap/dist/css/bootstrap.min.css'
 import 'easymde/dist/easymde.min.css';
-import filesData from './shared/files';
-import { mapArr, objToArr, readFile, writeFile, renameFile, deleteFile } from './shared/helper';
 
 const path = window.require('path');
 const { remote } = window.require('electron');
+const Store = window.require('electron-store');
+
+const fileStore = new Store({ name: "filesInfo" });
+
+// 定义方法实现持久化存储
+const saveInfoToStore = (files) => {
+  const storeObj = objToArr(files).reduce((prev, file) => {
+    const { id, title, createTime, path } = file;
+
+    prev[id] = {
+      id,
+      path,
+      title,
+      createTime
+    };
+
+    return prev;
+  }, {});
+
+  fileStore.set('files', storeObj);
+};
 
 const LeftBoard = styled.div.attrs({
   className: 'col-3 left-panel',
@@ -64,7 +84,7 @@ const RightBoard = styled.div.attrs({
 const savePath = remote.app.getPath('documents') + '/electron_mkdown';
 
 function App() {
-  const [files, setFiles] = useState(mapArr(filesData));
+  const [files, setFiles] = useState(fileStore.get('files') || {});
   const [activeId, setActiveId] = useState('');
   const [openIds, setOpenIds] = useState([]);
   const [unSaveIds, setUnSaveIds] = useState([]);
@@ -81,6 +101,20 @@ function App() {
   // 编辑文件
   const openItem = (id) => {
     setActiveId(id);
+
+    // 获取本地文件数据
+    const currentFile = files[id];
+
+    if (!currentFile.isLoaded) {
+      readFile(currentFile.path)
+        .then(data => {
+          const newFile = { ...currentFile, body: data, isLoaded: true };
+
+          console.log(data)
+
+          setFiles({ ...files, [id]: newFile });
+        });
+    }
 
     if (!openIds.includes(id)) {
       setOpenIds([ ...openIds, id]);
@@ -123,13 +157,25 @@ function App() {
 
   // 删除文件项
   const deleteItem = (id) => {
-    deleteFile(path.join(savePath, `${ files[id].title }.md`))
-      .then(() => {
-        delete files[id];
+    const file = files[id];
+
+    if (!file.isNew) {
+      deleteFile(path.join(savePath, `${ files[id].title }.md`))
+        .then(() => {
+          delete files[id];
+      
+          setFiles(files);
+          saveInfoToStore(files);
+          closeFile(id);
+        })
+      return;
+    }
+
+    delete files[id];
     
-        setFiles(files);
-        closeFile(id);
-      })
+    setFiles(files);
+    saveInfoToStore(files);
+    closeFile(id);
   }
 
   // 根据关键字搜索文件
@@ -146,20 +192,26 @@ function App() {
       newTitle += '_copy';
     }
 
-    const newFile = { ...files[id], title: newTitle, isNew: false };
     const newPath = path.join(savePath, `${ newTitle }.md`);
+    const newFile = { ...files[id], title: newTitle, isNew: false, path: newPath };
+
+    const newFiles = { ...files, [id]: newFile };
 
     if (isNew) {
       // 创建操作
       writeFile(newPath, files[id].body)
         .then(() => {
-          setFiles({ ...files, [id]: newFile });
+          setFiles(newFiles);
+          saveInfoToStore(newFiles)
         });
     } else {
       // 更新操作
-      renameFile(path.join(savePath, `${ files[id].title }.md`), newPath)
+      const oldPath = path.join(savePath, `${ files[id].title }.md`);
+
+      renameFile(oldPath, newPath)
         .then(() => {
-          setFiles({ ...files, [id]: newFile });
+          setFiles(newFiles);
+          saveInfoToStore(newFiles)
         });
     }
   }
