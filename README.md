@@ -5,7 +5,7 @@
   + [ECMAScript](https://git.yueluo.club/heora/notes/src/master/ecmascript/base) 已完成
   + [ES6](https://git.yueluo.club/heora/notes/src/master/ecmascript/es6) 已完成
   + [Promise源码实现](https://git.yueluo.club/heora/notes/src/master/ecmascript/promise) 已完成
-  + [内置对象](https://git.yueluo.club/heora/notes/src/master/ecmascript/Built_in_objects) 更新中...
+  + [内置对象](https://git.yueluo.club/heora/notes/src/master/ecmascript/Built_in_objects) 暂停中...
   + [函数式编程](https://git.yueluo.club/heora/notes/src/master/ecmascript/functional) 已完成
   + [JavaScript性能优化](https://git.yueluo.club/heora/notes/src/master/ecmascript/optimize) 已完成
 * [DOM](https://git.yueluo.club/heora/notes/src/master/dom) 已完成
@@ -48,7 +48,7 @@
   + [react-hooks](https://git.yueluo.club/heora/notes/src/master/react/react_hooks) 已完成
   + [VirtualDOM及DIFF算法](https://git.yueluo.club/heora/notes/src/master/react/virtual_dom) 已完成
   + [Fiber](https://git.yueluo.club/heora/notes/src/master/react/Fiber) 已完成
-  + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 更新中...
+  + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 暂停中...
 * [TypeScipt](https://git.yueluo.club/heora/notes/src/master/typescript) 已完成
 * NodeJS
   + [Node基础](https://git.yueluo.club/heora/notes/src/master/node/base) 已完成
@@ -60,7 +60,8 @@
   + [Electron基础](https://git.yueluo.club/heora/notes/src/master/electron/base) 已完成
   + [Electron实战](https://git.yueluo.club/heora/notes/src/master/electron/combat) 已完成
 * 微前端
-  + [single-spa源码实现](https://git.yueluo.club/heora/notes/src/master/micro_frontends) 已完成
+  + [微前端基础](https://git.yueluo.club/heora/notes/src/master/micro_frontends/base) 更新中...
+  + [single-spa源码实现](https://git.yueluo.club/heora/notes/src/master/micro_frontends/source) 已完成
 * [Superset](https://git.yueluo.club/heora/notes/src/master/superset) 已完成
 * [Nginx](https://git.yueluo.club/heora/notes/src/master/nginx) 暂停中...
 * jenkins
