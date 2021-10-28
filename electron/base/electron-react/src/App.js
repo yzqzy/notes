@@ -158,7 +158,7 @@ function App() {
     const file = files[id];
 
     if (!file.isNew) {
-      deleteFile(path.join(savePath, `${ files[id].title }.md`))
+      deleteFile(file.path)
         .then(() => {
           delete files[id];
       
@@ -190,7 +190,8 @@ function App() {
       newTitle += '_copy';
     }
 
-    const newPath = path.join(savePath, `${ newTitle }.md`);
+    const newPath = isNew ? path.join(savePath, `${ newTitle }.md`) 
+                          : path.join(path.dirname(files[id].path, `${ newTitle }.md`));
     const newFile = { ...files[id], title: newTitle, isNew: false, path: newPath };
 
     const newFiles = { ...files, [id]: newFile };
@@ -204,7 +205,7 @@ function App() {
         });
     } else {
       // 更新操作
-      const oldPath = path.join(savePath, `${ files[id].title }.md`);
+      const oldPath = files[id].path;
 
       renameFile(oldPath, newPath)
         .then(() => {
@@ -238,7 +239,7 @@ function App() {
 
   // 保存正在编辑的文件内容
   const saveCurrentFile = () => {
-    writeFile(path.join(savePath, `${ activeFile.title }.md`), activeFile.body)
+    writeFile(activeFile.path, activeFile.body)
       .then(() => {
         setUnSaveIds(unSaveIds.filter(id => id !== activeFile.id));
       });
