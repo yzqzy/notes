@@ -191,7 +191,7 @@ function App() {
     }
 
     const newPath = isNew ? path.join(savePath, `${ newTitle }.md`) 
-                          : path.join(path.dirname(files[id].path, `${ newTitle }.md`));
+                          : path.join(path.dirname(files[id].path), `${ newTitle }.md`);
     const newFile = { ...files[id], title: newTitle, isNew: false, path: newPath };
 
     const newFiles = { ...files, [id]: newFile };
@@ -279,8 +279,7 @@ function App() {
         const newFiles = { ...files, ...mapArr(packageData) };
 
         setFiles(newFiles);
-
-        // TODO 持久化操作
+        saveInfoToStore(newFiles);
 
         if (packageData.length) {
           remote.dialog.showMessageBox({
