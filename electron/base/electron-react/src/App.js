@@ -8,6 +8,8 @@ import ButtonItem from './components/ButtonItem';
 import TabList from './components/TabList';
 import SimpleMDE from 'react-simplemde-editor';
 import { mapArr, objToArr, readFile, writeFile, renameFile, deleteFile } from './shared/helper';
+import useIpcRenderer from './hooks/useIpcRenderer';
+
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'easymde/dist/easymde.min.css';
 
@@ -141,6 +143,8 @@ function App() {
 
   // 修改文件内容
   const changeFile = (id, newVal) => {
+    if (newVal === files[id].body) return;
+
     if (!unSaveIds.includes(id)) {
       setUnSaveIds([ ...unSaveIds, id ]);
     }
@@ -294,6 +298,13 @@ function App() {
     });
   }
 
+  // 渲染进程与主进程通信
+  useIpcRenderer({
+    'execute-create-file': createFile,
+    'execute-import-file': importFile,
+    'execute-save-file': saveCurrentFile,
+  });
+
   return (
     <div className="App container-fluid">
       <div className="row no-gutters">
@@ -322,7 +333,6 @@ function App() {
           </div>
         </LeftBoard>
         <RightBoard>
-          <button onClick={ saveCurrentFile }>保存</button>
           {
             activeFile ? (
               <>

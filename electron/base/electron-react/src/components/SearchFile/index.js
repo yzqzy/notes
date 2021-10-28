@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faSearch } from '@fortawesome/free-solid-svg-icons';
 import PropTypes from 'prop-types';
 import useKeyBoard from "../../hooks/useKeyBoard";
+import useIpcRenderer from "../../hooks/useIpcRenderer";
 
 const SearchDiv = styled.div.attrs({
   className: 'd-flex align-items-center justify-content-between'
@@ -51,6 +52,10 @@ const SearchFile = ({ title, onSearch }) => {
       oInputRef.current.focus();
     }
   }, [ searchActive ]);
+
+  useIpcRenderer({
+    'execute-search-file': () => setSearchActive(true)
+  });
 
   return (
     <>

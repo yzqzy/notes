@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileAlt, faEdit, faTrashAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PropTypes from 'prop-types';
 import useKeyBoard from "../../hooks/useKeyBoard";
 import useContextMenu from "../../hooks/useContextMenu";
@@ -102,18 +102,6 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
                     editFile(file.id);
                   }}
                 >{ file.title }</span>
-                <span
-                  className="col-1"
-                  onClick={() => setEditItem(file.id)}
-                >
-                  <FontAwesomeIcon icon={ faEdit }></FontAwesomeIcon>
-                </span>
-                <span
-                  className="col-1"
-                  onClick={() => deleteFile(file.id)}
-                >
-                  <FontAwesomeIcon icon={ faTrashAlt }></FontAwesomeIcon>
-                </span>
               </>
              ) : ( 
               <>
