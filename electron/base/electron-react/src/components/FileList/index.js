@@ -4,10 +4,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faEdit, faTrashAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import PropTypes from 'prop-types';
 import useKeyBoard from "../../hooks/useKeyBoard";
+import useContextMenu from "../../hooks/useContextMenu";
+import { getParentNode } from "../../shared/helper";
 
 const GroupUl = styled.ul.attrs({
-  className: 'list-group list-group-flush',
-
+  className: 'list-group list-group-flush menu-board',
 })`
   li {
     color: #fff;
@@ -25,6 +26,28 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
     setEditItem(false);
     setValue('');
   }
+
+  // 自定义右键菜单
+  const contextMenuTemplate = [
+    {
+      label: '重命名',
+      click () {
+        const retNode = getParentNode(currentElement.current, 'menu-item');
+
+        setEditItem(retNode.dataset.id);
+      }
+    },
+    {
+      label: '删除',
+      click () {
+        const retNode = getParentNode(currentElement.current, 'menu-item');
+
+        deleteFile(retNode.dataset.id);
+      }
+    }
+  ];
+
+  const currentElement = useContextMenu(contextMenuTemplate, '.menu-board');
 
   useEffect(() => {
     const newFile = files.find(file => file.isNew);
@@ -61,8 +84,10 @@ const FileList = ({ files, editFile, saveFile, deleteFile }) => {
       {
         files.map(file => (
           <li
-            className="list-group-item d-flex align-items-center"
+            className="list-group-item d-flex align-items-center menu-item"
             key={ file.id }
+            data-id={ file.id }
+            data-title={ file.title }
           > 
            {
              file.id !== editItem && !file.isNew ? (
