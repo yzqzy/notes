@@ -7,7 +7,7 @@ import FileList from './components/FileList';
 import ButtonItem from './components/ButtonItem';
 import TabList from './components/TabList';
 import SimpleMDE from 'react-simplemde-editor';
-import { objToArr, readFile, writeFile, renameFile, deleteFile } from './shared/helper';
+import { mapArr, objToArr, readFile, writeFile, renameFile, deleteFile } from './shared/helper';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'easymde/dist/easymde.min.css';
 
@@ -109,8 +109,6 @@ function App() {
       readFile(currentFile.path)
         .then(data => {
           const newFile = { ...currentFile, body: data, isLoaded: true };
-
-          console.log(data)
 
           setFiles({ ...files, [id]: newFile });
         });
@@ -246,6 +244,56 @@ function App() {
       });
   }
 
+  // 执行文件导入 
+  const importFile = () => {
+    remote.dialog.showOpenDialog({
+      defaultPath: __dirname,
+      buttonLabel: '请选择',
+      title: '选择 md 文件',
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        { name: 'md文档', extensions: ['md'] },
+        { name: '其他类型', extensions: ['js', 'json', 'html'] }
+      ]
+    }).then(ret => {
+      const paths = ret.filePaths;
+
+      if (paths.length) {
+        const validPaths = paths.filter(filePath => {
+          const existed = Object.values(files).find(file => {
+            return file.path === filePath;
+          });
+
+          return !existed;
+        });
+
+        const packageData = validPaths.map(filePath => {
+          return {
+            id: v4(),
+            title: path.basename(filePath, '.md'),
+            path: filePath
+          }
+        });
+
+        const newFiles = { ...files, ...mapArr(packageData) };
+
+        setFiles(newFiles);
+
+        // TODO 持久化操作
+
+        if (packageData.length) {
+          remote.dialog.showMessageBox({
+            type: 'info',
+            title: '文件导入',
+            message: '文件导入成功'
+          });
+        }
+      } else {
+        console.log('未选择文件导入');
+      }
+    });
+  }
+
   return (
     <div className="App container-fluid">
       <div className="row no-gutters">
@@ -269,6 +317,7 @@ function App() {
             <ButtonItem
               title="导入"
               icon={ faFileImport }
+              btnClick={ importFile }
             />
           </div>
         </LeftBoard>
