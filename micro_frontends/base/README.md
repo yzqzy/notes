@@ -1085,5 +1085,164 @@ export default {
 
 ### 实现跨应用通信
 
+跨应用通信可以使用 RxJS，因为它无关于框架，也就是可以在任何其他框架中使用。
 
+#### 1. 添加 rxjs 的 import-map
+
+```ejs
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@5.9.0/lib/system/single-spa.min.js",
+      "react": "https://cdn.jsdelivr.net/npm/react@17.0.1/umd/react.production.min.js",
+      "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@17.0.1/umd/react-dom.production.min.js",
+      "react-router-dom": "https://cdn.jsdelivr.net/npm/react-router-dom@5.2.0/umd/react-router-dom.min.js",
+      "vue": "https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js",
+      "vue-router": "https://cdn.jsdelivr.net/npm/vue-router@3.0.7/dist/vue-router.min.js",
+      "rxjs": "https://cdn.jsdelivr.net/npm/rxjs@6.6.3/bundles/rxjs.umd.min.js"
+    }
+  }
+</script>
+```
+
+#### 2. 利用 utility modules 中导出方法
+
+```js
+import { ReplaySubject } from 'rxjs';
+
+export function sayHello (who) {
+  console.log(`%c${ who } sayHello`, 'color:skyblue');
+}
+
+export const sharedSubject = new ReplaySubject();
+```
+
+#### 3. React 中订阅消息
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function useToolsModule () {
+  const [toolsModule, setToolsModule] = useState();
+
+  useEffect(() => {
+    System.import('@yueluo/tools').then(setToolsModule);
+  }, []);
+
+  return toolsModule;
+}
+
+const Home = () => {
+  const toolsModule = useToolsModule();
+
+  useEffect(() => {
+    let subjection = null;
+
+    if (toolsModule) {
+      toolsModule.sayHello('@yueluo/todos');
+      subjection = toolsModule.sharedSubject.subscribe(console.log);
+    }
+
+    return () => subjection && subjection.unsubscribe();
+  });
+
+
+  return <div>Home works</div>;
+}
+
+export default Home;
+```
+
+#### 4. Vue 中订阅消息
+
+```vue
+<template>
+  <div id="app">
+    <div>
+      <Parcel :config="parcelConfig" :mountParcel="mountParcel" />
+      <router-link to="/foo">foo</router-link> 
+      <router-link to="/bar">bar</router-link>
+      <button @click="handleClick">公共方法</button>
+    </div>
+    <router-view />
+  </div>
+</template>
+
+<script>
+import Parcel from "single-spa-vue/dist/esm/parcel";
+import { mountRootParcel } from "single-spa";
+
+export default {
+  name: 'App',
+  components: {
+    Parcel
+  },
+  data () {
+    return {
+      parcelConfig: window.System.import("@yueluo/navbar"),
+      mountParcel: mountRootParcel,
+      subjection: null
+    }
+  },
+  methods: {
+    async handleClick () {
+      const toolsModule = await window.System.import('@yueluo/tools');
+
+      this.toolsModule.sayHello('@yueluo/realworld');
+    }
+  },
+  async mounted () {
+    const toolsModule = await window.System.import('@yueluo/tools');
+
+    this.subjection = toolsModule.sharedSubject.subscribe(console.log);
+  },
+  async destroyed () {
+    this.subjection && this.subjection.unsubscribe();
+  }
+}
+</script>
+```
+
+#### 5. 发送广播
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function useToolsModule () {
+  const [toolsModule, setToolsModule] = useState();
+
+  useEffect(() => {
+    System.import('@yueluo/tools').then(setToolsModule);
+  }, []);
+
+  return toolsModule;
+}
+
+const Home = () => {
+  const toolsModule = useToolsModule();
+
+  useEffect(() => {
+    let subjection = null;
+
+    if (toolsModule) {
+      toolsModule.sayHello('@yueluo/todos');
+      subjection = toolsModule.sharedSubject.subscribe(console.log);
+    }
+
+    return () => subjection && subjection.unsubscribe();
+  });
+
+
+  return (
+    <div>
+      Home works
+      <button onClick={() => toolsModule.sharedSubject.next('@yueluo/todos -> hello')}>Send Message</button>
+    </div>
+  );
+}
+
+export default Home;
+```
+
+### 布局引擎（Layout Engine）
 

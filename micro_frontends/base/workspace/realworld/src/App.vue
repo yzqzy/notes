@@ -4,7 +4,7 @@
       <Parcel :config="parcelConfig" :mountParcel="mountParcel" />
       <router-link to="/foo">foo</router-link> 
       <router-link to="/bar">bar</router-link>
-      <button @click="handleClick">Button</button>
+      <button @click="handleClick">公共方法</button>
     </div>
     <router-view />
   </div>
@@ -22,7 +22,8 @@ export default {
   data () {
     return {
       parcelConfig: window.System.import("@yueluo/navbar"),
-      mountParcel: mountRootParcel
+      mountParcel: mountRootParcel,
+      subjection: null
     }
   },
   methods: {
@@ -31,6 +32,14 @@ export default {
 
       toolsModule.sayHello('@yueluo/realworld');
     }
+  },
+  async mounted () {
+    const toolsModule = await window.System.import('@yueluo/tools');
+
+    this.subjection = toolsModule.sharedSubject.subscribe(console.log);
+  },
+  async destroyed () {
+    this.subjection && this.subjection.unsubscribe();
   }
 }
 </script>

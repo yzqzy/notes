@@ -13,11 +13,24 @@ function useToolsModule () {
 const Home = () => {
   const toolsModule = useToolsModule();
 
-  if (toolsModule) {
-    toolsModule.sayHello('@yueluo/todos');
-  }
+  useEffect(() => {
+    let subjection = null;
 
-  return <div>Home works</div>;
+    if (toolsModule) {
+      toolsModule.sayHello('@yueluo/todos');
+      subjection = toolsModule.sharedSubject.subscribe(console.log);
+    }
+
+    return () => subjection && subjection.unsubscribe();
+  });
+
+
+  return (
+    <div>
+      Home works
+      <button onClick={() => toolsModule.sharedSubject.next('@yueluo/todos -> hello')}>Send Message</button>
+    </div>
+  );
 }
 
 export default Home;
