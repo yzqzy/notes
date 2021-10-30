@@ -970,17 +970,118 @@ create-single-spa
 #### 2. 修改端口
 
 ```js
+"scripts": {
+  "start": "webpack serve --port 9200",
+  "start:standalone": "webpack serve --env standalone",
+  "build": "concurrently yarn:build:*",
+  "build:webpack": "webpack --mode=production",
+  "analyze": "webpack --mode=production --env analyze",
+  "lint": "eslint src --ext js",
+  "format": "prettier --write .",
+  "check-format": "prettier --check .",
+  "prepare": "husky install",
+  "test": "cross-env BABEL_ENV=test jest --passWithNoTests",
+  "watch-tests": "cross-env BABEL_ENV=test jest --watch",
+  "coverage": "cross-env BABEL_ENV=test jest --coverage"
+}
 ```
-
-
 
 #### 3. 导出方法
 
+```js
+// Anything exported from this file is importable by other in-browser modules.
+export function sayHello (who) {
+  console.log(`%c${ who } sayHello`, 'color:skyblue');
+}
+```
+
 #### 4. 声明模块访问地址
+
+```ejs
+<% if (isLocal) { %>
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
+      "@yueluo/test": "//localhost:9001/yueluo-test.js",
+      "@yueluo/todos": "//localhost:9002/yueluo-todos.js",
+      "@yueluo/realworld": "//localhost:9003/js/app.js",
+      "@yueluo/navbar": "//localhost:9100/yueluo-navbar.js",
+      "@yueluo/tools": "//localhost:9200/yueluo-tools.js"
+    }
+  }
+</script>
+<% } %>
+```
 
 #### 5. react 中使用该方法
 
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function useToolsModule () {
+  const [toolsModule, setToolsModule] = useState();
+
+  useEffect(() => {
+    System.import('@yueluo/tools').then(setToolsModule);
+  }, []);
+
+  return toolsModule;
+}
+
+const Home = () => {
+  const toolsModule = useToolsModule();
+
+  if (toolsModule) {
+    toolsModule.sayHello('@yueluo/todos');
+  }
+
+  return <div>Home works</div>;
+}
+
+export default Home;
+```
+
 #### 6. vue 中使用该方法
+
+```vue
+<template>
+  <div id="app">
+    <div>
+      <Parcel :config="parcelConfig" :mountParcel="mountParcel" />
+      <router-link to="/foo">foo</router-link> 
+      <router-link to="/bar">bar</router-link>
+      <button @click="handleClick">Button</button>
+    </div>
+    <router-view />
+  </div>
+</template>
+
+<script>
+import Parcel from "single-spa-vue/dist/esm/parcel";
+import { mountRootParcel } from "single-spa";
+
+export default {
+  name: 'App',
+  components: {
+    Parcel
+  },
+  data () {
+    return {
+      parcelConfig: window.System.import("@yueluo/navbar"),
+      mountParcel: mountRootParcel
+    }
+  },
+  methods: {
+    async handleClick () {
+      const toolsModule = await window.System.import('@yueluo/tools');
+
+      toolsModule.sayHello('@yueluo/realworld');
+    }
+  }
+}
+</script>
+```
 
 ### 实现跨应用通信
 

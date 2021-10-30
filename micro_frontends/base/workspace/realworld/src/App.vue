@@ -4,6 +4,7 @@
       <Parcel :config="parcelConfig" :mountParcel="mountParcel" />
       <router-link to="/foo">foo</router-link> 
       <router-link to="/bar">bar</router-link>
+      <button @click="handleClick">Button</button>
     </div>
     <router-view />
   </div>
@@ -22,6 +23,13 @@ export default {
     return {
       parcelConfig: window.System.import("@yueluo/navbar"),
       mountParcel: mountRootParcel
+    }
+  },
+  methods: {
+    async handleClick () {
+      const toolsModule = await window.System.import('@yueluo/tools');
+
+      toolsModule.sayHello('@yueluo/realworld');
     }
   }
 }
