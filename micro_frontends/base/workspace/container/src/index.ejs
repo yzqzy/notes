@@ -57,7 +57,8 @@
         "@yueluo/todos": "//localhost:9002/yueluo-todos.js",
         "@yueluo/realworld": "//localhost:9003/js/app.js",
         "@yueluo/navbar": "//localhost:9100/yueluo-navbar.js",
-        "@yueluo/tools": "//localhost:9200/yueluo-tools.js"
+        "@yueluo/tools": "//localhost:9200/yueluo-tools.js",
+        "@single-spa/welcome": "https://unpkg.com/single-spa-welcome/dist/single-spa-welcome.js"
       }
     }
   </script>
@@ -82,6 +83,25 @@
   <noscript>
     You need to enable JavaScript to run this app.
   </noscript>
+
+  <template id="single-spa-layout">
+    <single-spa-router>
+      <application name="@yueluo/navbar"></application>
+      <route default>
+        <application name="@single-spa/welcome"></application>
+      </route>
+      <route path="test">
+        <application name="@yueluo/test"></application>
+      </route>
+      <route path="todos">
+        <application name="@yueluo/todos"></application>
+      </route>
+      <route path="realworld">
+        <application name="@yueluo/realworld"></application>
+      </route>
+    </single-spa-router>
+  </template>
+
   <main></main>
 
   <div id="root"></div>

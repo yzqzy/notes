@@ -1246,3 +1246,104 @@ export default Home;
 
 ### 布局引擎（Layout Engine）
 
+允许使用组件的方式声明顶层路由，并且提供了更加便捷的路由 API 用来注册。
+
+#### 1. 下载布局引擎
+
+```js
+yarn add single-spa-layout -S
+```
+
+#### 2. 构建路由
+
+```ejs
+<% if (isLocal) { %>
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
+      "@yueluo/test": "//localhost:9001/yueluo-test.js",
+      "@yueluo/todos": "//localhost:9002/yueluo-todos.js",
+      "@yueluo/realworld": "//localhost:9003/js/app.js",
+      "@yueluo/navbar": "//localhost:9100/yueluo-navbar.js",
+      "@yueluo/tools": "//localhost:9200/yueluo-tools.js",
+      "@single-spa/welcome": "https://unpkg.com/single-spa-welcome/dist/single-spa-welcome.js"
+    }
+  }
+</script>
+<% } %>
+
+<template id="single-spa-layout">
+  <single-spa-router>
+    <application name="@yueluo/navbar"></application>
+    <route default>
+      <application name="@single-spa/welcome"></application>
+    </route>
+    <route path="test">
+      <application name="@yueluo/test"></application>
+    </route>
+    <route path="todos">
+      <application name="@yueluo/todos"></application>
+    </route>
+    <route path="realworld">
+      <application name="@yueluo/realworld"></application>
+    </route>
+  </single-spa-router>
+</template>
+```
+
+#### 3. 获取路由信息、注册应用
+
+```js
+import { registerApplication, start } from "single-spa";
+import { constructApplications, constructRoutes } from "single-spa-layout";
+
+// 获取路由配置对象
+const routes = constructRoutes(document.querySelector("#single-spa-layout"));
+
+// 获取路由信息数组
+const applications = constructApplications({
+  routes,
+  loadApp({ name }) {
+    return System.import(name);
+  }
+})
+
+// 遍历路由信息注册应用
+applications.forEach(registerApplication);
+
+// // registerApplication({
+// //   name: "@single-spa/welcome",
+// //   app: ,
+// //   activeWhen: ["/"],
+// // });
+
+// registerApplication(
+//   "@single-spa/welcome", 
+//   () => System.import("https://unpkg.com/single-spa-welcome/dist/single-spa-welcome.js"),
+//   (location) => location.pathname === '/'
+// );
+
+// registerApplication({
+//   name: "@yueluo/test",
+//   app: () => System.import("@yueluo/test"),
+//   activeWhen: ["/test"],
+// });
+
+// registerApplication({
+//   name: "@yueluo/todos",
+//   app: () => System.import("@yueluo/todos"),
+//   activeWhen: ["/todos"],
+// });
+
+// registerApplication({
+//   name: "@yueluo/realworld",
+//   app: () => System.import("@yueluo/realworld"),
+//   activeWhen: ["/realworld"],
+// });
+
+start({
+  urlRerouteOnly: true,
+});
+```
+
