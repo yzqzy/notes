@@ -787,3 +787,202 @@ export default {
 
 ### 创建 Parcel 应用
 
+Parcel 用来创建公共 UI，涉及到跨端共享共享 UI 时需要使用 Parcel。
+
+Parcel 的定义可以使用任何 single-spa 支持的框架，它是单独的应用，需要单独启动，但是它不关联路由。
+
+Parcel 应用的模块访问地址也需要被添加到 import-map 中，其他微应用通过 System.import 方法进行引用。
+
+需求：创建 navbar parcel，在不同应用中使用它。
+
+#### 1. 创建 Parcel 应用
+
+create-single-spa，创建 Parcel 应用和创建普通应用其实是一致的。
+
+root.component.js
+
+```jsx
+import React from 'react';
+import { BrowserRouter, Link } from 'react-router-dom';
+
+export default function Root(props) {
+  return (
+    <BrowserRouter>
+      <div>
+        <Link to="/">@single-spa/welcome</Link>
+        <Link to="/test">@yueluo/test</Link>
+        <Link to="/todos">@yueluo/todos</Link>
+        <Link to="/realworld">@yueluo/realworld</Link>
+      </div>
+    </BrowserRouter>
+  );
+}
+
+```
+
+#### 2. 配置 webpack
+
+```js
+const { merge } = require("webpack-merge");
+const singleSpaDefaults = require("webpack-config-single-spa-react");
+
+module.exports = (webpackConfigEnv, argv) => {
+  const defaultConfig = singleSpaDefaults({
+    orgName: "yueluo",
+    projectName: "navbar",
+    webpackConfigEnv,
+    argv,
+  });
+
+  return merge(defaultConfig, {
+    // modify the webpack config however you'd like to by adding to this object
+    externals: ['react-router-dom']
+  });
+};
+ 
+```
+
+#### 3. 指定端口
+
+```js
+"scripts": {
+  "start": "webpack serve --port 9100",
+  "start:standalone": "webpack serve --env standalone",
+  "build": "concurrently yarn:build:*",
+  "build:webpack": "webpack --mode=production",
+  "analyze": "webpack --mode=production --env analyze",
+  "lint": "eslint src --ext js",
+  "format": "prettier --write .",
+  "check-format": "prettier --check .",
+  "test": "cross-env BABEL_ENV=test jest",
+  "watch-tests": "cross-env BABEL_ENV=test jest --watch",
+  "prepare": "husky install",
+  "coverage": "cross-env BABEL_ENV=test jest --coverage"
+}
+```
+
+#### 4. 指定模块地址
+
+```ejs
+<% if (isLocal) { %>
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
+      "@yueluo/test": "//localhost:9001/yueluo-test.js",
+      "@yueluo/todos": "//localhost:9002/yueluo-todos.js",
+      "@yueluo/realworld": "//localhost:9003/js/app.js",
+      "@yueluo/navbar": "//localhost:9100/yueluo-navbar.js"
+    }
+  }
+</script>
+<% } %>
+```
+
+#### 5. react 应用中使用
+
+```jsx
+import React from 'react';
+import { BrowserRouter, Route, Link, Redirect, Switch } from 'react-router-dom';
+import Home from './components/Home';
+import About from './components/About';
+import Parcel from "single-spa-react/parcel"
+
+export default function Root(props) {
+  return (
+    <BrowserRouter basename="/todos">
+      <Parcel config={System.import("@yueluo/navbar")} />
+      <div>
+        <Link to="/home">Home</Link> <Link to="/about">About</Link>
+      </div>
+      <Switch>
+        <Route path="/home">
+          <Home />
+        </Route> 
+        <Route path="/about">
+          <About />
+        </Route> 
+        <Route path="/">
+          <Redirect to="/home" />
+        </Route> 
+      </Switch>
+    </BrowserRouter>
+  );
+}
+```
+
+#### 6. vue 应用中使用
+
+vue.config.js
+
+```js
+module.exports = {
+  chainWebpack: config => {
+    config.externals(['vue', 'vue-router', 'single-spa'])
+  }
+}
+```
+
+App.vue
+
+```vue
+<template>
+  <div id="app">
+    <div>
+      <Parcel :config="parcelConfig" :mountParcel="mountParcel" />
+      <router-link to="/foo">foo</router-link> 
+      <router-link to="/bar">bar</router-link>
+    </div>
+    <router-view />
+  </div>
+</template>
+
+<script>
+import Parcel from "single-spa-vue/dist/esm/parcel";
+import { mountRootParcel } from "single-spa";
+
+export default {
+  name: 'App',
+  components: {
+    Parcel
+  },
+  data () {
+    return {
+      parcelConfig: window.System.import("@yueluo/navbar"),
+      mountParcel: mountRootParcel
+    }
+  }
+}
+</script>
+```
+
+### 创建 utility modules
+
+用于放置跨应用共享的 js 逻辑，它也是独立的应用，需要单独构建单独启动。
+
+#### 1. 创建应用
+
+create-single-spa
+
+* 文件夹写 tools
+* 应用选择 in-browser utility module（styleguide api cache，etc）
+
+#### 2. 修改端口
+
+```js
+```
+
+
+
+#### 3. 导出方法
+
+#### 4. 声明模块访问地址
+
+#### 5. react 中使用该方法
+
+#### 6. vue 中使用该方法
+
+### 实现跨应用通信
+
+
+
