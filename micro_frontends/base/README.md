@@ -305,3 +305,136 @@ index.ejs
 
 ### 创建不基于框架的微应用
 
+#### 1. 应用初始化
+
+container 容器同级目录
+
+```js
+mkdir test
+```
+
+#### 2. 配置package.json
+
+```js
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack serve"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.12.10",
+    "single-spa": "^5.9.3",
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0",
+    "webpack-config-single-spa": "^5.0.0",
+    "webpack-dev-server": "^4.0.0",
+    "webpack-merge": "^5.8.0"
+  }
+}
+```
+
+#### 3. 配置 webpack
+
+```js
+const singleSpaDefaults = require('webpack-config-single-spa');
+const { merge } = require('webpack-merge');
+
+module.exports = () => {
+  const defaultConfig = singleSpaDefaults({
+    orgName: 'yueluo',
+    projectName: 'test'
+  });
+
+  return merge(defaultConfig, {
+    devServer: {
+      port: 9001
+    }
+  });
+}
+```
+
+#### 4. 编写生命周期钩子函数
+
+src/yueluo-test.js
+
+```js
+let testContainer = null
+
+export async function bootstrap () {
+  console.log('应用正在启动');
+}
+
+export async function mount () {
+  console.log('应用正在挂载');
+
+  testContainer = document.createElement('div');
+  testContainer.id = 'test-container';
+  testContainer.innerHTML = 'hello, single spa test！'
+}
+
+export async function unmount () {
+  console.log('应用正在卸载');
+}
+```
+
+#### 5. 前端容器注册前端微应用
+
+src/yueluo-root-config.js
+
+```js
+import { registerApplication, start } from "single-spa";
+
+// registerApplication({
+//   name: "@single-spa/welcome",
+//   app: ,
+//   activeWhen: ["/"],
+// });
+
+registerApplication(
+  "@single-spa/welcome", 
+  () => System.import("https://unpkg.com/single-spa-welcome/dist/single-spa-welcome.js"),
+  (location) => location.pathname === '/'
+);
+
+registerApplication({
+  name: "@yueluo/test",
+  app: () => System.import("@yueluo/test"),
+  activeWhen: ["/test"],
+});
+
+// registerApplication({
+//   name: "@yueluo/navbar",
+//   app: () => System.import("@yueluo/navbar"),
+//   activeWhen: ["/"]
+// });
+
+start({
+  urlRerouteOnly: true,
+});
+```
+
+#### 6. 模板文件中指定模块地址
+
+src/index.ejs
+
+```html
+<% if (isLocal) { %>
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
+      "@yueluo/test": "//localhost:9001/yueluo-test.js"
+    }
+  }
+</script>
+<% } %>
+```
+
+### 创建基于 react 框架的微应用
+
