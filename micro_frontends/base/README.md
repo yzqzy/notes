@@ -185,7 +185,7 @@ single-spa 是一个实现微前端架构的框架。
 安装脚手架
 
 ```js
-npm install create-single-spa@2.0.3 -g
+npm install create-single-spa -g
 ```
 
 查看当前安装脚手架的版本
