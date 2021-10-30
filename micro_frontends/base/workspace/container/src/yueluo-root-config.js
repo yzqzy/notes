@@ -24,6 +24,12 @@ registerApplication({
   activeWhen: ["/todos"],
 });
 
+registerApplication({
+  name: "@yueluo/realworld",
+  app: () => System.import("@yueluo/realworld"),
+  activeWhen: ["/realworld"],
+});
+
 // registerApplication({
 //   name: "@yueluo/navbar",
 //   app: () => System.import("@yueluo/navbar"),

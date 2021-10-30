@@ -423,7 +423,7 @@ start({
 
 index.ejs
 
-```html
+```ejs
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
@@ -484,7 +484,7 @@ registerApplication({
 
 index.ejs
 
-```html
+```ejs
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
@@ -504,7 +504,7 @@ index.ejs
 
 index.ejs
 
-```html
+```ejs
 <script type="systemjs-importmap">
   {
     "imports": {
@@ -517,7 +517,7 @@ index.ejs
 </script>
 ```
 
-#### 6. 应用入口文件解析
+#### 6. 配置挂载位置
 
 yueluo-todo.js
 
@@ -621,4 +621,88 @@ module.exports = (webpackConfigEnv, argv) => {
   });
 };
 ```
+
+### 创建基于 vue 框架的微应用
+
+#### 1. 创建应用
+
+使用脚手架 create-single-spa。
+
+* 应用目录输入 realworld
+
+* 框架选择 vue
+* 生成 vue2 项目
+
+#### 2. 提取 vue、vue-router
+
+当前应用新建 vue.config.js
+
+```js
+module.exports = {
+  chainWebpack: config => {
+    config.externals(['vue', 'vue-router'])
+  }
+}
+```
+
+容器应用配置 vue、vue-router
+
+```ejs
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@5.9.0/lib/system/single-spa.min.js",
+      "react": "https://cdn.jsdelivr.net/npm/react@17.0.1/umd/react.production.min.js",
+      "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@17.0.1/umd/react-dom.production.min.js",
+      "react-router-dom": "https://cdn.jsdelivr.net/npm/react-router-dom@5.2.0/umd/react-router-dom.min.js",
+      "vue": "https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js",
+      "vue-router": "https://cdn.jsdelivr.net/npm/vue-router@3.0.7/dist/vue-router.min.js"
+    }
+  }
+</script>
+```
+
+#### 3. 修改启动命令
+
+```js
+"scripts": {
+  "start": "vue-cli-service serve --port 9003",
+  "build": "vue-cli-service build",
+  "lint": "vue-cli-service lint",
+  "serve:standalone": "vue-cli-service serve --mode standalone"
+}
+```
+
+#### 4. 注册应用、指定引用地址
+
+root-config.js
+
+```js
+registerApplication({
+  name: "@yueluo/realworld",
+  app: () => System.import("@yueluo/realworld"),
+  activeWhen: ["/realworld"],
+});
+```
+
+index.ejs
+
+```ejs
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: localhost:*; script-src 'unsafe-inline' 'unsafe-eval' https: localhost:*; connect-src https: localhost:* ws://localhost:*; style-src 'unsafe-inline' https:; object-src 'none';"> 内容安全策略 --> 
+
+<% if (isLocal) { %>
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
+      "@yueluo/test": "//localhost:9001/yueluo-test.js",
+      "@yueluo/todos": "//localhost:9002/yueluo-todos.js",
+      "@yueluo/realworld": "//localhost:9003/js/app.js"
+    }
+  }
+</script>
+<% } %>
+```
+
+#### 5. 路由配置
 
