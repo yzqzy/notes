@@ -230,3 +230,78 @@ localhost:9000
 
 #### 6. 默认代码解析
 
+root-config.js
+
+```js
+import { registerApplication, start } from "single-spa";
+
+// 注册微应用
+registerApplication({
+  name: "@single-spa/welcome",
+  app: () =>
+    System.import(
+      "https://unpkg.com/single-spa-welcome/dist/single-spa-welcome.js"
+    ),
+  activeWhen: ["/"],
+});
+
+// registerApplication({
+//   name: "@yueluo/navbar",
+//   app: () => System.import("@yueluo/navbar"),
+//   activeWhen: ["/"]
+// });
+
+// 启动应用
+start({
+  urlRerouteOnly: true,
+});
+```
+
+index.ejs
+
+```html
+<!-- 导入微前端容器应用 -->
+<script>
+  System.import("@study/root-config")
+</script>
+<!-- 
+ import-map-overrides 可以覆盖导入映射
+ 当前项目中用于配合 single-spa Inspector 调试工具使用.
+ 可以手动覆盖项目中的 JavaScript 模块加载地址, 用于调试.
+-->
+<import-map-overrides-full show-when-local-storage="devtools" dev-libs></import-map-overrides-full>
+```
+
+```html
+<!-- 模块加载器 -->
+<script src="https://cdn.jsdelivr.net/npm/systemjs@6.8.0/dist/system.min.js"></script>
+<!-- systemjs 用来解析 AMD 模块的插件 -->
+<script src="https://cdn.jsdelivr.net/npm/systemjs@6.8.0/dist/extras/amd.min.js"></script>
+<!-- 用于覆盖通过 import-map 设置的 JavaScript 模块下载地址 -->
+<script src="https://cdn.jsdelivr.net/npm/import-mapoverrides@2.2.0/dist/import-map-overrides.js"></script>
+<!-- 用于支持 Angular 应用 -->
+<script src="https://cdn.jsdelivr.net/npm/zone.js@0.10.3/dist/zone.min.js"></script>
+```
+
+```html
+<!-- single-spa 预加载 -->
+<link
+ 	rel="preload"
+  href="https://cdn.jsdelivr.net/npm/single-spa@5.8.3/lib/system/singlespa.min.js"
+  as="script"
+/>
+```
+
+```html
+<!-- JavaScript 模块下载地址 此处可放置微前端项目中的公共模块 -->
+<script type="systemjs-importmap">
+ {
+   "imports": {
+      "single-spa": "https://cdn.jsdelivr.net/npm/singlespa@5.8.3/lib/system/single-spa.min.js"
+   }
+ }
+</script>
+```
+
+### 创建不基于框架的微应用
+
