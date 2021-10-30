@@ -18,6 +18,12 @@ registerApplication({
   activeWhen: ["/test"],
 });
 
+registerApplication({
+  name: "@yueluo/todos",
+  app: () => System.import("@yueluo/todos"),
+  activeWhen: ["/todos"],
+});
+
 // registerApplication({
 //   name: "@yueluo/navbar",
 //   app: () => System.import("@yueluo/navbar"),

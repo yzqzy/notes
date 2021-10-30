@@ -385,7 +385,7 @@ export async function unmount () {
 
 #### 5. 前端容器注册前端微应用
 
-src/yueluo-root-config.js
+root-config.js
 
 ```js
 import { registerApplication, start } from "single-spa";
@@ -421,7 +421,7 @@ start({
 
 #### 6. 模板文件中指定模块地址
 
-src/index.ejs
+index.ejs
 
 ```html
 <% if (isLocal) { %>
@@ -437,4 +437,188 @@ src/index.ejs
 ```
 
 ### 创建基于 react 框架的微应用
+
+#### 1. 创建应用 
+
+使用脚手架 create-single-spa。
+
+* 应用目录输入 todos
+
+* 框架选择 react
+
+#### 2. 修改应用启动端口
+
+```js
+{
+  "name": "@yueluo/todos",
+  "scripts": {
+    "start": "webpack serve --port 9002",
+    "start:standalone": "webpack serve --env standalone",
+    "build": "concurrently yarn:build:*",
+    "build:webpack": "webpack --mode=production",
+    "analyze": "webpack --mode=production --env analyze",
+    "lint": "eslint src --ext js",
+    "format": "prettier --write .",
+    "check-format": "prettier --check .",
+    "test": "cross-env BABEL_ENV=test jest",
+    "watch-tests": "cross-env BABEL_ENV=test jest --watch",
+    "prepare": "husky install",
+    "coverage": "cross-env BABEL_ENV=test jest --coverage"
+  }
+}
+```
+
+#### 3. 注册应用
+
+root-config.js
+
+```js
+registerApplication({
+  name: "@yueluo/todos",
+  app: () => System.import("@yueluo/todos"),
+  activeWhen: ["/todos"],
+});
+```
+
+#### 4. 指定应用模块引用地址
+
+index.ejs
+
+```html
+<% if (isLocal) { %>
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
+      "@yueluo/test": "//localhost:9001/yueluo-test.js",
+      "@yueluo/todos": "//localhost:9002/yueluo-todos.js"
+    }
+  }
+</script>
+<% } %>
+```
+
+#### 5. 指定公共库的访问地址
+
+默认情况下，应用中的 react 和  react-dom 没有被 webpack 打包，single-spa 认为它是公共库，不应该单独打包。
+
+index.ejs
+
+```html
+<script type="systemjs-importmap">
+  {
+    "imports": {
+      "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@5.9.0/lib/system/single-spa.min.js",
+      "react": "https://cdn.jsdelivr.net/npm/react@17.0.1/umd/react.production.min.js",
+      "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@17.0.1/umd/react-dom.production.min.js",
+      "react-router-dom": "https://cdn.jsdelivr.net/npm/react-router-dom@5.2.0/umd/react-router-dom.min.js"
+    }
+  }
+</script>
+```
+
+#### 6. 应用入口文件解析
+
+yueluo-todo.js
+
+```js
+import React from "react";
+import ReactDOM from "react-dom";
+import singleSpaReact from "single-spa-react";
+import Root from "./root.component";
+
+const lifecycles = singleSpaReact({
+  React,
+  ReactDOM,
+  rootComponent: Root,
+  errorBoundary(err, info, props) {
+    // Customize the root error boundary for your microfrontend here.
+    return null;
+  },
+  // 指定应用挂载位置（DOM 元素在容器中定义）
+  domElementGetter: () => document.getElementById('root')
+});
+
+export const { bootstrap, mount, unmount } = lifecycles;
+
+```
+
+#### 7. 路由配置
+
+编写 Home、About 组件
+
+```js
+import React from 'react';
+
+const About = () => {
+  return <div>About works</div>;
+}
+
+export default About;
+```
+
+```js
+import React from 'react';
+
+const Home = () => {
+  return <div>Home works</div>;
+}
+
+export default Home;
+```
+
+修改 root.component.js
+
+```jsx
+import React from 'react';
+import { BrowserRouter, Route, Link, Redirect, Switch } from 'react-router-dom';
+import Home from './components/Home';
+import About from './components/About';
+
+export default function Root(props) {
+  return (
+    <BrowserRouter basename="/todos">
+      <div>
+        <Link to="/home">Home</Link>
+        <Link to="/about">About</Link>
+      </div>
+
+      <Switch>
+        <Route path="/home">
+          <Home />
+        </Route> 
+        <Route path="/about">
+          <About />
+        </Route> 
+        <Route path="/">
+          <Redirect to="/home" />
+        </Route> 
+      </Switch>
+    </BrowserRouter>
+  );
+}
+```
+
+#### 8. 修改 webpack 配置
+
+配置 externals 外部扩展，容器应用已经配置 react-router-dom。
+
+```js
+const { merge } = require("webpack-merge");
+const singleSpaDefaults = require("webpack-config-single-spa-react");
+
+module.exports = (webpackConfigEnv, argv) => {
+  const defaultConfig = singleSpaDefaults({
+    orgName: "yueluo",
+    projectName: "todos",
+    webpackConfigEnv,
+    argv,
+  });
+
+  return merge(defaultConfig, {
+    // modify the webpack config however you'd like to by adding to this object
+    externals: ['react-router-dom']
+  });
+};
+```
 

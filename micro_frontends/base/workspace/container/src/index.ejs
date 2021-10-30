@@ -33,7 +33,10 @@
   <script type="systemjs-importmap">
     {
       "imports": {
-        "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@5.9.0/lib/system/single-spa.min.js"
+        "single-spa": "https://cdn.jsdelivr.net/npm/single-spa@5.9.0/lib/system/single-spa.min.js",
+        "react": "https://cdn.jsdelivr.net/npm/react@17.0.1/umd/react.production.min.js",
+        "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@17.0.1/umd/react-dom.production.min.js",
+        "react-router-dom": "https://cdn.jsdelivr.net/npm/react-router-dom@5.2.0/umd/react-router-dom.min.js"
       }
     }
   </script>
@@ -47,7 +50,8 @@
     {
       "imports": {
         "@yueluo/root-config": "//localhost:9000/yueluo-root-config.js",
-        "@yueluo/test": "//localhost:9001/yueluo-test.js"
+        "@yueluo/test": "//localhost:9001/yueluo-test.js",
+        "@yueluo/todos": "//localhost:9002/yueluo-todos.js"
       }
     }
   </script>
@@ -73,6 +77,9 @@
     You need to enable JavaScript to run this app.
   </noscript>
   <main></main>
+
+  <div id="root"></div>
+
   <script>
     System.import('@yueluo/root-config');
   </script>
