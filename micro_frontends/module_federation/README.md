@@ -519,5 +519,91 @@ mountProducts(document.querySelector('#dev-products'));
 mountCart(document.querySelector('#dev-cart'));
 ```
 
-### test
+## 区分开发和生产环境
+
+### products
+
+```js
+import faker from "faker"
+
+// let products = ""
+
+// for (let i = 1; i <= 5; i++) {
+//   products += `<div>${faker.commerce.productName()}</div>`
+// }
+
+// document.querySelector("#dev-products").innerHTML = products
+
+function mount (el) {
+  let products = ""
+
+  for (let i = 1; i <= 5; i++) {
+    products += `<div>${faker.commerce.productName()}</div>`
+  }
+
+  el.innerHTML = products;
+}
+
+if (process.env.NODE_ENV === 'development') {
+  const el = document.querySelector('#dev-products');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
+### cart
+
+```js
+import faker from "faker"
+
+// document.querySelector("#dev-cart").innerHTML = `在您的购物车中有${ faker.random.number() }件商品`
+
+function mount (el) {
+  el.innerHTML = `在您的购物车中有${ faker.random.number() }件商品`
+}
+
+if (process.env.NODE_ENV === 'development') {
+  const el = document.querySelector('#dev-cart');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
+### container
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Container</title>
+  </head>
+  <body>
+    <div id="prod-products"></div>
+    <div id="prod-cart"></div>
+  </body>
+</html>
+```
+
+bootstrap.js
+
+```js
+// import("products/Index").then(products => {
+//   console.log(products);
+// });
+
+import { mount as mountProducts } from "products/Index";
+import { mount as mountCart } from "cart/Index";
+
+mountProducts(document.querySelector('#prod-products'));
+mountCart(document.querySelector('#prod-cart'));
+```
 
