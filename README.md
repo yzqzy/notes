@@ -60,7 +60,8 @@
   + [Electron基础](https://git.yueluo.club/heora/notes/src/master/electron/base) 已完成
   + [Electron实战](https://git.yueluo.club/heora/notes/src/master/electron/combat) 已完成
 * 微前端
-  + [微前端基础](https://git.yueluo.club/heora/notes/src/master/micro_frontends/base) 更新中...
+  + [微前端基础](https://git.yueluo.club/heora/notes/src/master/micro_frontends/base) 已完成
+  + [模块联邦](https://git.yueluo.club/heora/notes/src/master/micro_frontends/module_federation) 已完成
   + [single-spa源码实现](https://git.yueluo.club/heora/notes/src/master/micro_frontends/source) 已完成
 * [Superset](https://git.yueluo.club/heora/notes/src/master/superset) 已完成
 * [Nginx](https://git.yueluo.club/heora/notes/src/master/nginx) 暂停中...

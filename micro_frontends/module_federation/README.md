@@ -200,6 +200,36 @@ import("./bootstrap");
 
 ### 加载 cart 微应用
 
+```js
+import faker from "faker"
+
+document.querySelector("#dev-cart").innerHTML = `在您的购物车中有${ faker.random.number() }件商品`
+```
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8082
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "cart",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Index": "./src/index"
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
 
 
 ## 共享模块

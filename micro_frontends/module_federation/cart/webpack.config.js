@@ -1,5 +1,5 @@
-const HtmlWebpackPlugin = require("html-webpack-plugin")
-const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin")
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
 
 module.exports = {
   mode: "development",
@@ -11,12 +11,7 @@ module.exports = {
       name: "cart",
       filename: "remoteEntry.js",
       exposes: {
-        "./Index": "./src/bootstrap"
-      },
-      shared: {
-        faker: {
-          singleton: true
-        }
+        "./Index": "./src/index"
       }
     }),
     new HtmlWebpackPlugin({
