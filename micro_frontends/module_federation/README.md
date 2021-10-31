@@ -275,6 +275,107 @@ import "cart/Index";
 
 ### 实现模块共享
 
+**问题：**
 
+在 products 和 cart 中都需要 faker，当 container 加载这两个模块后，faker 被加载两次。
+
+**解决方案：**
+
+分别在 products 和 cart 的 webpack 配置文件中的模块联邦插件中添加以下代码。
+
+> 共享模块需要异步加载，在 product 和 cart 都需要添加 bootstrap.js
+
+**products**
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8081
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "products",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Index": "./src/index"
+      },
+      shared: ["faker"]
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
+bootstrap.js
+
+```js
+import faker from "faker"
+
+let products = ""
+
+for (let i = 1; i <= 5; i++) {
+  products += `<div>${faker.commerce.productName()}</div>`
+}
+
+document.querySelector("#dev-products").innerHTML = products
+```
+
+index.js
+
+```js
+import("./bootstrap");
+```
+
+**cart**
+
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8082
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "cart",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Index": "./src/index"
+      },
+      shared: ["faker"]
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
+bootstrap.js
+
+```js
+import faker from "faker"
+
+document.querySelector("#dev-cart").innerHTML = `在您的购物车中有${ faker.random.number() }件商品`
+```
+
+index.js
+
+```js
+import("./bootstrap");
+```
+
+重启应用后，faker 模块只会被加载一次。
 
 ### 共享模块版本冲突解决
+
