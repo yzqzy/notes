@@ -186,9 +186,21 @@ import("./bootstrap");
 
 ### 文件打包加载分析
 
+#### products 应用打包分析
 
+<img src="./images/1.png" />
+
+#### container 应用打包分析
+
+<img src="./images/2.png" />
+
+#### 文件加载顺序分析
+
+<img src="./images/3.png" />
 
 ### 加载 cart 微应用
+
+
 
 ## 共享模块
 
