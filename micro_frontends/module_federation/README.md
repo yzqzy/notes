@@ -200,6 +200,8 @@ import("./bootstrap");
 
 ### 加载 cart 微应用
 
+**cart 微应用**
+
 ```js
 import faker from "faker"
 
@@ -230,7 +232,49 @@ module.exports = {
 }
 ```
 
+**container 容器**
 
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8080
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "container",
+      remotes: {
+        products: "products@http://localhost:8081/remoteEntry.js",
+        cart: "cart@http://localhost:8082/remoteEntry.js"
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
+bootstrap.js
+
+```js
+// import("products/Index").then(products => {
+//   console.log(products);
+// });
+
+import "products/Index";
+import "cart/Index";
+```
 
 ## 共享模块
 
+### 实现模块共享
+
+
+
+### 共享模块版本冲突解决
