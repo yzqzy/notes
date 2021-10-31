@@ -1,5 +1,5 @@
-import { mount as mountProducts } from "products/Index"
-import { mount as mountCart } from "cart/Index"
+// import("products/Index").then(products => {
+//   console.log(products);
+// });
 
-mountProducts(document.querySelector("#prod-products"))
-mountCart(document.querySelector("#prod-cart"))
+import "products/Index";

@@ -106,17 +106,87 @@ yarn start
 
 ### Module Federation
 
-通过配置模块联邦在容器应用中加载产品列表微应用
+通过配置模块联邦在容器应用中加载产品列表微应用。
 
 #### 模块导出
 
 ```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
 
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8081
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "products",
+      filename: "remoteEnetry.js",
+      exposes: {
+        "./Index": "./src/index"
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
 ```
 
 #### 模块导入
 
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8080
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "container",
+      remotes: {
+        products: "products@http://localhost:8081/remoteEntry.js"
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
+```js
+// index.js
+import("products/Index").then(products => {
+  console.log(products);
+});
+```
+
+这时就已经可以在 container 容器中加载 products 应用。但是上面这种方式加载在写法上多了一层回调函数，所以一般都会在 src 文件夹中建立 bootstrap.js，这样可以在形式上将写法变成同步。
+
+bootstrap.js
+
+```js
+// import("products/Index").then(products => {
+//   console.log(products);
+// });
+
+import "products/Index";
+```
+
+index.js
+
+```js
+import("./bootstrap");
+```
+
 ### 文件打包加载分析
+
+
 
 ### 加载 cart 微应用
 
