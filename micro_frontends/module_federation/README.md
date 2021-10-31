@@ -395,3 +395,129 @@ shared: {
 
 ## 开放子应用挂载接口
 
+目前微应用内容是写死的，还需要容器应用提供对应的 DOM 节点。理想情况下，在容器应用导入微应用后，应该有权限决定微应用的挂载位置，而不是微应用在代码运行时直接进行挂载。所以每个微应用都应该导出一个挂载方法供容器应用调用。
+
+### products 微应用改造
+
+bootstrap.js
+
+```js
+import faker from "faker"
+
+// let products = ""
+
+// for (let i = 1; i <= 5; i++) {
+//   products += `<div>${faker.commerce.productName()}</div>`
+// }
+
+// document.querySelector("#dev-products").innerHTML = products
+
+function mount (el) {
+  let products = ""
+
+  for (let i = 1; i <= 5; i++) {
+    products += `<div>${faker.commerce.productName()}</div>`
+  }
+
+  el.innerHTML = products;
+}
+
+export { mount };
+```
+
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8081
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "products",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Index": "./src/bootstrap"
+      },
+      shared: {
+        faker: {
+          singleton: true
+        }
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
+### cart 微应用改造
+
+bootstrap.js
+
+```js
+import faker from "faker"
+
+// document.querySelector("#dev-cart").innerHTML = `在您的购物车中有${ faker.random.number() }件商品`
+
+function mount (el) {
+  el.innerHTML = `在您的购物车中有${ faker.random.number() }件商品`
+}
+
+export { mount };
+```
+
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+
+module.exports = {
+  mode: "development",
+  devServer: {
+    port: 8082
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "cart",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Index": "./src/bootstrap"
+      },
+      shared: {
+        faker: {
+          singleton: true
+        }
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ]
+}
+```
+
+### container 容器应用改造
+
+bootstrap.js
+
+```js
+// import("products/Index").then(products => {
+//   console.log(products);
+// });
+
+import { mount as mountProducts } from "products/Index";
+import { mount as mountCart } from "cart/Index";
+
+mountProducts(document.querySelector('#dev-products'));
+mountCart(document.querySelector('#dev-cart'));
+```
+
+### test
+
