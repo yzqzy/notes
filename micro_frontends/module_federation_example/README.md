@@ -278,3 +278,126 @@ module.exports = {
 
 ## 容器应用加载 Marketing 应用
 
+### marketing 应用
+
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+
+module.exports = {
+  mode: 'development',
+  devServer: {
+    port: 8081,
+    // 使用 html5 history API 时，所有的 404 请求都会响应 index.html 文件 
+    historyApiFallback: true 
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react', '@babel/preset-env'],
+            // 1. 避免 babel 语法转义后，函数重复
+            // 2. 避免 babel polyfill 将 API 添加到全局
+            plugins: ['@babel/plugin-transform-runtime']
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    // 导出模块
+    new ModuleFederationPlugin({
+      name: 'marketing',
+      filename: 'remoteEntry.js',
+      exposes: {
+        "./MarketingApp": "./src/bootstrap.js"
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    })
+  ]
+}
+```
+
+### Container 应用
+
+components/MarketingApp
+
+```js
+import React, { useEffect, useRef } from 'react';
+import { mount } from 'marketing/MarketingApp';
+
+export default function MarketingApp () {
+  const ref = useRef();
+
+  useEffect(() => {
+    mount(ref.current);
+  }, []);
+
+  return (
+    <div ref={ ref }></div>
+  );
+}
+```
+
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+
+module.exports = {
+  mode: 'development',
+  devServer: {
+    port: 8080,
+    historyApiFallback: true 
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react', '@babel/preset-env'],
+            plugins: ['@babel/plugin-transform-runtime']
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'container',
+      remotes: {
+        marketing: "marketing@http://localhost:8081/remoteEntry.js"
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    })
+  ]
+}
+```
+
+App.js
+
+```js
+import React from 'react';
+import Marketing from './components/MarketingApp';
+
+function App () {
+  return <Marketing />;
+}
+
+export default App;
+```
+

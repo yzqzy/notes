@@ -1,7 +1,8 @@
 import React from 'react';
+import Marketing from './components/MarketingApp';
 
 function App () {
-  return <div>Container works</div>;
+  return <Marketing />;
 }
 
 export default App;
