@@ -8,11 +8,11 @@
 * Authentication：身份验证微应用，包含登录组件
 * Dashboard：仪表盘微应用，包含仪表盘组件
 
-TODO
+<img src="./images/1.png" />
 
 容器应用、营销应用、身份验证应用使用 React 框架，仪表盘使用 Vue 框架。
 
-TODO
+<img src="./images/2.png" />
 
 ## Marketing - 应用初始化
 
@@ -105,5 +105,89 @@ module.exports = {
 }
 ```
 
-## Marketing - 创建挂载方法
+## Marketing 创建挂载方法
 
+bootstrap.js
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+function mount (el) {
+  ReactDOM.render(<div>Marketing workds</div>, el);
+}
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-marketing');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
+## Marketing 创建路由
+
+### 1. 创建 components 文件夹
+
+### 2. 创建 App 组件，编写路由
+
+```jsx
+import React from 'react';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import Landing from './components/Landing';
+import Pricing from './components/Pricing';
+
+function App () {
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route path="/pricing">
+          <Pricing />
+        </Route>
+        <Route path="/">
+          <Landing />
+        </Route>
+      </Switch>
+    </BrowserRouter>
+  )
+}
+
+export default App;
+```
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+function mount (el) {
+  ReactDOM.render(<App />, el);
+}
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-marketing');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
+## Container 应用初始化
+
+### 1. 创建应用结构
+
+基于 marking 应用进行拷贝修改。
+
+
+
+
+
+### 2. 修改 index.html
+
+### 3. 修改 App.js
+
+### 4. 修改 bootstrap.js
+
+### 5. 修改 webpack.config.js
