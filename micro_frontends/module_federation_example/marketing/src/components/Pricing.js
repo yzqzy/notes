@@ -36,11 +36,11 @@ const footers = [
   {
     title: "产品特点",
     description: [
-      "很酷的东西",
-      "随机特征",
-      "团队特色",
-      "开发人员的东西",
-      "另一个"
+      "xxxxxxxx",
+      "xxxxxx",
+      "xxxxxx",
+      "xxxxxxxxxxxxxxxx",
+      "xxxxxx"
     ]
   },
   {
@@ -78,7 +78,7 @@ export default function Pricing() {
           color="textSecondary"
           component="p"
         >
-          拉勾旗下专为互联网人打造的实战大学
+          XXXXXXXXXXXXXXXXXXXX
         </Typography>
       </Container>
 
