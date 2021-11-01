@@ -180,14 +180,101 @@ export { mount };
 
 基于 marking 应用进行拷贝修改。
 
-
-
-
+```js
+public
+	index.html
+src
+	bootstrap.js
+	index.js
+package-lock.json
+package.json
+webpack.config.js
+```
 
 ### 2. 修改 index.html
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Container</title>
+</head>
+<body>
+  
+  <div id="root"></div>
+
+</body>
+</html>
+```
+
 ### 3. 修改 App.js
+
+```js
+import React from 'react';
+
+function App () {
+  return <div>Container works</div>;
+}
+
+export default App;
+```
 
 ### 4. 修改 bootstrap.js
 
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+function mount (el) {
+  ReactDOM.render(<App />, el);
+}
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#root');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
 ### 5. 修改 webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+  mode: 'development',
+  devServer: {
+    port: 8080,
+    historyApiFallback: true 
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react', '@babel/preset-env'],
+            plugins: ['@babel/plugin-transform-runtime']
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    })
+  ]
+}
+```
+
+## 容器应用加载 Marketing 应用
+
