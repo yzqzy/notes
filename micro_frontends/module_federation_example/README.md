@@ -580,9 +580,136 @@ function App () {
 export default App;
 ```
 
-### 微应用和容器应用路由
+### 微应用和容器应用路由交互
 
+* 微应用路由变化时 url 地址没有被同步到浏览器中的地址栏中，路由变化也没有被同步到浏览器的历史记录中。
 
+  当微应用路由变化时通知容器应用更新路由信息（容器应用向微应用传递方法）。
+
+```js
+// Container/components/MarketingApp.js
+
+import React, { useEffect, useRef } from 'react';
+import { mount } from 'marketing/MarketingApp';
+import { useHistory } from 'react-router-dom';
+
+export default function MarketingApp () {
+  const ref = useRef();
+  const history = useHistory();
+
+  useEffect(() => {
+    mount(ref.current, {
+      onNavgate ({ pathname: nextPathname }) {
+        const pathname = history.location.pathname;
+
+        if (nextPathname !== pathname) {
+          history.push(nextPathname);
+        }
+      }
+    });
+  }, []);
+
+  return (
+    <div ref={ ref }></div>
+  );
+}
+```
+
+```js
+// Marketing/bootstrap.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createMemoryHistory } from 'history';
+import App from './App';
+
+function mount (el, { onNavgate }) {
+  const history = createMemoryHistory();
+
+  onNavgate && history.listen(onNavgate);
+
+  ReactDOM.render(<App history={ history } />, el);
+}
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-marketing');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
+* 容器应用路由变化时只能匹配到微应用，微应用路由并不会响应容器应用路由的变化。
+
+  当容器应用路由变化时需要通知微应用路由进行响应（微应用容容器应用传递方法）。
+
+```js
+// Container/components/MarketingApp.js
+
+import React, { useEffect, useRef } from 'react';
+import { mount } from 'marketing/MarketingApp';
+import { useHistory } from 'react-router-dom';
+
+export default function MarketingApp () {
+  const ref = useRef();
+  const history = useHistory();
+
+  useEffect(() => {
+    const { onParentNavgate } = mount(ref.current, {
+      onNavgate ({ pathname: nextPathname }) {
+        const pathname = history.location.pathname;
+
+        if (nextPathname !== pathname) {
+          history.push(nextPathname);
+        }
+      }
+    });
+
+    onParentNavgate && history.listen(onParentNavgate);
+  }, []);
+
+  return (
+    <div ref={ ref }></div>
+  );
+}
+```
+
+```js
+// Marketing/bootstrap.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createMemoryHistory } from 'history';
+import App from './App';
+
+function mount (el, { onNavgate }) {
+  const history = createMemoryHistory();
+
+  onNavgate && history.listen(onNavgate);
+
+  ReactDOM.render(<App history={ history } />, el);
+
+  return {
+    onParentNavgate ({ pathname: nextPathname }) {
+      const pathname = history.location.pathname;
+
+      if (nextPathname !== pathname) {
+        history.push(nextPathname);
+      }
+    }
+  }
+}
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-marketing');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
 
 ### marketing 应用本地路由设置
 
+目前 Marketing 
