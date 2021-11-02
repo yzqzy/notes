@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+const packageJSON = require('./package.json');
 
 module.exports = {
   mode: 'development',
@@ -31,7 +32,8 @@ module.exports = {
       filename: 'remoteEntry.js',
       exposes: {
         "./MarketingApp": "./src/bootstrap.js"
-      }
+      },
+      shared: packageJSON.dependencies
     }),
     new HtmlWebpackPlugin({
       template: './public/index.html'

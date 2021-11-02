@@ -401,3 +401,37 @@ function App () {
 export default App;
 ```
 
+## 共享库设置
+
+container 和 marketing 中使用大量相同的代码库，如果不做共享处理，则应用中相同的库会被加载多次。
+
+```js
+"@material-ui/core": "^4.11.0",
+"@material-ui/icons": "^4.9.1",
+"react": "^17.0.1",
+"react-dom": "^17.0.1",
+"react-router-dom": "^5.2.0"
+```
+
+container 和 marketing 应用的 webpack.config.js 配置文件中加入以下代码
+
+```js
+const packageJSON = require('./package.json');
+
+plugins: [
+  new ModuleFederationPlugin({
+    name: 'marketing',
+    filename: 'remoteEntry.js',
+    exposes: {
+      "./MarketingApp": "./src/bootstrap.js"
+    },
+    shared: packageJSON.dependencies
+  }),
+  new HtmlWebpackPlugin({
+    template: './public/index.html'
+  })
+]
+```
+
+## 微前端应用路由概述
+
