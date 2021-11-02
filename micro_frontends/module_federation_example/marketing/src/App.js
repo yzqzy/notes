@@ -1,11 +1,11 @@
 import React from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import { Router, Route, Switch } from 'react-router-dom';
 import Landing from './components/Landing';
 import Pricing from './components/Pricing';
 
-function App () {
+function App ({ history }) {
   return (
-    <BrowserRouter>
+    <Router history={ history }>
       <Switch>
         <Route path="/pricing">
           <Pricing />
@@ -14,7 +14,7 @@ function App () {
           <Landing />
         </Route>
       </Switch>
-    </BrowserRouter>
+    </Router>
   )
 }
 

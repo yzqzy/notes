@@ -433,5 +433,156 @@ plugins: [
 ]
 ```
 
-## 微前端应用路由概述
+## 微前端应用路由
+
+### 概述
+
+容器应用路由用于匹配微应用，微应用用于匹配组件。
+
+**Container**
+
+| 路由         | 组件           |
+| ------------ | -------------- |
+| /            | Marketing      |
+| /auth/signin | Authentication |
+| /dashboard   | Dashboard      |
+
+**Marketing**
+
+| 路由       | 组件      |
+| ---------- | --------- |
+| /          | Landing   |
+| /pircing   | Pricing   |
+
+**Auth**
+
+| 路由         | 组件    |
+| ------------ | ------- |
+| /auth/signin | signin  |
+
+**Dashboard**
+
+| 路由       | 组件      |
+| ---------- | --------- |
+| /dashboard | dashboard |
+
+容器应用使用 BrowserHistory 路由，微应用使用 MemoryHistory 路由。
+
+* 为防止容器应用和微应用同时操作 url 而产生冲突，在微前端架构中，只允许容器应用更新 url，微应用不允许更新 url，MemoryHistory 是基于内存的路由，不会改变浏览器地址栏中的 url；
+* 如果不同的应用程序需要传达有关路由的相关信息，应该尽可能的使用通用的方式，memoryHistory 在 React 和 Vue 中都有提供。
+
+### 更新现有路由配置
+
+#### Container 路由配置
+
+```jsx
+// src/App.js
+
+import React from 'react';
+import { Router, Route, Switch } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import Marketing from './components/MarketingApp';
+
+const history = createBrowserHistory()
+
+function App () {
+  return (
+    <Router history={ history }>
+      <Switch>
+        <Route path="/"> 
+          <Marketing />
+        </Route>
+      </Switch>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+#### Marketing 路由配置
+
+```js
+// Marketing/bootstrap.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createMemoryHistory } from 'history';
+import App from './App';
+
+function mount (el) {
+  const history = createMemoryHistory();
+
+  ReactDOM.render(<App history={ history } />, el);
+}
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-marketing');
+
+  if (el) mount(el);
+}
+
+export { mount };
+```
+
+```jsx
+// Marketing/app.js
+
+import React from 'react';
+import { Router, Route, Switch } from 'react-router-dom';
+import Landing from './components/Landing';
+import Pricing from './components/Pricing';
+
+function App ({ history }) {
+  return (
+    <Router history={ history }>
+      <Switch>
+        <Route path="/pricing">
+          <Pricing />
+        </Route>
+        <Route path="/">
+          <Landing />
+        </Route>
+      </Switch>
+    </Router>
+  )
+}
+
+export default App;
+```
+
+#### 添加头部组件
+
+container/src/App.js
+
+```jsx
+import React from 'react';
+import { Router, Route, Switch } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import Marketing from './components/MarketingApp';
+import Header from './components/Header';
+
+const history = createBrowserHistory()
+
+function App () {
+  return (
+    <Router history={ history }>
+      <Header />
+      <Switch>
+        <Route path="/"> 
+          <Marketing />
+        </Route>
+      </Switch>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+### 微应用和容器应用路由
+
+
+
+### marketing 应用本地路由设置
 
