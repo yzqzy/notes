@@ -712,4 +712,41 @@ export { mount };
 
 ### marketing 应用本地路由设置
 
-目前 Marketing 
+目前 Marketing 应用本地开发环境是报错的，原因是本地开发环境在调用 mount 方法时没有传递第二个参数，默认值就是 undefined，mount 方法内部试图从 undefined 解构 onNavigate，所以就报错了。
+
+解决办法是在本地开发环境调用 mount 方法时传递一个空对象。
+
+如果当前是本地开发环境，路由依然使用 BrowserHistory，所以在调用 mount 方法时传递 defaultHistory 以做区分。
+
+```js
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-marketing');
+
+  if (el) mount(el, {
+    defaultHistory: createBrowserHistory()
+  });
+}
+```
+
+在 mount 方法内部判断 defaultHistory 是否存在，如果存在就用 defaultHistory，否则就用 MemoryHistory。
+
+```js
+function mount (el, { onNavgate, defaultHistory }) {
+  const history = defaultHistory || createMemoryHistory();
+
+  onNavgate && history.listen(onNavgate);
+
+  ReactDOM.render(<App history={ history } />, el);
+
+  return {
+    onParentNavgate ({ pathname: nextPathname }) {
+      const pathname = history.location.pathname;
+
+      if (nextPathname !== pathname) {
+        history.push(nextPathname);
+      }
+    }
+  }
+}
+```
+
