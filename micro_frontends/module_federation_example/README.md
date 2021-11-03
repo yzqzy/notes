@@ -1251,5 +1251,3 @@ function App ({ history, setStatus }) {
 export default App;
 ```
 
-## 登录状态相关的三件事情
-
