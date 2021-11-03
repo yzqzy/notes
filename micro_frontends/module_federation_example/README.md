@@ -980,3 +980,117 @@ module.exports = {
 }
 ```
 
+**解决登录页面两次才显示的 BUG**
+
+当点击登录按钮时，容器应用的路由地址时 /auth/signin，加载 AuthApp，但是 AuthApp 在首次加载时默认访问的时 /，因为使用 createMemoryHistory 创建路由时没有传递初始参数，当再次点击登录按钮时，容器应用通知微应用路由发生了变化，微应用同步路由变化，所以最终看到登陆界面。
+
+解决问题的核心在于微应用在初次创建路由时应该接收一个默认参数，默认参数就来自于容器应用。
+
+```js
+// auth/boostrap.js
+
+function mount (el, { onNavgate, defaultHistory, initialPath }) {
+  const history = defaultHistory || createMemoryHistory({ 
+    initialEntries: [ initialPath ]
+  });
+
+  onNavgate && history.listen(onNavgate);
+
+  ReactDOM.render(<App history={ history } />, el);
+
+  return {
+    onParentNavgate ({ pathname: nextPathname }) {
+      const pathname = history.location.pathname;
+
+      if (nextPathname !== pathname) {
+        history.push(nextPathname);
+      }
+    }
+  }
+}
+```
+
+```js
+// container/src/components/AuthApp/index.js
+
+export default function AuthApp () {
+  const ref = useRef();
+  const history = useHistory();
+
+  useEffect(() => {
+    const { onParentNavgate } = mount(ref.current, {
+      initialPath: history.location.pathname,
+      onNavgate ({ pathname: nextPathname }) {
+        const pathname = history.location.pathname;
+
+        if (nextPathname !== pathname) {
+          history.push(nextPathname);
+        }
+      }
+    });
+
+    onParentNavgate && history.listen(onParentNavgate);
+  }, []);
+
+  return (
+    <div ref={ ref }></div>
+  );
+}
+```
+
+**按照上述方法修改 MarketingApp**
+
+```js
+// marketing/boostrap.js
+
+function mount (el, { onNavgate, defaultHistory, initialPath }) {
+  const history = defaultHistory || createMemoryHistory({
+    initialEntries: [ initialPath ]
+  });
+
+  onNavgate && history.listen(onNavgate);
+
+  ReactDOM.render(<App history={ history } />, el);
+
+  return {
+    onParentNavgate ({ pathname: nextPathname }) {
+      const pathname = history.location.pathname;
+
+      if (nextPathname !== pathname) {
+        history.push(nextPathname);
+      }
+    }
+  }
+}
+```
+
+```js
+// container/src/components/MarketingApp/index.js
+
+export default function MarketingApp () {
+  const ref = useRef();
+  const history = useHistory();
+
+  useEffect(() => {
+    const { onParentNavgate } = mount(ref.current, {
+      initialPath: history.location.pathname,
+      onNavgate ({ pathname: nextPathname }) {
+        const pathname = history.location.pathname;
+
+        if (nextPathname !== pathname) {
+          history.push(nextPathname);
+        }
+      }
+    });
+
+    onParentNavgate && history.listen(onParentNavgate);
+  }, []);
+
+  return (
+    <div ref={ ref }></div>
+  );
+}
+```
+
+## 微应用懒加载
+
