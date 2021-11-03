@@ -750,3 +750,104 @@ function mount (el, { onNavgate, defaultHistory }) {
 }
 ```
 
+## Authentication 应用初始化
+
+拷贝 marketing 项目的文件。
+
+### 下载应用依赖
+
+```js
+cd auth && npm install
+```
+
+### 拷贝 src 文件夹
+
+```js
+// bootstrap.js
+
+if (process.env.NODE_ENV == 'development') {
+  const el = document.querySelector('#dev-auth');
+
+  if (el) mount(el, {
+    defaultHistory: createBrowserHistory()
+  });
+}
+```
+
+```jsx
+// App.js
+
+import React from 'react';
+import { Router, Route, Switch } from 'react-router-dom';
+import Signin from './components/Signin';
+
+function App ({ history }) {
+  return (
+    <Router history={ history }>
+      <Switch>
+        <Route path="/auth/signin">
+          <Signin />
+        </Route>
+      </Switch>
+    </Router>
+  )
+}
+
+export default App;
+```
+
+### 拷贝 public 文件夹
+
+```html
+<div id="dev-auth"></div>
+```
+
+### 修改 webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+const packageJSON = require('./package.json');
+
+module.exports = {
+  mode: 'development',
+  output: {
+    publicPath: 'http://localhost:8082/'
+  },
+  devServer: {
+    port: 8082,
+    historyApiFallback: true 
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react', '@babel/preset-env'],
+            plugins: ['@babel/plugin-transform-runtime']
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'auth',
+      filename: 'remoteEntry.js',
+      exposes: {
+        "./AuthApp": "./src/bootstrap.js"
+      },
+      shared: packageJSON.dependencies
+    }),
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    })
+  ]
+}
+```
+
+## Container 加载 Auth 应用
+
