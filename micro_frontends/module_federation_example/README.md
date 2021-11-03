@@ -1094,3 +1094,40 @@ export default function MarketingApp () {
 
 ## 微应用懒加载
 
+目前所有的微应用都会在用户初始访问时加载，这样会导致加载时间过长，解决办法就是懒加载微应用。
+
+```jsx
+container/App.js
+
+import React, { lazy, Suspense } from 'react';
+import { Router, Route, Switch } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import Header from './components/Header';
+import Progress from './components/Progress';
+
+const AuthApp = lazy(() => import("./components/AuthApp"));
+const MarketingApp = lazy(() => import("./components/MarketingApp"));
+
+const history = createBrowserHistory()
+
+function App () {
+  return (
+    <Router history={ history }>
+      <Header />
+      <Suspense fallback={ <Progress /> }>
+        <Switch>
+          <Route path="/auth/signin"> 
+            <AuthApp />
+          </Route>
+          <Route path="/"> 
+            <MarketingApp />
+          </Route>
+        </Switch>
+      </Suspense>
+    </Router>
+  );
+}
+
+export default App;
+```
+
