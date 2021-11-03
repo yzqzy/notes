@@ -750,6 +750,24 @@ function mount (el, { onNavgate, defaultHistory }) {
 }
 ```
 
+### 配置其他应用的 publicPath
+
+container
+
+```js
+output: {
+  publicPath: 'http://localhost:8080/'
+}
+```
+
+marketing
+
+```js
+output: {
+  publicPath: 'http://localhost:8081/'
+}
+```
+
 ## Authentication 应用初始化
 
 拷贝 marketing 项目的文件。
@@ -850,4 +868,115 @@ module.exports = {
 ```
 
 ## Container 加载 Auth 应用
+
+拷贝 Marketing App 的内容进行修改。
+
+Auth/index.js
+
+```js
+import React, { useEffect, useRef } from 'react';
+import { mount } from 'auth/AuthApp';
+import { useHistory } from 'react-router-dom';
+
+export default function AuthApp () {
+  const ref = useRef();
+  const history = useHistory();
+
+  useEffect(() => {
+    const { onParentNavgate } = mount(ref.current, {
+      onNavgate ({ pathname: nextPathname }) {
+        const pathname = history.location.pathname;
+
+        if (nextPathname !== pathname) {
+          history.push(nextPathname);
+        }
+      }
+    });
+
+    onParentNavgate && history.listen(onParentNavgate);
+  }, []);
+
+  return (
+    <div ref={ ref }></div>
+  );
+}
+```
+
+App.js
+
+```jsx
+import React from 'react';
+import { Router, Route, Switch } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+import Auth from './components/AuthApp';
+import Marketing from './components/MarketingApp';
+import Header from './components/Header';
+
+const history = createBrowserHistory()
+
+function App () {
+  return (
+    <Router history={ history }>
+      <Header />
+      <Switch>
+        <Route path="/auth/signin"> 
+          <Auth />
+        </Route>
+        <Route path="/"> 
+          <Marketing />
+        </Route>
+      </Switch>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+webpack.config.js
+
+```js
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+const packageJSON = require('./package.json');
+
+module.exports = {
+  mode: 'development',
+  output: {
+    publicPath: 'http://localhost:8080/'
+  },
+  devServer: {
+    port: 8080,
+    historyApiFallback: true 
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react', '@babel/preset-env'],
+            plugins: ['@babel/plugin-transform-runtime']
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'container',
+      remotes: {
+        marketing: "marketing@http://localhost:8081/remoteEntry.js",
+        auth: "auth@http://localhost:8082/remoteEntry.js",
+      },
+      shared: packageJSON.dependencies
+    }),
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    })
+  ]
+}
+```
 

@@ -4,6 +4,9 @@ const packageJSON = require('./package.json');
 
 module.exports = {
   mode: 'development',
+  output: {
+    publicPath: 'http://localhost:8081/'
+  },
   devServer: {
     port: 8081,
     // 使用 html5 history API 时，所有的 404 请求都会响应 index.html 文件 
