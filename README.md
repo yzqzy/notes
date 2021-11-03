@@ -52,7 +52,7 @@
 * [TypeScipt](https://git.yueluo.club/heora/notes/src/master/typescript) 已完成
 * NodeJS
   + [Node基础](https://git.yueluo.club/heora/notes/src/master/node/base) 已完成
-  + [Node进阶](https://git.yueluo.club/heora/notes/src/master/node/plus) 已完成
+  + [Node进阶](https://git.yueluo.club/heora/notes/src/master/node/plus) 更新中...
   + [koa架构分析与源码重写](https://git.yueluo.club/heora/notes/src/master/node/koa) 已完成
 * threejs
   + [跳一跳案例](https://git.yueluo.club/heora/notes/src/master/three.js/jump) 已完成

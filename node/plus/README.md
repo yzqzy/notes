@@ -1,3 +1,31 @@
+## 核心模块 path
+
+node 内置模块，require 之后直接使用，用于处理文件/目录路径。
+
+| API          | 功能                   |
+| ------------ | ---------------------- |
+| basename()   | 获取路径中基础名称     |
+| dirname()    | 获取路径中目录名称     |
+| extname()    | 获取路径中扩展名称     |
+| isAbsoulte() | 获取路径是否为绝对路径 |
+| join()       | 拼接多个路径           |
+| resolve()    | 返回绝对路径           |
+| parse()      | 解析路径               |
+| format()     | 序列化路径             |
+| normalize()  | 规范化路径             |
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## RPC 调用
 
 Remote Rroducture Call（远程过程调用）。
