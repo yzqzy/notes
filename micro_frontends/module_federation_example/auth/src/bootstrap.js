@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom';
 import { createMemoryHistory, createBrowserHistory } from 'history';
 import App from './App';
 
-function mount (el, { onNavgate, defaultHistory, initialPath }) {
+function mount (el, { setStatus, onNavgate, defaultHistory, initialPath }) {
   const history = defaultHistory || createMemoryHistory({ 
     initialEntries: [ initialPath ]
   });
 
   onNavgate && history.listen(onNavgate);
 
-  ReactDOM.render(<App history={ history } />, el);
+  ReactDOM.render(<App history={ history } setStatus={ setStatus } />, el);
 
   return {
     onParentNavgate ({ pathname: nextPathname }) {

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Router, Route, Switch } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import Header from './components/Header';
@@ -10,13 +10,19 @@ const MarketingApp = lazy(() => import("./components/MarketingApp"));
 const history = createBrowserHistory()
 
 function App () {
+  const [status, setStatus] = useState(false);
+
+  useEffect(() => {
+    console.log(status);
+  }, [ status ])
+
   return (
     <Router history={ history }>
       <Header />
       <Suspense fallback={ <Progress /> }>
         <Switch>
           <Route path="/auth/signin"> 
-            <AuthApp />
+            <AuthApp setStatus={ setStatus } />
           </Route>
           <Route path="/"> 
             <MarketingApp />
