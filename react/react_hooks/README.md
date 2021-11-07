@@ -36,7 +36,7 @@ useContext()
 useMemo()
 ```
 
-### 基本使用
+### 基础使用
 
 useState 为函数组件引入状态。
 
@@ -177,4 +177,49 @@ export default App;
 ## useEffect
 
 让函数型组件拥有处理副作用的能力，类似生命周期函数。
+
+### 基础使用
+
+useEffect 看作是 componentDidMount、componentDidUpdate 和 componentWillUnmount 这三个函数的组合。
+
+```js
+useEffect(() => {});				=> componentDidMount、componentDidUpdate
+useEffect(() => {}, []);    => componentDidMount
+useEffect(() => () => {});  => componentWillUnmount
+```
+
+```jsx
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
+
+function App () {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    console.log(count);
+  });
+
+  useEffect(() => {
+    console.log(count);
+  }, [])
+  
+  useEffect(() => {
+    return () => {
+      console.log('unmount：', count);
+    }
+  })
+
+  return (
+    <div>
+      <span>{ count }</span>
+      <button onClick={() => setCount(count + 1)}>+1</button>
+      <button onClick={() => ReactDOM.unmountComponentAtNode(document.getElementById('root'))}>卸载组件</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 使用细节
 
