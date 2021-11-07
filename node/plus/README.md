@@ -14,15 +14,119 @@ node 内置模块，require 之后直接使用，用于处理文件/目录路径
 | format()     | 序列化路径             |
 | normalize()  | 规范化路径             |
 
+```js
+const path = require('path');
+
+console.log(__filename); // D:\workspace\notes\node\plus\test\path_test\index.js
+
+// 获取路径中基础名称
+// 1. 返回路径中最后一部分（不区分文件或者目录）
+// 2. 第二个参数表示扩展名，如果没有设置则返回完整的文件后缀名称带后缀
+// 3. 第二个参数作为后缀时，如果没有在当前路径中被匹配到，会忽略后缀
+// 4. 处理目录路径的时候，如果结尾存在路径分隔符，会忽略路径分隔符
+console.log(path.basename(__filename)); // index.js
+console.log(path.basename(__filename, '.js')); // index
+console.log(path.basename(__filename, '.css')); // index.js
+console.log(path.basename('/a/b/c')); // c
+console.log(path.basename('/a/b/c/')); // c
 
 
+// 获取路径目录名（路径）
+// 1. 返回路径中最后一部分的上一层目录所在路径
+// 2. 处理目录路径的时候，如果结尾存在路径分隔符，会忽略路径分隔符
+console.log(path.dirname(__filename)); // D:\workspace\notes\node\plus\test\path_test
+console.log(path.dirname('/a/b/c')); // /a/b
+console.log(path.dirname('/a/b/c/')); // /a/b
 
 
+// 获取路径扩展名
+// 1. 返回路径中相应文件的后缀名
+// 2. 如果路径中存在多个"."，返回最后一个点到结尾的位置
+console.log(path.extname(__filename)); // .js
+console.log(path.extname('/a/b')); // ""
+console.log(path.extname('/a/b/')); // ""
+console.log(path.extname('/a/b/index.html.js.css')); // .css
+console.log(path.extname('/a/b/index.html.js.')); // .
 
 
+// 解析路径
+// 1. 接收路径，返回一个对象包含不同信息
+// 2. root dir base ext name 
+console.log(path.parse('/a/b/c/index.html')); // { root: '/', dir: '/a/b/c', base: 'index.html', ext: '.html', name: 'index' } 
+console.log(path.parse('/a/b/c')); // { root: '/', dir: '/a/b', base: 'c', ext: '', name: 'c' }
+console.log(path.parse('./a/b/c/')); // { root: '', dir: './a/b', base: 'c', ext: '', name: 'c' }
 
 
+// 序列化路径
+console.log(path.format(path.parse('./a/b/c'))); // ./a/b\c
 
+
+// 判断当前路径是否为绝对路径
+console.log(path.isAbsolute('foo')); // false
+console.log(path.isAbsolute('/foo')); // true
+console.log(path.isAbsolute('///foo')); // true
+console.log(path.isAbsolute('')); // false
+console.log(path.isAbsolute('.')); // false
+console.log(path.isAbsolute('../bar')); // false
+
+
+// 拼接路径
+console.log(path.join('a/b', 'c', 'index.html')); // a\b\c\index.html
+console.log(path.join('/a/b', 'c', 'index.html')); // \a\b\c\index.html
+console.log(path.join('/a/b', 'c', '../', 'index.html')); // \a\b\index.html
+console.log(path.join('/a/b', 'c', './', 'index.html')); // \a\b\c\index.html
+console.log(path.join('/a/b', 'c', '', 'index.html')); // \a\b\c\index.html
+console.log(path.join('')); // .
+
+
+// 规范化路径
+console.log(path.normalize('')); // .
+console.log(path.normalize('a/b/c/d')); // a\b\c\d
+console.log(path.normalize('a///b/c../d')); // a\b\c..\d
+console.log(path.normalize('a//\\b/c\\/d')); // a\b\c\d
+console.log(path.normalize('a//\\\b/c\\/d')); // a\c\d
+
+
+// 返回绝对路径
+console.log(path.resolve()); // D:\workspace\notes\node\plus\test\path_test
+console.log(path.resolve('')); // D:\workspace\notes\node\plus\test\path_test
+console.log(path.resolve('a', 'b')); // D:\workspace\notes\node\plus\test\path_test\a\b
+console.log(path.resolve('a', '/b')); // D:\b
+console.log(path.resolve('/a', '/b')); // D:\b
+console.log(path.resolve('/a', 'b')); // D:\a\b
+console.log(path.resolve('index.html')); // D:\workspace\notes\node\plus\test\path_test\index.html
+```
+
+## 全局变量 Buffer 
+
+Buffer 缓冲区。Buffer 让 JavaScript 可以操作二进制。
+
+### 概述
+
+JavaScript 语言起初服务于浏览器平台，NodeJs 平台下 JavaScript 可以实现 IO 操作。
+
+IO 行为操作的就是二进制数据，Stream 流操作并非 Node.js 独创。流操作配置管道可以实现数据分段传输。
+
+数据的端到端传输会有生产者和消费者，生产和消费的过程往往存在等待。
+
+Nodejs 中 Buffer 是一片内存空间。
+
+Buffer 是无须 require 的一个全局变量，可以实现 Nodejs 平台下的二进制数据操作，它不占据 V8 堆内存大小的内存空间。
+
+Buffer 内存的使用由 Node 来控制，由 V8 的 GC 回收。Buffer 一般配合 Stream 流进行使用，充当数据缓冲区。
+
+### 创建 Buffer
+
+Buffer 是 Nodejs 的内置类。
+
+alloc：创建指定字节大小的 buffer。
+
+allocUnsafe：创建指定大小的 buffer（不安全）。
+
+from：接收数据，创建 buffer。
+
+```js
+```
 
 
 

@@ -30,3 +30,51 @@ console.log(path.extname('/a/b')); // ""
 console.log(path.extname('/a/b/')); // ""
 console.log(path.extname('/a/b/index.html.js.css')); // .css
 console.log(path.extname('/a/b/index.html.js.')); // .
+
+
+// 解析路径
+// 1. 接收路径，返回一个对象包含不同信息
+// 2. root dir base ext name 
+console.log(path.parse('/a/b/c/index.html')); // { root: '/', dir: '/a/b/c', base: 'index.html', ext: '.html', name: 'index' } 
+console.log(path.parse('/a/b/c')); // { root: '/', dir: '/a/b', base: 'c', ext: '', name: 'c' }
+console.log(path.parse('./a/b/c/')); // { root: '', dir: './a/b', base: 'c', ext: '', name: 'c' }
+
+
+// 序列化路径
+console.log(path.format(path.parse('./a/b/c'))); // ./a/b\c
+
+
+// 判断当前路径是否为绝对路径
+console.log(path.isAbsolute('foo')); // false
+console.log(path.isAbsolute('/foo')); // true
+console.log(path.isAbsolute('///foo')); // true
+console.log(path.isAbsolute('')); // false
+console.log(path.isAbsolute('.')); // false
+console.log(path.isAbsolute('../bar')); // false
+
+
+// 拼接路径
+console.log(path.join('a/b', 'c', 'index.html')); // a\b\c\index.html
+console.log(path.join('/a/b', 'c', 'index.html')); // \a\b\c\index.html
+console.log(path.join('/a/b', 'c', '../', 'index.html')); // \a\b\index.html
+console.log(path.join('/a/b', 'c', './', 'index.html')); // \a\b\c\index.html
+console.log(path.join('/a/b', 'c', '', 'index.html')); // \a\b\c\index.html
+console.log(path.join('')); // .
+
+
+// 规范化路径
+console.log(path.normalize('')); // .
+console.log(path.normalize('a/b/c/d')); // a\b\c\d
+console.log(path.normalize('a///b/c../d')); // a\b\c..\d
+console.log(path.normalize('a//\\b/c\\/d')); // a\b\c\d
+console.log(path.normalize('a//\\\b/c\\/d')); // a\c\d
+
+
+// 返回绝对路径
+console.log(path.resolve()); // D:\workspace\notes\node\plus\test\path_test
+console.log(path.resolve('')); // D:\workspace\notes\node\plus\test\path_test
+console.log(path.resolve('a', 'b')); // D:\workspace\notes\node\plus\test\path_test\a\b
+console.log(path.resolve('a', '/b')); // D:\b
+console.log(path.resolve('/a', '/b')); // D:\b
+console.log(path.resolve('/a', 'b')); // D:\a\b
+console.log(path.resolve('index.html')); // D:\workspace\notes\node\plus\test\path_test\index.html
