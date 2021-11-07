@@ -86,3 +86,95 @@ setCount(count => {
 ## useReducer
 
 useReducer 是一种让函数组件保存状态的方式。
+
+```jsx
+import React, { useReducer } from 'react';
+
+function reducer (state, action) {
+  switch (action.type) {
+    case 'increment':
+      return state + 1;
+    case 'decrement':
+      return state - 1;
+    default:
+      return state;
+  }
+}
+
+function App () {
+  const [count, dispatch] = useReducer(reducer, 0);
+  
+  return (
+    <div>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-1</button>
+      <span>{ count }</span>
+      <button onClick={() => dispatch({ type: 'increment' })}>+1</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## useContext
+
+跨组件层级获取数据时简化获取数据的代码。
+
+```jsx
+import React, { createContext } from 'react';
+ 
+const countContext = createContext();
+
+function Foo () {
+  return (
+    <countContext.Consumer>
+      {
+        (value) => (
+          <div>{ value }</div>
+        )
+      }
+    </countContext.Consumer>
+  )
+} 
+
+function App () {
+  return (
+    <countContext.Provider value={ 100 }>
+      <Foo />
+    </countContext.Provider>
+  )
+}
+
+export default App;
+```
+
+简化操作如下：
+
+```jsx
+import React, { createContext, useContext } from 'react';
+ 
+const countContext = createContext();
+
+function Foo () {
+  const value = useContext(countContext);
+
+  return (
+    <div>{ value }</div>
+  )
+} 
+
+function App () {
+  return (
+    <countContext.Provider value={ 100 }>
+      <Foo />
+    </countContext.Provider>
+  )
+}
+
+export default App;
+```
+
+## useEffect
+
+让函数型组件拥有处理副作用的能力，类似生命周期函数。
+

@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
+import React, { createContext, useContext } from 'react';
+ 
+const countContext = createContext();
+
+function Foo () {
+  const value = useContext(countContext);
+
+  return (
+    <div>{ value }</div>
+  )
+} 
 
 function App () {
-  const [count, setCount] = useState(0);
-  const [person, setPerson] = useState({ name: '张三', age: 20 });
-  
   return (
-    <div>
-      <span>{ count } { person.name } { person.age }</span>
-      <button onClick={() => setCount(count + 1)}>+1</button>
-      <button onClick={() => setPerson({ name: '李四', age: 30 })}>setPerson</button>
-    </div>
-  );
+    <countContext.Provider value={ 100 }>
+      <Foo />
+    </countContext.Provider>
+  )
 }
 
 export default App;
