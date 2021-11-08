@@ -223,3 +223,111 @@ export default App;
 
 ### 使用细节
 
+**window 对象添加滚动事件、设置定时器让 count 数值每隔一秒增加 1**
+
+```jsx
+import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
+
+function App () {
+  function onScroll () {
+    console.log('change');
+  }
+
+  useEffect(() => {
+    window.addEventListener('scroll', onScroll);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    }
+  }, []);
+
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setCount((count) => count + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(timerId);
+    }
+  }, []);
+
+  return (
+    <div>
+      <span>works</span>
+      <span>{ count }</span>
+      <button onClick={() => ReactDOM.unmountComponentAtNode(document.getElementById('root'))}>卸载组件</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 优点
+
+可以将按照用途将代码进行分类（将一组相干的业务逻辑归置到同一个副作用函数中）。
+
+简化重复代码，使组件内部代码更加清晰。
+
+### 数据检测
+
+useEffect 第二个参数是一个数组，可以指定依赖项。只有指定依赖数据发生变化时会触发 effect。
+
+```jsx
+import React, { useEffect, useState } from 'react';
+
+function App () {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = count;
+  }, [count]);
+
+  return (
+    <div>
+      <span>{ count }</span>
+      <button onClick={ () => setCount(count => count + 1) }>+1</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 结合异步函数
+
+useEffect 中的参数函数不能是异步函数，因为 useEffect 函数要返回清理资源的函数，如果是异步函数就变成了返回 Promise。
+
+```jsx
+import React, { useEffect } from 'react';
+
+function getData () {
+  return new Promise(resolve => {
+    resolve({ message: 'hello' });
+  });
+}
+
+function App () {
+  useEffect(() => {
+    (async () => {
+      const result = await getData();
+
+      console.log(result);
+    })();
+  }, []);
+
+  return (
+    <div>
+      
+    </div>
+  );
+}
+
+export default App;
+```
+
+## useMemo
+

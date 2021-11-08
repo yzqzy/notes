@@ -1,28 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useEffect } from 'react';
+
+function getData () {
+  return new Promise(resolve => {
+    resolve({ message: 'hello' });
+  });
+}
 
 function App () {
-  const [count, setCount] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const result = await getData();
 
-  useEffect(() => {
-    console.log(count);
-  });
-
-  useEffect(() => {
-    console.log(count);
-  }, [])
-  
-  useEffect(() => {
-    return () => {
-      console.log('unmount：', count);
-    }
-  })
+      console.log(result);
+    })();
+  }, []);
 
   return (
     <div>
-      <span>{ count }</span>
-      <button onClick={() => setCount(count + 1)}>+1</button>
-      <button onClick={() => ReactDOM.unmountComponentAtNode(document.getElementById('root'))}>卸载组件</button>
+      
     </div>
   );
 }
