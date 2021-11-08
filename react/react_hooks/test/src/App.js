@@ -1,23 +1,21 @@
-import React, { useEffect } from 'react';
-
-function getData () {
-  return new Promise(resolve => {
-    resolve({ message: 'hello' });
-  });
-}
+import React, { useMemo, useState } from 'react';
 
 function App () {
-  useEffect(() => {
-    (async () => {
-      const result = await getData();
+  const [count, setCount] = useState(0);
 
-      console.log(result);
-    })();
-  }, []);
+  const [bool, setBool] = useState(true);
+
+  const result = useMemo(() => {
+    console.log(1);
+    return count * 2;
+  }, [count])
 
   return (
     <div>
-      
+      <span>{ result }</span> - <span>{ count }</span>
+      <span>{ bool ? '真' : '假' }</span>
+      <button onClick={ () => setCount(count + 1) }>Add</button>
+      <button onClick={ () => setBool(!bool) }>setBool</button>
     </div>
   );
 }

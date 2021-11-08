@@ -331,3 +331,37 @@ export default App;
 
 ## useMemo
 
+useMemo 类似于 Vue 中的计算属性，可以检测某个值的变化，根据变化值计算新值。useMemo 会缓存计算结果，如果检测值没有发生变化，即使组件重新渲染，也不会重新计算。此行为可以有助于避免在每个渲染上进行大量计算。
+
+```jsx
+import React, { useMemo, useState } from 'react';
+
+function App () {
+  const [count, setCount] = useState(0);
+
+  const [bool, setBool] = useState(true);
+
+  const result = useMemo(() => {
+    console.log(1);
+    return count * 2;
+  }, [count])
+
+  return (
+    <div>
+      <span>{ result }</span> - <span>{ count }</span>
+      <span>{ bool ? '真' : '假' }</span>
+      <button onClick={ () => setCount(count + 1) }>Add</button>
+      <button onClick={ () => setBool(!bool) }>setBool</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## memo
+
+性能优化，如果本组件中的数据没有发生变化，阻止组件更新，类似类组件中 PureComponent 和 shouldComponentUpdate。
+
+ 
+
