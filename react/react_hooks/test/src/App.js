@@ -1,21 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, memo } from 'react';
+
+const Foo = memo(function Foo () {
+  console.log('foo render');
+
+  return (
+    <div>Foo 组件</div>
+  )
+});
+
 
 function App () {
   const [count, setCount] = useState(0);
 
-  const [bool, setBool] = useState(true);
-
-  const result = useMemo(() => {
-    console.log(1);
-    return count * 2;
-  }, [count])
-
   return (
     <div>
-      <span>{ result }</span> - <span>{ count }</span>
-      <span>{ bool ? '真' : '假' }</span>
+      <span>{ count }</span>
       <button onClick={ () => setCount(count + 1) }>Add</button>
-      <button onClick={ () => setBool(!bool) }>setBool</button>
+      <Foo />
     </div>
   );
 }

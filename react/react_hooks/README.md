@@ -363,5 +363,37 @@ export default App;
 
 性能优化，如果本组件中的数据没有发生变化，阻止组件更新，类似类组件中 PureComponent 和 shouldComponentUpdate。
 
+ ```jsx
+ import React, { useState, memo } from 'react';
  
+ const Foo = memo(function Foo () {
+   console.log('foo render');
+ 
+   return (
+     <div>Foo 组件</div>
+   )
+ });
+ 
+ 
+ function App () {
+   const [count, setCount] = useState(0);
+ 
+   return (
+     <div>
+       <span>{ count }</span>
+       <button onClick={ () => setCount(count + 1) }>Add</button>
+       <Foo />
+     </div>
+   );
+ }
+ 
+ export default App;
+ ```
+
+## useCallback
+
+性能优化，缓存函数，组件重新渲染时得到相同的函数实例。
+
+```jsx
+```
 
