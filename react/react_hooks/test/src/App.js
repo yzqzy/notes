@@ -1,16 +1,28 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
+const useUpdateInput = (initialValue) => {
+  const [value, setValue] = useState(initialValue);
+  return {
+    value,
+    onChange: event => setValue(event.target.value)
+  }
+}
 
 function App () {
-  const ref = useRef();
+  const usenameInput = useUpdateInput('');
+  const passwordInput = useUpdateInput('');
+
+  const submitForm = (e) => {
+    e.preventDefault();
+    console.log(usenameInput.value, passwordInput.value);
+  }
 
   return (
-    <div
-      ref={ ref }
-    >
-      App works
-      <button onClick={ () => console.log(ref.current) }>获取 DIV</button>
-    </div>
+    <form onSubmit={ submitForm }>
+      <input type="text" name="username" { ...usenameInput } />
+      <input type="text" name="password" { ...passwordInput } />
+      <button type="submit">提交</button>
+    </form>
   );
 }
 

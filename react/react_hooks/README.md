@@ -457,5 +457,106 @@ export default App;
 
 useRef 保存的数据是跨组件周期的，即使组件重新渲染，保存的数据仍然还在，保存的数据被更改不会触发组件重新渲染。
 
+```jsx
+import React, { useState, useEffect, useRef } from 'react';
 
+
+
+function App () {
+  const [count, setCount] = useState(0);
+
+  let timerId = useRef();
+
+  useEffect(() => {
+    timerId.current = setInterval(() => {
+      setCount(count => count + 1);
+    }, 1000)
+  }, []);
+
+  const stopCount = () => {
+    clearInterval(timerId.current);
+  }
+
+  return (
+    <div>
+      { count }
+      <button onClick={stopCount}>停止</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## 自定义 hook
+
+自定义 hook 是标准的封装和共享逻辑的方式。
+
+自定义 hook 是一个函数，其名称以 use 开头。
+
+自定义 hook 其实就是逻辑和内置 Hook 的组合。
+
+```jsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+function useGetPost () {
+  const [post, setPost] = useState({});
+
+  useEffect(() => {
+    axios.get('https://jsonplaceholder.typicode.com/posts/1')
+      .then(res => {
+        setPost(res.data);
+      })
+      .catch(err => console.log(err));
+  }, []);
+
+  return [post, setPost];
+}
+
+function App () {
+  const [post] = useGetPost();
+
+  return (
+    <div>
+      <div>{ post.title }</div>
+      <div>{ post.body }</div>
+    </div>
+  );
+}
+
+export default App;
+```
+
+```jsx
+import React, { useEffect, useState } from 'react';
+
+const useUpdateInput = (initialValue) => {
+  const [value, setValue] = useState(initialValue);
+  return {
+    value,
+    onChange: event => setValue(event.target.value)
+  }
+}
+
+function App () {
+  const usenameInput = useUpdateInput('');
+  const passwordInput = useUpdateInput('');
+
+  const submitForm = (e) => {
+    e.preventDefault();
+    console.log(usenameInput.value, passwordInput.value);
+  }
+
+  return (
+    <form onSubmit={ submitForm }>
+      <input type="text" name="username" { ...usenameInput } />
+      <input type="text" name="password" { ...passwordInput } />
+      <button type="submit">提交</button>
+    </form>
+  );
+}
+
+export default App;
+```
 
