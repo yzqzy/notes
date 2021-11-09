@@ -1,22 +1,26 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 
-const Foo = memo(function Foo () {
+const Foo = memo(function Foo (props) {
   console.log('foo render');
 
   return (
-    <div>Foo 组件</div>
+    <div>
+      <span>Foo 组件</span>
+      <button onClick={ props.resetCount }>resetCount</button>
+    </div>
   )
 });
 
 
 function App () {
   const [count, setCount] = useState(0);
+  const resetCount = useCallback(() => setCount(0), [setCount]);
 
   return (
     <div>
       <span>{ count }</span>
       <button onClick={ () => setCount(count + 1) }>Add</button>
-      <Foo />
+      <Foo resetCount={ resetCount } />
     </div>
   );
 }

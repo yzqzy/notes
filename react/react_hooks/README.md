@@ -395,5 +395,39 @@ export default App;
 性能优化，缓存函数，组件重新渲染时得到相同的函数实例。
 
 ```jsx
+import React, { useState, memo, useCallback } from 'react';
+
+const Foo = memo(function Foo (props) {
+  console.log('foo render');
+
+  return (
+    <div>
+      <span>Foo 组件</span>
+      <button onClick={ props.resetCount }>resetCount</button>
+    </div>
+  )
+});
+
+
+function App () {
+  const [count, setCount] = useState(0);
+  const resetCount = useCallback(() => setCount(0), [setCount]);
+
+  return (
+    <div>
+      <span>{ count }</span>
+      <button onClick={ () => setCount(count + 1) }>Add</button>
+      <Foo resetCount={ resetCount } />
+    </div>
+  );
+}
+
+export default App;
 ```
+
+使用 useCallback 可以避免在父组件重新渲染时，导致 memo 缓存的子组件缓存失效。
+
+## useRef
+
+获取 DOM 元素对象。
 
