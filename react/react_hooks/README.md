@@ -431,3 +431,31 @@ export default App;
 
 获取 DOM 元素对象。
 
+### 基本使用
+
+```jsx
+import React, { useRef } from 'react';
+
+
+function App () {
+  const ref = useRef();
+
+  return (
+    <div
+      ref={ ref }
+    >
+      App works
+      <button onClick={ () => console.log(ref.current) }>获取 DIV</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 保存数据
+
+useRef 保存的数据是跨组件周期的，即使组件重新渲染，保存的数据仍然还在，保存的数据被更改不会触发组件重新渲染。
+
+
+

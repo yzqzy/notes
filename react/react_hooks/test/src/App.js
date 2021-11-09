@@ -1,26 +1,15 @@
-import React, { useState, memo, useCallback } from 'react';
-
-const Foo = memo(function Foo (props) {
-  console.log('foo render');
-
-  return (
-    <div>
-      <span>Foo 组件</span>
-      <button onClick={ props.resetCount }>resetCount</button>
-    </div>
-  )
-});
+import React, { useRef } from 'react';
 
 
 function App () {
-  const [count, setCount] = useState(0);
-  const resetCount = useCallback(() => setCount(0), [setCount]);
+  const ref = useRef();
 
   return (
-    <div>
-      <span>{ count }</span>
-      <button onClick={ () => setCount(count + 1) }>Add</button>
-      <Foo resetCount={ resetCount } />
+    <div
+      ref={ ref }
+    >
+      App works
+      <button onClick={ () => console.log(ref.current) }>获取 DIV</button>
     </div>
   );
 }
