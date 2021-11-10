@@ -560,3 +560,88 @@ function App () {
 export default App;
 ```
 
+## 路由钩子函数
+
+react-router-dom 路由提供的钩子函数。
+
+```js
+useHistory、useLocation、useRouteMatch、useParams
+```
+
+```js
+npm install react-router react-router-dom@5.1.0
+```
+
+src/index.js
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
+import './index.css';
+import App from './App';
+
+ReactDOM.render(
+  <Router>
+    <App />
+  </Router>,
+  document.getElementById('root')
+);
+```
+
+src/App.js
+
+```jsx
+import React from 'react';
+import { Link, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import List from './pages/List';
+
+function App () {
+  return (
+    <>
+      <div>
+        <Link to="/home">首页</Link>
+        <Link to="/list">列表页</Link>
+      </div>
+      <div>
+        <Route path="/home" component={ Home } />
+        <Route path="/list" component={ List } />
+      </div>
+    </>
+  );
+}
+
+export default App;
+```
+
+src/pages/Home.js
+
+```jsx
+import React from 'react';
+import { useHistory, useLocation, useRouteMatch, useParams } from 'react-router-dom';
+
+export default function Home (props) {
+  console.log(props);
+  console.log(useHistory())
+  console.log(useLocation())
+  console.log(useRouteMatch())
+  console.log(useParams())
+
+  return <div>Home</div>;
+}
+```
+
+src/pages/List.js
+
+```jsx
+import React from 'react';
+
+export default function List (props) {
+  console.log(props);
+  return <div>List</div>;
+}
+```
+
+## useState 原理
+

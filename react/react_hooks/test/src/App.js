@@ -1,28 +1,20 @@
-import React, { useState } from 'react';
-
-const useUpdateInput = (initialValue) => {
-  const [value, setValue] = useState(initialValue);
-  return {
-    value,
-    onChange: event => setValue(event.target.value)
-  }
-}
+import React from 'react';
+import { Link, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import List from './pages/List';
 
 function App () {
-  const usenameInput = useUpdateInput('');
-  const passwordInput = useUpdateInput('');
-
-  const submitForm = (e) => {
-    e.preventDefault();
-    console.log(usenameInput.value, passwordInput.value);
-  }
-
   return (
-    <form onSubmit={ submitForm }>
-      <input type="text" name="username" { ...usenameInput } />
-      <input type="text" name="password" { ...passwordInput } />
-      <button type="submit">提交</button>
-    </form>
+    <>
+      <div>
+        <Link to="/home">首页</Link>
+        <Link to="/list">列表页</Link>
+      </div>
+      <div>
+        <Route path="/home" component={ Home } />
+        <Route path="/list" component={ List } />
+      </div>
+    </>
   );
 }
 
