@@ -1,19 +1,46 @@
 import React from 'react';
-import { Link, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import List from './pages/List';
+import ReactDOM from 'react-dom';
+
+let state = [];
+let setters = [];
+let stateIndex = 0;
+
+function render () {
+  stateIndex = 0;
+  ReactDOM.render(<App />, document.getElementById('root'));
+}
+
+function createSetter (index) {
+  return function (newVal) {
+    state[index] = newVal;
+    render();
+  }
+}
+
+function useState (initialState) {
+  state[stateIndex] = state[stateIndex] ? state[stateIndex] : initialState;
+
+  setters.push(createSetter(stateIndex))
+
+  const value = state[stateIndex];
+  const setter = setters[stateIndex];
+
+  stateIndex++;
+
+  return [value, setter];
+}
 
 function App () {
+  const [count, setCount] = useState(0);
+
+  const [name, setName] = useState('yueluo');
+
   return (
     <>
-      <div>
-        <Link to="/home">首页</Link>
-        <Link to="/list">列表页</Link>
-      </div>
-      <div>
-        <Route path="/home" component={ Home } />
-        <Route path="/list" component={ List } />
-      </div>
+      <p>{ count }</p>
+      <button onClick={() => setCount(count + 1)}>setCount</button>
+      <p>{ name }</p>
+      <button onClick={() => setName('heore')}>setName</button>
     </>
   );
 }
