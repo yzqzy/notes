@@ -63,25 +63,38 @@ function useEffect (callback, deps) {
   }
 }
 
+
+function useReducer (reducer, initialState) {
+  const [state, setState] = useState(initialState);
+
+  function dispatch (action) {
+    const newState = reducer(state, action);
+    setState(newState);
+  }
+
+  return [state, dispatch];
+}
+
+
 function App () {
-  const [count, setCount] = useState(0);
+  function reducer (state, action) {
+    switch (action.type) {
+      case 'increment':
+        return state + 1;
+      case 'decrement':
+        return state - 1;
+      default:
+        return state;
+    }
+  }
 
-  const [name, setName] = useState('yueluo');
-
-  useEffect(() => {
-    console.log('hello');
-  }, [ count ])
-
-  useEffect(() => {
-    console.log('world');
-  }, [ name ])
+  const [count, dispatch] = useReducer(reducer, 0);
 
   return (
     <>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-1</button>
       <p>{ count }</p>
-      <button onClick={() => setCount(count + 1)}>setCount</button>
-      <p>{ name }</p>
-      <button onClick={() => setName('heora')}>setName</button>
+      <button onClick={() => dispatch({ type: 'increment' })}>+1</button>
     </>
   );
 }
