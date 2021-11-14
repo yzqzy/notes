@@ -1,15 +1,26 @@
 import React from 'react';
-import { css } from '@emotion/react';
+import styled from '@emotion/styled';
 
-const style = css({
-  width: 200,
-  height: 200,
-  background: 'orange'
-});
+const Button = styled.button`
+  width: 100px;
+  height: 30px;
+  background: orange;
+  border: none;
+`;
+
+const Container = styled.div`
+  width: 1000px;
+  padding: 20px;
+  margin: 0 auto;
+  background: pink;
+`;
 
 function App () {
   return (
-    <div css={ style }>App</div>
+    <Container>
+      <Button>按钮</Button>
+      App works
+    </Container>
   );
 }
 

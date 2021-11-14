@@ -128,3 +128,101 @@ export default App;
 
 ### css 优先级
 
+props 对象中的 css 属性优先级高于组件内部的 css 属性。调用组件时可以覆盖组件默认样式。
+
+components/Css
+
+```jsx
+import React from 'react';
+import { css } from '@emotion/react';
+
+const style = css`
+  width: 200px;
+  height: 200px;
+  background: orange;
+`;
+
+function Css (props) {
+  return (
+    <div
+      css={ style }
+      { ...props }
+    >
+      CSS
+    </div>
+  )
+}
+
+export default Css
+```
+
+App.js
+
+```js
+import React from 'react';
+import Css from './components/CSS';
+import { css } from '@emotion/react';
+
+const style = css({
+  background: 'blue'
+});
+
+function App () {
+  return (
+    <div>
+      <Css css={ style } />
+      App works
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 样式化组件
+
+#### 基础使用
+
+样式化组件就是用来构建用户界面，是 emotion 库提供的另一种为元素添加样式的方式。
+
+> 样式编写同样支持模板字符串和对象的方式。
+
+```jsx
+import React from 'react';
+import styled from '@emotion/styled';
+
+const Button = styled.button`
+  width: 100px;
+  height: 30px;
+  background: orange;
+  border: none;
+`;
+
+const Container = styled.div`
+  width: 1000px;
+  padding: 20px;
+  margin: 0 auto;
+  background: pink;
+`;
+
+function App () {
+  return (
+    <Container>
+      <Button>按钮</Button>
+      App works
+    </Container>
+  );
+}
+
+export default App;
+```
+
+#### 默认样式处理
+
+根据 props 属性覆盖样式。
+
+**字符串类型样式覆盖**
+
+
+
+**对象类型样式覆盖**
