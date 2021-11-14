@@ -4516,6 +4516,11 @@
   "resolved" "https://registry.npmjs.org/emojis-list/-/emojis-list-3.0.0.tgz"
   "version" "3.0.0"
 
+"emotion-theming@^11.0.0":
+  "integrity" "sha1-gh3jyYBM/nu1/aLdEq1yKmxbz/U="
+  "resolved" "https://registry.npm.taobao.org/emotion-theming/download/emotion-theming-11.0.0.tgz"
+  "version" "11.0.0"
+
 "encodeurl@~1.0.2":
   "integrity" "sha1-rT/0yG7C0CkyL1oCw6mmBslbP1k="
   "resolved" "https://registry.npmjs.org/encodeurl/-/encodeurl-1.0.2.tgz"

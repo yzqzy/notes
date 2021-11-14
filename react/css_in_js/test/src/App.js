@@ -1,26 +1,32 @@
 import React from 'react';
-import styled from '@emotion/styled';
+import { css, keyframes } from '@emotion/react';
 
-const Button = styled.button`
-  width: 100px;
-  height: 30px;
-  background: orange;
-  border: none;
+const move = keyframes`
+  0% {
+    background: orange;
+    left: 0;
+    top: 0;
+  }
+
+  100% {
+    background: green;
+    left：600px;
+    top: 300px;
+  }
 `;
 
-const Container = styled.div`
-  width: 1000px;
-  padding: 20px;
-  margin: 0 auto;
-  background: pink;
+const box = css`
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  animation: ${ move } 2s ease infinite;
 `;
 
 function App () {
   return (
-    <Container>
-      <Button>按钮</Button>
-      App works
-    </Container>
+    <div css={ box }>
+      App Works
+    </div>
   );
 }
 
