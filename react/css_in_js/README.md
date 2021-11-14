@@ -34,7 +34,18 @@ npm install @emotion/core @emotion/styled -S
 
 ### css 属性支持
 
-#### JSX Pragma
+```js
+import React from 'react';
+
+function App () {
+  return (
+    <div css={{ width: 200, height: 200, background: 'orange' }}>App</div>
+  );
+}
+
+export default App;
+
+```
 
 通知 babel，不再需要将 JSX 语法转换为 React.createElement 方法，而是需要转换为 JSX 方法。
 
@@ -42,6 +53,8 @@ npm install @emotion/core @emotion/styled -S
 | ------ | -------------------------- | ---------------------------------------------------- |
 | Before | `<img src="avator.png" />` | `Reactc.createElement('img', { src: 'avator.png' })` |
 | After  | `<img src="avator.png" />` | `jsx('img', { src: 'avator.png' })`                  |
+
+#### JSX Pragma
 
 ```jsx
 /** @jsx jsx */
@@ -55,9 +68,63 @@ npm run eject
 ```
 
 ```js
+npm i @emotion/babel-preset-css-prop -D
+```
+
+package.json
+
+```js
 "presets": [
   "react-app",
   "@emotion/babel-preset-css-prop"
 ]
 ```
+
+### css 方法
+
+#### String Styles
+
+推荐使用。
+
+```js
+import React from 'react';
+import { css } from '@emotion/react';
+
+const style = css`
+  width: 200px;
+  height: 200px;
+  background: orange
+`;
+
+function App () {
+  return (
+    <div css={ style }>App</div>
+  );
+}
+
+export default App;
+```
+
+#### Oject Styles
+
+```jsx
+import React from 'react';
+import { css } from '@emotion/react';
+
+const style = css({
+  width: 200,
+  height: 200,
+  background: 'orange'
+});
+
+function App () {
+  return (
+    <div css={ style }>App</div>
+  );
+}
+
+export default App;
+```
+
+### css 优先级
 
