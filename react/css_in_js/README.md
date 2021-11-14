@@ -526,7 +526,49 @@ export default App;
 
 ### 创建主题
 
+index.js
+
 ```jsx
-npm install emotion-theming -D
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import { ThemeProvider } from '@emotion/react';
+
+const theme = {
+  colors: {
+    primary: 'blue'
+  }
+}
+
+ReactDOM.render(
+  <ThemeProvider theme={ theme }>
+    <App />
+  </ThemeProvider>,
+  document.getElementById('root')
+);
+
+```
+
+App.js
+
+```jsx
+import React from 'react';
+import { css, useTheme } from '@emotion/react';
+
+const primaryColor = props => css`
+  color: ${ props.colors.primary }
+`;
+
+function App () {
+  console.log(useTheme()); // 也可以用 hook 的方式获得
+
+  return (
+    <div css={ primaryColor }>
+      App Works
+    </div>
+  );
+}
+
+export default App;
 ```
 

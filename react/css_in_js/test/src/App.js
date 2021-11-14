@@ -1,30 +1,15 @@
 import React from 'react';
-import { css, keyframes } from '@emotion/react';
+import { css, useTheme } from '@emotion/react';
 
-const move = keyframes`
-  0% {
-    background: orange;
-    left: 0;
-    top: 0;
-  }
-
-  100% {
-    background: green;
-    left：600px;
-    top: 300px;
-  }
-`;
-
-const box = css`
-  width: 100px;
-  height: 100px;
-  position: absolute;
-  animation: ${ move } 2s ease infinite;
+const primaryColor = props => css`
+  color: ${ props.colors.primary }
 `;
 
 function App () {
+  console.log(useTheme()); // 也可以用 hook 的方式获得
+
   return (
-    <div css={ box }>
+    <div css={ primaryColor }>
       App Works
     </div>
   );
