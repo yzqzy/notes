@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router } from 'react-router-dom';
-import './index.css';
 import App from './App';
+import { theme, ChakraProvider, CSSReset } from '@chakra-ui/react';
+
+theme.config.useSystemColorMode = true;
 
 ReactDOM.render(
-  <Router>
-    <App />
-  </Router>,
+  <ChakraProvider>
+    <CSSReset />
+    <App theme={ theme } />
+  </ChakraProvider>,
   document.getElementById('root')
 );
