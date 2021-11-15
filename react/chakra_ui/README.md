@@ -218,7 +218,32 @@ ReactDOM.render(
 
 ### 颜色
 
+设置颜色时，可以但不限于取主题中提供的颜色值。
 
+```js
+console.log(theme.colors); 
+```
+
+```jsx
+console.log(JSON.stringify(theme.colors.red));
+
+//{"50":"#FFF5F5","100":"#FED7D7","200":"#FEB2B2","300":"#FC8181","400":"#F56565","500":"#E53E3E","600":"#C53030","700":"#9B2C2C","800":"#822727","900":"#63171B"}
+```
+
+```jsx
+import React from 'react';
+import { Box, Text } from '@chakra-ui/react';
+
+function App () {
+  return (
+    <Box w={ 200 } h={ 100 } bgColor="orange.200">
+      <Text>Test</Text>
+    </Box>
+  );
+}
+
+export default App;
+```
 
 ### 间距和大小
 
