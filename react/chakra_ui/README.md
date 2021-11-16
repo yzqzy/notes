@@ -247,4 +247,59 @@ export default App;
 
 ### 间距和大小
 
+**Space**
+
+使用 Space 可以自定义项目间距，这些间距值可以由 padding、margin 和 top、left、right、bottom 样式引用。
+
+```jsx
+console.log(theme.space); 
+
+//{"1":"0.25rem","2":"0.5rem","3":"0.75rem","4":"1rem","5":"1.25rem","6":"1.5rem","7":"1.75rem","8":"2rem","9":"2.25rem","10":"2.5rem","12":"3rem","14":"3.5rem","16":"4rem","20":"5rem","24":"6rem","28":"7rem","32":"8rem","36":"9rem","40":"10rem","44":"11rem","48":"12rem","52":"13rem","56":"14rem","60":"15rem","64":"16rem","72":"18rem","80":"20rem","96":"24rem","px":"1px","0.5":"0.125rem","1.5":"0.375rem","2.5":"0.625rem","3.5":"0.875rem"}
+```
+
+```jsx
+import React from 'react';
+import { Box, Text } from '@chakra-ui/react';
+
+function App () {
+  return (
+    <Box mt="6" w="2xs" h="10" bgColor="orange.200">
+      <Text>Test</Text>
+    </Box>
+  );
+}
+
+export default App;
+```
+
+**Sizes**
+
+使用 Sizes 可以自定义元素大小，这些值可以由 width、height 和 maxWidth、minWidth 等样式引用。
+
+```jsx
+console.log(theme.sizes); 
+
+//{"1":"0.25rem","2":"0.5rem","3":"0.75rem","4":"1rem","5":"1.25rem","6":"1.5rem","7":"1.75rem","8":"2rem","9":"2.25rem","10":"2.5rem","12":"3rem","14":"3.5rem","16":"4rem","20":"5rem","24":"6rem","28":"7rem","32":"8rem","36":"9rem","40":"10rem","44":"11rem","48":"12rem","52":"13rem","56":"14rem","60":"15rem","64":"16rem","72":"18rem","80":"20rem","96":"24rem","px":"1px","0.5":"0.125rem","1.5":"0.375rem","2.5":"0.625rem","3.5":"0.875rem","max":"max-content","min":"min-content","full":"100%","3xs":"14rem","2xs":"16rem","xs":"20rem","sm":"24rem","md":"28rem","lg":"32rem","xl":"36rem","2xl":"42rem","3xl":"48rem","4xl":"56rem","5xl":"64rem","6xl":"72rem","7xl":"80rem","8xl":"90rem","container":{"sm":"640px","md":"768px","lg":"1024px","xl":"1280px"}}
+```
+
 ### 响应式断点
+
+Breakpoints。配置响应数组值中使用的默认断点，这些值将用于生成移动优先（即最小宽度）的媒体查询。
+
+```jsx
+import React from 'react';
+import { Box, Text } from '@chakra-ui/react';
+
+function App () {
+  return (
+    <Box mt="6" w={["100px", "300px", "500px", "700px", "1000px"]} h="10" bgColor="orange.200">
+      <Text>Test</Text>
+    </Box>
+  );
+}
+
+export default App;
+```
+
+## 标准 chakra-ui 组件
+

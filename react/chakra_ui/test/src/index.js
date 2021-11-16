@@ -6,7 +6,8 @@ import { theme, ChakraProvider, CSSReset } from '@chakra-ui/react';
 // theme.config.useSystemColorMode = true;
 
 // console.log(JSON.stringify(theme.colors));
-console.log(JSON.stringify(theme.colors.red));
+// console.log(JSON.stringify(theme.colors.red));
+// console.log(JSON.stringify(theme.sizes)); 
 
 ReactDOM.render(
   <ChakraProvider>
