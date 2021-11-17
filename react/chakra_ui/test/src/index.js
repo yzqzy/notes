@@ -1,18 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { theme, ChakraProvider, CSSReset } from '@chakra-ui/react';
+import { ChakraProvider, CSSReset, extendTheme } from '@chakra-ui/react';
+import { Button } from './components/index';
 
-// theme.config.useSystemColorMode = true;
-
-// console.log(JSON.stringify(theme.colors));
-// console.log(JSON.stringify(theme.colors.red));
-// console.log(JSON.stringify(theme.sizes)); 
+const theme = extendTheme({
+  components: {
+    Button
+  }
+});
 
 ReactDOM.render(
-  <ChakraProvider>
+  <ChakraProvider theme={ theme } >
     <CSSReset />
-    <App theme={ theme } />
+    <App />
   </ChakraProvider>,
   document.getElementById('root')
 );

@@ -303,3 +303,123 @@ export default App;
 
 ## 标准 chakra-ui 组件
 
+```jsx
+import React from 'react';
+import { chakra } from '@chakra-ui/react';
+
+const MyButton = chakra('button', {
+  baseStyle: {
+    borderRadius: 'lg',
+    px: 4,
+    py: 2,
+    fontSize: '12px',
+    bgColor: 'blue.500',
+    color: 'white'
+  }
+});
+
+function App () {
+  return (
+    <div>
+      <MyButton>按钮</MyButton>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## 全局化 chakra-ui 组件样式
+
+* src 文件夹中创建 components 文件夹用于放置自定义 Chakra-UI 组件
+* 在 components 文件夹中创建 button.js 文件并将组件样式放置于当前文件并进行默认导出
+
+```js
+const ButtonStyle = {
+  baseStyle: {
+    borderRadius: 'lg'
+  },
+  sizes: {
+    sm: {
+      px: 3,
+      py: 1,
+      fontSize: '12px'
+    },
+    md: {
+      px: 4,
+      py: 2,
+      fontSize: '14px'
+    }
+  },
+  variants: {
+    primary: {
+      bgColor: 'blue.500',
+      color: 'white'
+    },
+    danger: {
+      bgColor: 'red.500',
+      color: 'white'
+    }
+  },
+  defaultProps: {
+    size: 'sm',
+    variant: 'primary'
+  }
+}
+
+export default ButtonStyle;
+```
+
+* 在 components 文件夹中创建 index.js 文件用于导入导出所有的自定义组件
+
+```js
+import Button from './button';
+
+export {
+  Button
+}
+```
+
+* 在 src 文件夹中的 index.js 文件中导入自定义 Chakra-UI 组件并和 components 属性进行合并
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import { ChakraProvider, CSSReset, extendTheme } from '@chakra-ui/react';
+import { Button } from './components/index';
+
+const theme = extendTheme({
+  components: {
+    Button
+  }
+});
+
+ReactDOM.render(
+  <ChakraProvider theme={ theme } >
+    <CSSReset />
+    <App />
+  </ChakraProvider>,
+  document.getElementById('root')
+);
+```
+
+* 在组件中使用样式化组件
+
+```jsx
+import React from 'react';
+import { Button } from '@chakra-ui/react';
+
+function App () {
+  return (
+    <div>
+      <Button variant="danger" size="md">按钮</Button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## 构建注册表单
+
