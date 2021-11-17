@@ -331,8 +331,8 @@ export default App;
 
 ## 全局化 chakra-ui 组件样式
 
-* src 文件夹中创建 components 文件夹用于放置自定义 Chakra-UI 组件
-* 在 components 文件夹中创建 button.js 文件并将组件样式放置于当前文件并进行默认导出
+* src 文件夹中创建 component-styles 文件夹用于放置自定义 Chakra-UI 组件
+* 在 component-styles 文件夹中创建 button.js 文件并将组件样式放置于当前文件并进行默认导出
 
 ```js
 const ButtonStyle = {
@@ -370,7 +370,7 @@ const ButtonStyle = {
 export default ButtonStyle;
 ```
 
-* 在 components 文件夹中创建 index.js 文件用于导入导出所有的自定义组件
+* 在 component-styles 文件夹中创建 index.js 文件用于导入导出所有的自定义组件
 
 ```js
 import Button from './button';
@@ -387,7 +387,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import { ChakraProvider, CSSReset, extendTheme } from '@chakra-ui/react';
-import { Button } from './components/index';
+import { Button } from './component-styles/index';
 
 const theme = extendTheme({
   components: {
