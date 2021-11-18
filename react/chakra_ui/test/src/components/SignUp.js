@@ -21,7 +21,7 @@ export default function SignUp () {
   return (
     <form>
       <Stack spacing="6">
-        <FormControl isDisabled isInvalid>
+        <FormControl>
           <InputGroup>
             <InputLeftAddon children={ <FaUserAlt /> } />
             <Input bgColor="white" placeholder="请输入用户名" />
