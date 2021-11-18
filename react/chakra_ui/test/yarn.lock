@@ -10112,6 +10112,11 @@
     "use-callback-ref" "^1.2.5"
     "use-sidecar" "^1.0.5"
 
+"react-icons@^4.3.1":
+  "integrity" "sha512-cB10MXLTs3gVuXimblAdI71jrJx8njrJZmNMEMC+sQu5B/BIOmlsAjskdqpn81y8UBVEGuHODd7/ci5DvoSzTQ=="
+  "resolved" "https://registry.npmjs.org/react-icons/-/react-icons-4.3.1.tgz"
+  "version" "4.3.1"
+
 "react-is@^16.6.0":
   "integrity" "sha1-eJcppNw23imZ3BVt1sHZwYzqVqQ="
   "resolved" "https://registry.npmmirror.com/react-is/download/react-is-16.13.1.tgz?cache=0&sync_timestamp=1636388163403&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Freact-is%2Fdownload%2Freact-is-16.13.1.tgz"
