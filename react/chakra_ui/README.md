@@ -521,5 +521,141 @@ export default function Form () {
 }
 ```
 
-## 选项卡组件的使用方式
+## 选项卡组件的使用
 
+components/Form.js
+
+```jsx
+import React from "react";
+import { Box, Tabs, Tab, TabList, TabPanels, TabPanel, Image } from "@chakra-ui/react";
+import SignUp from "./SignUp";
+import SignIn from "./SignIn";
+
+import chakraUILight from '../assets/images/chakra-ui-light.png';
+
+export default function Form () {
+  return (
+    <Box bgColor="gray.200" p={3} boxShadow="lg" borderRadius="lg">
+      <Image w={ 250 } mx="auto" mt="2" mb="6" src={ chakraUILight } />
+      <Tabs isFitted>
+        <TabList>
+          <Tab _focus={{ boxShadow: 'none' }}>注册</Tab>
+          <Tab _focus={{ boxShadow: 'none' }}>登录</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <SignUp />
+          </TabPanel>
+          <TabPanel>
+            <SignIn />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </Box>
+  )
+}
+```
+
+components/SignIn.js
+
+```jsx
+import React from "react";
+import {
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightAddon,
+  Stack,
+  FormControl,
+  FormHelperText,
+  Button
+} from "@chakra-ui/react";
+import { FaUserAlt, FaLock, FaCheck } from 'react-icons/fa';
+
+export default function SignIn () {
+  return (
+    <form>
+      <Stack spacing="6">
+        <FormControl isDisabled isInvalid>
+          <InputGroup>
+            <InputLeftAddon children={ <FaUserAlt /> } />
+            <Input bgColor="white" placeholder="请输入用户名" />
+          </InputGroup>
+          <FormHelperText fontSize="xs">用户名是必填项</FormHelperText>
+        </FormControl>
+        <InputGroup>
+          <InputLeftAddon children={ <FaLock /> } />
+          <Input bgColor="white" type="password" placeholder="请输入密码" />
+          <InputRightAddon children={ <FaCheck /> } />
+        </InputGroup>
+        <Button _hover={{ bgColor: 'tomato' }} colorScheme="teal">登录</Button>
+      </Stack>
+    </form>
+  )
+}
+```
+
+components/SignUp.js
+
+```jsx
+import React from "react";
+import {
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputRightAddon,
+  Stack,
+  FormControl,
+  FormHelperText,
+  RadioGroup,
+  Radio,
+  Select,
+  Switch,
+  FormLabel,
+  Flex,
+  Button
+} from "@chakra-ui/react";
+import { FaUserAlt, FaLock, FaCheck } from 'react-icons/fa';
+
+export default function SignUp () {
+  return (
+    <form>
+      <Stack spacing="6">
+        <FormControl isDisabled isInvalid>
+          <InputGroup>
+            <InputLeftAddon children={ <FaUserAlt /> } />
+            <Input bgColor="white" placeholder="请输入用户名" />
+          </InputGroup>
+          <FormHelperText fontSize="xs">用户名是必填项</FormHelperText>
+        </FormControl>
+        <InputGroup>
+          <InputLeftAddon children={ <FaLock /> } />
+          <Input bgColor="white" type="password" placeholder="请输入密码" />
+          <InputRightAddon children={ <FaCheck /> } />
+        </InputGroup>
+        <RadioGroup defaultValue="0">
+          <Stack direction="row" spacing="4">
+            <Radio bgColor="white" value="0">男</Radio>
+            <Radio bgColor="white" value="1">女</Radio>
+          </Stack>
+        </RadioGroup>
+        <Select bgColor="white" placeholder="请选择学科">
+          <option value="Java">Java</option>
+          <option value="大前端">大前端</option>
+        </Select>
+        <Flex>
+          <Switch id="deal" mr="3" />
+          <FormLabel htmlFor="deal">是否同意协议</FormLabel>
+        </Flex>
+        <Button _hover={{ bgColor: 'tomato' }} colorScheme="teal">注册</Button>
+      </Stack>
+    </form>
+  )
+}
+```
+
+## 布局组件的使用
+
+
+
+## 表单和卡片的颜色兼容
