@@ -736,3 +736,150 @@ export default App;
 
 ## 表单和卡片的颜色兼容
 
+App.js
+
+```jsx
+import React from 'react';
+import { Box, Button, useColorMode, Flex } from '@chakra-ui/react';
+import Form from './components/Form';
+import Card from './components/Card';
+
+function App () {
+  const { toggleColorMode } = useColorMode();
+
+  return (
+    <Box>
+      <Button
+        colorScheme="teal"
+        mt="10px"
+        ml="10px"
+        mb="30px"
+        onClick={toggleColorMode}
+      >
+        切换模式
+      </Button>
+      <Flex width="100%">
+        <Box width={ 400 }>
+          <Form />
+        </Box>
+        <Box width={ 400 } ml="30px">
+          <Card />
+        </Box>
+      </Flex>
+    </Box>
+  );
+}
+
+export default App;
+```
+
+components/Card.js
+
+```jsx
+import React from 'react';
+import {
+  Box,
+  Image,
+  Badge,
+  Text,
+  Stack,
+  Flex,
+  Button,
+  useColorModeValue
+} from '@chakra-ui/react';
+import ChakraUI from '../assets/images/chakra-ui.png';
+import { AiFillStar } from 'react-icons/ai';
+
+export default function Card () {
+  const bgColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.700', 'gray.100');
+
+  return (
+    <Box
+      w={ 400 }
+      borderRadius="lg"
+      boxShadow="lg"
+      bgColor={ bgColor }
+      overflow="hidden"
+    >
+      <Image src={ ChakraUI } />
+      <Box
+        p={ 3 }
+      >
+        <Stack direction="row" align="center">
+          <Badge variant="solid" colorScheme="teal" borderRadius="full" px="2">New</Badge>
+          <Badge variant="solid" colorScheme="teal" borderRadius="full" px="2">React</Badge>
+          <Badge variant="solid" colorScheme="teal" borderRadius="full" px="2">Chakra-UI</Badge>
+          <Text color={ textColor }>月落</Text>
+        </Stack>
+        <Text as="h3" pt={ 3 } pb={ 2 } color={ textColor } fontSize="xl" fontWeight="semibold">Chakra-UI 框架专题课程</Text>
+        <Text fontWeight="light" fontSize="sm" color={ textColor } lineHeight="tall">
+          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          xxxxxxxxxxxxxxxxxxxxxxx
+          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        </Text>
+        <Flex align="center" mt={ 2 }>
+          <Flex color="teal.500">
+            <AiFillStar />
+            <AiFillStar />
+            <AiFillStar />
+            <AiFillStar />
+          </Flex>
+          <AiFillStar />
+          <Text color={ textColor } ml={ 1 }>100 评论</Text>
+        </Flex>
+      </Box>
+      <Button w="100%" colorScheme="teal"> 登录</Button>
+    </Box>
+  )
+}
+```
+
+components/Form.js
+
+```jsx
+import React from "react";
+import {
+  Box,
+  Tabs,
+  Tab,
+  TabList,
+  TabPanels,
+  TabPanel,
+  Image,
+  useColorModeValue
+} from "@chakra-ui/react";
+import SignUp from "./SignUp";
+import SignIn from "./SignIn";
+
+import chakraUILight from '../assets/images/chakra-ui-light.png';
+import chakraUIDark from '../assets/images/chakra-ui-dark.png';
+
+export default function Form () {
+  const bgColor = useColorModeValue('gray.200', 'gray.700');
+  const chakraUI = useColorModeValue(chakraUILight, chakraUIDark);
+
+
+  return (
+    <Box bgColor={ bgColor } p={3} boxShadow="lg" borderRadius="lg">
+      <Image w={ 250 } mx="auto" mt="2" mb="6" src={ chakraUI } />
+      <Tabs isFitted>
+        <TabList>
+          <Tab _focus={{ boxShadow: 'none' }}>注册</Tab>
+          <Tab _focus={{ boxShadow: 'none' }}>登录</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <SignUp />
+          </TabPanel>
+          <TabPanel>
+            <SignIn />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </Box>
+  )
+}
+```
+
