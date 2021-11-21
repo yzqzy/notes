@@ -68,70 +68,6 @@ function Timer () {
 export default Timer;
 ```
 
-## shouldComponentUpdate
-
-纯组件只能进行浅层比较，要进行深层比较，使用 shouldComponentUpdate，可以用它编写自定义比较逻辑。返回 true 重新渲染组件，返回 false 阻止重新渲染。
-
-函数的第一个参数为 nextProps，第二个参数为 nextState。
-
-```jsx
-import { Component } from "react";
-
-class App extends Component {
-  constructor () {
-    super();
-
-    this.state = {
-      person: {
-        name: '月落',
-        age: 23,
-        job: 'waiter'
-      }
-    }
-  }
-  componentDidMount() {
-    setTimeout(() => {
-      this.setState({
-        person: {
-          ...this.state.person,
-          job: 'chef'
-        }
-      })
-    }, 2000)
-    setTimeout(() => {
-      this.setState({
-        person: {
-          ...this.state.person,
-          name: 'heora'
-        }
-      })
-    }, 4000)
-  }
-
-  shouldComponentUpdate (nextProps, nextState) {
-    if (nextState.person.name !== this.state.person.name || nextState.person.age !== this.state.person.age) {
-      return true;
-    }
-
-    return false;
-  }
-
-  render() {
-    const { name, age } = this.state.person;
-
-    console.log('render');
-
-    return (
-      <div>
-        { name }{ age }
-      </div>
-    )
-  }
-}
-
-export default App;
-```
-
 ## 纯组件提升组件性能（类组件）
 
 纯组件会对组件输入数据进行浅层比较，如果当前输入数据和上次输入数据相同，组件不会重新渲染。
@@ -235,6 +171,123 @@ function App () {
 export default App;
 ```
 
+## shouldComponentUpdate
+
+纯组件只能进行浅层比较，要进行深层比较，使用 shouldComponentUpdate，可以用它编写自定义比较逻辑。返回 true 重新渲染组件，返回 false 阻止重新渲染。
+
+函数的第一个参数为 nextProps，第二个参数为 nextState。
+
+```jsx
+import { Component } from "react";
+
+class App extends Component {
+  constructor () {
+    super();
+
+    this.state = {
+      person: {
+        name: '月落',
+        age: 23,
+        job: 'waiter'
+      }
+    }
+  }
+  componentDidMount() {
+    setTimeout(() => {
+      this.setState({
+        person: {
+          ...this.state.person,
+          job: 'chef'
+        }
+      })
+    }, 2000)
+    setTimeout(() => {
+      this.setState({
+        person: {
+          ...this.state.person,
+          name: 'heora'
+        }
+      })
+    }, 4000)
+  }
+
+  shouldComponentUpdate (nextProps, nextState) {
+    if (nextState.person.name !== this.state.person.name || nextState.person.age !== this.state.person.age) {
+      return true;
+    }
+
+    return false;
+  }
+
+  render() {
+    const { name, age } = this.state.person;
+
+    console.log('render');
+
+    return (
+      <div>
+        { name }{ age }
+      </div>
+    )
+  }
+}
+
+export default App;
+```
 
 ## memo 方法 - 自定义比较逻辑
+
+memo 方法第二个参数返回 false 重新渲染，返回 true 不会重新渲染。与 shouldComponentUpdate 正好相反。
+
+```jsx
+import { useEffect, useState, memo } from "react";
+
+function compare (prevProps, nextProps) {
+  if (prevProps.person.name !== nextProps.person.name || prevProps.person.age !== nextProps.person.age) {
+    return false;
+  }
+  return true;
+}
+
+const ShowPerson = memo(function ({ person }) {
+  console.log('rendering');
+
+  return (
+    <div>{ person.name }</div>
+  )
+}, compare);
+
+function App () {
+  const [person, setPerson] = useState({
+    name: '月落',
+    age: 23,
+    job: 'waiter'
+  });
+
+  useEffect(() => {
+    setInterval(() => {
+      setPerson({
+        ...person,
+        job: 'chef'
+      });
+    }, 1000);
+  }, []);
+
+  return (
+    <div>
+      <ShowPerson person={person} />
+    </div>
+  )
+}
+
+export default App;
+```
+
+memo 方法内部仍然是浅层比较，如果是引用数据类型，需要传递自定义比较逻辑。
+
+## 组件懒加载
+
+使用组件懒加载可以减少 bundle 文件大小，加快组件渲染速度。
+
+
 
