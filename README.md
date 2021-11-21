@@ -50,9 +50,9 @@
   + [formik](https://git.yueluo.club/heora/notes/src/master/react/formik) 已完成
   + [css-in-js](https://git.yueluo.club/heora/notes/src/master/react/css_in_js) 已完成
   + [chakra-ui](https://git.yueluo.club/heora/notes/src/master/react/chakra_ui) 已完成
+  + [react性能优化](https://git.yueluo.club/heora/notes/src/master/react/optimize) 更新中...
   + [VirtualDOM及DIFF算法](https://git.yueluo.club/heora/notes/src/master/react/virtual_dom) 已完成
   + [Fiber](https://git.yueluo.club/heora/notes/src/master/react/Fiber) 已完成
-  + [react性能优化](https://git.yueluo.club/heora/notes/src/master/react/optimize) 更新中...
   + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 暂停中...
 * [TypeScipt](https://git.yueluo.club/heora/notes/src/master/typescript) 已完成
 * NodeJS
