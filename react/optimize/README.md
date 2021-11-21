@@ -287,7 +287,63 @@ memo 方法内部仍然是浅层比较，如果是引用数据类型，需要传
 
 ## 组件懒加载
 
-使用组件懒加载可以减少 bundle 文件大小，加快组件渲染速度。
+使用组件懒加载可以减少 bundle 文件大小，加快首屏渲染速度。
 
+### 路由懒加载
 
+```jsx
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
+
+const Home = lazy(() => import(/* webpackChunkName: "home" */'./pages/Home'));
+const List = lazy(() => import(/* webpackChunkName: "list" */'./pages/List'));
+
+function App () {
+  return (
+    <BrowserRouter>
+      <Link to="/">首页</Link>
+      <Link to="/list">列表页</Link>
+
+      <Switch>
+        <Suspense fallback={ <div>loading...</div> }>
+          <Route path="/" component={ Home } exact />
+          <Route path="/list" component={ List } />
+        </Suspense>
+      </Switch>
+    </BrowserRouter>
+  )
+}
+
+export default App;
+```
+
+### 条件判断懒加载
+
+适用于组件不会随条件频繁切换的场景。
+
+```jsx
+import { lazy, Suspense } from 'react';
+
+function App () {
+  let LazyComponent = null;
+
+  if (true) {
+    LazyComponent = lazy(() => import(/* webpackChunkName: "home" */'./pages/Home'));
+  } else {
+    LazyComponent = lazy(() => import(/* webpackChunkName: "list" */'./pages/List'));
+  }
+
+  return (
+    <div>
+      <Suspense fallback={ <div>loading...</div> }>
+        <LazyComponent />
+      </Suspense>
+    </div>
+  )
+}
+
+export default App;
+```
+
+## 占位符标记提升渲染性能
 
