@@ -347,3 +347,99 @@ export default App;
 
 ## 占位符标记提升渲染性能
 
+React 组件中返回的 JSX 如果存在多个同级元素，多个同级元素必须要由一个共同的父级。
+
+为了满足这个条件通常我们都会在最外层添加一个 div，但是这样就会多出一个无意义的标记，如果每个组件都多出一个无意义标记，浏览器渲染引擎的负担就会加重。
+
+为了解决这个问题，React 推出了 fragment 占位符标记，使用占位符标记既满足了拥有相同父级的要求又不会多出额外的无意义标记。
+
+```jsx
+import { Fragment } from "react";
+
+function App () {
+  return (
+    <>
+      <Fragment>
+        <div>Box1</div>
+        <div>Box2</div>
+      </Fragment>
+      <>
+        <div>Box3</div>
+        <div>Box4</div>
+      </>
+    </>
+  )
+}
+
+export default App;
+```
+
+## 构造函数中进行 this 指向更正
+
+在类组件中如果使用 fn() {} 这种方式定义函数，函数 this 默认指向 undefined，函数内部的 this 指向需要被更正。
+
+可以在构造函数中对函数的 this 进行更正，也可以在行内进行更正，两者看起来没有很大区别，但是对性能的影响是不同的。
+
+```jsx
+export default class App extends React.Component {
+  construator () {
+    super();
+    // 构造函数只执行一次，所以函数 this 指向更正的代码也只执行一次
+    this.handleClick = this.changeClik.bind(this);
+  }
+  
+  handleClick () {
+    console.log(this);
+  }
+  
+  render () {
+    // render 方法每次执行时都会调用 bind 方法生成新的函数实例
+    return <button onClick={ this.handleClick.bind(this) }>Click</button>
+  }
+}
+```
+
+## 类组件中的箭头函数
+
+类组件中使用箭头函数不会存在 this 指向问题，因为箭头函数本身并不绑定 this。
+
+```jsx
+export default class App extends React.Component {
+  handleClick = () => {
+    console.log(this);
+  }
+  
+  render () {
+    return <button onClick={ this.handleClick }>Click</button>
+  }
+}
+```
+
+箭头函数在 this 指向问题上很占优势，但是同时也存在不利的一面。
+
+当使用箭头函数时，该函数被添加为类的实例对象属性，而不是原型对象属性。如果组件被多次重用，每个组件实例对象中都将有一个相同的函数实例，降低了函数实例的可重用性，造成了资源浪费。
+
+综上所述，更正函数内部 this 的指向的最佳做法仍然是在构造函数中使用 bind 方法进行绑定。
+
+## 避免使用内联函数
+
+在使用内联函数后，render 方法每次运行时都会创建该函数的新实例，导致 React 在运行 Virtual DOM 比对时，新旧函数比对不相等，导致 React 总是为元素绑定新的函数实例，而旧的函数实例又要交给垃圾回收器处理。
+
+```jsx
+// 错误示范
+
+<input onChange={() => console.log('')} />
+```
+
+```jsx
+// 正确示范
+
+handleChange = () => {}
+
+<input onChange={ handleChange } />
+```
+
+正确的方法是在组件中单独定义函数，将函数绑定给事件。
+
+## 避免使用内联样式属性
+

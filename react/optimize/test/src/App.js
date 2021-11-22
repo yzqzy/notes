@@ -1,20 +1,17 @@
-import { lazy, Suspense } from 'react';
+import { Fragment } from "react";
 
 function App () {
-  let LazyComponent = null;
-
-  if (true) {
-    LazyComponent = lazy(() => import(/* webpackChunkName: "home" */'./pages/Home'));
-  } else {
-    LazyComponent = lazy(() => import(/* webpackChunkName: "list" */'./pages/List'));
-  }
-
   return (
-    <div>
-      <Suspense fallback={ <div>loading...</div> }>
-        <LazyComponent />
-      </Suspense>
-    </div>
+    <>
+      <Fragment>
+        <div>Box1</div>
+        <div>Box2</div>
+      </Fragment>
+      <>
+        <div>Box3</div>
+        <div>Box4</div>
+      </>
+    </>
   )
 }
 
