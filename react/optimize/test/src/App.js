@@ -1,18 +1,14 @@
-import { Fragment } from "react";
+import { Component } from "react";
+import _ from 'lodash';
 
-function App () {
-  return (
-    <>
-      <Fragment>
-        <div>Box1</div>
-        <div>Box2</div>
-      </Fragment>
-      <>
-        <div>Box3</div>
-        <div>Box4</div>
-      </>
-    </>
-  )
+class App extends Component {
+  render () {
+    console.log(_.chunk(['a', 'b', 'c', 'd', 'e'], 2));
+
+    return (
+      <div>App Works</div>
+    )
+  }
 }
 
 export default App;
