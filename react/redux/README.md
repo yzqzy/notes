@@ -108,12 +108,6 @@ Reducers：函数，操作状态并返回新的状态
 
 ## react 计数器
 
-### 安装
-
-```jsx
-npm i redux react-redux
-```
-
 ### redux 工作流程
 
 组件通过 dispatch 方法触发 Action。
@@ -124,11 +118,68 @@ Reducer 根据 Action 类型对状态进行更改并将更改后的状态返回�
 
 组件订阅 Store 状态，Store 中的状态更新会同步到组件。
 
-
-
 <img src="./images/redux02.png" style="zoom: 70%" />
 
+### 安装
+
+```jsx
+npm i redux react-redux
+```
+
+### 基本实现
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createStore } from 'redux';
+
+const initialState = {
+  count: 0
+}
+
+function reducer (state = initialState, action) {
+  switch (action.type) {
+    case 'increment':
+      return {
+        count: state.count + 1
+      };
+    case 'decrement':
+      return {
+        count: state.count -1
+      };
+    default:
+      return state;
+  }
+}
+
+const store = createStore(reducer);
+
+const increment = { type: 'increment' };
+const decrement = { type: 'decrement' };
 
 
+function Counter () {
+  return (
+    <div>
+      <button onClick={() => store.dispatch(increment)}>+</button>
+      <span>{ store.getState().count }</span>
+      <button onClick={() => store.dispatch(decrement)}>-</button>
+    </div>
+  )
+}
 
+store.subscribe(() => {
+  ReactDOM.render(
+    <Counter />,
+    document.getElementById('root')
+  );
+});
+
+ReactDOM.render(
+  <Counter />,
+  document.getElementById('root')
+);
+```
+
+## Provider 组件与 connect 方法
 
