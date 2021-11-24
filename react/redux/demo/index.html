@@ -1,35 +1,3 @@
-# Redux
-
-## 概述
-
-JavaScript 状态容器，提供可预测化的状态管理。
-
-```js
-const state = {
-  modelOpen: 'yes',
-  btnClicked: 'no',
-  btnActiveClass: 'active',
-  page: 5,
-  size: 10
-}
-```
-
-## 核心概念及工作流程
-
-<img src="./images/redux.png" style="zoom: 70%" />
-
-
-Store：存储状态的容器，JavaScript 对象
-
-View：视图，HTML 页面
-
-Actions：对象，描述对状态进行怎样的操作
-
-Reducers：函数，操作状态并返回新的状态
-
-## redux 计数器案例
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -98,37 +66,3 @@ Reducers：函数，操作状态并返回新的状态
   
 </body>
 </html>
-```
-
-## react 中 redux 解决的问题
-
-在 React 中组件通信的数据流是单向的，顶层组件可以通过 props 属性向下层组件传递数据，而下层组件不能向上层传递数据，要实现下层组件修改数据，需要上层组件传递修改数据的方法到下层组件。当项目越来越大时，组件之间传递数据变得越来越困难。
-
-使用 Redux 管理数据，由于 Store 独立于组件，使得数据管理独立于组件，解决了组件与组件之间传递数据困难的问题。
-
-## react 计数器
-
-### 安装
-
-```jsx
-npm i redux react-redux
-```
-
-### redux 工作流程
-
-组件通过 dispatch 方法触发 Action。
-
-Store 接收 Action 并将 Action 分发给 Reducer。
-
-Reducer 根据 Action 类型对状态进行更改并将更改后的状态返回给 Store。
-
-组件订阅 Store 状态，Store 中的状态更新会同步到组件。
-
-
-
-<img src="./images/redux02.png" style="zoom: 70%" />
-
-
-
-
-
