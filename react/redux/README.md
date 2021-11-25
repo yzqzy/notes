@@ -394,3 +394,93 @@ ReactDOM.render(
 
 ## action 传递参数
 
+### 步骤
+
+传递参数
+
+```jsx
+<button onClick={ () => increment(5) }>+</button>
+```
+
+接收参数，传递 reducer
+
+```js
+export const increment = payload = ({ type: INCREMENT, payload });
+```
+
+reducer 根据接收到的数据进行处理
+
+```js
+export default (state, action) => {
+  switch (action.type) {
+    case INCREMENT:
+      return { count: state.count + action.payload };
+  }
+}
+```
+
+### 代码改造
+
+component/Counter.js
+
+```js
+import React from "react"
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as counterActions from '../store/actions/counter'
+
+function Counter ({ count, increment, decrement }) {
+  return (
+    <div>
+      <button onClick={ () => increment(5) }>+</button>
+      <span>{ count }</span>
+      <button onClick={ () => decrement(5) }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.count
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+store/actions/actions/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+
+export const increment = payload => ({ type: INCREMENT, payload });
+export const decrement = payload => ({ type: DECREMENT, payload });
+```
+
+store/action/reducers/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+
+const initialState = {
+  count: 0
+}
+
+export function reducer (state = initialState, action) {
+  switch (action.type) {
+    case INCREMENT:
+      return {
+        count: state.count + action.payload
+      };
+    case DECREMENT:
+      return {
+        count: state.count - action.payload
+      };
+    default:
+      return state;
+  }
+}
+```
+
+## redux 弹出框案例
+
