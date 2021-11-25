@@ -183,3 +183,107 @@ ReactDOM.render(
 
 ## Provider 组件与 connect 方法
 
+connect 方法：
+
+* 订阅 store ，状态改变时重新渲染组件
+* 获取 store 状态，将状态映射到组件的 props
+* 获取 dispatch 方法
+
+components/Counter.js
+
+```jsx
+import React from "react"
+import { connect } from 'react-redux';
+
+function Counter ({ count, dispatch }) {
+  return (
+    <div>
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <span>{ count }</span>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.count
+})
+
+export default connect(mapStateToProps)(Counter);
+```
+
+index.js
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { createStore } from 'redux';
+import { Provider } from 'react-redux';
+import Counter from './components/Counter';
+
+const initialState = {
+  count: 0
+}
+
+function reducer (state = initialState, action) {
+  switch (action.type) {
+    case 'increment':
+      return {
+        count: state.count + 1
+      };
+    case 'decrement':
+      return {
+        count: state.count -1
+      };
+    default:
+      return state;
+  }
+}
+
+const store = createStore(reducer);
+
+const increment = { type: 'increment' };
+const decrement = { type: 'decrement' };
+
+ReactDOM.render(
+  <Provider store={store}>
+    <Counter />
+  </Provider>,
+  document.getElementById('root')
+);
+```
+
+## 使用 connect 方法的第二个参数
+
+```jsx
+import React from "react"
+import { connect } from 'react-redux';
+
+function Counter ({ count, increment, decrement }) {
+  return (
+    <div>
+      <button onClick={ increment }>+</button>
+      <span>{ count }</span>
+      <button onClick={ decrement }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.count
+});
+
+const mapDispatchToProps = dispatch => ({
+  increment () {
+    dispatch({ type: 'increment' })
+  },
+  decrement () {
+    dispatch({ type: 'decrement' })
+  }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+## bindActionCreator 方法
+
