@@ -323,5 +323,74 @@ export default connect(mapStateToProps, mapDispatchToProps)(Counter);
 
 ## 代码重构 - 代码拆分
 
+store/const/counter.js
 
+```js
+export const INCREMENT = 'increment';
+export const DECREMENT = 'decrement';
+```
+
+store/actions/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+
+export const increment = () => ({ type: INCREMENT });
+export const decrement = () => ({ type: DECREMENT });
+```
+
+store/reducers/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+
+const initialState = {
+  count: 0
+}
+
+export function reducer (state = initialState, action) {
+  switch (action.type) {
+    case INCREMENT:
+      return {
+        count: state.count + 1
+      };
+    case DECREMENT:
+      return {
+        count: state.count -1
+      };
+    default:
+      return state;
+  }
+} 
+```
+
+store/index.js
+
+```js
+import { createStore } from 'redux';
+import { reducer } from './reducers/couner';
+
+export const store = createStore(reducer);
+```
+
+index.js
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import { Provider } from 'react-redux';
+import Counter from './components/Counter';
+
+import { store } from './store';
+
+ReactDOM.render(
+  <Provider store={store}>
+    <Counter />
+  </Provider>,
+  document.getElementById('root')
+);
+```
+
+## action 传递参数
 
