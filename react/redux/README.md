@@ -484,3 +484,135 @@ export function reducer (state = initialState, action) {
 
 ## redux 弹出框案例
 
+components/Modal.js
+
+```js
+import React from "react";
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as modalActions from '../store/actions/modal';
+
+function Modal ({ showStatus, show, hide }) {
+  const styles = {
+    width: 200,
+    height: 200,
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    marginLeft: -100,
+    marginTop: -100,
+    background: 'orange',
+    display: showStatus ? 'block' : 'none'
+  };
+
+  return (
+    <div>
+      <button onClick={ show }>显示</button>
+      <button onClick={ hide }>隐藏</button>
+      <div style={styles}></div>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  showStatus: state.show
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(modalActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Modal);
+```
+
+store/actions/modal.js
+
+```js
+import { HIDE_MODAL, SHOW_MODAL } from "../const/modal";
+
+export const show = () => ({ type: SHOW_MODAL });
+export const hide = () => ({ type: HIDE_MODAL });
+```
+
+store/const/modal.js
+
+```js
+export const SHOW_MODAL = 'showModal';
+export const HIDE_MODAL = 'hideModal';
+```
+
+store/reducers/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+import { HIDE_MODAL, SHOW_MODAL } from "../const/modal";
+
+const initialState = {
+  count: 0,
+  show: false
+}
+
+export function reducer (state = initialState, action) {
+  switch (action.type) {
+    case INCREMENT:
+      return {
+        ...state,
+        count: state.count + action.payload
+      };
+    case DECREMENT:
+      return {
+        ...state,
+        count: state.count - action.payload
+      };
+    case SHOW_MODAL: 
+      return {
+        ...state,
+        show: true
+      };
+    case HIDE_MODAL:
+      return {
+        ...state,
+        show: false
+      };
+    default:
+      return state;
+  }
+} 
+```
+
+App.js
+
+```jsx
+import React from "react";
+import Counter from './components/Counter';
+import Modal from './components/Modal';
+
+function App () {
+  return (
+    <div>
+      <Counter />
+      <Modal />
+    </div>
+  )
+}
+
+export default App;
+```
+
+index.js
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import App from './App';
+import { store } from './store';
+
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root')
+);
+```
+
+## 拆分合并 reducer
+
