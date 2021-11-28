@@ -616,3 +616,157 @@ ReactDOM.render(
 
 ## 拆分合并 reducer
 
+components/Counter.js
+
+```jsx
+import React from "react"
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as counterActions from '../store/actions/counter'
+
+function Counter ({ count, increment, decrement }) {
+  return (
+    <div>
+      <button onClick={ () => increment(5) }>+</button>
+      <span>{ count }</span>
+      <button onClick={ () => decrement(5) }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.counter.count // edit
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+components/Modal.js
+
+```jsx
+import React from "react";
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as modalActions from '../store/actions/modal';
+
+function Modal ({ showStatus, show, hide }) {
+  const styles = {
+    width: 200,
+    height: 200,
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    marginLeft: -100,
+    marginTop: -100,
+    background: 'orange',
+    display: showStatus ? 'block' : 'none'
+  };
+
+  return (
+    <div>
+      <button onClick={ show }>显示</button>
+      <button onClick={ hide }>隐藏</button>
+      <div style={styles}></div>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  showStatus: state.modal.show // edit
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(modalActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Modal);
+```
+
+store/reducers/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+
+const initialState = {
+  count: 0
+}
+
+const counterReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case INCREMENT:
+      return {
+        ...state,
+        count: state.count + action.payload
+      };
+    case DECREMENT:
+      return {
+        ...state,
+        count: state.count - action.payload
+      };
+    default:
+      return state;
+  }
+};
+
+export default counterReducer;
+```
+
+store/reducers/modal.js
+
+```js
+import { HIDE_MODAL, SHOW_MODAL } from "../const/modal";
+
+const initialState = {
+  show: false
+}
+
+const modalReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case SHOW_MODAL: 
+      return {
+        ...state,
+        show: true
+      };
+    case HIDE_MODAL:
+      return {
+        ...state,
+        show: false
+      };
+    default:
+      return state;
+  }
+};
+
+export default modalReducer;
+```
+
+store/reducers/index.js
+
+```js
+import { combineReducers } from 'redux';
+import CounterReducer from './counter';
+import ModalReducer from './modal';
+
+export default combineReducers({
+  counter: CounterReducer,
+  modal: ModalReducer
+});
+```
+
+store/index.js
+
+```js
+import { createStore } from 'redux';
+import reducers from './reducers';
+
+export const store = createStore(reducers);
+```
+
+## 中间件概念
+
+中间件本质是一个函数，redux 允许我们通过中间件的方式扩展和增强 redux 应用程序。
+
+
+
+## 开发 Redux 中间件
+

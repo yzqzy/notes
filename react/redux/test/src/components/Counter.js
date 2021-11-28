@@ -14,7 +14,7 @@ function Counter ({ count, increment, decrement }) {
 }
 
 const mapStateToProps = state => ({
-  count: state.count
+  count: state.counter.count
 });
 
 const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
