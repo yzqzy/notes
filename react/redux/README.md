@@ -766,7 +766,8 @@ export const store = createStore(reducers);
 
 中间件本质是一个函数，redux 允许我们通过中间件的方式扩展和增强 redux 应用程序。
 
-
+<img src="./images/redux03.png" style="zoom: 70%" />
 
 ## 开发 Redux 中间件
 
+### 模板代码
