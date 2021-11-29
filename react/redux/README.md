@@ -770,4 +770,63 @@ export const store = createStore(reducers);
 
 ## 开发 Redux 中间件
 
-### 模板代码
+### 步骤
+
+模板代码
+
+```js
+export default store => next => action => {};
+```
+
+注册中间件
+
+```js
+import { } from 'redux';
+import logger from './middlewares/logger';
+
+createStore(reducer, applyMiddleware(
+  logger
+));
+```
+
+### 案例
+
+store/middleware/logger.js
+
+```jsx
+const logger = store => next => action => {
+  console.log(action, store);
+  
+  next(action);
+}; 
+
+export default logger;
+```
+
+store/middleware/test.js
+
+```js
+const test = store => next => action => {
+  console.log('test running.');
+  
+  next(action);
+}; 
+
+export default test;
+```
+
+store/index.js
+
+```js
+import { createStore, applyMiddleware } from 'redux';
+import reducers from './reducers';
+import logger from './middleware/logger';
+import test from './middleware/test';
+
+export const store = createStore(reducers, applyMiddleware(logger, test));
+```
+
+中间件执行顺序取决于中间件注册顺序。
+
+## redux 中间件开发实例 thunk
+
