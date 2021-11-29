@@ -828,5 +828,132 @@ export const store = createStore(reducers, applyMiddleware(logger, test));
 
 中间件执行顺序取决于中间件注册顺序。
 
-## redux 中间件开发实例 thunk
+## 定义异步处理中间件
+
+增加异步处理。
+
+ src/components/Counter.js
+
+```js
+import React from "react"
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as counterActions from '../store/actions/counter'
+
+function Counter ({ count, increment, decrement, increment_async }) {
+  return (
+    <div>
+      <button onClick={ () => increment_async(5) }>+ async</button>
+      <button onClick={ () => increment(5) }>+</button>
+      <span>{ count }</span>
+      <button onClick={ () => decrement(5) }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.counter.count
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+src/components/Modal.js
+
+```jsx
+import React from "react";
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as modalActions from '../store/actions/modal';
+
+function Modal ({ showStatus, show, hide, show_async }) {
+  const styles = {
+    width: 200,
+    height: 200,
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    marginLeft: -100,
+    marginTop: -100,
+    background: 'orange',
+    display: showStatus ? 'block' : 'none'
+  };
+
+  return (
+    <div>
+      <button onClick={ show_async }>显示-async</button>
+      <button onClick={ show }>显示</button>
+      <button onClick={ hide }>隐藏</button>
+      <div style={styles}></div>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  showStatus: state.modal.show
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(modalActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Modal);
+```
+
+store/actions/counter.js
+
+```js
+import { INCREMENT, DECREMENT } from "../const/counter";
+
+export const increment = payload => ({ type: INCREMENT, payload });
+export const decrement = payload => ({ type: DECREMENT, payload });
+
+export const increment_async = payload => dispatch => {
+  setTimeout(() => dispatch(increment(payload)), 2 * 1000);
+}
+```
+
+store/action/modal.js
+
+```js
+import { HIDE_MODAL, SHOW_MODAL } from "../const/modal";
+
+export const show = () => ({ type: SHOW_MODAL });
+export const hide = () => ({ type: HIDE_MODAL });
+
+export const show_async = () => dispatch => {
+  setTimeout(() => dispatch(show()), 2 * 1000);
+}
+```
+
+store/middleware/thunk.js
+
+```js
+const thunk = ({ dispatch }) => next => action => {
+  if (typeof action === 'function') {
+    return action(dispatch);
+  }
+  next(action);
+}
+
+export default thunk;
+```
+
+store/index.js
+
+```js
+import { createStore, applyMiddleware } from 'redux';
+import reducers from './reducers';
+import logger from './middleware/logger';
+import test from './middleware/test';
+import thunk from './middleware/thunk';
+
+export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
+```
+
+## redux-thunk 中间件的使用
+
+```js
+yarn add redux-thunk
+```
 
