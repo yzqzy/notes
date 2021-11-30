@@ -394,7 +394,7 @@ ReactDOM.render(
 
 ## action 传递参数
 
-### 步骤
+### 使用方法
 
 传递参数
 
@@ -770,7 +770,7 @@ export const store = createStore(reducers);
 
 ## 开发 Redux 中间件
 
-### 步骤
+### 使用方法
 
 模板代码
 
@@ -951,9 +951,41 @@ import thunk from './middleware/thunk';
 export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
 ```
 
-## redux-thunk 中间件的使用
+## redux-thunk 中间件
+
+### 使用方法
 
 ```js
 yarn add redux-thunk
 ```
+
+```js
+import thunk from 'redux-thunk';
+import { applyMiddleware } from 'redux';
+
+createStore(rootRouter, applyMiddleware(thunk));
+```
+
+```js
+const loadPosts = () => async dispatch => {
+  const posts = await axios.get('/api/posts').then(response => response.data);
+  
+  dispatch({ type: LOADPOSTSUCCESS, payload: posts })
+}
+```
+
+### 案例
+
+```js
+import { createStore, applyMiddleware } from 'redux';
+import reducers from './reducers';
+import logger from './middleware/logger';
+import test from './middleware/test';
+// import thunk from './middleware/thunk';
+import thunk from 'redux-thunk';
+
+export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
+```
+
+## redux-aga 中间件
 
