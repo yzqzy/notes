@@ -987,5 +987,5 @@ import thunk from 'redux-thunk';
 export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
 ```
 
-## redux-aga 中间件
+## redux-saga 中间件
 
