@@ -1,8 +1,10 @@
 import { createStore, applyMiddleware } from 'redux';
 import reducers from './reducers';
-import logger from './middleware/logger';
-import test from './middleware/test';
-// import thunk from './middleware/thunk';
-import thunk from 'redux-thunk';
+import createSagaMiddleware from 'redux-saga';
+import counterSaga from './sagas/counter';
 
-export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
+const sagaMiddleware = createSagaMiddleware();
+
+export const store = createStore(reducers, applyMiddleware(sagaMiddleware));
+
+sagaMiddleware.run(counterSaga);

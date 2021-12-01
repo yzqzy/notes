@@ -989,3 +989,137 @@ export const store = createStore(reducers, applyMiddleware(logger, test, thunk))
 
 ## redux-saga 中间件
 
+redux-saga 可以将异步操作从 Action Creator 文件中抽离出来，放在一个单独的文件中。
+
+```js
+yarn add redux-saga
+```
+
+### 使用方法
+
+创建 redux-saga 中间件
+
+```js
+import createSagaMiddleware from 'redux-saga';
+
+const sagaMiddleware = createSagaMiddleware();
+```
+
+注册 sagaMiddleware
+
+```js
+createStore(reducer, applyMiddleware(sagaMiddleware));
+```
+
+使用 saga 接收 action 执行异步操作
+
+```js
+import { takeEntry, put } from 'redux-saga/effects';
+
+function* load_posts () {
+  const { data } = yield axios.get('/api/posts.json');
+  
+  yield put(load_posts_success(data));
+}
+
+export default function* postSaga () {
+  yield takeEntry(LOAD_POSTS, load_posts);
+}
+```
+
+启动 saga
+
+```js
+import postSaga from './store/saga/post.saga';
+
+sagaMiddleware.run(postSaga);
+```
+
+### 案例
+
+components/Counter.js
+
+```jsx
+import React from "react"
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as counterActions from '../store/actions/counter'
+
+function Counter ({ count, increment, decrement, increment_async }) {
+  return (
+    <div>
+      <button onClick={ increment_async }>+</button>
+      <span>{ count }</span>
+      <button onClick={ () => decrement(5) }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.counter.count
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+store/actions/counter.js
+
+```js
+import { INCREMENT, DECREMENT, INCREMENT_ASYNC } from "../const/counter";
+
+export const increment = payload => ({ type: INCREMENT, payload });
+export const decrement = payload => ({ type: DECREMENT, payload });
+
+// export const increment_async = payload => dispatch => {
+//   setTimeout(() => dispatch(increment(payload)), 2 * 1000);
+// }
+
+export const increment_async = () => ({ type: INCREMENT_ASYNC });
+```
+
+store/actions/const/counter.js
+
+```js
+export const INCREMENT = 'increment';
+export const DECREMENT = 'decrement';
+export const INCREMENT_ASYNC = 'increment_async';
+```
+
+store/sagas/counter.js
+
+```js
+import { takeEvery, put, delay } from 'redux-saga/effects';
+import { increment } from '../actions/counter';
+import { INCREMENT_ASYNC } from '../const/counter';
+
+function* increament_async_fn () {
+  yield delay(2000);
+  yield put(increment(10));
+}
+
+const counterSaga = function* () {
+  yield takeEvery(INCREMENT_ASYNC, increament_async_fn)
+}
+
+export default counterSaga;
+```
+
+store/index.js
+
+```js
+import { createStore, applyMiddleware } from 'redux';
+import reducers from './reducers';
+import createSagaMiddleware from 'redux-saga';
+import counterSaga from './sagas/counter';
+
+const sagaMiddleware = createSagaMiddleware();
+
+export const store = createStore(reducers, applyMiddleware(sagaMiddleware));
+
+sagaMiddleware.run(counterSaga);
+```
+
+## redux-saga action 传参
+
