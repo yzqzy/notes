@@ -1,6 +1,8 @@
 # Redux
 
-## 概述
+## 一、基础
+
+### 概述
 
 JavaScript 状态容器，提供可预测化的状态管理。
 
@@ -14,7 +16,7 @@ const state = {
 }
 ```
 
-## 核心概念及工作流程
+###  核心概念及工作流程
 
 <img src="./images/redux.png" style="zoom: 70%" />
 
@@ -27,7 +29,7 @@ Actions：对象，描述对状态进行怎样的操作
 
 Reducers：函数，操作状态并返回新的状态
 
-## redux 计数器案例
+### redux 计数器案例
 
 ```html
 <!DOCTYPE html>
@@ -100,15 +102,15 @@ Reducers：函数，操作状态并返回新的状态
 </html>
 ```
 
-## react 中 redux 解决的问题
+### react 中 redux 解决的问题
 
 在 React 中组件通信的数据流是单向的，顶层组件可以通过 props 属性向下层组件传递数据，而下层组件不能向上层传递数据，要实现下层组件修改数据，需要上层组件传递修改数据的方法到下层组件。当项目越来越大时，组件之间传递数据变得越来越困难。
 
 使用 Redux 管理数据，由于 Store 独立于组件，使得数据管理独立于组件，解决了组件与组件之间传递数据困难的问题。
 
-## react 计数器
+### react 计数器
 
-### redux 工作流程
+#### redux 工作流程
 
 组件通过 dispatch 方法触发 Action。
 
@@ -120,13 +122,13 @@ Reducer 根据 Action 类型对状态进行更改并将更改后的状态返回�
 
 <img src="./images/redux02.png" style="zoom: 70%" />
 
-### 安装
+#### 安装
 
 ```jsx
 npm i redux react-redux
 ```
 
-### 基本实现
+#### 基本实现
 
 ```jsx
 import React from 'react';
@@ -181,7 +183,7 @@ ReactDOM.render(
 );
 ```
 
-## Provider 组件与 connect 方法
+### Provider 组件与 connect 方法
 
 connect 方法：
 
@@ -253,7 +255,7 @@ ReactDOM.render(
 );
 ```
 
-## 使用 connect 方法的第二个参数
+### 使用 connect 方法的第二个参数
 
 ```jsx
 import React from "react"
@@ -285,7 +287,7 @@ const mapDispatchToProps = dispatch => ({
 export default connect(mapStateToProps, mapDispatchToProps)(Counter);
 ```
 
-## bindActionCreator 方法
+### bindActionCreator 方法
 
 store/actions/counter.js
 
@@ -321,7 +323,7 @@ const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispat
 export default connect(mapStateToProps, mapDispatchToProps)(Counter);
 ```
 
-## 代码重构 - 代码拆分
+###  代码重构 - 代码拆分
 
 store/const/counter.js
 
@@ -392,9 +394,9 @@ ReactDOM.render(
 );
 ```
 
-## action 传递参数
+### action 传递参数
 
-### 使用方法
+#### 使用方法
 
 传递参数
 
@@ -419,7 +421,7 @@ export default (state, action) => {
 }
 ```
 
-### 代码改造
+#### 代码改造
 
 component/Counter.js
 
@@ -482,7 +484,7 @@ export function reducer (state = initialState, action) {
 }
 ```
 
-## redux 弹出框案例
+### redux 弹出框案例
 
 components/Modal.js
 
@@ -614,7 +616,7 @@ ReactDOM.render(
 );
 ```
 
-## 拆分合并 reducer
+### 拆分合并 reducer
 
 components/Counter.js
 
@@ -762,15 +764,15 @@ import reducers from './reducers';
 export const store = createStore(reducers);
 ```
 
-## 中间件概念
+### 中间件概念
 
 中间件本质是一个函数，redux 允许我们通过中间件的方式扩展和增强 redux 应用程序。
 
 <img src="./images/redux03.png" style="zoom: 70%" />
 
-## 开发 Redux 中间件
+### 开发 Redux 中间件
 
-### 使用方法
+#### 使用方法
 
 模板代码
 
@@ -789,7 +791,7 @@ createStore(reducer, applyMiddleware(
 ));
 ```
 
-### 案例
+#### 案例
 
 store/middleware/logger.js
 
@@ -828,7 +830,7 @@ export const store = createStore(reducers, applyMiddleware(logger, test));
 
 中间件执行顺序取决于中间件注册顺序。
 
-## 定义异步处理中间件
+### 定义异步处理中间件
 
 增加异步处理。
 
@@ -951,9 +953,9 @@ import thunk from './middleware/thunk';
 export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
 ```
 
-## redux-thunk 中间件
+### redux-thunk 中间件
 
-### 使用方法
+#### 使用方法
 
 ```js
 yarn add redux-thunk
@@ -974,7 +976,7 @@ const loadPosts = () => async dispatch => {
 }
 ```
 
-### 案例
+#### 案例
 
 ```js
 import { createStore, applyMiddleware } from 'redux';
@@ -987,7 +989,7 @@ import thunk from 'redux-thunk';
 export const store = createStore(reducers, applyMiddleware(logger, test, thunk));
 ```
 
-## redux-saga 中间件
+### redux-saga 中间件
 
 redux-saga 可以将异步操作从 Action Creator 文件中抽离出来，放在一个单独的文件中。
 
@@ -995,7 +997,7 @@ redux-saga 可以将异步操作从 Action Creator 文件中抽离出来，放�
 yarn add redux-saga
 ```
 
-### 使用方法
+#### 使用方法
 
 创建 redux-saga 中间件
 
@@ -1035,7 +1037,7 @@ import postSaga from './store/saga/post.saga';
 sagaMiddleware.run(postSaga);
 ```
 
-### 案例
+#### 案例
 
 components/Counter.js
 
@@ -1121,7 +1123,7 @@ export const store = createStore(reducers, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(counterSaga);
 ```
 
-## redux-saga action 传参
+### redux-saga action 传参
 
 src/components/Counter.js
 
@@ -1184,7 +1186,7 @@ const counterSaga = function* () {
 export default counterSaga;
 ```
 
-## saga 文件的拆分与合并
+### saga 文件的拆分与合并
 
 src/store/action/modal.js
 
@@ -1280,7 +1282,7 @@ export const store = createStore(reducers, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(rootSaga);
 ```
 
-## redux-action 中间件使用
+### redux-action 中间件使用
 
 redux 流程中存在大量的样板代码，使用 redux-actions 可以简化 Action 和 Reducer 的处理。
 
@@ -1288,7 +1290,7 @@ redux 流程中存在大量的样板代码，使用 redux-actions 可以简化 A
 yarn add redux-actions
 ```
 
-### 使用方法
+#### 使用方法
 
 创建 action
 
@@ -1315,7 +1317,7 @@ const counterReducer = createReducer({
 export default counterReducer;
 ```
 
-### 案例
+#### 案例
 
 components/counter.js
 
@@ -1415,4 +1417,6 @@ export default createReducer({
   [decrement]: handleDecrement
 }, initialState);
 ```
+
+## 二、源码
 
