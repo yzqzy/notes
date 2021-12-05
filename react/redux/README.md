@@ -1280,3 +1280,139 @@ export const store = createStore(reducers, applyMiddleware(sagaMiddleware));
 sagaMiddleware.run(rootSaga);
 ```
 
+## redux-action 中间件使用
+
+redux 流程中存在大量的样板代码，使用 redux-actions 可以简化 Action 和 Reducer 的处理。
+
+```js
+yarn add redux-actions
+```
+
+### 使用方法
+
+创建 action
+
+```js
+import { createAction } from 'redux-actions';
+
+const increment_action = createAction('increment');
+const decrement_action = createAction('decrement');
+```
+
+创建 reducer
+
+```js
+import { handleActions as createReducer } from 'redux-actions';
+import { increment_action, decrement_action } from '../actions/counter.js';
+
+const initialState = { count: 0 };
+
+const counterReducer = createReducer({
+  [increment_action]: (state, action) => ({ count: state.count + 1 }),
+  [decrement_action]: (state, action) => ({ count: state.count - 1 }),
+}, initialState);
+
+export default counterReducer;
+```
+
+### 案例
+
+components/counter.js
+
+```js
+import React from "react"
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as counterActions from '../store/actions/counter'
+
+function Counter ({ count, increment, decrement}) {
+  return (
+    <div>
+      <button onClick={ () => increment(10) }>+</button>
+      <span>{ count }</span>
+      <button onClick={ () => decrement(10) }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.counter.count
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+store/action/counter.js
+
+```js
+// import { INCREMENT, DECREMENT, INCREMENT_ASYNC } from "../const/counter";
+
+// export const increment = payload => ({ type: INCREMENT, payload });
+// export const decrement = payload => ({ type: DECREMENT, payload });
+
+// // export const increment_async = payload => dispatch => {
+// //   setTimeout(() => dispatch(increment(payload)), 2 * 1000);
+// // }
+
+// export const increment_async = payload => ({ type: INCREMENT_ASYNC, payload });
+
+
+import { createAction } from 'redux-actions';
+
+export const increment = createAction('inrement');
+export const decrement = createAction('decrement');
+```
+
+store/reducers/counter.js
+
+```js
+// import { INCREMENT, DECREMENT } from "../const/counter";
+
+// const initialState = {
+//   count: 0
+// }
+
+// const counterReducer = (state = initialState, action) => {
+//   switch (action.type) {
+//     case INCREMENT:
+//       return {
+//         ...state,
+//         count: state.count + action.payload
+//       };
+//     case DECREMENT:
+//       return {
+//         ...state,
+//         count: state.count - action.payload
+//       };
+//     default:
+//       return state;
+//   }
+// };
+
+// export default counterReducer;
+
+
+
+import { handleActions as createReducer } from 'redux-actions';
+import { increment, decrement } from '../actions/counter';
+
+const initialState = {
+  count: 0
+};
+
+const handleIncrement = (state, action) => ({
+  count: state.count + action.payload
+});
+
+const handleDecrement = (state, action) => ({
+  count: state.count - action.payload
+});
+
+export default createReducer({
+  [increment]: handleIncrement,
+  [decrement]: handleDecrement
+}, initialState);
+```
+
