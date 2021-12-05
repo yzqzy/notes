@@ -8,7 +8,7 @@ function* increament_async_fn (action) {
 }
 
 const counterSaga = function* () {
-  yield takeEvery(INCREMENT_ASYNC, increament_async_fn)
+  yield takeEvery(INCREMENT_ASYNC, increament_async_fn);
 }
 
 export default counterSaga;

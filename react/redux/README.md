@@ -1186,3 +1186,97 @@ export default counterSaga;
 
 ## saga 文件的拆分与合并
 
+src/store/action/modal.js
+
+```js
+import { HIDE_MODAL, SHOW_MODAL, SHOW_MODAL_ASYNC } from "../const/modal";
+
+export const show = () => ({ type: SHOW_MODAL });
+export const hide = () => ({ type: HIDE_MODAL });
+
+// export const show_async = () => dispatch => {
+//   setTimeout(() => dispatch(show()), 2 * 1000);
+// }
+
+export const show_async = () => ({ type: SHOW_MODAL_ASYNC });
+```
+
+src/store/const/modal.js
+
+```js
+export const SHOW_MODAL = 'showModal';
+export const HIDE_MODAL = 'hideModal';
+
+export const SHOW_MODAL_ASYNC = 'showModal_async';
+```
+
+src/store/sagas/counter.js
+
+```js
+import { takeEvery, put, delay } from 'redux-saga/effects';
+import { increment } from '../actions/counter';
+import { INCREMENT_ASYNC } from '../const/counter';
+
+function* increament_async_fn (action) {
+  yield delay(2000);
+  yield put(increment(action.payload));
+}
+
+const counterSaga = function* () {
+  yield takeEvery(INCREMENT_ASYNC, increament_async_fn);
+}
+
+export default counterSaga;
+```
+
+src/store/sagas/modal.js
+
+```js
+import { takeEvery, put, delay } from 'redux-saga/effects';
+import { show } from '../actions/modal';
+import { SHOW_MODAL_ASYNC } from '../const/modal';
+
+function* showModal_async () {
+  yield delay(2000);
+  yield put(show());
+}
+
+const modalSaga = function* () {
+  yield takeEvery(SHOW_MODAL_ASYNC, showModal_async);
+}
+
+export default modalSaga;
+```
+
+src/store/sagas/index.js
+
+```js
+import { all } from 'redux-saga/effects';
+import counterSaga from './counter';
+import modalSaga from './modal';
+
+const rootSaga = function* () {
+  yield all([
+    counterSaga(),
+    modalSaga()
+  ]);
+}
+
+export default rootSaga;
+```
+
+src/store/index.js
+
+```js
+import { createStore, applyMiddleware } from 'redux';
+import reducers from './reducers';
+import createSagaMiddleware from 'redux-saga';
+import rootSaga from './sagas';
+
+const sagaMiddleware = createSagaMiddleware();
+
+export const store = createStore(reducers, applyMiddleware(sagaMiddleware));
+
+sagaMiddleware.run(rootSaga);
+```
+
