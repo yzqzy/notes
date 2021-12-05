@@ -1123,3 +1123,66 @@ sagaMiddleware.run(counterSaga);
 
 ## redux-saga action 传参
 
+src/components/Counter.js
+
+```jsx
+import React from "react"
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as counterActions from '../store/actions/counter'
+
+function Counter ({ count, increment, decrement, increment_async }) {
+  return (
+    <div>
+      <button onClick={ () => increment_async(20) }>+</button>
+      <span>{ count }</span>
+      <button onClick={ () => decrement(5) }>-</button>
+    </div>
+  )
+}
+
+const mapStateToProps = state => ({
+  count: state.counter.count
+});
+
+const mapDispatchToProps = dispatch => bindActionCreators(counterActions, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+```
+
+store/actions/counter.js
+
+```js
+import { INCREMENT, DECREMENT, INCREMENT_ASYNC } from "../const/counter";
+
+export const increment = payload => ({ type: INCREMENT, payload });
+export const decrement = payload => ({ type: DECREMENT, payload });
+
+// export const increment_async = payload => dispatch => {
+//   setTimeout(() => dispatch(increment(payload)), 2 * 1000);
+// }
+
+export const increment_async = payload => ({ type: INCREMENT_ASYNC, payload });
+```
+
+store/sagas/counter.js
+
+```js
+import { takeEvery, put, delay } from 'redux-saga/effects';
+import { increment } from '../actions/counter';
+import { INCREMENT_ASYNC } from '../const/counter';
+
+function* increament_async_fn (action) {
+  yield delay(2000);
+  yield put(increment(action.payload));
+}
+
+const counterSaga = function* () {
+  yield takeEvery(INCREMENT_ASYNC, increament_async_fn)
+}
+
+export default counterSaga;
+```
+
+## saga 文件的拆分与合并
+
