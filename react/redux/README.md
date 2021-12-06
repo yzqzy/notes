@@ -1782,5 +1782,7 @@ function iSFunction (val) {
 </html>
 ```
 
+applyMiddleware 中间件其实就是一个内置的 Enhancer 函数。
+
 ### applyMiddleware
 
