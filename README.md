@@ -52,6 +52,7 @@
   + [chakra-ui](https://git.yueluo.club/heora/notes/src/master/react/chakra_ui) 已完成
   + [react性能优化](https://git.yueluo.club/heora/notes/src/master/react/optimize) 已完成
   + [redux](https://git.yueluo.club/heora/notes/src/master/react/redux) 已完成
+  + [redux源码实现](https://git.yueluo.club/heora/notes/src/master/react/redux_source) 更新中...
   + [VirtualDOM及DIFF算法](https://git.yueluo.club/heora/notes/src/master/react/virtual_dom) 已完成
   + [Fiber](https://git.yueluo.club/heora/notes/src/master/react/Fiber) 已完成
   + [react源码阅读](https://git.yueluo.club/heora/notes/src/master/react/react_source) 暂停中...

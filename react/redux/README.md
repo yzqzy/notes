@@ -1418,5 +1418,13 @@ export default createReducer({
 }, initialState);
 ```
 
-## 二、源码
+## 二、源码实现
+
+```js
+createStore(reducer, preloadedState, enhancer)
+
+{
+  getState, dispatch, subscribe
+}
+```
 
