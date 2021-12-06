@@ -1428,3 +1428,107 @@ createStore(reducer, preloadedState, enhancer)
 }
 ```
 
+### 核心逻辑
+
+redux/index.js
+
+```js
+function createStore (reducer, preloadedState) {
+  // store 对象中存储的状态
+  let currentState = preloadedState;
+  // 存放订阅者函数
+  const currentListeners = [];
+
+  // 获取状态
+  function getState () {
+    return currentState;
+  }
+
+  // 触发 action
+  function dispatch (action) {
+    currentState = reducer(currentState, action);
+
+    // 循环数据，调用订阅者
+    for (let i = 0; i < currentListeners.length; i++) {
+      const listener = currentListeners[i];
+
+      listener();
+    }
+  }
+
+  // 订阅状态 
+  function subscribe (listener) {
+    currentListeners.push(listener);
+  }
+
+  return {
+    getState,
+    dispatch,
+    subscribe
+  }
+}
+```
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redux 源码实现</title>
+</head>
+<body>
+
+  <button id="J-increment">+</button>
+  <span id="J-count">0</span>
+  <button id="J-decrement">-</button>
+
+  <script src="./redux/index.js"></script>
+
+  <script>
+    const oCount = document.getElementById('J-count');
+    const oIncrementBtn = document.getElementById('J-increment');
+    const oDecrementBtn = document.getElementById('J-decrement');
+
+    function reducer (state, action) {
+      switch (action.type) {
+        case 'increment':
+          return state + 1;
+        case 'decrement':
+          return state - 1;
+        default:
+          return state;
+      }
+    }
+
+    // 创建 store
+    const store = createStore(reducer, 0);
+
+    // 触发 action
+    oIncrementBtn.onclick = function () {
+      store.dispatch({ type: 'increment' });
+    }
+    oDecrementBtn.onclick = function () {
+      store.dispatch({ type: 'decrement' });
+    }
+
+    // 订阅状态
+    store.subscribe(() => {
+      const count = store.getState();
+
+      oCount.innerHTML = count;
+    });
+
+  </script>
+  
+</body>
+</html>
+```
+
+### 参数类型约束
+
+
+
