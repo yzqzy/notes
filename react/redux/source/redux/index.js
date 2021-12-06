@@ -2,10 +2,26 @@
  * @file 自定义 Redux
  */
 
-function createStore (reducer, preloadedState) {
+/**
+ * @descriptions 
+ * @param {function} reducer 
+ * @param {object} preloadedState 
+ * @param {function} enhancer
+ * @returns 
+ */
+function createStore (reducer, preloadedState, enhancer) {
   // 约束 reducer 参数类型
-  if (typeof reducer !== 'function') {
+  if (!iSFunction(reducer)) {
     throw new Error('reducer has to be a function.');
+  }
+
+  // 判断 enhancer 参数
+  if (typeof enhancer !== 'undefined') {
+    if (!iSFunction(reducer)) {
+      throw new Error('enhancer has to be a function.');
+    }
+
+    return enhancer(createStore)(reducer, preloadedState);
   }
 
   // store 对象中存储的状态
@@ -67,4 +83,9 @@ function isPlainObject (obj) {
   }
 
   return Object.getPrototypeOf(obj) == proto;
+}
+
+
+function iSFunction (val) {
+  return typeof val === 'function';
 }

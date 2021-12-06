@@ -19,6 +19,27 @@
     const oIncrementBtn = document.getElementById('J-increment');
     const oDecrementBtn = document.getElementById('J-decrement');
 
+    function enhancer (createStore) {
+      return function (reducer, preloadedState) {
+        const store = createStore(reducer, preloadedState);
+
+        let dispatch = store.dispatch;
+
+        function _dispatch (action) {
+          if (typeof action === 'function') {
+            return action(dispatch);
+          }
+
+          dispatch(action);
+        }
+
+        return {
+          ...store,
+          dispatch: _dispatch
+        };
+      }
+    }
+
     function reducer (state, action) {
       switch (action.type) {
         case 'increment':
@@ -31,11 +52,16 @@
     }
 
     // 创建 store
-    const store = createStore(reducer, 0);
+    const store = createStore(reducer, 0, enhancer);
 
     // 触发 action
     oIncrementBtn.onclick = function () {
-      store.dispatch({ type: 'increment' });
+      // store.dispatch({ type: 'increment' });
+      store.dispatch((dispatch) => {
+        setTimeout(() => {
+          dispatch({ type: 'increment' });
+        }, 1000);
+      });
     }
     oDecrementBtn.onclick = function () {
       store.dispatch({ type: 'decrement' });
