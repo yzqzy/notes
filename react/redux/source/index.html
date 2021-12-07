@@ -21,27 +21,6 @@
     const oIncrementBtn = document.getElementById('J-increment');
     const oDecrementBtn = document.getElementById('J-decrement');
 
-    // function enhancer (createStore) {
-    //   return function (reducer, preloadedState) {
-    //     const store = createStore(reducer, preloadedState);
-
-    //     let dispatch = store.dispatch;
-
-    //     function _dispatch (action) {
-    //       if (typeof action === 'function') {
-    //         return action(dispatch);
-    //       }
-
-    //       dispatch(action);
-    //     }
-
-    //     return {
-    //       ...store,
-    //       dispatch: _dispatch
-    //     };
-    //   }
-    // }
-
     function reducer (state, action) {
       switch (action.type) {
         case 'increment':
@@ -52,23 +31,9 @@
           return state;
       }
     }
-
+    
     // 创建 store
-    // const store = createStore(reducer, 0, enhancer);
     const store = createStore(reducer, 0, applyMiddleware(logger, thunk));
-
-    // 触发 action
-    oIncrementBtn.onclick = function () {
-      // store.dispatch((dispatch) => {
-      //   setTimeout(() => {
-      //     dispatch({ type: 'increment' });
-      //   }, 1000);
-      // });
-      store.dispatch({ type: 'increment' });
-    }
-    oDecrementBtn.onclick = function () {
-      store.dispatch({ type: 'decrement' });
-    }
 
     // 订阅状态
     store.subscribe(() => {
@@ -77,6 +42,26 @@
       oCount.innerHTML = count;
     });
 
+    const actions = bindActionCreators({ increment, decrement }, store.dispatch);
+
+    function increment () {
+      return { type: 'increment' };
+    }
+
+    function decrement () {
+      return { type: 'decrement' };
+    }
+
+    // 触发 action
+    oIncrementBtn.onclick = function () {
+      // store.dispatch({ type: 'increment' });
+      actions.increment();
+    }
+    oDecrementBtn.onclick = function () {
+      // store.dispatch({ type: 'decrement' });
+      actions.decrement();
+    }
+   
   </script>
   
 </body>
