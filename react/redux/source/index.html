@@ -13,32 +13,34 @@
   <button id="J-decrement">-</button>
 
   <script src="./redux/index.js"></script>
+  <script src="./redux/middlewares/logger.js"></script>
+  <script src="./redux/middlewares/thunk.js"></script>
 
   <script>
     const oCount = document.getElementById('J-count');
     const oIncrementBtn = document.getElementById('J-increment');
     const oDecrementBtn = document.getElementById('J-decrement');
 
-    function enhancer (createStore) {
-      return function (reducer, preloadedState) {
-        const store = createStore(reducer, preloadedState);
+    // function enhancer (createStore) {
+    //   return function (reducer, preloadedState) {
+    //     const store = createStore(reducer, preloadedState);
 
-        let dispatch = store.dispatch;
+    //     let dispatch = store.dispatch;
 
-        function _dispatch (action) {
-          if (typeof action === 'function') {
-            return action(dispatch);
-          }
+    //     function _dispatch (action) {
+    //       if (typeof action === 'function') {
+    //         return action(dispatch);
+    //       }
 
-          dispatch(action);
-        }
+    //       dispatch(action);
+    //     }
 
-        return {
-          ...store,
-          dispatch: _dispatch
-        };
-      }
-    }
+    //     return {
+    //       ...store,
+    //       dispatch: _dispatch
+    //     };
+    //   }
+    // }
 
     function reducer (state, action) {
       switch (action.type) {
@@ -52,16 +54,17 @@
     }
 
     // 创建 store
-    const store = createStore(reducer, 0, enhancer);
+    // const store = createStore(reducer, 0, enhancer);
+    const store = createStore(reducer, 0, applyMiddleware(logger, thunk));
 
     // 触发 action
     oIncrementBtn.onclick = function () {
-      // store.dispatch({ type: 'increment' });
-      store.dispatch((dispatch) => {
-        setTimeout(() => {
-          dispatch({ type: 'increment' });
-        }, 1000);
-      });
+      // store.dispatch((dispatch) => {
+      //   setTimeout(() => {
+      //     dispatch({ type: 'increment' });
+      //   }, 1000);
+      // });
+      store.dispatch({ type: 'increment' });
     }
     oDecrementBtn.onclick = function () {
       store.dispatch({ type: 'decrement' });

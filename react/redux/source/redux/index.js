@@ -89,3 +89,40 @@ function isPlainObject (obj) {
 function iSFunction (val) {
   return typeof val === 'function';
 }
+
+
+function applyMiddleware (...middlewares) {
+  return function (createStore) {
+    return function (reducer, preloadedState) {
+      const store = createStore(reducer, preloadedState);
+
+      const middlewareAPI = {
+        getState: store.getState,
+        dispatch: store.dispatch
+      };
+
+      // 调用中间件函数，传递 store 对象
+      const chain = middlewares.map(middleware => middleware(middlewareAPI));
+
+      // 第一个中间件的最里层函数
+      const dispatch = compose(...chain)(store.dispatch);
+
+      return {
+        ...store,
+        dispatch
+      }
+    }
+  }
+}
+
+function compose () {
+  const funcs = [...arguments];
+
+  return function (dispatch) {
+    for (let i = funcs.length - 1; i >= 0; i--) {
+      dispatch = funcs[i](dispatch);
+    }
+
+    return dispatch;
+  }
+}
