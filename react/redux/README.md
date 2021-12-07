@@ -2510,3 +2510,36 @@ index.html
 
 ## 三、Redux Toolkit
 
+### 概述
+
+官方推出的 Redux 工具，对 Redux 进行的二次封装，用于高效 Redux 开发，使用简单。
+
+```js
+yarn add @reduxjs/toolkit react-redux
+```
+
+### 创建状态切片
+
+状态切片，可以认为它是 Redux 中一个个小的 Reducer 函数。
+
+在 Redux 中，原本 Reducer 函数和 Action 对象需要分别创建，现在通过状态切片替代，它会返回 Reducer 函数和 Action 对象。
+
+```js
+import { createSlice } from '@reduxjs/toolkit';
+
+export const TODOS_FEATURE_KEY = 'todos';
+
+const { reducer: ToolsReducer, actions } = createSlice({
+  name: TODOS_FEATURE_KEY,
+  initialState: [],
+  reducers: {
+    addTodo: (state, action) => {
+      state.push(action.payload)
+    }
+  }
+});
+
+export const { addTodo } = actions;
+export default ToolsReducer;
+```
+
