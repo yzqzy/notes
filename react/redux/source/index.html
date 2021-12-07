@@ -21,7 +21,7 @@
     const oIncrementBtn = document.getElementById('J-increment');
     const oDecrementBtn = document.getElementById('J-decrement');
 
-    function reducer (state, action) {
+    function counterReducer (state, action) {
       switch (action.type) {
         case 'increment':
           return state + 1;
@@ -31,13 +31,15 @@
           return state;
       }
     }
+
+    const rootReducer = combineReducers({ counter: counterReducer });
     
     // 创建 store
-    const store = createStore(reducer, 0, applyMiddleware(logger, thunk));
+    const store = createStore(rootReducer, { counter: 0 }, applyMiddleware(logger, thunk));
 
     // 订阅状态
     store.subscribe(() => {
-      const count = store.getState();
+      const count = store.getState().counter;
 
       oCount.innerHTML = count;
     });

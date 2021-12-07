@@ -139,3 +139,32 @@ function bindActionCreators (actionCreators, dispatch) {
 
   return boundActionCreators;
 }
+
+
+function combineReducers (reducers) {
+  // 检查 reducer 类型，必须是函数类型
+  const reducerKeys = Object.keys(reducers);
+
+  for (let i = 0; i < reducerKeys.length; i++) {
+    const key = reducerKeys[i];
+
+    if (!iSFunction(reducers[key])) {
+      throw new Error('reducer has to be a function.');
+    }
+  }
+
+  return function (state, action) {
+    // 调用 reducer，并存储 reducer 返回的状态
+    let nextState = {};
+
+    for (let i = 0; i < reducerKeys.length; i++) {
+      const key = reducerKeys[i];
+      const reducer = reducers[key];
+      const previousState = state[key];
+
+      nextState[key] = reducer(previousState, action);
+    }
+
+    return nextState;
+  }
+}
