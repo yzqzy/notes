@@ -1,6 +1,13 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 export const TODOS_FEATURE_KEY = 'todos';
+
+export const loadTodos = createAsyncThunk(
+	'todos/loadTodos',
+  (payload, thunkAPI) => {
+    axios.get(payload).then(response => thunkAPI.dispatch(setTodos(response.data)))
+  }
+)
 
 const { reducer: ToolsReducer, actions } = createSlice({
   name: TODOS_FEATURE_KEY,
@@ -18,9 +25,12 @@ const { reducer: ToolsReducer, actions } = createSlice({
           payload: { id: Math.random(), ...todo }
         }
       }
+    },
+    setTodos: (state, action) => {
+      action.payload.forEach(todo => state.push(todo));
     }
   }
 });
 
-export const { addTodo } = actions;
+export const { addTodo, setTodos } = actions;
 export default ToolsReducer;
