@@ -1,4 +1,11 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  createEntityAdapter,
+  createSelector
+} from '@reduxjs/toolkit';
+
+const todosAdapter = createEntityAdapter();
 
 export const TODOS_FEATURE_KEY = 'todos';
 
@@ -11,26 +18,25 @@ export const loadTodos = createAsyncThunk(
 
 const { reducer: ToolsReducer, actions } = createSlice({
   name: TODOS_FEATURE_KEY,
-  initialState: [],
+  initialState: todosAdapter.getInitialState(),
   reducers: {
-    // addTodo: (state, action) => {
-    //   state.push(action.payload)
-    // }
     addTodo: {
-      reducer:  (state, action) => {
-        state.push(action.payload)
-      },
+      reducer: todosAdapter.addOne,
       prepare: todo => {
         return {
           payload: { id: Math.random(), ...todo }
         }
       }
     },
-    setTodos: (state, action) => {
-      action.payload.forEach(todo => state.push(todo));
-    }
-  }
+    setTodos: todosAdapter.addMany
+  },
+  extraReducers: {}
 });
+
+
+const { selectAll } = todosAdapter.getSelectors();
+
+export const selectTodos = createSelector(state => state[TODOS_FEATURE_KEY], selectAll);
 
 export const { addTodo, setTodos } = actions;
 export default ToolsReducer;

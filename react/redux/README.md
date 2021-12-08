@@ -2645,3 +2645,143 @@ export default ToolsReducer;
 
 ### 实体适配器
 
+将状态放入实体适配器，实体适配器提供操作状态的各种方法，简化操作。
+
+```js
+import { createSlice, createAsyncThunk, createEntityAdapter } from '@reduxjs/toolkit';
+
+const todosAdapter = createEntityAdapter();
+
+export const TODOS_FEATURE_KEY = 'todos';
+
+export const loadTodos = createAsyncThunk(
+	'todos/loadTodos',
+  (payload, thunkAPI) => {
+    axios.get(payload).then(response => thunkAPI.dispatch(setTodos(response.data)))
+  }
+)
+
+const { reducer: ToolsReducer, actions } = createSlice({
+  name: TODOS_FEATURE_KEY,
+  initialState: todosAdapter.getInitialState(),
+  reducers: {
+    addTodo: {
+      reducer:  (state, action) => {
+        todosAdapter.addOne(state, action.payload);
+      },
+      prepare: todo => {
+        return {
+          payload: { id: Math.random(), ...todo }
+        }
+      }
+    },
+    setTodos: (state, action) => {
+      todosAdapter.addMany(state, action.payload);
+    }
+  },
+  extraReducers: {}
+});
+
+export const { addTodo, setTodos } = actions;
+export default ToolsReducer;
+```
+
+### 简化实体适配器代码
+
+todosAdapter 的方法会检测传入的参数，如果传入的是 action，会寻找 action.payload。
+
+```js
+import { createSlice, createAsyncThunk, createEntityAdapter } from '@reduxjs/toolkit';
+
+const todosAdapter = createEntityAdapter();
+
+export const TODOS_FEATURE_KEY = 'todos';
+
+export const loadTodos = createAsyncThunk(
+	'todos/loadTodos',
+  (payload, thunkAPI) => {
+    axios.get(payload).then(response => thunkAPI.dispatch(setTodos(response.data)))
+  }
+)
+
+const { reducer: ToolsReducer, actions } = createSlice({
+  name: TODOS_FEATURE_KEY,
+  initialState: todosAdapter.getInitialState(),
+  reducers: {
+    addTodo: {
+      reducer: todosAdapter.addOne,
+      prepare: todo => {
+        return {
+          payload: { id: Math.random(), ...todo }
+        }
+      }
+    },
+    setTodos: todosAdapter.addMany
+  },
+  extraReducers: {}
+});
+
+export const { addTodo, setTodos } = actions;
+export default ToolsReducer;
+```
+
+### 状态选择器
+
+提供从实体适配器中获取状态的快捷途径。
+
+```js
+import { createSelector } from '@reduxjs/toolkit';
+
+const { selectAll } = todosAdapter.getSelectors();
+
+export const selectTodosList = createSelector(
+	state => state[TODOS_FEATURE_KEY],
+  selectAll
+)
+```
+
+```js
+import {
+  createSlice,
+  createAsyncThunk,
+  createEntityAdapter,
+  createSelector
+} from '@reduxjs/toolkit';
+
+const todosAdapter = createEntityAdapter();
+
+export const TODOS_FEATURE_KEY = 'todos';
+
+export const loadTodos = createAsyncThunk(
+	'todos/loadTodos',
+  (payload, thunkAPI) => {
+    axios.get(payload).then(response => thunkAPI.dispatch(setTodos(response.data)))
+  }
+)
+
+const { reducer: ToolsReducer, actions } = createSlice({
+  name: TODOS_FEATURE_KEY,
+  initialState: todosAdapter.getInitialState(),
+  reducers: {
+    addTodo: {
+      reducer: todosAdapter.addOne,
+      prepare: todo => {
+        return {
+          payload: { id: Math.random(), ...todo }
+        }
+      }
+    },
+    setTodos: todosAdapter.addMany
+  },
+  extraReducers: {}
+});
+
+
+const { selectAll } = todosAdapter.getSelectors();
+
+export const selectTodos = createSelector(state => state[TODOS_FEATURE_KEY], selectAll);
+
+export const { addTodo, setTodos } = actions;
+export default ToolsReducer;
+```
+
