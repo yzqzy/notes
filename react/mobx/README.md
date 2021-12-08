@@ -1,0 +1,38 @@
+# Mobx 6
+
+## 概述
+
+Mobx 是一个简单的可扩展的状态管理库，无样板代码，=风格简约。
+
+目前最新版本是 6，版本 4 和版本 5 已不再支持。
+
+Mobx 6 中不推荐使用装饰器语法，因为它不是 ES 标准，并且标准化过程要花费很长时间，但是通过配置仍然可以启用装饰器语法。
+
+Mobx 可以运行在任何支持 ES5 的环境中，包含浏览器和 Node。
+
+Mobx 通过和 React 配合使用，但是在 Angular 和 Vue 中也可以使用。
+
+## 核心概念
+
+observable：被 Mobx 跟踪的状态
+
+action：允许修改状态的方法，在严格模式下只有 action 方法被允许修改状态
+
+computed：根据现有状态衍生出来的状态
+
+flow：执行副作用，它是 generator 函数。可以更改状态值。
+
+## 工作流程
+
+<img src="../images/mobx.png" style="zoom: 70%" />
+
+* mobx：Mobx 核心库
+* mobx-react-lite：仅支持函数组件
+* mobx-react：既支持函数组件也支持类组件
+
+```js
+yarn add mobx mobx-react-lite
+```
+
+## 计数器案例
+
