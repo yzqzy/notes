@@ -2543,3 +2543,24 @@ export const { addTodo } = actions;
 export default ToolsReducer;
 ```
 
+### 创建 Store
+
+```js
+import { configureStore } from '@reduxjs/toolkit';
+import TodosReducer, { TODOS_FEATURE_KEY } from './todos';
+
+export default configureStore({
+  reducer: {
+    [TODOS_FEATURE_KEY]: TodosReducer
+  },
+  devTools: process.env.NODE_ENV !== 'production'
+});
+```
+
+### Action 预处理
+
+当 Action 被触发后，可以通过 prepare 方法对 Action 进行预处理，处理完成后交给 Reudcer.prepare 方法必须返回对象。
+
+```js
+```
+
