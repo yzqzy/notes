@@ -2524,6 +2524,8 @@ yarn add @reduxjs/toolkit react-redux
 
 在 Redux 中，原本 Reducer 函数和 Action 对象需要分别创建，现在通过状态切片替代，它会返回 Reducer 函数和 Action 对象。
 
+store/todos.js
+
 ```js
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -2545,6 +2547,8 @@ export default ToolsReducer;
 
 ### 创建 Store
 
+store/index.js
+
 ```js
 import { configureStore } from '@reduxjs/toolkit';
 import TodosReducer, { TODOS_FEATURE_KEY } from './todos';
@@ -2560,6 +2564,39 @@ export default configureStore({
 ### Action 预处理
 
 当 Action 被触发后，可以通过 prepare 方法对 Action 进行预处理，处理完成后交给 Reudcer.prepare 方法必须返回对象。
+
+store/todos.js
+
+```js
+import { createSlice } from '@reduxjs/toolkit';
+
+export const TODOS_FEATURE_KEY = 'todos';
+
+const { reducer: ToolsReducer, actions } = createSlice({
+  name: TODOS_FEATURE_KEY,
+  initialState: [],
+  reducers: {
+    // addTodo: (state, action) => {
+    //   state.push(action.payload)
+    // }
+    addTodo: {
+      reducer:  (state, action) => {
+        state.push(action.payload)
+      },
+      prepare: todo => {
+        return {
+          payload: { id: Math.random(), ...todo }
+        }
+      }
+    }
+  }
+});
+
+export const { addTodo } = actions;
+export default ToolsReducer;
+```
+
+### 执行异步操作
 
 ```js
 ```
