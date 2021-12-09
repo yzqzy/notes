@@ -36,3 +36,104 @@ yarn add mobx mobx-react-lite
 
 ## 计数器案例
 
+创建用于存储状态的 store，创建用于修改状态的方法
+
+```js
+export default class CounterStore {
+  constructor () {
+    this.count = 0;
+  }
+
+  increment () {
+    this.count += 1;
+  }
+
+  decrement () {
+    this.count -= 1;
+  }
+}
+```
+
+让 Mobx 可以追踪状态变化
+
+* 通过 observable 标识状态，使状态可观察
+* 通过 action 标识修改状态的方法，状态只有通过 action 方法修改后才会通知视图更新
+
+```js
+import { action, makeObservable, observable } from "mobx";
+
+export default class CounterStore {
+  constructor () {
+    this.count = 0;
+
+    makeObservable(this, {
+      count: observable,
+      increment: action,
+      decrement: action
+    });
+  }
+
+  increment () {
+    this.count += 1;
+  }
+
+  decrement () {
+    this.count -= 1;
+  }
+}
+```
+
+创建 Store 类的实例对象并将实例对象传递给组件
+
+```js
+import React from "react";
+import Counter from './components/Counter';
+import CounterStore from './store/CounterStore';
+
+const counterStore = new CounterStore();
+
+function App () {
+  return (
+    <Counter store={ counterStore } />
+  );
+}
+
+export default App;
+```
+
+组件中通过 Store 实例对象获取状态以及操作状态的方法
+
+```jsx
+function Counter ({ store }) {
+  return (
+    <div>
+      <button onClick={ () => store.increment() }>+</button>
+      <span>{ store.count }</span>
+      <button onClick={ () => store.decrement() }>-</button>
+    </div>
+  )
+}
+
+export default Counter;
+```
+
+当组件中使用到的 Mobx 管理的状态发生变化后，使视图更新。通过 observer 方法包裹组件
+
+```jsx
+import { observer } from "mobx-react-lite";
+
+function Counter ({ store }) {
+  return (
+    <div>
+      <button onClick={ () => store.increment() }>+</button>
+      <span>{ store.count }</span>
+      <button onClick={ () => store.decrement() }>-</button>
+    </div>
+  )
+}
+
+export default observer(Counter);
+```
+
+
+
