@@ -1,11 +1,13 @@
 import { observer } from "mobx-react-lite";
 
 function Counter ({ store }) {
+  const { count, increment, decrement } = store;
+
   return (
     <div>
-      <button onClick={ () => store.increment() }>+</button>
-      <span>{ store.count }</span>
-      <button onClick={ () => store.decrement() }>-</button>
+      <button onClick={ increment }>+</button>
+      <span>{ count }</span>
+      <button onClick={ decrement }>-</button>
     </div>
   )
 }

@@ -6,8 +6,8 @@ export default class CounterStore {
 
     makeObservable(this, {
       count: observable,
-      increment: action,
-      decrement: action
+      increment: action.bound,
+      decrement: action.bound
     });
   }
 
