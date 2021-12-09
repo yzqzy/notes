@@ -1,7 +1,9 @@
 import { observer } from "mobx-react-lite";
+import { useRootStore } from "../store";
 
-function Counter ({ store }) {
-  const { count, increment, decrement } = store;
+function Counter () {
+  const { counterStore } = useRootStore();
+  const { count, increment, decrement } = counterStore;
 
   return (
     <div>

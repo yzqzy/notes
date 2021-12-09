@@ -1,12 +1,12 @@
 import React from "react";
 import Counter from './components/Counter';
-import CounterStore from './store/CounterStore';
-
-const counterStore = new CounterStore();
+import { RootStoreProvider } from './store/index';
 
 function App () {
   return (
-    <Counter store={ counterStore } />
+    <RootStoreProvider>
+      <Counter />
+    </RootStoreProvider>
   );
 }
 

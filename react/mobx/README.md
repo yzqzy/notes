@@ -191,6 +191,72 @@ export default observer(Counter);
 
 在应用中可以存在多个 Store，多个 Store 最终要通过 RootState 管理，在每个组件都需要获取到 RootState（状态共享）。
 
-```js
+```jsx
+// store/idnex.js
+
+import CounterStore from "./CounterStore";
+import { createContext, useContext } from "react";
+
+class RootStore {
+  constructor () {
+    this.counterStore = new CounterStore();
+  }
+}
+
+const rootStore = new RootStore();
+
+const RootStoreContext = createContext();
+
+export const RootStoreProvider = ({ children }) => {
+  return (
+    <RootStoreContext.Provider value={ rootStore }>{ children }</RootStoreContext.Provider>
+  )
+};
+
+export const useRootStore = () => {
+  return useContext(RootStoreContext);
+}
 ```
+
+```jsx
+// App.js
+
+import React from "react";
+import Counter from './components/Counter';
+import { RootStoreProvider } from './store/index';
+
+function App () {
+  return (
+    <RootStoreProvider>
+      <Counter />
+    </RootStoreProvider>
+  );
+}
+
+export default App;
+```
+
+```jsx
+// components/Counter.js
+
+import { observer } from "mobx-react-lite";
+import { useRootStore } from "../store";
+
+function Counter () {
+  const { counterStore } = useRootStore();
+  const { count, increment, decrement } = counterStore;
+
+  return (
+    <div>
+      <button onClick={ increment }>+</button>
+      <span>{ count }</span>
+      <button onClick={ decrement }>-</button>
+    </div>
+  )
+}
+
+export default observer(Counter);
+```
+
+## todo 案例
 
