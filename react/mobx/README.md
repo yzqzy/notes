@@ -260,3 +260,73 @@ export default observer(Counter);
 
 ## todo 案例
 
+**创建 todo 状态**
+
+store/Todo.js
+
+```js
+import { makeObservable, observable } from "mobx";
+
+export default class Todo {
+  constructor (todo) {
+    this.id = todo.id;
+    this.title = todo.title;
+    this.isCompleted = todo.isCompleted || false;
+    this.isEditing = false;
+
+    makeObservable(this, {
+      title: observable,
+      isCompleted: observable,
+      isEditing: observable
+    });
+  }
+}
+```
+
+src/TodoStore.js
+
+```js
+import { makeObservable, observable } from "mobx";
+
+export default class TodoStore {
+  constructor () {
+    this.todos = []
+
+    makeObservable(this, {
+      todos: observable
+    })
+  }
+}
+```
+
+store/index.js
+
+```js
+import CounterStore from "./CounterStore";
+import TodoStore from "./TodoStore";
+import { createContext, useContext } from "react";
+
+class RootStore {
+  constructor () {
+    this.counterStore = new CounterStore();
+    this.todoStore = new TodoStore();
+  }
+}
+
+const rootStore = new RootStore();
+
+const RootStoreContext = createContext();
+
+export const RootStoreProvider = ({ children }) => {
+  return (
+    <RootStoreContext.Provider value={ rootStore }>{ children }</RootStoreContext.Provider>
+  )
+};
+
+export const useRootStore = () => {
+  return useContext(RootStoreContext);
+}
+```
+
+**添加任务**
+
