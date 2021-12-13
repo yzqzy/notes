@@ -408,7 +408,7 @@ export default class TodoStore {
   createId () {
     if (!this.todos.length) return 1;
 
-    return this.todos.reduce((id, todo) => id < todo.id ? id : todo.id, 0) + 1;
+    return this.todos.reduce((id, todo) => (id < todo.id ? todo.id : id), 0) + 1;
   }
 }
 ```
@@ -431,5 +431,57 @@ function App () {
 }
 
 export default App;
+```
+
+**展示任务列表**
+
+components/Todos/Main.js
+
+```jsx
+import { useRootStore } from '../../store';
+import { observer } from 'mobx-react-lite';
+
+function Todo ({ todo }) {
+  return (
+    <li>
+      <label>{ todo.title }</label>
+    </li>
+  )
+}
+
+function Main () {
+  const { todoStore } = useRootStore();
+  const { todos } =  todoStore;
+
+  return (
+    <section>
+      <ul>
+        {
+          todos.map(todo => <Todo todo={ todo } key={ todo.id } />)
+        }
+      </ul>
+    </section>
+  )
+}
+
+export default observer(Main);
+```
+
+components/Todos/index.js
+
+```jsx
+import Header from "./Header";
+import Main from "./Main";
+
+const Todo = () => {
+  return (
+    <>
+      <Header />
+      <Main />
+    </>
+  )
+}
+
+export default Todo;
 ```
 

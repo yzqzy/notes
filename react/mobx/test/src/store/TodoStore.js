@@ -23,6 +23,6 @@ export default class TodoStore {
   createId () {
     if (!this.todos.length) return 1;
 
-    return this.todos.reduce((id, todo) => id < todo.id ? id : todo.id, 0) + 1;
+    return this.todos.reduce((id, todo) => (id < todo.id ? todo.id : id), 0) + 1;
   }
 }
