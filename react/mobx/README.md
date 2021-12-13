@@ -36,7 +36,9 @@ yarn add mobx mobx-react-lite
 
 ## 计数器案例
 
-**创建用于存储状态的 store，创建用于修改状态的方法**
+### 创建存储状态
+
+创建用于存储状态的 store，创建用于修改状态的方法
 
 ```js
 export default class CounterStore {
@@ -54,7 +56,9 @@ export default class CounterStore {
 }
 ```
 
-**让 Mobx 可以追踪状态变化**
+### 追踪状态变化
+
+让 Mobx 可以追踪状态变化
 
 * 通过 observable 标识状态，使状态可观察
 * 通过 action 标识修改状态的方法，状态只有通过 action 方法修改后才会通知视图更新
@@ -83,7 +87,9 @@ export default class CounterStore {
 }
 ```
 
-**创建 Store 类的实例对象并将实例对象传递给组件**
+### 传递状态
+
+创建 Store 类的实例对象并将实例对象传递给组件
 
 ```js
 import React from "react";
@@ -101,7 +107,9 @@ function App () {
 export default App;
 ```
 
-**组件中通过 Store 实例对象获取状态以及操作状态的方法**
+### 获取、操作状态
+
+组件中通过 Store 实例对象获取状态以及操作状态的方法
 
 ```jsx
 function Counter ({ store }) {
@@ -117,7 +125,9 @@ function Counter ({ store }) {
 export default Counter;
 ```
 
-**当组件中使用到的 Mobx 管理的状态发生变化后，使视图更新。通过 observer 方法包裹组件**
+### 更新视图
+
+当组件中使用到的 Mobx 管理的状态发生变化后，使视图更新。通过 observer 方法包裹组件
 
 ```jsx
 import { observer } from "mobx-react-lite";
@@ -135,7 +145,9 @@ function Counter ({ store }) {
 export default observer(Counter);
 ```
 
-**修改 action this 指向**
+### 修改 action this 指向
+
+修改 action this 指向
 
 ```js
 import { action, makeObservable, observable } from "mobx";
@@ -179,7 +191,7 @@ function Counter ({ store }) {
 export default observer(Counter);
 ```
 
-**使用总结**
+### 使用总结
 
 状态变化更新视图的必要条件
 
@@ -187,7 +199,7 @@ export default observer(Counter);
 * 更改状态的方法必须被标记为 action
 * 组件必须通过 observer 方法包裹
 
-**创建 RootStore**
+### 创建 RootStore
 
 在应用中可以存在多个 Store，多个 Store 最终要通过 RootState 管理，在每个组件都需要获取到 RootState（状态共享）。
 
@@ -260,7 +272,7 @@ export default observer(Counter);
 
 ## todo 案例
 
-**创建 todo 状态**
+### 创建 todo 状态
 
 store/Todo.js
 
@@ -328,7 +340,7 @@ export const useRootStore = () => {
 }
 ```
 
-**添加任务**
+### 添加任务
 
 components/Todo/Header.js
 
@@ -433,7 +445,7 @@ function App () {
 export default App;
 ```
 
-**展示任务列表**
+### 展示任务列表
 
 components/Todos/Main.js
 
@@ -484,4 +496,89 @@ const Todo = () => {
 
 export default Todo;
 ```
+
+### 加载远端任务
+
+**mock 数据**
+
+db.json
+
+```js
+{
+  "todos": [
+    {
+      "id": 1,
+      "title": "吃饭",
+      "isCompleted": false
+    },
+    {
+      "id": 2,
+      "title": "睡觉",
+      "isCompleted": false
+    },
+    {
+      "id": 3,
+      "title": "打豆豆",
+      "isCompleted": false
+    }
+  ]
+}
+```
+
+**package.json**
+
+```js
+"scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject",
+  "server": "json-server --watch ./db.json --port 3001"
+},
+```
+
+src/store/TodoStore.js
+
+```js
+import { action, flow, makeObservable, observable } from "mobx";
+import Todo from './Todo';
+import axios from 'axios';
+
+export default class TodoStore {
+  constructor () {
+    this.todos = []
+
+    makeObservable(this, {
+      todos: observable,
+      addTodo: action.bound,
+      loadTodos: flow.bound
+    });
+
+    this.loadTodos();
+  }
+
+  *loadTodos () {
+    const response = yield axios.get('http://localhost:3001/todos');
+
+    response.data.forEach(todo =>  this.todos.push(new Todo(todo)));
+  }
+
+  addTodo (title) {
+    this.todos.push(new Todo({
+      title,
+      id: this.createId() 
+    }));
+
+    console.log(this.todos);
+  }
+
+  createId () {
+    if (!this.todos.length) return 1;
+
+    return this.todos.reduce((id, todo) => (id < todo.id ? todo.id : id), 0) + 1;
+  }
+}
+```
+
+### 更改任务完成状态
 

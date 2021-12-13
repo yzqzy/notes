@@ -1,5 +1,6 @@
-import { action, makeObservable, observable } from "mobx";
+import { action, flow, makeObservable, observable } from "mobx";
 import Todo from './Todo';
+import axios from 'axios';
 
 export default class TodoStore {
   constructor () {
@@ -7,8 +8,17 @@ export default class TodoStore {
 
     makeObservable(this, {
       todos: observable,
-      addTodo: action.bound
+      addTodo: action.bound,
+      loadTodos: flow.bound
     });
+
+    this.loadTodos();
+  }
+
+  *loadTodos () {
+    const response = yield axios.get('http://localhost:3001/todos');
+
+    response.data.forEach(todo =>  this.todos.push(new Todo(todo)));
   }
 
   addTodo (title) {
