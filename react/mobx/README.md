@@ -330,3 +330,106 @@ export const useRootStore = () => {
 
 **添加任务**
 
+components/Todo/Header.js
+
+```jsx
+import { useState } from "react"
+import { useRootStore } from "../../store";
+
+function Header () {
+  const [title, setTitle] = useState('');
+  const { todoStore } = useRootStore();
+  const { addTodo } = todoStore;
+
+  return (
+    <header className="header">
+      <h1>todos</h1>
+      <input
+        className="new-todo"
+        placeholder="what needs to be done?"
+        autoFocus
+        value={title}
+        onChange={e => {
+          setTitle(e.target.value);
+        }}
+        onKeyUp={e => {
+          if (e.key !== 'Enter') return;
+
+          addTodo(title);
+          setTitle('');
+        }}
+      />
+    </header>
+  )
+}
+
+export default Header;
+```
+
+components/Todo/index.js
+
+```jsx
+import Header from "./Header";
+
+const Todo = () => {
+  return (
+    <Header />
+  )
+}
+
+export default Todo;
+```
+
+store/TodoStore.js
+
+```js
+import { action, makeObservable, observable } from "mobx";
+import Todo from './Todo';
+
+export default class TodoStore {
+  constructor () {
+    this.todos = []
+
+    makeObservable(this, {
+      todos: observable,
+      addTodo: action.bound
+    });
+  }
+
+  addTodo (title) {
+    this.todos.push(new Todo({
+      title,
+      id: this.createId() 
+    }));
+
+    console.log(this.todos);
+  }
+
+  createId () {
+    if (!this.todos.length) return 1;
+
+    return this.todos.reduce((id, todo) => id < todo.id ? id : todo.id, 0) + 1;
+  }
+}
+```
+
+App.js
+
+```jsx
+import React from "react";
+import Counter from './components/Counter';
+import Todo from "./components/Todo";
+import { RootStoreProvider } from './store/index';
+
+function App () {
+  return (
+    <RootStoreProvider>
+      <Counter />
+      <Todo />
+    </RootStoreProvider>
+  );
+}
+
+export default App;
+```
+
