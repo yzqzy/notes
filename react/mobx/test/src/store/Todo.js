@@ -1,4 +1,4 @@
-import { makeObservable, observable } from "mobx";
+import { action, makeObservable, observable } from "mobx";
 
 export default class Todo {
   constructor (todo) {
@@ -10,7 +10,12 @@ export default class Todo {
     makeObservable(this, {
       title: observable,
       isCompleted: observable,
-      isEditing: observable
+      isEditing: observable,
+      modifyTodoIsCompleted: action.bound
     });
+  }
+
+  modifyTodoIsCompleted () {
+    this.isCompleted = !this.isCompleted;
   }
 }

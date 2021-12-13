@@ -582,3 +582,76 @@ export default class TodoStore {
 
 ### 更改任务完成状态
 
+components/Todo/Main.js
+
+```jsx
+import { useRootStore } from '../../store';
+import { observer } from 'mobx-react-lite';
+
+const TodoCompleted = observer(({ todo }) => {
+  const { isCompleted, modifyTodoIsCompleted } = todo;
+
+  return (
+    <input
+      type="checkbox"
+      checked={ isCompleted }
+      onChange={ modifyTodoIsCompleted }
+    />
+  )
+});
+
+function Todo ({ todo }) {
+  return (
+    <li>
+      <TodoCompleted todo={ todo } />
+      <label>{ todo.title }</label>
+    </li>
+  )
+}
+
+function Main () {
+  const { todoStore } = useRootStore();
+  const { todos } =  todoStore;
+
+  return (
+    <section>
+      <ul>
+        {
+          todos.map(todo => <Todo todo={ todo } key={ todo.id } />)
+        }
+      </ul>
+    </section>
+  )
+}
+
+export default observer(Main);
+```
+
+store/Todo.js
+
+```js
+import { action, makeObservable, observable } from "mobx";
+
+export default class Todo {
+  constructor (todo) {
+    this.id = todo.id;
+    this.title = todo.title;
+    this.isCompleted = todo.isCompleted || false;
+    this.isEditing = false;
+
+    makeObservable(this, {
+      title: observable,
+      isCompleted: observable,
+      isEditing: observable,
+      modifyTodoIsCompleted: action.bound
+    });
+  }
+
+  modifyTodoIsCompleted () {
+    this.isCompleted = !this.isCompleted;
+  }
+}
+```
+
+### 删除任务
+

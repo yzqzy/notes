@@ -1,9 +1,22 @@
 import { useRootStore } from '../../store';
 import { observer } from 'mobx-react-lite';
 
+const TodoCompleted = observer(({ todo }) => {
+  const { isCompleted, modifyTodoIsCompleted } = todo;
+
+  return (
+    <input
+      type="checkbox"
+      checked={ isCompleted }
+      onChange={ modifyTodoIsCompleted }
+    />
+  )
+});
+
 function Todo ({ todo }) {
   return (
     <li>
+      <TodoCompleted todo={ todo } />
       <label>{ todo.title }</label>
     </li>
   )
