@@ -13,11 +13,21 @@ const TodoCompleted = observer(({ todo }) => {
   )
 });
 
+const TodoRemove = observer(({ id }) => {
+  const { todoStore } = useRootStore();
+  const { removeTodo } = todoStore;
+
+  return (
+    <button onClick={ () => removeTodo(id) } >Delete</button>
+  )
+});
+
 function Todo ({ todo }) {
   return (
     <li>
       <TodoCompleted todo={ todo } />
       <label>{ todo.title }</label>
+      <TodoRemove id={ todo.id } />
     </li>
   )
 }

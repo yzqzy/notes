@@ -655,3 +655,108 @@ export default class Todo {
 
 ### 删除任务
 
+components/Todo/Main.js
+
+```jsx
+import { useRootStore } from '../../store';
+import { observer } from 'mobx-react-lite';
+
+const TodoCompleted = observer(({ todo }) => {
+  const { isCompleted, modifyTodoIsCompleted } = todo;
+
+  return (
+    <input
+      type="checkbox"
+      checked={ isCompleted }
+      onChange={ modifyTodoIsCompleted }
+    />
+  )
+});
+
+const TodoRemove = observer(({ id }) => {
+  const { todoStore } = useRootStore();
+  const { removeTodo } = todoStore;
+
+  return (
+    <button onClick={ () => removeTodo(id) } >Delete</button>
+  )
+});
+
+function Todo ({ todo }) {
+  return (
+    <li>
+      <TodoCompleted todo={ todo } />
+      <label>{ todo.title }</label>
+      <TodoRemove id={ todo.id } />
+    </li>
+  )
+}
+
+function Main () {
+  const { todoStore } = useRootStore();
+  const { todos } =  todoStore;
+
+  return (
+    <section>
+      <ul>
+        {
+          todos.map(todo => <Todo todo={ todo } key={ todo.id } />)
+        }
+      </ul>
+    </section>
+  )
+}
+
+export default observer(Main);
+```
+
+store/TodoStore.js
+
+```js
+import { action, flow, makeObservable, observable } from "mobx";
+import Todo from './Todo';
+import axios from 'axios';
+
+export default class TodoStore {
+  constructor () {
+    this.todos = []
+
+    makeObservable(this, {
+      todos: observable,
+      loadTodos: flow.bound,
+      addTodo: action.bound,
+      removeTodo: action.bound
+    });
+
+    this.loadTodos();
+  }
+
+  *loadTodos () {
+    const response = yield axios.get('http://localhost:3001/todos');
+
+    response.data.forEach(todo =>  this.todos.push(new Todo(todo)));
+  }
+
+  addTodo (title) {
+    this.todos.push(new Todo({
+      title,
+      id: this.createId() 
+    }));
+
+    console.log(this.todos);
+  }
+
+  removeTodo (id) {
+    this.todos = this.todos.filter(todo => todo.id !== id);
+  }
+
+  createId () {
+    if (!this.todos.length) return 1;
+
+    return this.todos.reduce((id, todo) => (id < todo.id ? todo.id : id), 0) + 1;
+  }
+}
+```
+
+### 编辑任务名称
+

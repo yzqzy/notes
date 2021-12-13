@@ -8,8 +8,9 @@ export default class TodoStore {
 
     makeObservable(this, {
       todos: observable,
+      loadTodos: flow.bound,
       addTodo: action.bound,
-      loadTodos: flow.bound
+      removeTodo: action.bound
     });
 
     this.loadTodos();
@@ -28,6 +29,10 @@ export default class TodoStore {
     }));
 
     console.log(this.todos);
+  }
+
+  removeTodo (id) {
+    this.todos = this.todos.filter(todo => todo.id !== id);
   }
 
   createId () {
