@@ -10,8 +10,7 @@ var swapPairs = function (head) {
 
   let current = dummy;
 
-  while (current.next !== null
-    &&current.next.next !== null) {
+  while (current.next !== null &&current.next.next !== null) {
     let n1 = current.next,
         n2 = current.next.next;
 
