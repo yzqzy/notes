@@ -11,11 +11,22 @@ export default class Todo {
       title: observable,
       isCompleted: observable,
       isEditing: observable,
-      modifyTodoIsCompleted: action.bound
+      modifyTodoIsCompleted: action.bound,
+      modifyTodoIsEditing: action.bound,
+      modifyTodoTitle: action.bound
     });
   }
 
   modifyTodoIsCompleted () {
     this.isCompleted = !this.isCompleted;
+  }
+
+  modifyTodoIsEditing () {
+    this.isEditing = !this.isEditing;
+  }
+
+  modifyTodoTitle (title) {
+    this.title = title;
+    this.isEditing = false;
   }
 }

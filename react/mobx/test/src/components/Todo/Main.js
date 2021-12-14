@@ -1,5 +1,7 @@
 import { useRootStore } from '../../store';
 import { observer } from 'mobx-react-lite';
+import classnames from 'classnames';
+import { useEffect, useRef } from 'react';
 
 const TodoCompleted = observer(({ todo }) => {
   const { isCompleted, modifyTodoIsCompleted } = todo;
@@ -22,15 +24,53 @@ const TodoRemove = observer(({ id }) => {
   )
 });
 
-function Todo ({ todo }) {
+const TodoEditing = observer(({ todo }) => {
+  const { modifyTodoIsEditing, title }  = todo;
+
   return (
-    <li>
-      <TodoCompleted todo={ todo } />
-      <label>{ todo.title }</label>
-      <TodoRemove id={ todo.id } />
+    <label onDoubleClick={ modifyTodoIsEditing }>{ title }</label>
+  )
+});
+
+const Editing = observer(({ todo }) => {
+  const ref = useRef(null);
+  const { isEditing, modifyTodoTitle } = todo;
+
+  useEffect(() => {
+    if (isEditing) {
+      ref.current.focus();
+    }
+  }, [ isEditing ])
+
+  return (
+    <input
+      ref={ref}
+      className='edit'
+      defaultValue={ todo.title }
+      onBlur={ () =>  modifyTodoTitle(ref.current.value)}
+    />
+  )
+});
+
+const Todo = observer(({ todo }) => {
+  const classname = classnames({
+    "completed": todo.isCompleted,
+    "editing": todo.isEditing
+  });
+
+  return (
+    <li
+      className={classname}
+    >
+      <div>
+        <TodoCompleted todo={ todo } />
+        <TodoEditing todo={ todo } />
+        <TodoRemove id={ todo.id } />
+      </div>
+      <Editing todo={ todo } />
     </li>
   )
-}
+});
 
 function Main () {
   const { todoStore } = useRootStore();
