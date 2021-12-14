@@ -892,3 +892,102 @@ export default class Todo {
 }
 ```
 
+### 计算未完成任务数量
+
+components/Todo/Footer.js
+
+```jsx
+import { useRootStore } from '../../store';
+import { observer } from 'mobx-react-lite';
+
+const UnCompletedTodoCount = observer(() => {
+  const { todoStore } = useRootStore();
+  const { unCompletedTodosCount } = todoStore;
+  
+  return (
+    <strong>{ unCompletedTodosCount }</strong>
+  )
+});
+
+function Footer () {
+  return (
+    <UnCompletedTodoCount />
+  )
+}
+
+export default Footer;
+```
+
+components/Todo/Index.js
+
+```jsx
+import Header from "./Header";
+import Main from "./Main";
+import Footer from "./Footer";
+
+const Todo = () => {
+  return (
+    <>
+      <Header />
+      <Main />
+      <Footer />
+    </>
+  )
+}
+
+export default Todo;
+```
+
+store/TodoStore.js
+
+```js
+import { action, computed, flow, makeObservable, observable } from "mobx";
+import Todo from './Todo';
+import axios from 'axios';
+
+export default class TodoStore {
+  constructor () {
+    this.todos = []
+
+    makeObservable(this, {
+      todos: observable,
+      loadTodos: flow.bound,
+      addTodo: action.bound,
+      removeTodo: action.bound,
+      unCompletedTodosCount: computed
+    });
+
+    this.loadTodos();
+  }
+
+  *loadTodos () {
+    const response = yield axios.get('http://localhost:3001/todos');
+
+    response.data.forEach(todo =>  this.todos.push(new Todo(todo)));
+  }
+
+  addTodo (title) {
+    this.todos.push(new Todo({
+      title,
+      id: this.createId() 
+    }));
+
+    console.log(this.todos);
+  }
+
+  removeTodo (id) {
+    this.todos = this.todos.filter(todo => todo.id !== id);
+  }
+
+  get unCompletedTodosCount () {
+    return this.todos.filter(todo => !todo.isCompleted).length;
+  }
+
+  createId () {
+    if (!this.todos.length) return 1;
+
+    return this.todos.reduce((id, todo) => (id < todo.id ? todo.id : id), 0) + 1;
+  }
+}
+```
+

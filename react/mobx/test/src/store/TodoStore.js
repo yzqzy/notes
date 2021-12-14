@@ -1,4 +1,4 @@
-import { action, flow, makeObservable, observable } from "mobx";
+import { action, computed, flow, makeObservable, observable } from "mobx";
 import Todo from './Todo';
 import axios from 'axios';
 
@@ -10,7 +10,8 @@ export default class TodoStore {
       todos: observable,
       loadTodos: flow.bound,
       addTodo: action.bound,
-      removeTodo: action.bound
+      removeTodo: action.bound,
+      unCompletedTodosCount: computed
     });
 
     this.loadTodos();
@@ -33,6 +34,10 @@ export default class TodoStore {
 
   removeTodo (id) {
     this.todos = this.todos.filter(todo => todo.id !== id);
+  }
+
+  get unCompletedTodosCount () {
+    return this.todos.filter(todo => !todo.isCompleted).length;
   }
 
   createId () {
