@@ -2,11 +2,13 @@
 
 <img src="./images/outline.png" />
 
-## 学习方法
+## 准备工作
+
+### 学习方法
 
 改变学习习惯（不要死磕）。多写多练，但不是每次花很多时间。看高票代码和高质量题解。
 
-### Chunk it up 庖丁解牛
+#### Chunk it up 庖丁解牛
 
 * 数据结构分类
   * 一维
@@ -28,12 +30,12 @@
   * 贪心 Greedy
   * 数学 Math，几何 Geometry
 
-### Deliberate Practicing 刻意练习
+#### Deliberate Practicing 刻意练习
 
 * 分解和反复练习，过遍数，最少刷五遍
 * 练习缺陷、弱点
 
-### Feedback 反馈
+#### Feedback 反馈
 
 * 及时反馈
 * 主动型反馈
@@ -42,7 +44,7 @@
 * 被动式反馈
   * code review
 
-## 五步刷题法
+### 五步刷题法
 
 **第一遍**
 
@@ -71,4 +73,18 @@
 **第 5 遍**
 
 面试前一周或者多周恢复性训练。
+
+### 环境配置
+
+Google 浏览器。
+
+VSCode 配合 LeetCode 插件。
+
+https://leetcode-cn.com、https://leetcode.com 。
+
+leetcode-cn.com 和 题解、leetcode.com 和 Discuss board。
+
+> 中文网站和英文网站的题目除了 `-cn`，其他都一致。尽量在中文站做完题，再去看国际站的讨论区。
+
+## 时间复杂度和空间复杂度
 
