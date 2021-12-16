@@ -1,6 +1,6 @@
 # 算法训练
 
-<img src="./images/alg.png" />
+
 
 ## 学习方法
 
