@@ -2,7 +2,7 @@
 
 <img src="./images/outline.png" />
 
-## 准备工作
+## 概述
 
 ### 学习方法
 
@@ -418,4 +418,6 @@ var climbStairs = function(n) {
 ```
 
 ## 数组、链表、跳表
+
+
 
