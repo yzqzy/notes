@@ -1,10 +1,24 @@
+/**
+ * @param {number} n
+ * @return {number}
+ */
+ var climbStairs = function(n) {
+  if (n == 1) {
+    return 1;
+  }
 
-// 最简单递归写法
+  let first = 1;
+  let second = 2;
 
-function fib (n) {
-  if (n < 2) return n;
-  
-  return fib(n - 1) + fib(n -2);
-}
+  for (let i = 3; i <= n; i++) {
+    let thrid = first + second;
 
-console.log(fib(6));
+    first = second;
+    second = thrid;
+  }
+
+  return second;
+};
+
+
+console.log(climbStairs(44))

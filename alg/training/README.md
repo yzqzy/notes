@@ -88,9 +88,9 @@ leetcode-cn.com 和 题解、leetcode.com 和 Discuss board。
 
 ## 时间复杂度和空间复杂度
 
-## Big O notation
+### Big O notation
 
-### 常见的时间复杂度
+#### 常见的时间复杂度
 
 O(1)：Constant Complexity 常数复杂度
 
@@ -184,7 +184,7 @@ function fib (n) {
 
 能够用最简洁的时间和空间复杂度完成程序。
 
-### 累加案例
+#### 累加案例
 
 计算 1+ 2 +  3 + 4 + ...n 。
 
@@ -203,7 +203,7 @@ for i = 1 to n
 y = n * (n + 1) / 2
 ```
 
-### 递归的时间复杂度
+#### 递归的时间复杂度
 
 将递归代码转化为递归树。
 
@@ -233,8 +233,189 @@ function fib (n) {
 
 其次我们可以观察到重复的节点。
 
+面试中不要这么写上述的代码，可以采用加缓存处理或者用循环的写法。
 
+### Master Theorem
+
+用来解决如何计算递归函数的时间复杂度。
+
+
+
+<img src="./images/master_theorem.png" />
+
+
+
+> Binary Search	二分查找
+>
+> Binary tree traversal	二叉树
+>
+> Optimal Sorted Martrix Search	排好序的二维矩阵
+>
+> Merge Sort	归并排序
+
+
+
+**二叉树的遍历 - 前序、中序、后序：时间复杂度是多少？**
+
+O(n)，n 代表二叉树里面的树的节点总数。
+
+不管是前序、中序、后序遍历二叉树的时候，每个节点会访问一次仅访问一次。
+
+所以它的时间复杂度就是线性于二叉树的节点总数，也就是 O(n) 的时间复杂度。
+
+**图的遍历：时间复杂度是多少？**
+
+图里面的每个节点访问一次且仅访问一次，所以它的时间复杂度为 O(n)。n 指图里面的节点总数。
+
+**搜索算法：DFS，BFS 时间复杂度是多少？**
+
+访问的节点只访问一次，所以时间复杂度都为 O(n)。n 指搜索空间的节点总数。
+
+**二分查找：时间复杂度是多少？**
+
+O(log n)。
+
+
+
+### 空间复杂度
+
+空间复杂度其实和时间复杂度的情况类似，但它更加简单。
+
+
+如果代码中存在数组，那么数组的长度基本是就是空间复杂度。
+
+如果开辟一个一维数组，长度为传入的元素的个数，一般来说，空间复杂度就是 O(n)。
+
+如果开辟一个二维数组，它的长度数组的长度为 n 平方，空间复杂度基本上就是 n 平方。
+
+
+
+如果存在递归，那么它递归的深度，就是空间复杂度的最大值。
+
+
+如果又是递归又是开辟新数组，那么两者之间的最大值就是空间复杂度。
+
+
+
+**爬楼梯问题**
+
+本身就是斐波那契数列求值，F(n) = F(n-1) + F(n-2)。
+
+https://leetcode-cn.com/problems/climbing-stairs/
 
 ```js
+// 暴力法，递归解法且没有任何缓存，存在大量的重复计算
+// 时间复杂度：O(2^n)，树形递归的大小为 2^n。
+// 空间复杂度：O(n)，递归树的深度可以达到 n。
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+  const _climbStairs = (i, n) => {
+    if (i > n) {
+      return 0;
+    }
+
+    if (i == n) {
+      return 1;
+    }
+
+    return _climbStairs(i + 1, n) + _climbStairs(i + 2, n);
+  }
+
+  return _climbStairs(0, n);
+};
 ```
+
+```js
+// 记忆化递归，通过 memo 数组，我们可以得到一个修复的递归树，其大小减少到 n。
+// 时间复杂度：O(n)，树形递归的大小可以达到 n
+// 空间复杂度：O(n)，递归树的深度可以达到 n。
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+  const memo = [];
+
+  const _climbStairs = (i, n, memo) => {
+    if (i > n) {
+      return 0;
+    }
+
+    if (i == n) {
+      return 1;
+    }
+
+    if (memo[i] > 0) {
+      return memo[i];
+    }
+
+    return memo[i] = _climbStairs(i + 1, n, memo) + _climbStairs(i + 2, n, memo);
+  }
+
+  return _climbStairs(0, n, memo);
+};
+```
+
+```js
+// 动态规划
+// 时间复杂度：O(n)
+// 空间复杂度：O(n)
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+  if (n == 1) {
+    return 1;
+  }
+
+  const dp = [];
+
+  dp[1] = 1;
+  dp[2] = 2;
+
+  for (let i = 3; i <= n; i++) {
+    dp[i] = dp[i - 1] + dp[i - 2];
+  }
+
+  return dp[n];
+};
+```
+
+```js
+// 斐波那契树
+// 上述方法，我们使用 dp 数组，但其实我们并不需要存储所有的状态，只需要存储 n-1 和 n-2 就可以。
+// 时间复杂度：O(n)
+// 空间复杂度：O(1)，常量级时间
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+ var climbStairs = function(n) {
+  if (n == 1) {
+    return 1;
+  }
+
+  let first = 1;
+  let second = 2;
+
+  for (let i = 3; i <= n; i++) {
+    let thrid = first + second;
+
+    first = second;
+    second = thrid;
+  }
+
+  return second;
+};
+```
+
+## 数组、链表、跳表
 
