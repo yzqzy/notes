@@ -48,11 +48,11 @@
 
 **第一遍**
 
-5 分钟：读题和思考。
+5 - 10分钟：读题和思考。
 
 没有思路，直接看解法，比较解法优劣。
 
-背诵、默认最好的解法。 
+背诵、默写最好的解法。 
 
 **第二遍**
 
@@ -447,6 +447,46 @@ delete O(n)
 
 正常情况下数组的 prepend 操作的时间复杂度是 O(n)，但是可以进行特殊优化到 O(1)。采用的方式是申请稍大一些的内存空间，然后在数组最开始预留一部分空间，然后 prepend 的操作则是把头下标前移一个位置即可。
 
+
+
+[盛最多水的容器](https://leetcode-cn.com/problems/container-with-most-water/)（腾讯、百度、字节跳动在近半年内面试常考）
+
+[移动零](https://leetcode-cn.com/problems/move-zeroes/)（华为、字节跳动在近半年内面试常考）
+
+[爬楼梯](https://leetcode.com/problems/climbing-stairs/)（阿里巴巴、腾讯、字节跳动在半年内面试常考）
+
+[三数之和](https://leetcode-cn.com/problems/3sum/)（国内、国际大厂历年面试高频老题）
+
+
+
+```js
+// 移动零
+
+// 思路1：循环遍历数组，每次走的时候统计 0 的个数，非 0 元素前移，0 元素后移
+// 思路2：重新开一个新数组，遇到 0 往后放，非 0 前面放，内存空间多。新开了数组，不符合必须原数组操作
+// 思路3：操作数组中 index 操作
+
+/**
+ * @param {number[]} nums
+ * @return {void} Do not return anything, modify nums in-place instead.
+ */
+var moveZeroes = function(nums) {
+  let j = 0; // 记录下一个非 0 元素
+
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] != 0) {
+      nums[j] = nums[i];
+
+      if (i !== j) {
+        nums[i] = 0;
+      }
+
+      j++;
+    }
+  }
+};
+```
+
 ### 链表 LinkedList
 
 如果只存在一个 next 指针，叫做单链表。
@@ -507,4 +547,50 @@ delete O(1)
 
 它最大的优势是原理简单、容易实现、方便扩展、效率更高。因此在一些热门的项目里用来替代平衡树，如 Redis、LevelDB 等。
 LevelDB 是 Goole 用来取代 BigTable 的，同时是 Google 的工程师 Jeff Dean 这个人发明的。
+
+
+
+如何给有序的链表加速？
+
+时间复杂度：查询 O(n)
+简单优化：添加头尾指针
+
+一维数据结构加速，经常采用的方式就是**升维**。这样就会存在更加的附加信息，**空间换时间**。
+可以为链表增加一级索引，指向 next + 1。还可以增加多级索引。
+
+
+
+跳表查询的时间复杂度分析
+
+n/2、n/4、n/8，第 k 级索引结点的个数就是 n/(2^k)。
+假设索引有 h 级，最高级的索引有 2 个结点。n/(2^h) = 2，从而可以求得 h = log2(n) - 1。
+
+在跳表中查询任意数据的时间复杂度就是 O(logn)。
+
+现实中使用跳表时，会由于元素的增加和删除，导致它的索引并不是完全工整的。
+经过多次改动之后，有些地方会少跨或者只跨两步。
+维护成本相对比较高。增加元素时，要把索引更新一遍，删除元素时，也需要把索引更新一遍。
+增加和删除的时候的时间复杂度就变成 logn。
+
+
+
+跳表的空间复杂度分析
+
+原始链表大小为 n，每 2 个结点抽一个，每层索引的节点数：
+n/2，n/4，n/8，...，8，4，2
+原始链表大小为 n，没 3 个结点抽一个，每层索引的节点数：
+n/3，n/9，n/27，...，9，3，1
+空间复杂度是 O(n)。
+
+
+
+不管是 java，还是现在的 c++，Go，js 中，都提供了很多封装好的数据结构。
+
+LRU Cache - Linked list：[ LRU 缓存机制](http://leetcode-cn.com/problems/lru-cache)
+
+Redis - Skip List：[跳跃表](http://redisbook.readthedocs.io/en/latest/internal-datastruct/skiplist.html)、[为啥 Redis 使用跳表（Skip List）而不是使用 Red-Black？](http://www.zhihu.com/question/20202931)
+
+
+
+
 
