@@ -90,6 +90,8 @@ leetcode-cn.com 和 题解、leetcode.com 和 Discuss board。
 
 ### Big O notation
 
+[如何理解算法时间复杂度的表示法](http://www.zhihu.com/question/21387264)
+
 #### 常见的时间复杂度
 
 O(1)：Constant Complexity 常数复杂度
@@ -239,7 +241,7 @@ function fib (n) {
 
 用来解决如何计算递归函数的时间复杂度。
 
-
+[Master theorem](http://en.wikipedia.org/wiki/Master_theorem_(analysis_of_algorithms))、[主定理](http://zh.wikipedia.org/wiki/主定理)
 
 <img src="./images/master_theorem.png" />
 
@@ -419,7 +421,7 @@ var climbStairs = function(n) {
 
 ## 数组、链表、跳表
 
-### 数组
+### 数组 ArrayList
 
 高级编程语言，对于数组里的元素的类型没有严格的要求，相对来说比较多样化。
 在语言上，有一个标准的叫法叫做泛型。也就是说任何一个单元类型，都可以放进数组。
@@ -430,4 +432,79 @@ var climbStairs = function(n) {
 数组可以随机访问任何一个元素，它的访问速度非常快。
 
 数组增加、删除数组元素都是 O(n) 的时间复杂度。最好的情况为 O(1)，最坏的情况为 O(n)。
+修改、添加、删除比较频繁的情况下，数组其实并不好用。
+
+ [Java 源码分析（ArrayList）](http://developer.classpath.org/doc/java/util/ArrayList-source.html)
+
+
+**ArrayList 的时间复杂度**
+
+prepend O(1)
+append O(1)
+lookup O(1)
+insert O(n)
+delete O(n)
+
+正常情况下数组的 prepend 操作的时间复杂度是 O(n)，但是可以进行特殊优化到 O(1)。采用的方式是申请稍大一些的内存空间，然后在数组最开始预留一部分空间，然后 prepend 的操作则是把头下标前移一个位置即可。
+
+### 链表 LinkedList
+
+如果只存在一个 next 指针，叫做单链表。
+
+如果还存在先前指针叫做 prev 或者是 previous，这个链表就叫做双向链表。
+头指针一般用 head 来表示，尾指针用 tail 来表示。最后一个元素，它的 next 指针指向空。
+
+如果 tail 指针的 next 指回到 head，那么这个链表就叫做循环链表。
+
+```java
+// 最简单 LinkedList 实现
+
+class LinkedList {
+  Node Head;
+  
+  class Node {
+    int data;
+    Node next;
+    
+    Node (int d) {
+      data = d;
+    }
+  }
+}
+```
+
+[Linked List 的标准实现代码](http://www.geeksforgeeks.org/implementing-a-linked-list-in-java-using-class/)
+
+[Linked List 示例代码](http://www.cs.cmu.edu/~adamchik/15-121/lectures/Linked Lists/code/LinkedList.java)
+
+[Java 源码分析（LinkedList）](http://developer.classpath.org/doc/java/util/LinkedList-source.html)
+
+Java 中的 LinkedList 是一个很标准的双向链表结构。
+
+
+链表增加和删除任何节点，不会引起整个链表的群移操作，也不需要复制元素、挪动一半的元素、挪动多个元素到新的位置。
+链表的移动和修改的效率非常高，都为 O(1)。
+
+但是也因为这样的结构，访问链表中任何一个位置，操作其实并不简单。
+如果访问头节点和尾节点，都是 O(1)。但是如果想访问中间节点，必须从头节点一步一步往后移动。线性 n 的，O(n) 的算法。
+
+**LinkedList 的时间复杂度**
+
+prepend O(1)
+append O(1)
+lookup O(n)
+insert O(1)
+delete O(1)
+
+### 跳表 Skip List
+
+数组中有序的时候，二分查找可以很快的查到目标元素位置。
+链表元素有序的时候，如何快速的查询到目标位置？
+
+跳表的使用只能用于链表里的元素有序的情况。跳表里的元素始终必须是有序的，不然没办法使用。
+跳表（skip list）对标的是平衡二叉树（AVL Tree）和二分查找，是一种插入、删除、搜索都是 O(log n) 的数据结构。1989 年出现。
+其他的 “树” 都是在 1960、196 几年出现，跳表比它们晚了接近 30 年，最后才出现。
+
+它最大的优势是原理简单、容易实现、方便扩展、效率更高。因此在一些热门的项目里用来替代平衡树，如 Redis、LevelDB 等。
+LevelDB 是 Goole 用来取代 BigTable 的，同时是 Google 的工程师 Jeff Dean 这个人发明的。
 
