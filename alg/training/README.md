@@ -460,7 +460,7 @@ delete O(n)
 
 
 ```js
-// 移动零
+// 移动零，一维数组的坐标变换
 
 // 思路1：循环遍历数组，每次走的时候统计 0 的个数，非 0 元素前移，0 元素后移
 // 思路2：重新开一个新数组，遇到 0 往后放，非 0 前面放，内存空间多。新开了数组，不符合必须原数组操作
@@ -484,6 +484,83 @@ var moveZeroes = function(nums) {
       j++;
     }
   }
+};
+```
+
+```js
+// 盛最多水的容器
+
+// 思路1：枚举，left bar、right bar，(x - y) * height_diff、O(n^2)
+
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+ var maxArea = function(height) {
+  const _getArea = (i, j) => {
+    return (j - i) * Math.min(height[i], height[j]);
+  }
+
+  let max = 0;
+
+  for (let i = 0; i < height.length; i++) {
+    for (let j = i + 1; j < height.length; j++) {
+      max = Math.max(_getArea(i, j), max);
+    }
+  }
+
+  return max;
+};
+
+
+// 思路2：双指针（左右夹逼），左右边界向中间收敛，只需要关心下标比它高的，计算最大面积、O(n)
+
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+ var maxArea = function(height) {
+  let max = 0;
+
+  for (let i = 0, j = height.length - 1; i < j; ) {
+    const minHeight = height[i] < height[j] ? height[i++] : height[j--];
+    const area = (j - i + 1) * minHeight;
+
+    max = Math.max(max, area);
+  }
+
+  return max;
+};
+```
+
+```js
+// 爬楼梯问题
+
+// 思路1：寻找最近重复子问题
+// 1: 1
+// 2: 2
+// 3: f(1) + f(2)
+// 4: f(3) + f(2)
+// n: f(n - 1) + f(n - 2)
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+  if (n <= 2) return n;
+
+  let f1 = 1,
+      f2 = 2;
+
+  for (let i = 3; i <= n; i++) {
+    const temp = f1 + f2;
+
+    f1 = f2;
+    f2 = temp;
+  }
+
+  return f2;
 };
 ```
 
