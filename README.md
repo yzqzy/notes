@@ -8,6 +8,7 @@
   + [内置对象](https://github.com/iheora/notes/tree/master/ecmascript/Built_in_objects) 暂停中...
   + [函数式编程](https://github.com/iheora/notes/tree/master/ecmascript/functional) 已完成
   + [JavaScript性能优化](https://github.com/iheora/notes/tree/master/ecmascript/optimize) 已完成
+  + [前端性能优化](https://github.com/iheora/notes/tree/master/ecmascript/front_end_optimize) 更新中...
 * [DOM](https://github.com/iheora/notes/tree/master/dom) 已完成
 * [BOM](https://github.com/iheora/notes/tree/master/bom) 已完成
 * [HTML5](https://github.com/iheora/notes/tree/master/html5/base) 已完成
