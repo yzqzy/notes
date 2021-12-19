@@ -564,6 +564,28 @@ var climbStairs = function(n) {
 };
 ```
 
+```js
+// 两数之和 https://leetcode-cn.com/problems/two-sum/
+// a + b == target
+
+// 思路1：两层循环，枚举下标
+// 思路2：hash 表处理
+// 思路3：一次 hash 表
+```
+
+
+
+```js
+// 三数之和（高频老题）
+// a + b = -c
+
+// 思路1：暴力求解 三层循环
+// 思路2：两重暴力 + hash，O(n^2)、仍然需要判重
+// 思路3：排序之后，双指针（夹逼），结果可能重复
+
+
+```
+
 ### 链表 LinkedList
 
 如果只存在一个 next 指针，叫做单链表。
@@ -612,6 +634,29 @@ append O(1)
 lookup O(n)
 insert O(1)
 delete O(1)
+
+
+
+[反转链表](https://leetcode.com/problems/reverse-linked-list/)（字节跳动、亚马逊在半年内面试常考）
+
+[两两交换链表中的节点](https://leetcode.com/problems/swap-nodes-in-pairs)（阿里巴巴、字节跳动在半年内面试常考）
+
+[环形链表](https://leetcode.com/problems/linked-list-cycle)（阿里巴巴、字节跳动、腾讯在半年内面试常考）
+
+[环形链表 II](https://leetcode.com/problems/linked-list-cycle-ii)
+
+[K 个一组翻转链表](https://leetcode.com/problems/reverse-nodes-in-k-group/)（字节跳动、猿辅导在半年内面试常考）
+
+
+
+```js
+// 环形链表
+
+// 思路1：遍历链表，set 记录所有访问的结点，看后续元素是否出现再 set 中
+// 思路2：快慢指针 O(1) 内存，也是双指针解法
+```
+
+
 
 ### 跳表 Skip List
 
@@ -667,7 +712,21 @@ LRU Cache - Linked list：[ LRU 缓存机制](http://leetcode-cn.com/problems/
 
 Redis - Skip List：[跳跃表](http://redisbook.readthedocs.io/en/latest/internal-datastruct/skiplist.html)、[为啥 Redis 使用跳表（Skip List）而不是使用 Red-Black？](http://www.zhihu.com/question/20202931)
 
+### 相关题目
 
+[删除有序数组中的重复项](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/)
 
+[轮转数组](https://leetcode-cn.com/problems/rotate-array/)
 
+[合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
+
+[合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/)
+
+[两数之和](https://leetcode-cn.com/problems/two-sum/)
+
+[移动零](https://leetcode-cn.com/problems/move-zeroes/)
+
+[加一](https://leetcode-cn.com/problems/plus-one/)
+
+## 栈、队列
 
