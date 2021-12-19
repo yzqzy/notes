@@ -449,13 +449,13 @@ delete O(n)
 
 
 
-[盛最多水的容器](https://leetcode-cn.com/problems/container-with-most-water/)（腾讯、百度、字节跳动在近半年内面试常考）
+[盛最多水的容器](https://leetcode.com/problems/container-with-most-water/)（腾讯、百度、字节跳动在近半年内面试常考）
 
-[移动零](https://leetcode-cn.com/problems/move-zeroes/)（华为、字节跳动在近半年内面试常考）
+[移动零](https://leetcode.com/problems/move-zeroes/)（华为、字节跳动在近半年内面试常考）
 
 [爬楼梯](https://leetcode.com/problems/climbing-stairs/)（阿里巴巴、腾讯、字节跳动在半年内面试常考）
 
-[三数之和](https://leetcode-cn.com/problems/3sum/)（国内、国际大厂历年面试高频老题）
+[三数之和](https://leetcode.com/problems/3sum/)（国内、国际大厂历年面试高频老题）
 
 
 
@@ -565,7 +565,7 @@ var climbStairs = function(n) {
 ```
 
 ```js
-// 两数之和 https://leetcode-cn.com/problems/two-sum/
+// 两数之和 https://leetcode.com/problems/two-sum/
 // a + b == target
 
 // 思路1：两层循环，枚举下标
@@ -683,6 +683,12 @@ delete O(1)
 
 
 ```js
+// 翻转链表
+
+
+```
+
+```js
 // 环形链表
 
 // 思路1：遍历链表，set 记录所有访问的结点，看后续元素是否出现再 set 中
@@ -747,19 +753,19 @@ Redis - Skip List：[跳跃表](http://redisbook.readthedocs.io/en/latest/intern
 
 ### 相关题目
 
-[删除有序数组中的重复项](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/)
+[删除有序数组中的重复项](https://leetcode.com/problems/remove-duplicates-from-sorted-array/)
 
-[轮转数组](https://leetcode-cn.com/problems/rotate-array/)
+[轮转数组](https://leetcode.com/problems/rotate-array/)
 
-[合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
+[合并两个有序链表](https://leetcode.com/problems/merge-two-sorted-lists/)
 
-[合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/)
+[合并两个有序数组](https://leetcode.com/problems/merge-sorted-array/)
 
-[两数之和](https://leetcode-cn.com/problems/two-sum/)
+[两数之和](https://leetcode.com/problems/two-sum/)
 
-[移动零](https://leetcode-cn.com/problems/move-zeroes/)
+[移动零](https://leetcode.com/problems/move-zeroes/)
 
-[加一](https://leetcode-cn.com/problems/plus-one/)
+[加一](https://leetcode.com/problems/plus-one/)
 
 ## 栈、队列
 
