@@ -685,6 +685,63 @@ delete O(1)
 ```js
 // 翻转链表
 
+// 思路1：迭代法
+/**
+ * Definition for singly-linked list.
+ * function ListNode(val, next) {
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.next = (next===undefined ? null : next)
+ * }
+ */
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var reverseList = function(head) {
+  let prev = null,
+      curr = head;
+
+  while (curr) {
+    const next = curr.next;
+
+    curr.next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  return prev;
+};
+
+
+// 思路2：尾递归法
+/**
+ * Definition for singly-linked list.
+ * function ListNode(val, next) {
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.next = (next===undefined ? null : next)
+ * }
+ */
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var reverseList = function(head) {
+  if (head == null || head.next == null) {
+    return head;
+  }
+
+  const newHead = reverseList(head.next);
+
+  head.next.next = head;
+  head.next = null;
+
+  return newHead;
+};
+```
+
+```js
+// 两两交换链表中的节点
+
 
 ```
 
@@ -695,7 +752,13 @@ delete O(1)
 // 思路2：快慢指针 O(1) 内存，也是双指针解法
 ```
 
+```js
+// 环形链表II
+```
 
+```js
+// K个一组翻转链表
+```
 
 ### 跳表 Skip List
 
