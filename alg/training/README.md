@@ -531,6 +531,26 @@ var moveZeroes = function(nums) {
 
   return max;
 };
+
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+var maxArea = function(height) {
+  let sum = 0;
+
+  let i = 0,
+      j = height.length - 1;
+
+  while (i < j) {
+    const minHeight = height[i] < height[j] ? height[i++] : height[j--];
+    const area = (j - i + 1) * minHeight;
+
+    sum = Math.max(sum, area);
+  }
+
+  return sum;
+};
 ```
 
 ```js
@@ -742,7 +762,34 @@ var reverseList = function(head) {
 ```js
 // 两两交换链表中的节点
 
+/**
+ * Definition for singly-linked list.
+ * function ListNode(val, next) {
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.next = (next===undefined ? null : next)
+ * }
+ */
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var swapPairs = function(head) {
+  const dummy = new ListNode(0, head);
 
+  let curr = dummy;
+
+  while (curr.next && curr.next.next) {
+    let n1 = curr.next,
+        n2 = curr.next.next;
+
+    curr.next = n2;
+    n1.next = n2.next;
+    n2.next = n1;
+    curr = n1;
+  }
+
+  return dummy.next;
+};
 ```
 
 ```js
