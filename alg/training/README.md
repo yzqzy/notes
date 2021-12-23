@@ -797,10 +797,99 @@ var swapPairs = function(head) {
 
 // 思路1：遍历链表，set 记录所有访问的结点，看后续元素是否出现再 set 中
 // 思路2：快慢指针 O(1) 内存，也是双指针解法
+
+/**
+ * @param {ListNode} head
+ * @return {boolean}
+ */
+var hasCycle = function(head) {
+  const set = new Set();
+  
+  while (head) {
+    if (set.has(head)) return true;
+    
+    set.add(head);
+    
+    head = head.next;
+  }
+  
+  return false;
+};
+
+
+/**
+ * @param {ListNode} head
+ * @return {boolean}
+ */
+var hasCycle = function(head) {
+  if (head == null) return false;
+  
+  let slow = head,
+      fast = head;
+  
+  while (fast.next && fast.next.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    
+    if (slow === fast) return true;
+  }
+  
+  return false;
+};
 ```
 
 ```js
 // 环形链表II
+
+// 思路1：遍历链表，set 记录所有访问的结点，看后续元素是否出现再 set 中
+// 思路2：快慢指针 O(1) 内存，也是双指针解法
+
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var detectCycle = function(head) {
+  const set = new Set();
+  
+  while (head) {
+    if (set.has(head)) return head;
+    
+    set.add(head);
+    
+    head = head.next;
+  }
+  
+  return null;
+};
+
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var detectCycle = function(head) {
+  if (head == null) return null;
+  
+  let slow = head,
+      fast = head;
+  
+  while (fast.next && fast.next.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    
+    if (slow === fast) {
+      fast = head;
+      
+      while (fast != slow) {
+        fast = fast.next;
+        slow = slow.next;
+      }
+      
+      return fast;
+    }
+  }
+  
+  return null;
+};
 ```
 
 ```js
