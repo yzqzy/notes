@@ -822,12 +822,10 @@ var hasCycle = function(head) {
  * @return {boolean}
  */
 var hasCycle = function(head) {
-  if (head == null) return false;
-  
   let slow = head,
       fast = head;
   
-  while (fast.next && fast.next.next) {
+  while (fast && fast.next) {
     slow = slow.next;
     fast = fast.next.next;
     
@@ -867,24 +865,22 @@ var detectCycle = function(head) {
  * @return {ListNode}
  */
 var detectCycle = function(head) {
-  if (head == null) return null;
-  
   let slow = head,
       fast = head;
   
-  while (fast.next && fast.next.next) {
+  while (fast && fast.next) {
     slow = slow.next;
     fast = fast.next.next;
     
     if (slow === fast) {
       fast = head;
       
-      while (fast != slow) {
+      while (fast !== slow) {
         fast = fast.next;
         slow = slow.next;
       }
       
-      return fast;
+      return slow;
     }
   }
   
@@ -894,6 +890,47 @@ var detectCycle = function(head) {
 
 ```js
 // K个一组翻转链表
+
+// 思路，定义反转函数，根据 k 对链表进行拆分
+
+/**
+ * @param {ListNode} head
+ * @param {number} k
+ * @return {ListNode}
+ */
+var reverseKGroup = function(head, k) {
+  if (head === null) return null;
+
+  let start = head,
+      end = head;
+
+  for (let i = 0; i < k; i++) {
+    if (end == null) return head;
+
+    end = end.next;
+  }
+
+  const newHead = reverse(start, end);
+
+  start.next = reverseKGroup(end, k);
+
+  return newHead;
+};
+
+function reverse (start, end) {
+  let prev = null,
+      curr = start;
+
+  while (curr !== end) {
+    const next = curr.next;
+
+    curr.next = prev;
+    prev = curr;
+    curr = next;
+  }
+
+  return prev;
+}
 ```
 
 ### 跳表 Skip List
@@ -965,6 +1002,40 @@ Redis - Skip List：[跳跃表](http://redisbook.readthedocs.io/en/latest/intern
 [移动零](https://leetcode.com/problems/move-zeroes/)
 
 [加一](https://leetcode.com/problems/plus-one/)
+
+
+
+```js
+// 删除有序数组中的重复项
+
+// 思路：双指针解法，一个指针数组长度，一个指针迭代数据
+
+/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+var removeDuplicates = function(nums) {
+  if (!nums.length) return 0;
+  
+  let i = 0;
+
+  for (let j = 1; j < nums.length; j++) {
+    if (nums[j] !== nums[i]) {
+      nums[++i] = nums[j];
+    }
+  }
+
+  return ++i;
+};
+```
+
+```js
+// 轮转数组
+
+
+```
+
+
 
 ## 栈、队列
 
