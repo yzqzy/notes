@@ -1032,9 +1032,51 @@ var removeDuplicates = function(nums) {
 ```js
 // 轮转数组
 
+// 思路1：使用额外数组
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {void} Do not return anything, modify nums in-place instead.
+ */
+var rotate = function(nums, k) {
+  const len = nums.length;
+  const arr = [];
+
+  for (let i = 0; i < len; i++) {
+    arr[(i + k) % len] = nums[i];
+  }
+
+  for (let i = 0; i < len; i++) {
+    nums[i] = arr[i];
+  }
+};
+
+// 思路2：翻转数据，根据 k 进行分割，然后旋转
+
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {void} Do not return anything, modify nums in-place instead.
+ */
+var rotate = function(nums, k) {
+  k %= nums.length;
+
+  reverse(nums, 0, nums.length - 1);
+  reverse(nums, 0, k - 1);
+  reverse(nums, k, nums.length - 1);
+};
+
+function reverse (nums, start, end) {
+  while (start < end) {
+    [nums[start++], nums[end--]] = [nums[end], nums[start]];
+  }
+}
+```
+```js
+// 合并两个有序链表
+
 
 ```
-
 
 
 ## 栈、队列

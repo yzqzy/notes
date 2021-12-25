@@ -1,22 +1,23 @@
 /**
- * @param {number[]} height
- * @return {number}
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {void} Do not return anything, modify nums in-place instead.
  */
- var maxArea = function(height) {
-  const _getArea = (i, j) => {
-    return (j - i) * Math.min(height[i], height[j]);
+ var rotate = function(nums, k) {
+  let res = [];
+
+  for (let i = k; i < nums.length; i++) {
+    res[nums.length] = nums[i];  
   }
 
-  let max = 0;
-
-  for (let i = 0; i < height.length; i++) {
-    for (let j = i + 1; j < height.length; j++) {
-      max = Math.max(_getArea(i, j), max);
-    }
+  for (let j = 0; j < k; j ++) {
+    res[res.length] = k;
   }
 
-  return max;
+  return res;
 };
 
-console.log(maxArea([1,8,6,2,5,4,8,3,7]));
+let nums = [1,2,3,4,5,6,7], k = 3;
+
+console.log(rotate(nums, k));
 
