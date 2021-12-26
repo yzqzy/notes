@@ -1294,7 +1294,45 @@ https://www.bigocheatsheet.com/
 // 有效的括号
 // 如果一个题目具有最近相关性，它就可以用栈来解决。
 
-// 思路1：暴力求解，不断 replace 匹配括号
-// 思路2：
+// 思路1：暴力求解，不断 replace 匹配括号，O(n^2)
+// 思路2：Stack
+
+/**
+ * @param {string} s
+ * @return {boolean}
+ */
+var isValid = function(s) {
+  if (s.length % 2 === 1) return false;
+
+  const map = new Map([
+    ['{', '}'],
+    ['[', ']'],
+    ['(', ')']
+  ]);
+
+  const stack = [];
+
+  let c;
+
+  for (let i = 0; i < s.length; i++) {
+    c = s[i];
+
+    if (map.get(c)) {
+      stack.push(map.get(c));
+    } else {
+      if (stack.pop() !== c) {
+        return false;
+      }
+    }
+  }
+
+  return stack.length === 0;
+};
+```
+
+```js
+// 最小栈
+
+
 ```
 
