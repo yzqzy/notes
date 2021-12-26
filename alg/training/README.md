@@ -1251,3 +1251,21 @@ var plusOne = function (digits) {
 
 ## 栈、队列
 
+栈(Stack)，先进后出。Fast In - Last Out、FILO。添加、删除都是 O(1)、查询为 O(n)，元素是无序的。 
+
+队列(Queue)，先进先出。Fast In - First Out、FIFO。 添加、删除都是 O(1)、查询为 O(n)，元素是无序的。 
+
+双端队列(Deque、Double-End Queue)，queue 和 stack 的结合体。插入和删除都是 O(1) 操作。
+
+
+[Java 的 PriorityQueue 文档](http://docs.oracle.com/javase/10/docs/api/java/util/PriorityQueue.html)
+
+[Java 的 Stack 源码](http://developer.classpath.org/doc/java/util/Stack-source.html)
+
+[Java 的 Queue 源码](http://fuseyism.com/classpath/doc/java/util/Queue-source.html)
+
+[Python 的 heapq](http://docs.python.org/2/library/heapq.html)
+
+[高性能的 container 库](http://docs.python.org/2/library/collections.html)
+
+
