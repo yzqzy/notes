@@ -1200,9 +1200,53 @@ var twoSum = function(nums, target) {
 ```
 
 ```js
-// 移动零
+// 移动零，一维数组的坐标变换
 
+// 思路1：循环遍历数组，每次走的时候统计 0 的个数，非 0 元素前移，0 元素后移
+// 思路2：重新开一个新数组，遇到 0 往后放，非 0 前面放，内存空间多。新开了数组，不符合必须原数组操作
+// 思路3：操作数组中 index 操作
 
+/**
+ * @param {number[]} nums
+ * @return {void} Do not return anything, modify nums in-place instead.
+ */
+var moveZeroes = function(nums) {
+  let j = 0; // 记录下一个非 0 元素
+
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] != 0) {
+      nums[j] = nums[i];
+
+      if (i !== j) {
+        nums[i] = 0;
+      }
+
+      j++;
+    }
+  }
+};
+```
+
+```js
+// 加一
+
+/**
+ * @description 加一
+ * @param {number[]} digits
+ * @return {number[]}
+ */
+var plusOne = function (digits) {
+  for (let i = digits.length - 1; i >= 0; i--) {
+    if (digits[i] != 9) {
+      digits[i]++;
+      return digits;
+    } else {
+      digits[i] = 0; 
+    }
+  }
+
+  return [1].concat(digits);
+};
 ```
 
 ## 栈、队列
