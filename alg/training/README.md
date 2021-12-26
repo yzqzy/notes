@@ -1074,10 +1074,136 @@ function reverse (nums, start, end) {
 ```
 ```js
 // 合并两个有序链表
+ 
+// 思路1：迭代方法，时间复杂度 O(m + n), 空间复杂度 O(1)
+/**
+ * @param {ListNode} list1
+ * @param {ListNode} list2
+ * @return {ListNode}
+ */
+var mergeTwoLists = function(list1, list2) {
+  const dummy = new ListNode();
+
+  let curr = dummy;
+
+  while (list1 && list2) {
+    if (list1.val <= list2.val) {
+      curr.next = list1;
+      list1 = list1.next;
+    } else {
+      curr.next = list2;
+      list2 = list2.next;
+    }
+
+    curr = curr.next;
+  }
+
+  curr.next = list1 || list2;
+
+  return dummy.next;
+};
+
+// 思路2：递归解法，时间复杂度和空间复杂度都为 O(m + n)
+/**
+ * @param {ListNode} list1
+ * @param {ListNode} list2
+ * @return {ListNode}
+ */
+var mergeTwoLists = function(list1, list2) {
+  if (list1 === null) return list2;
+  if (list2 === null) return list1;
+
+  if (list1.val < list2.val) {
+    list1.next = mergeTwoLists(list1.next, list2);
+    return list1;
+  }
+
+  list2.next = mergeTwoLists(list2.next, list1);
+  return list2;
+}
+```
+
+```js
+// 合并两个有序数组
+
+// 思路1：合并然后进行排序，时间复杂度 O((m+n)log(m+n))，空间复杂度 O(log⁡(m+n))。
+/**
+ * @param {number[]} nums1
+ * @param {number} m
+ * @param {number[]} nums2
+ * @param {number} n
+ * @return {void} Do not return anything, modify nums1 in-place instead.
+ */
+var merge = function(nums1, m, nums2, n) {
+  nums1.splice(m, nums1.length - m, ...nums2);
+  nums1.sort((a, b) => a - b);
+};
+
+
+// 思路2：双指针，时间复杂度：O(m+n)，空间复杂度 O(1)。
+/**
+ * @param {number[]} nums1
+ * @param {number} m
+ * @param {number[]} nums2
+ * @param {number} n
+ * @return {void} Do not return anything, modify nums1 in-place instead.
+ */
+var merge = function(nums1, m, nums2, n) {
+  let p1 = m - 1,
+      p2 = n - 1;
+
+  let tail = m + n - 1;
+  let cur;
+
+  while (p1 >= 0 || p2 >= 0) {
+    if (p1 === -1) {
+      cur = nums2[p2--];
+    } else if (p2 === -1) {
+      cur = nums1[p1--];
+    } else if (nums1[p1] > nums2[p2]) {
+      cur = nums1[p1--];
+    } else {
+      cur = nums2[p2--];
+    }
+
+    nums1[tail--] = cur;
+  }
+};
+```
+
+```js
+// 两数之和
+
+// 思路1：使用 Map 存储，时间复杂度和空间复杂度都为 O(n)。
+/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+var twoSum = function(nums, target) {
+  const map = new Map();
+
+  let curr;
+
+  for (let i = 0; i < nums.length; i++) {
+    curr = target - nums[i];
+    
+    if (map.has(curr)) {
+      return [map.get(curr), i];
+    }
+
+    map.set(nums[i], i);
+  }
+
+  return [];
+};
+```
+
+```js
+// 移动零
 
 
 ```
-
 
 ## 栈、队列
 
