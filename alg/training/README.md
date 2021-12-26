@@ -1258,8 +1258,6 @@ var plusOne = function (digits) {
 双端队列(Deque、Double-End Queue)，queue 和 stack 的结合体。插入和删除都是 O(1) 操作。
 
 
-[Java 的 PriorityQueue 文档](http://docs.oracle.com/javase/10/docs/api/java/util/PriorityQueue.html)
-
 [Java 的 Stack 源码](http://developer.classpath.org/doc/java/util/Stack-source.html)
 
 [Java 的 Queue 源码](http://fuseyism.com/classpath/doc/java/util/Queue-source.html)
@@ -1268,4 +1266,9 @@ var plusOne = function (digits) {
 
 [高性能的 container 库](http://docs.python.org/2/library/collections.html)
 
+优先队列(Priority Queue)。
+插入操作 O(1)，取出操作 O(log n)，可以按照元素的优先级取出。
+底层具体实现的数据结构较为多样和复杂，可以由 heap、bst、avl 等实现。
+
+[Java 的 PriorityQueue 文档](http://docs.oracle.com/javase/10/docs/api/java/util/PriorityQueue.html)
 
