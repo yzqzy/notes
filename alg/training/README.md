@@ -1272,3 +1272,29 @@ var plusOne = function (digits) {
 
 [Java 的 PriorityQueue 文档](http://docs.oracle.com/javase/10/docs/api/java/util/PriorityQueue.html)
 
+
+
+<img src="./images/structure_operations.png" />
+
+https://www.bigocheatsheet.com/
+
+
+
+[有效的括号](https://leetcode.com/problems/valid-parentheses/)（亚马逊、JPMorgan 在半年内面试常考）
+[最小栈](https://leetcode.com/problems/min-stack/)（亚马逊在半年内面试常考）
+[柱状图中最大的矩形](https://leetcode.com/problems/largest-rectangle-in-histogram)（亚马逊、微软、字节跳动在半年内面试中考过）
+[滑动窗口最大值](https://leetcode.com/problems/sliding-window-maximum)（亚马逊在半年内面试常考）
+
+[设计循环双端队列](https://leetcode.com/problems/design-circular-deque)（Facebook 在 1 年内面试中考过）
+[接雨水](https://leetcode.com/problems/trapping-rain-water/)（亚马逊、字节跳动、高盛集团、Facebook     在半年内面试常考）
+
+
+
+```js
+// 有效的括号
+// 如果一个题目具有最近相关性，它就可以用栈来解决。
+
+// 思路1：暴力求解，不断 replace 匹配括号
+// 思路2：
+```
+
