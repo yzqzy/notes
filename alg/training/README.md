@@ -1336,36 +1336,119 @@ var isValid = function(s) {
 // 思路：使用辅助栈
 // 后续如果遇到用栈来实现队列，都可以考虑使用两个栈来解决
 
+var MinStack = function() {
+  this.stack = [];
+  this.minStack = [Infinity];
+};
 
+/** 
+ * @param {number} val
+ * @return {void}
+ */
+MinStack.prototype.push = function(val) {
+  this.stack.push(val);
+  this.minStack.push(
+    Math.min(this.minStack[this.minStack.length - 1], val)
+  );
+};
+
+/**
+ * @return {void}
+ */
+MinStack.prototype.pop = function() {
+  this.stack.pop();
+  this.minStack.pop();
+};
+
+/**
+ * @return {number}
+ */
+MinStack.prototype.top = function() {
+  return this.stack[this.stack.length - 1];
+};
+
+/**
+ * @return {number}
+ */
+MinStack.prototype.getMin = function() {
+  return this.minStack[this.minStack.length - 1]
+};
 ```
 
 ```js
-// 柱状图中最大的矩形
+// 柱状图中最大的矩形（★★★）
 
 // 思路1：暴力求解 O(n^3)
 // 思路2：暴力求解，枚举柱子高度，寻找左右边界 
-// 思路3：stack，
+// 思路3：stack，单调递增栈
 
+/**
+ * @param {number[]} heights
+ * @return {number}
+ */
+var largestRectangleArea = function(heights) {
+  let maxArea = 0;
 
+  const stack = [];
+
+  heights = [0, ...heights, 0];
+
+  for (let i = 0; i < heights.length; i++) {
+    while (heights[i] < heights[stack[stack.length - 1]]) {
+      maxArea = Math.max(
+        maxArea,
+        heights[stack.pop()] * (i - stack[stack.length - 1] - 1)
+      );
+    }
+
+    stack.push(i);
+  }
+  
+  return maxArea;
+};
 ```
 
 ```js
-// 滑动窗口最大值
+// 滑动窗口最大值（★★★）
 // 所有的滑动窗口的题目，都可以考虑使用队列解决
 
 // 思路1：暴力求解 O(n*k)
 // 思路2：单调队列 O(n+k) -> O(n)
 
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number[]}
+ */
+var maxSlidingWindow = function(nums, k) {
+  const queue = [], result = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    while (queue.length && nums[i] >= nums[queue[queue.length - 1]]) {
+      queue.pop();
+    }
+
+    queue.push(i);
+
+    while (queue[0] <= i - k) {
+      queue.shift();
+    }
+
+    if (i >= k - 1) result.push(nums[queue[0]]);
+  }
+
+  return result;
+};
+```
+
+```js
+// 设计循环双端队列（★★☆）
+
 
 ```
 
 ```js
-// 设计循环双端队列
-
-```
-
-```js
-// 接雨水
+// 接雨水（★★★）
 
 ```
 
