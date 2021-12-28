@@ -1454,3 +1454,50 @@ var maxSlidingWindow = function(nums, k) {
 
 ## 哈希表、映射、集合
 
+哈希表（Hash table），也叫散列表，是根据关键码值（key value）而直接进行访问的数据结构。
+它通过把关键代码映射到表中一个位置来访问记录，以加快查找的速度
+这个映射函数叫做散列函数（Hash Function），存放记录的数据组叫做哈希表（散列表）。
+
+应用场景：
+
+* 电话簿
+* 用户信息表
+* 缓存（LRU Cache）
+* 键值对存储（Redis）
+
+不同的值通过散列函数得到的值相同的现象，叫做哈希碰撞（Hash Collisions）。
+
+这种情况可以通过链表的方式解决。如果很多的元素堆积，会导致链表的长度增加，如果链表很长，查询效率会退化，从 O(1) 退化到 O(n) 。所以需要设计好的哈希函数，这样会使发生哈希碰撞的概率很小，这样，在平均时刻的查询时间就是 O(1)。
+
+工业级应用中，通常使用 Map 和 Set，它们是从哈希表基础上抽象出来的。
+
+<img src="./images/structure_operations.png" />
+
+[Java Set 文档](http://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/util/Set.html)
+[Java Map 文档](http://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/util/Map.html)
+
+HashSet 在 Java 中实际上就是使用的 HashMap。
+HashMap 实现比较复杂，Node 分为 HashNode 和 TreeNode 两种，可以研究一下 put（putVal） 和 get（getNode） 方法。
+
+HashMap 的复杂度可以看图中的 Hash Table。
+TreeMap 和 TreeSet 复杂度可以看图中的 Red-Black Tree。高级语言的 TreeMap 和 TreeSet 都是通过红黑树来实现的。
+
+
+
+[有效的字母异位词](https://leetcode-cn.com/problems/valid-anagram/description/)（亚马逊、Facebook、谷歌在半年内面试中考过）
+[字母异位词分组](https://leetcode-cn.com/problems/group-anagrams/)（亚马逊在半年内面试中常考）
+[两数之和](https://leetcode-cn.com/problems/two-sum/description/)（亚马逊、字节跳动、谷歌、Facebook、苹果、微软、腾讯在半年内面试中常考）
+
+
+```js
+// 有效的字母异位词
+```
+
+```js
+// 字母异位词分组
+```
+
+```js
+// 两数之和
+```
+
