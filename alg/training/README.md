@@ -1444,12 +1444,162 @@ var maxSlidingWindow = function(nums, k) {
 ```js
 // 设计循环双端队列（★★☆）
 
+// 思路：数组实现双端队列，数组其实就是一个双端队列，只不过不存在限制
 
+/**
+ * @param {number} k
+ */
+var MyCircularDeque = function(k) {
+  this.queue = [];
+  this.maxSize = k;
+};
+
+MyCircularDeque.prototype.size = function () {
+  return this.queue.length;
+}
+
+/** 
+ * @param {number} value
+ * @return {boolean}
+ */
+MyCircularDeque.prototype.insertFront = function(value) {
+  if (this.size() < this.maxSize) {
+    this.queue.unshift(value);
+    return true;
+  }
+  return false;
+};
+
+/** 
+ * @param {number} value
+ * @return {boolean}
+ */
+MyCircularDeque.prototype.insertLast = function(value) {
+  if (this.size() < this.maxSize) {
+    this.queue.push(value);
+    return true;
+  }
+  return false;
+};
+
+/**
+ * @return {boolean}
+ */
+MyCircularDeque.prototype.deleteFront = function() {
+  if (this.size()) {
+    this.queue.shift();
+    return true;
+  }
+  return false;
+};
+
+/**
+ * @return {boolean}
+ */
+MyCircularDeque.prototype.deleteLast = function() {
+  if (this.size()) {
+    this.queue.pop();
+    return true;
+  }
+  return false;
+};
+
+/**
+ * @return {number}
+ */
+MyCircularDeque.prototype.getFront = function() {
+  if (this.size()) {
+    return this.queue[0];
+  }
+  return -1;
+};
+
+/**
+ * @return {number}
+ */
+MyCircularDeque.prototype.getRear = function() {
+  if (this.size()) {
+    return this.queue[this.size() - 1];
+  }
+  return -1;
+};
+
+/**
+ * @return {boolean}
+ */
+MyCircularDeque.prototype.isEmpty = function() {
+  return this.size() == 0;
+};
+
+/**
+ * @return {boolean}
+ */
+MyCircularDeque.prototype.isFull = function() {
+  return this.size() === this.maxSize;
+};
 ```
 
 ```js
 // 接雨水（★★★）
 
+// 思路1：单调栈
+// 思路2：双指针解法
+
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+var trap = function(height) {
+  const stack = [];
+  
+  let maxArea = 0;
+
+  for (let i = 0; i < height.length; i++) {
+    while (stack.length && height[i] > height[stack[stack.length - 1]]) {
+      const top = stack.pop();
+
+      if (!stack.length) break;
+
+      const left = stack[stack.length - 1];
+      const currWidth = i - left - 1;
+      const currHeight = Math.min(height[left], height[i]) - height[top];
+
+      maxArea += currWidth * currHeight;
+    }
+
+    stack.push(i);
+  }
+
+  return maxArea;
+};
+
+
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+var trap = function(height) {
+  let maxArea = 0;
+
+  let left = 0,
+      right = height.length - 1;
+
+  let leftMax = 0,
+      rightMax = 0;
+
+  while (left < right) {
+    leftMax = Math.max(leftMax, height[left]);
+    rightMax = Math.max(rightMax, height[right]);
+
+    if (leftMax < rightMax) {
+      maxArea += leftMax - height[left++];
+    } else {
+      maxArea += rightMax - height[right--];
+    }
+  }
+
+  return maxArea;
+};
 ```
 
 ## 哈希表、映射、集合
