@@ -1641,13 +1641,145 @@ TreeMap 和 TreeSet 复杂度可以看图中的 Red-Black Tree。高级语言的
 
 ```js
 // 有效的字母异位词
+// 异位词：字母出现的次数一致，但是顺序不同
+
+// 思路1：暴力，sort 排序，比较 sorted_str 是否相等，O(nlogn)
+// 思路2：hash 表，map 统计字符频次，判断两个字符串出现频次一致
+
+/**
+ * @param {string} s
+ * @param {string} t
+ * @return {boolean}
+ */
+var isAnagram = function(s, t) {
+  if (s.length != t.length) return false;
+
+  const s1 = s.split('');
+  const t1 = t.split('');
+
+  s1.sort();
+  t1.sort();
+
+  return s1.join() === t1.join();
+};
+
+/**
+ * @param {string} s
+ * @param {string} t
+ * @return {boolean}
+ */
+var isAnagram = function(s, t) {
+  if (s.length != t.length) return false;
+
+  const letters = new Array(26).fill(0);
+
+  const base = 'a'.charCodeAt();
+
+  for (const i of s) {
+    letters[i.charCodeAt() - base]++;
+  }
+  for (const i of t) {
+    if (!letters[i.charCodeAt() - base]) return false;
+    letters[i.charCodeAt() - base]--;
+  }
+
+  return true;
+};
 ```
 
 ```js
 // 字母异位词分组
+
+// 思路1：排序做法
+// 思路2：计数
+
+/**
+ * @param {string[]} strs
+ * @return {string[][]}
+ */
+var groupAnagrams = function(strs) {
+  const map = new Map();
+
+  for (const str of strs) {
+    const key = str.split('').sort().join();
+
+    map.has(key) ? map.get(key).push(str) : map.set(key, [str]);
+  }
+
+  return Array.from(map.values());
+};
+
+/**
+ * @param {string[]} strs
+ * @return {string[][]}
+ */
+var groupAnagrams = function(strs) {
+  const map = new Map();
+
+  const base = 'a'.charCodeAt();
+
+  for (const str of strs) {
+    const letters = new Array(26).fill(0);
+
+    for (const s of str) {
+      letters[s.charCodeAt() - base]++;
+    }
+
+    const key = letters.join();
+
+    map.has(key) ? map.get(key).push(str) : map.set(key, [str]);
+  }
+
+  return Array.from(map.values());
+};
+
+/**
+ * @param {string[]} strs
+ * @return {string[][]}
+ */
+var groupAnagrams = function(strs) {
+  const cache = {};
+  const base = 'a'.charCodeAt();
+
+  for (const str of strs) {
+    const letters = new Array(26).fill(0);
+
+    for (const s of str) {
+      letters[s.charCodeAt() - base]++;
+    }
+
+    // 对象存储时，会调用 toString 方法作为 key，但是执行效率好像也不高
+    cache[letters] ? cache[letters].push(str) : cache[letters] = [str];
+  }
+
+  return Object.values(cache);
+};
 ```
 
 ```js
 // 两数之和
+// target - a 是否在 map 中
+
+/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+var twoSum = function(nums, target) {
+  const map = new Map();
+
+  let curr;
+
+  for (let i = 0; i < nums.length; i++) {
+    curr = target - nums[i]
+
+    if (map.has(curr)) {
+      return [map.get(curr), i];
+    }
+    map.set(nums[i], i);
+  }
+
+  return [];
+};
 ```
 
