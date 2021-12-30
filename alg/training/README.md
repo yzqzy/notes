@@ -1783,3 +1783,154 @@ var twoSum = function(nums, target) {
 };
 ```
 
+## 树、二叉树、二叉搜索树
+
+树和图最大的差别就是看有没有环。
+
+Linked List 是特殊化的 Tree，Tree 是特殊化的 Graph。
+
+
+
+二叉树遍历 Pre-order/In-order/Post-order。
+
+* 前序（Pre-order）：根-左-右
+* 中序（In-order）：左-根-右
+* 后序（Post-order）：左-右-根
+
+> 二叉树遍历可以使用递归或者栈的方式解决。
+
+
+
+```js
+// 前序遍历
+
+const preorder = (root) => {
+  if (!root) return;
+
+  console.log(root.val);
+
+  preorder(root.left);
+  preorder(root.right);
+}
+
+const preorder = (root) => {
+  if (!root) return;
+
+  const stack = [root];
+
+  while (stack.length) {
+    const n = stack.pop();
+
+    console.log(n.val);
+
+    if (n.right) stack.push(n.right);
+    if (n.left) stack.push(n.left);
+  }
+}
+```
+
+```js
+// 中序遍历
+
+const inorder = (root) => {
+  if (!root) return;
+
+  inorder(root.left);
+  console.log(root.val);
+  inorder(root.right);
+}
+
+const inorder = (root) => {
+  if (!root) return;
+
+  const stack = [];
+
+  let p = root;
+
+  while (stack.length || p) {
+    while (p) {
+      stack.push(p);
+      p = p.left;
+    }
+  
+    const n = stack.pop();
+    console.log(n.val);
+  
+    p = n.right;
+  }
+}
+```
+
+```js
+// 后序遍历
+
+const postorder = (root) => {
+  if (!root) return;
+
+  postorder(root.left);
+  postorder(root.right);
+  console.log(root.val);
+}
+
+const postorder = (root) => {
+  if (!root) return;
+
+  const outputStack = [];
+  const stack = [root];
+  
+  while (stack.length) {
+    const n = stack.pop();
+
+    outputStack.push(n);
+
+    if (n.left) stack.push(n.left);
+    if (n.right) stack.push(n.right);
+  }
+
+  while (outputStack.length) {
+    const n = outputStack.pop();
+    console.log(n.val);
+  }
+}
+```
+
+
+
+普通的树遍历的话都是  O(n) 的时间复杂度，和链表没有太大区别。
+
+二叉搜索树（Binary Search Tree），也称二叉排序树、有序二叉树（Ordered Binary Tree）、排序二叉树（Sorted Binary Tree），是指一棵空树或者具有下列性质的二叉树。
+
+* 左子树上所有结点的值均小于它的根结点的值
+* 右子树上所有结点的值均大于它的根结点的值
+* 以此类推：左、右子树也分别为二叉查找树
+
+>  中序遍历：升序排列
+
+
+
+二叉搜索树的时间复杂度是 O(log n)，极端情况下会退化到 O(n)。
+
+二叉搜索树查询、插入、删除  Demo 演示：  https://visualgo.net/zh/bst
+
+
+
+[二叉树的中序遍历](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)（亚马逊、微软、字节跳动在半年内面试中考过）
+
+[二叉树的前序遍历](https://leetcode-cn.com/problems/binary-tree-preorder-traversal/)（谷歌、微软、字节跳动在半年内面试中考过）
+
+[N 叉树的后序遍历](https://leetcode-cn.com/problems/n-ary-tree-postorder-traversal/)（亚马逊在半年内面试中考过）
+
+[N 叉树的前序遍历](https://leetcode-cn.com/problems/n-ary-tree-preorder-traversal/description/)（亚马逊在半年内面试中考过）
+
+[N 叉树的层序遍历](https://leetcode-cn.com/problems/n-ary-tree-level-order-traversal/)
+
+
+
+```js
+// 二叉树的中序遍历
+
+
+```
+
+## 堆、二叉堆
+
