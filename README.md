@@ -14,6 +14,7 @@
 * [HTML5](https://github.com/iheora/notes/tree/master/html5/base) 已完成
 * [CSS3](https://github.com/iheora/notes/tree/master/css3) 已完成
 * [工具函数](https://github.com/iheora/notes/tree/master/utils) 已完成
+* [Git](https://github.com/iheora/notes/tree/master/git) 更新中
 * NPM
   + [NPM基础](https://github.com/iheora/notes/tree/master/npm/base) 已完成
   + [NPM私服](https://github.com/iheora/notes/tree/master/npm/repos) 已完成
