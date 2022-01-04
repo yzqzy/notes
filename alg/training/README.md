@@ -2161,3 +2161,126 @@ var levelOrder = function(root) {
 
 ## 堆、二叉堆
 
+### 定义
+
+堆（Heap）：可以迅速找到一堆数中的最大或者最小值的数据结构。
+
+将根节点最大的堆叫做大顶堆，根节点最小的堆叫做小顶堆。常见的堆有二叉堆、斐波那契堆等。
+
+以大顶堆为例，常见操作：
+
+* find-max：O(1)
+* delete-max：O(log n)
+* insert(create)：O(log n) or O(1)
+
+不同实现的比较：https://en.wikipedia.org/wiki/Heap_(data_structure)
+
+堆有很多实现方式，二叉堆是堆的一种常见且简单的实现，但不是最优的实现。
+
+### 二叉堆性质
+
+通过完全二叉树来实现（注意：不是二叉搜索树）；二叉搜索树的查询最小元素是 O(n) 的。
+
+> 完全二叉树：除叶子结点之外，其他都是满的。
+
+二叉堆（大顶）满足以下性质：
+
+* 是一颗完全树
+* 树中任意节点的值总是等于等于其子节点的值
+
+### 二叉堆实现细节
+
+二叉堆一般都是通过 ”数组“ 来实现。
+
+假设 ”第一个元素“ 在数组中的索引为 0，则父节点和子节点的位置关系如下：
+
+* 索引为 i 的左子结点索引：2 * i + 1
+* 索引为 i 的右子结点索引：2 * i + 2
+* 索引为 i 的父结点索引：Math.floor((i - 1) / 2)
+
+#### 插入操作
+
+新元素一律先插入堆的尾部；
+依次向上调整整个堆的结构（一直到根）；
+
+HeapifyUp，O(log n)。
+
+#### 删除堆顶操作
+
+将堆尾元素替换到顶部（即对顶被替代的删除掉）；
+依次从根部向下调整整个堆的结构（一直到堆尾即可）；
+
+HeapifyDown，O(logn)。
+
+### 代码实现
+
+```js
+class BinaryHeap {
+  constructor (compare) {
+    this.heap = [];
+    this.compare = compare;
+  }
+
+  swap (i1, i2) {
+    [this.heap[i1], this.heap[i2]] = [this.heap[i2], this.heap[i1]];
+  }
+
+  getParentIndex (i) {
+    return (i - 1) >> 1;
+  }
+
+  getLeftIndex (i) {
+    return i * 2 + 1;
+  }
+  
+  getRightIndex (i) {
+    return i * 2 + 2;
+  }
+
+  heapifyUp (curIdx) {
+    if (curIdx == 0) return;
+
+    const parentIdx = this.getParentIndex(curIdx);
+
+    if (this.compare(this.heap[curIdx], this.heap[parentIdx]) < 0) {
+      this.swap(parentIdx, curIdx);
+      this.heapifyUp(parentIdx);
+    }
+  }
+
+  heapifyDown (curIdx) {
+    const leftIdx = this.getLeftIndex(curIdx),
+          rightIdx = this.getRightIndex(curIdx);
+
+    if (this.compare(this.heap[leftIdx], this.heap[curIdx]) < 0) {
+      this.swap(leftIdx, curIdx);
+      this.heapifyDown(leftIdx);
+    }
+    if (this.compare(this.heap[rightIdx], this.heap[curIdx]) < 0) {
+      this.swap(rightIdx, curIdx);
+      this.heapifyDown(rightIdx);
+    }
+  }
+  
+  insert (val) {
+    this.heap.push(val);
+    this.heapifyUp(this.heap.length - 1);
+  }
+
+  pop () {
+    this.heap[0] = this.heap.pop();
+    this.heapifyDown(0);
+  }
+
+  peek () {
+    return this.heap[0];
+  }
+
+  size () {
+    return this.heap.length;
+  }
+}
+```
+
+### 相关题目
+
