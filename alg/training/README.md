@@ -1929,7 +1929,234 @@ const postorder = (root) => {
 ```js
 // 二叉树的中序遍历
 
+// 思路1：递归解法，复杂度 O(n)
+// 思路2：迭代解法，维护一个栈，复杂度 O(n)
 
+/**
+ * @param {TreeNode} root
+ * @return {number[]}
+ */
+var inorderTraversal = function(root) {
+  if (!root) return [];
+
+  const res = [];
+
+  const inorder = (root) => {
+    root.left && inorder(root.left); 
+    res.push(root.val);
+    root.right && inorder(root.right); 
+  }
+
+  inorder(root);
+
+  return res;
+};
+
+/**
+ * @param {TreeNode} root
+ * @return {number[]}
+ */
+var inorderTraversal = function(root) {
+  const res = [];
+  const stack = [];
+
+  while (root || stack.length) {
+    while (root) {
+      stack.push(root);
+      root = root.left;
+    }
+
+    root = stack.pop();
+    res.push(root.val);
+    root = root.right;
+  }
+
+  return res;
+};
+```
+
+```js
+// 二叉树的前序遍历
+
+/**
+ * @param {TreeNode} root
+ * @return {number[]}
+ */
+var preorderTraversal = function(root) {
+  if (!root) return [];
+
+  const res = [];
+
+  const preorder = (root) => {
+    res.push(root.val);
+    root.left && preorder(root.left);
+    root.right && preorder(root.right);
+  }
+
+  preorder(root);
+
+  return res;
+};
+
+/**
+ * @param {TreeNode} root
+ * @return {number[]}
+ */
+var preorderTraversal = function(root) {
+  if (!root) return [];
+  
+  const stack = [root];
+  const res = [];
+
+  while (stack.length) {
+    const curr = stack.pop();
+
+    res.push(curr.val);
+
+    curr.right && stack.push(curr.right);
+    curr.left && stack.push(curr.left);
+  }
+
+  return res;
+};
+```
+
+```js
+// N 叉树的后序遍历
+
+/**
+ * @param {Node|null} root
+ * @return {number[]}
+ */
+var postorder = function(root) {
+  if (!root) return [];
+
+  const res = [];
+
+  const _postorder = (root) => {
+    root.children && root.children.forEach(_postorder);
+    res.push(root.val);
+  }
+
+  _postorder(root);
+
+  return res;
+};
+
+/**
+ * @param {Node|null} root
+ * @return {number[]}
+ */
+var postorder = function(root) {
+  if (!root) return [];
+
+  const res = [];
+  const stack = [root];
+
+  while (stack.length) {
+    const curr = stack.pop();
+
+    res.push(curr.val);
+
+    curr.children && stack.push(...curr.children);
+  }
+
+  return res.reverse();
+};
+```
+
+```js
+// N 叉树的前序遍历
+
+/**
+ * @param {Node|null} root
+ * @return {number[]}
+ */
+var preorder = function(root) {
+  if (!root) return [];
+
+  const res = [];
+
+  const _preorder = (root) => {
+    res.push(root.val);
+    root.children && root.children.forEach(_preorder);
+  }
+
+  _preorder(root);
+
+  return res;
+};
+
+/**
+ * @param {Node|null} root
+ * @return {number[]}
+ */
+var preorder = function(root) {
+  if (!root) return [];
+
+  const res = [];
+  const stack = [root];
+
+  while (stack.length) {
+    const curr = stack.pop();
+
+    res.push(curr.val);
+    curr.children && stack.push(...curr.children.reverse());    
+  }
+
+  return res;
+};
+```
+
+```js
+// N 叉树的层序遍历
+
+/**
+ * @param {Node|null} root
+ * @return {number[][]}
+ */
+var levelOrder = function(root) {
+  if (!root) return [];
+
+  const res = [];
+
+  const _levelorder = (root, level) => {
+    res[level] ? res[level].push(root.val) : res[level] = [root.val];
+    root.children && root.children.forEach(curr => _levelorder(curr, level + 1));
+  }
+
+  _levelorder(root, 0);
+
+  return res;
+};
+
+/**
+ * @param {Node|null} root
+ * @return {number[][]}
+ */
+var levelOrder = function(root) {
+  if (!root) return [];
+
+  const res = [];
+  const queue = [root];
+
+  while (queue.length) {
+    const len = queue.length;
+    const level = [];
+
+    for (let i = 0; i < len; i++) {
+      const curr = queue.shift();
+
+      level.push(curr.val);
+
+      queue.push(...curr.children);
+    }
+
+    res.push(level);
+  }
+  
+  return res;
+};
 ```
 
 ## 堆、二叉堆
