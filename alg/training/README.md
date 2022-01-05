@@ -2333,39 +2333,34 @@ var getLeastNumbers = function(arr, k) {
  * @return {number[]}
  */
 var maxSlidingWindow = function(nums, k) {
-  const heap = new BinaryHeap((a, b) => b.val - a.val);
+  const heap = new BinaryHeap((a, b) => b[0] - a[0]);
 
   for (let i = 0; i < k - 1; i++) {
-    heap.insert({
-      val: nums[i],
-      index: i
-    });
+    heap.insert([nums[i], i]);
   }
 
   const res = [];
 
   for (let i = k -1; i < nums.length; i++) {
-    heap.insert({
-      val: nums[i],
-      index: i
-    });
+    heap.insert([nums[i], i]);
 
-    while (heap.peek().index <= i - k) heap.pop();
+    while (heap.peek()[1] <= i - k) heap.pop();
 
-    res.push(heap.peek().val);
+    res.push(heap.peek()[0]);
   }
 
   return res;
 };
 
-// 思路2：数组实现
+// 思路2：双端队列实现
 /**
  * @param {number[]} nums
  * @param {number} k
  * @return {number[]}
  */
 var maxSlidingWindow = function(nums, k) {
-  const queue = [], result = [];
+  const queue = [],
+        result = [];
 
   for (let i = 0; i < nums.length; i++) {
     while (queue.length && nums[i] >= nums[queue[queue.length - 1]]) {
