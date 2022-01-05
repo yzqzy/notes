@@ -2242,7 +2242,7 @@ class BinaryHeap {
 
     const parentIdx = this.getParentIndex(curIdx);
 
-    if (this.compare(this.data[curIdx], this.data[parentIdx]) < 0) {
+    if (this.data[parentIdx] && this.compare(this.data[curIdx], this.data[parentIdx]) < 0) {
       this.swap(parentIdx, curIdx);
       this.heapifyUp(parentIdx);
     }
@@ -2252,18 +2252,16 @@ class BinaryHeap {
     const leftIdx = this.getLeftIndex(curIdx),
           rightIdx = this.getRightIndex(curIdx);
 
-    const len = this.size() - 1;
-
-    if (leftIdx < len && this.compare(this.data[leftIdx], this.data[curIdx]) < 0) {
+    if (this.data[leftIdx] && this.compare(this.data[leftIdx], this.data[curIdx]) < 0) {
       this.swap(leftIdx, curIdx);
       this.heapifyDown(leftIdx);
     }
-    if (rightIdx < len && this.compare(this.data[rightIdx], this.data[curIdx]) < 0) {
+    if (this.data[rightIdx] && this.compare(this.data[rightIdx], this.data[curIdx]) < 0) {
       this.swap(rightIdx, curIdx);
       this.heapifyDown(rightIdx);
     }
   }
-  
+
   insert (val) {
     this.data.push(val);
     this.heapifyUp(this.size() - 1);
@@ -2272,6 +2270,7 @@ class BinaryHeap {
   pop () {
     this.data[0] = this.data.pop();
     this.heapifyDown(0);
+    return this.data[0];
   }
 
   peek () {
@@ -2326,7 +2325,7 @@ var getLeastNumbers = function(arr, k) {
 ```js
 // 滑动窗口最大值
 
-// 思路1：大顶堆实现，写法暂时有点问题，思路如下
+// 思路1：大顶堆实现（超出时间限制，自定义的二叉堆需要优化）
 /**
  * @param {number[]} nums
  * @param {number} k
@@ -2383,10 +2382,67 @@ var maxSlidingWindow = function(nums, k) {
 ```js
 // 前 k 个高频元素
 
+// 思路：小顶堆实现，时间复杂度 O(nlogk)、空间复杂度 O(n)
 
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number[]}
+ */
+var topKFrequent = function(nums, k) {
+  const map = new Map();
+
+  for(const num of nums) {
+    map.set(num, (map.get(num) || 0) + 1);
+  }
+
+  const heap = new BinaryHeap((a, b) => a[1] - b[1]);
+
+  for (const entry of map.entries()) {
+    heap.insert(entry);
+
+    if (heap.size() > k) heap.pop();
+  }
+
+  return heap.data.map(item => item[0]);
+};
 ```
 
 ```js
 // 丑数
+
+// 思路：小顶堆，时间复杂度 O(nlogn)、空间复杂度 O(n)
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var nthUglyNumber = function(n) {
+  const heap = new BinaryHeap((a, b) => a - b);
+  const factors = [2, 3, 5];
+  const set = new Set();
+
+  set.add(1);
+  heap.insert(1);
+
+  let ugly = 0;
+
+  for (let i = 0; i < n; i++) {
+    ugly = heap.pop();
+
+    for (const factor of factors) {
+      const next = ugly * factor;
+
+      if (!set.has(next)) {
+        set.add(next);
+        heap.insert(next);
+      }
+    }
+  }
+
+  return ugly;
+};
 ```
+
+## 图的实现和特性
 

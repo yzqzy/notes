@@ -25,7 +25,7 @@ class BinaryHeap {
 
     const parentIdx = this.getParentIndex(curIdx);
 
-    if (this.compare(this.data[curIdx], this.data[parentIdx]) < 0) {
+    if (this.data[parentIdx] && this.compare(this.data[curIdx], this.data[parentIdx]) < 0) {
       this.swap(parentIdx, curIdx);
       this.heapifyUp(parentIdx);
     }
@@ -35,18 +35,16 @@ class BinaryHeap {
     const leftIdx = this.getLeftIndex(curIdx),
           rightIdx = this.getRightIndex(curIdx);
 
-    const len = this.size() - 1;
-
-    if (leftIdx < len && this.compare(this.data[leftIdx], this.data[curIdx]) < 0) {
+    if (this.data[leftIdx] && this.compare(this.data[leftIdx], this.data[curIdx]) < 0) {
       this.swap(leftIdx, curIdx);
       this.heapifyDown(leftIdx);
     }
-    if (rightIdx < len && this.compare(this.data[rightIdx], this.data[curIdx]) < 0) {
+    if (this.data[rightIdx] && this.compare(this.data[rightIdx], this.data[curIdx]) < 0) {
       this.swap(rightIdx, curIdx);
       this.heapifyDown(rightIdx);
     }
   }
-  
+
   insert (val) {
     this.data.push(val);
     this.heapifyUp(this.size() - 1);
@@ -55,6 +53,7 @@ class BinaryHeap {
   pop () {
     this.data[0] = this.data.pop();
     this.heapifyDown(0);
+    return this.data[0];
   }
 
   peek () {
@@ -65,5 +64,3 @@ class BinaryHeap {
     return this.data.length;
   }
 }
-
-

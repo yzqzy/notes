@@ -26,7 +26,7 @@ class MinHeap {
 
     const parentIdx = this.getParentIndex(curIdx);
 
-    if (this.heap[parentIdx] > this.heap[curIdx]) {
+    if (this.heap[parentIdx] && this.heap[parentIdx].value > this.heap[curIdx].value) {
       this.swap(parentIdx, curIdx);
       this.shiftUp(parentIdx);
     }
@@ -36,11 +36,11 @@ class MinHeap {
     const leftIdx = this.getLeftIndex(curIdx),
           rightIdx = this.getRightIndex(curIdx);
 
-    if (this.heap[leftIdx] < this.heap[curIdx]) {
+    if (this.heap[leftIdx] && this.heap[leftIdx].value < this.heap[curIdx].value) {
       this.swap(leftIdx, curIdx);
       this.shiftDown(leftIdx);
     }
-    if (this.heap[rightIdx] < this.heap[curIdx]) {
+    if (this.heap[rightIdx] && this.heap[rightIdx].value < this.heap[curIdx].value) {
       this.swap(rightIdx, curIdx);
       this.shiftDown(rightIdx);
     }
