@@ -2217,12 +2217,12 @@ HeapifyDown，O(logn)。
 ```js
 class BinaryHeap {
   constructor (compare) {
-    this.heap = [];
+    this.data = [];
     this.compare = compare;
   }
 
   swap (i1, i2) {
-    [this.heap[i1], this.heap[i2]] = [this.heap[i2], this.heap[i1]];
+    [this.data[i1], this.data[i2]] = [this.data[i2], this.data[i1]];
   }
 
   getParentIndex (i) {
@@ -2242,7 +2242,7 @@ class BinaryHeap {
 
     const parentIdx = this.getParentIndex(curIdx);
 
-    if (this.compare(this.heap[curIdx], this.heap[parentIdx]) < 0) {
+    if (this.compare(this.data[curIdx], this.data[parentIdx]) < 0) {
       this.swap(parentIdx, curIdx);
       this.heapifyUp(parentIdx);
     }
@@ -2252,35 +2252,146 @@ class BinaryHeap {
     const leftIdx = this.getLeftIndex(curIdx),
           rightIdx = this.getRightIndex(curIdx);
 
-    if (this.compare(this.heap[leftIdx], this.heap[curIdx]) < 0) {
+    const len = this.size() - 1;
+
+    if (leftIdx < len && this.compare(this.data[leftIdx], this.data[curIdx]) < 0) {
       this.swap(leftIdx, curIdx);
       this.heapifyDown(leftIdx);
     }
-    if (this.compare(this.heap[rightIdx], this.heap[curIdx]) < 0) {
+    if (rightIdx < len && this.compare(this.data[rightIdx], this.data[curIdx]) < 0) {
       this.swap(rightIdx, curIdx);
       this.heapifyDown(rightIdx);
     }
   }
   
   insert (val) {
-    this.heap.push(val);
-    this.heapifyUp(this.heap.length - 1);
+    this.data.push(val);
+    this.heapifyUp(this.size() - 1);
   }
 
   pop () {
-    this.heap[0] = this.heap.pop();
+    this.data[0] = this.data.pop();
     this.heapifyDown(0);
   }
 
   peek () {
-    return this.heap[0];
+    return this.data[0];
   }
 
   size () {
-    return this.heap.length;
+    return this.data.length;
   }
 }
 ```
 
+堆排序：https://www.geeksforgeeks.org/heap-sort/
+
 ### 相关题目
+
+[最小的 k 个数](https://leetcode-cn.com/problems/zui-xiao-de-kge-shu-lcof/)（字节跳动在半年内面试中考过）
+
+[滑动窗口最大值](https://leetcode-cn.com/problems/sliding-window-maximum/)（亚马逊在半年内面试中常考）
+
+[前 K 个高频元素](https://leetcode-cn.com/problems/top-k-frequent-elements/)（亚马逊在半年内面试中常考）
+
+[丑数](https://leetcode-cn.com/problems/chou-shu-lcof/)（字节跳动在半年内面试中考过）
+
+```js
+// 最小的 k 个数
+
+// 思路1：sort，O(nlogn)
+// 思路2：heap，添加 O(nlogk)
+// 思路3：快速排序
+
+/**
+ * @param {number[]} arr
+ * @param {number} k
+ * @return {number[]}
+ */
+var getLeastNumbers = function(arr, k) {
+  if (k == 0) return [];
+
+  const heap = new BinaryHeap((a, b) => b - a);
+
+  for (let i = 0; i < arr.length; i++) {
+    heap.insert(arr[i]);
+
+    if (heap.size() > k) heap.pop();
+  }
+
+  return heap.data;
+};
+```
+
+```js
+// 滑动窗口最大值
+
+// 思路1：大顶堆实现，写法暂时有点问题，思路如下
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number[]}
+ */
+var maxSlidingWindow = function(nums, k) {
+  const heap = new BinaryHeap((a, b) => b.val - a.val);
+
+  for (let i = 0; i < k - 1; i++) {
+    heap.insert({
+      val: nums[i],
+      index: i
+    });
+  }
+
+  const res = [];
+
+  for (let i = k -1; i < nums.length; i++) {
+    heap.insert({
+      val: nums[i],
+      index: i
+    });
+
+    while (heap.peek().index <= i - k) heap.pop();
+
+    res.push(heap.peek().val);
+  }
+
+  return res;
+};
+
+// 思路2：数组实现
+/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number[]}
+ */
+var maxSlidingWindow = function(nums, k) {
+  const queue = [], result = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    while (queue.length && nums[i] >= nums[queue[queue.length - 1]]) {
+      queue.pop();
+    }
+
+    queue.push(i);
+
+    while (queue[0] <= i - k) {
+      queue.shift();
+    }
+
+    if (i >= k - 1) result.push(nums[queue[0]]);
+  }
+
+  return result;
+};
+```
+
+```js
+// 前 k 个高频元素
+
+
+```
+
+```js
+// 丑数
+```
 
