@@ -2565,3 +2565,134 @@ function trunZero (i, j, grid) {
 
 ## 递归的实现及特性
 
+树的面试题解法一般都是递归。主要原因如下：
+
+* 节点的定义，本身就是以递归的方式进行的
+*  树、二叉树、搜索二叉树，存在重复性。
+
+递归（Recursion），本质就是通过函数体来进行的循环。
+
+
+递归模板
+
+```js
+function recursion (level, param1, param2, ...):
+	// 1. recursion terminator	递归终结条件
+  if level > MAX_LEVEL:
+  	process_result
+    return
+               
+  // 2. process logic in current level	处理当前层逻辑
+  process(level, data...)
+
+  // 3. drill down	下探到下一层
+  recursion(level + 1, p1, ...)
+                 
+  // 4. reverse the current level staus if needed	清理当前层
+```
+
+
+注意点：
+
+* 不要人肉递归（画递归树）
+* 找到最近最简方法，将其拆解成可重复解决的问题（最近重复子问题）
+* 数学归纳法思维
+
+
+
+[爬楼梯](https://leetcode-cn.com/problems/climbing-stairs/)（阿里巴巴、腾讯、字节跳动在半年内面试常考）
+
+[括号生成](https://leetcode-cn.com/problems/generate-parentheses/) (字节跳动在半年内面试中考过)
+
+[翻转二叉树](https://leetcode-cn.com/problems/invert-binary-tree/description/) (谷歌、字节跳动、Facebook 在半年内面试中考过)
+
+[验证二叉搜索树](https://leetcode-cn.com/problems/validate-binary-search-tree)（亚马逊、微软、Facebook 在半年内面试中考过）
+
+[二叉树的最大深度](https://leetcode-cn.com/problems/maximum-depth-of-binary-tree)（亚马逊、微软、字节跳动在半年内面试中考过）
+
+[二叉树的最小深度](https://leetcode-cn.com/problems/minimum-depth-of-binary-tree)（Facebook、字节跳动、谷歌在半年内面试中考过）
+
+[二叉树的序列化与反序列化](https://leetcode-cn.com/problems/serialize-and-deserialize-binary-tree/)（Facebook、亚马逊在半年内面试常考）
+
+
+
+```js
+// 爬楼梯 
+
+// f(n) = f(n - 1) + f(n - 2)，mutual exclusive、complete exhaustive
+
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+  if (n <= 2) return n;
+
+  let n1 = 1,
+      n2 = 2;
+    
+  for (let i = 2; i < n; i++) {
+    const n3 = n1 + n2;
+
+    n1 = n2;
+    n2 = n3;
+  }
+
+  return n2;
+};
+```
+
+```js
+// 括号生成
+
+/**
+ * @param {number} n
+ * @return {string[]}
+ */
+var generateParenthesis = function(n) {
+  const ret = [];
+
+  function _generate (left, right, n, s) {
+    if (left === n && right === n) {
+      ret.push(s);
+      return;
+    }
+
+    if (left < n) {
+      _generate(left + 1, right, n, s + '(');
+    }
+    if (left > right) {
+      _generate(left, right + 1, n, s + ')');
+    }
+  }
+
+  _generate (0, 0, n, '');
+
+  return ret;
+};
+```
+
+```js
+// 翻转二叉树
+
+
+```
+
+```js
+// 验证二叉搜索树
+
+// BST - 中序遍历是递增的，有序的
+```
+
+
+
+[二叉树的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/)（Facebook 在半年内面试常考）
+
+[从前序与中序遍历序列构造二叉树](https://leetcode-cn.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal)（字节跳动、亚马逊、微软在半年内面试中考过）
+
+[组合](https://leetcode-cn.com/problems/combinations/)（微软、亚马逊、谷歌在半年内面试中考过）
+
+[全排列](https://leetcode-cn.com/problems/permutations/)（字节跳动在半年内面试常考）
+
+[全排列 II ](https://leetcode-cn.com/problems/permutations-ii/)（亚马逊、字节跳动、Facebook 在半年内面试中考过）
+
