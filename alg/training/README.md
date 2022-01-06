@@ -2446,3 +2446,122 @@ var nthUglyNumber = function(n) {
 
 ## 图的实现和特性
 
+> 面试中较少出现。
+
+Graph(V, E)
+
+V - vertex：点
+
+* 度 - 入度和出度
+* 点与点之间：连通与否
+
+E - edge：边
+
+* 有向和无向（单行线）
+* 权重（边长）
+  
+
+表示方法：连接矩阵、邻接表，都是二维的数据结构。
+
+无向无权图：矩阵是对称的矩阵，以中间的主对角线进行对称。
+
+有向无权图：矩阵不再是对称的矩阵
+
+无向有权图：矩阵是对阵的矩阵，值为权重
+
+
+递归写法：BFS、DFS
+
+```js
+// BFS
+
+const bfs = (root) => {
+  const visited = new Set();
+  const queue = [root];
+
+  visited.add(root);
+
+  while (queue.length) {
+    const n = queue.shift();
+
+    console.log(n);
+
+    graph[n].forEach(c => {
+      if (!visited.has(c)) {
+        queue.push(c);
+        visited.add(c);
+      }
+    });
+  }
+}
+```
+
+```js
+// DFS
+
+const dfs = (n) => {
+  console.log(n);
+
+  visited.add(n);
+
+  graph[n].forEach(c => {
+    if (!visited.has(c)) {
+      dfs(c);
+    }
+  });
+}
+```
+
+
+
+**图的高级算法**
+
+连通图个数：[ https://leetcode-cn.com/problems/number-of-islands/](https://leetcode-cn.com/problems/number-of-islands/)
+
+```js
+// 连接图个数
+
+/**
+ * @param {character[][]} grid
+ * @return {number}
+ */
+var numIslands = function(grid) {
+  let count = 0;
+
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[0].length; j++) {
+      if (grid[i][j] === '1') {
+        count++;
+        trunZero(i, j, grid);
+      }
+    }
+  }
+
+  return count;
+};
+
+// 访问过的结点置为 0
+function trunZero (i, j, grid) {
+  if (
+    i < 0 || i >= grid.length ||
+    j < 0 || j >= grid[0].length || 
+    grid[i][j] === '0'
+  ) return;
+
+  grid[i][j] = '0';
+
+  trunZero(i, j + 1, grid);
+  trunZero(i, j - 1, grid);
+  trunZero(i + 1, j, grid);
+  trunZero(i - 1, j, grid);
+}
+```
+
+拓扑排序（Topological Sorting）：[ https://zhuanlan.zhihu.com/p/34871092](https://zhuanlan.zhihu.com/p/34871092)
+
+最短路径（Shortest Path）：Dijkstra https://www.bilibili.com/video/av25829980?from=search&seid=13391343514095937158
+
+最小生成树（Minimum Spanning Tree）：[ https://www.bilibili.com/video/av84820276?from=search&seid=17476598104352152051](https://www.bilibili.com/video/av84820276?from=search&seid=17476598104352152051)
+
+## 递归的实现及特性
+
