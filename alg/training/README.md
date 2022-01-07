@@ -2675,13 +2675,55 @@ var generateParenthesis = function(n) {
 ```js
 // 翻转二叉树
 
+/**
+ * @param {TreeNode} root
+ * @return {TreeNode}
+ */
+var invertTree = function(root) {
+  let curr;
 
+  const preorder = (root) => {
+    if (!root) return;
+
+    curr = root.left;
+    root.left = root.right;
+    root.right = curr;
+
+    preorder(root.left);
+    preorder(root.right);
+  }
+
+  preorder(root);
+
+  curr = null;
+
+  return root;
+};
 ```
 
 ```js
 // 验证二叉搜索树
 
 // BST - 中序遍历是递增的，有序的
+
+/**
+ * @param {TreeNode} root
+ * @return {boolean}
+ */
+var isValidBST = function(root) {
+  const inorder = (root, min = -Infinity, max = Infinity) => {
+    if (!root) return true;
+
+    if (root.val <= min || root.val >= max) return false;
+
+    return (
+      inorder(root.left, min, root.val) && 
+      inorder(root.right, root.val, max)
+    )
+  }
+
+  return inorder(root);
+};
 ```
 
 
