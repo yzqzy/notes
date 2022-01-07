@@ -2726,6 +2726,226 @@ var isValidBST = function(root) {
 };
 ```
 
+```js
+// 二叉树的最大深度
+
+/**
+ * @param {TreeNode} root
+ * @return {number}
+ */
+var maxDepth = function(root) {
+  if (!root) return 0;
+
+  let deep = 0;
+
+  const queue = [[root, 1]];
+
+  while (queue.length) {
+    const [ root, l ] = queue.shift();
+
+    deep = Math.max(deep, l);
+
+    root.left && queue.push([ root.left, l + 1 ]);
+    root.right && queue.push([ root.right, l + 1 ]);
+  }
+
+  return deep;
+};
+
+/**
+ * @param {TreeNode} root
+ * @return {number}
+ */
+var maxDepth = function(root) {
+  if (!root) return 0;
+
+  let deep = 1;
+
+  const dfs = (root, l) => {
+    if (!root) return;
+
+    deep = Math.max(l, deep);
+
+    root.left && dfs(root.left, l + 1);
+    root.right && dfs(root.right, l + 1);
+  }
+
+  dfs(root, 1);
+
+  return deep;
+};
+```
+
+```js
+// 二叉树的最小深度
+
+/**
+ * @param {TreeNode} root
+ * @return {number}
+ */
+var minDepth = function(root) {
+  if (!root) return 0;
+
+  const queue = [[ root, 1 ]];
+
+  while (queue.length) {
+    const [root, l] = queue.shift();
+
+    if (!root.left && !root.right) {
+      return l;
+    }
+
+    root.left && queue.push([ root.left, l + 1 ]);
+    root.right && queue.push([ root.right, l + 1 ]);
+  }
+};
+
+/**
+ * @param {TreeNode} root
+ * @return {number}
+ */
+var minDepth = function(root) {
+  if (!root) return 0;
+
+  let deep = 0;
+
+  const dfs = (root, l) => {
+    if (!root.left && !root.right) {
+      // 首次赋值，必须是真实深度，不能给 deep 赋值默认值
+      deep = deep ? Math.min(deep, l) : l;
+    }
+
+    root.left && dfs(root.left, l + 1);
+    root.right && dfs(root.right, l + 1);
+  }
+
+  dfs(root, 1);
+
+  return deep;
+};
+```
+
+```js
+// 二叉树的序列化和反序列化
+
+// 深度优先遍历
+/**
+ * Encodes a tree to a single string.
+ *
+ * @param {TreeNode} root
+ * @return {string}
+ */
+var serialize = function(root) {
+  const dfs = (root) => {
+    if (!root) return '*';
+
+    const left = dfs(root.left),
+          right = dfs(root.right);
+    
+    return `${ root.val },${ left },${ right }`;
+  }
+
+  return dfs(root);
+};
+/**
+ * Decodes your encoded data to tree.
+ *
+ * @param {string} data
+ * @return {TreeNode}
+ */
+var deserialize = function(data) {
+  const list = data.split(',');
+
+  const dfs = (list) => {
+    const rootVal = list.shift();
+
+    if (rootVal == '*') {
+      return null;
+    }
+
+    const root = new TreeNode(rootVal);
+
+    root.left = dfs(list);
+    root.right = dfs(list);
+
+    return root;
+  }
+
+  return dfs(list);
+};
+
+
+// 广度优先遍历
+/**
+ * Encodes a tree to a single string.
+ *
+ * @param {TreeNode} root
+ * @return {string}
+ */
+var serialize = function(root) {
+  const queue = [root];
+
+  const ret = [];
+
+  while (queue.length) {
+    const root = queue.shift();
+
+    if (root) {
+      ret.push(root.val);
+      queue.push(root.left);
+      queue.push(root.right);
+    } else {
+      ret.push('*')
+    }
+  }
+
+  return ret.join(',');
+};
+
+/**
+ * Decodes your encoded data to tree.
+ *
+ * @param {string} data
+ * @return {TreeNode}
+ */
+var deserialize = function(data) {
+  if (data == '*') return null;
+
+  const list = data.split(',');
+
+  const root = new TreeNode(list[0]);
+  const queue = [root];
+
+  let cursor = 1;
+
+  while (cursor < list.length) {
+    const root = queue.shift();
+
+    const leftVal = list[cursor],
+          rightVal = list[cursor + 1];
+
+    if (leftVal != '*') {
+      const leftNode = new TreeNode(leftVal);
+
+      root.left = leftNode;
+
+      queue.push(leftNode);
+    }
+    if (rightVal != '*') {
+      const rightNode = new TreeNode(rightVal);
+
+      root.right = rightNode;
+
+      queue.push(rightNode);
+    }
+
+    cursor += 2;
+  }
+
+  return root;
+};
+```
+
 
 
 [二叉树的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/)（Facebook 在半年内面试常考）
@@ -2737,4 +2957,12 @@ var isValidBST = function(root) {
 [全排列](https://leetcode-cn.com/problems/permutations/)（字节跳动在半年内面试常考）
 
 [全排列 II ](https://leetcode-cn.com/problems/permutations-ii/)（亚马逊、字节跳动、Facebook 在半年内面试中考过）
+
+
+
+```js
+// 二叉树的最近公共祖先
+
+
+```
 
