@@ -2563,7 +2563,7 @@ function trunZero (i, j, grid) {
 
 最小生成树（Minimum Spanning Tree）：[ https://www.bilibili.com/video/av84820276?from=search&seid=17476598104352152051](https://www.bilibili.com/video/av84820276?from=search&seid=17476598104352152051)
 
-## 递归的实现及特性
+## 递归的实现和特性
 
 树的面试题解法一般都是递归。主要原因如下：
 
@@ -3021,4 +3021,101 @@ function buildTreeHelper (preorder, p_start, p_end, inorder, i_start, i_end, map
   return root;
 }
 ```
+
+```js
+// 组合
+
+/**
+ * @param {number} n
+ * @param {number} k
+ * @return {number[][]}
+ */
+var combine = function(n, k) {
+  const ret = [];
+
+  const dfs = (cur, n, k, temp) => {
+    if (temp.length + (n - cur + 1) < k) return;
+
+    if (temp.length == k) {
+      return ret.push(temp);
+    }
+
+    dfs(cur + 1, n, k, [...temp, cur]);
+    dfs(cur + 1, n, k, temp);
+  }
+
+  dfs(1, n, k, []);
+
+  return ret;
+};
+```
+
+```js
+// 全排列
+
+/**
+ * @param {number[]} nums
+ * @return {number[][]}
+ */
+var permute = function(nums) {
+  const ret = [];
+
+  const backtrack = (path) => {
+    if (path.length === nums.length) {
+      return ret.push(path);
+    }
+
+    nums.forEach(n => {
+      if (path.includes(n)) return;
+      backtrack(path.concat(n));
+    });
+  }
+
+  backtrack([]);
+
+  return ret;
+};
+```
+
+```js
+// 全排列 II
+
+/**
+ * @param {number[]} nums
+ * @return {number[][]}
+ */
+var permuteUnique = function(nums) {
+  const ret = [];
+
+  const visited = new Array(nums.length).fill(false);
+
+  const backtrack = (idx, path) => {
+    if (path.length === nums.length) {
+      return ret.push(path.slice());
+    }
+
+    for (let i = 0; i < nums.length; i++) {
+      if (visited[i] || (i > 0 && nums[i] === nums[i - 1] && !visited[i - 1])) continue;
+
+      path.push(nums[i]);
+
+      visited[i] = true;
+
+      backtrack(idx + 1, path);
+
+      visited[i] = false;
+
+      path.pop();
+    }
+  }
+
+  nums.sort((x, y) => x - y);
+
+  backtrack(0, []);
+
+  return ret;
+};
+```
+
+## 分治、回溯的实现和特性
 
