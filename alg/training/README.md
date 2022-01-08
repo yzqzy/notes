@@ -2963,6 +2963,62 @@ var deserialize = function(data) {
 ```js
 // 二叉树的最近公共祖先
 
+/**
+ * @param {TreeNode} root
+ * @param {TreeNode} p
+ * @param {TreeNode} q
+ * @return {TreeNode}
+ */
+var lowestCommonAncestor = function(root, p, q) {
+  const dfs = (root, p, q) => {
+    if (!root || root == p || root == q) return root;
 
+    const left = dfs(root.left, p, q),
+          right = dfs(root.right, p, q);
+
+    if (!left) return right;
+    if (!right) return left;
+
+    return root;
+  }
+
+  return dfs(root, p, q);
+};
+```
+
+```js
+// 前序遍历与中序遍历序列构造二叉树
+
+/**
+ * @param {number[]} preorder
+ * @param {number[]} inorder
+ * @return {TreeNode}
+ */
+var buildTree = function(preorder, inorder) {
+  const map = new Map();
+
+  for (let i = 0; i < inorder.length; i++) {
+    map.set(inorder[i], i);
+  }
+
+  return buildTreeHelper(preorder, 0, preorder.length, inorder, 0, inorder.length, map);
+};
+
+function buildTreeHelper (preorder, p_start, p_end, inorder, i_start, i_end, map) {
+  if (p_start == p_end) {
+    return null;
+  }
+
+  const root_val = preorder[p_start],
+        root_idx = map.get(root_val),
+        left_idx = root_idx - i_start;
+
+  const root = new TreeNode(root_val);
+
+  root.left = buildTreeHelper(preorder, p_start + 1, p_start + left_idx + 1, inorder, i_start, root_idx, map);
+  root.right = buildTreeHelper(preorder, p_start + left_idx + 1, p_end, inorder, root_idx + 1, i_end, map);
+
+  return root;
+}
 ```
 
