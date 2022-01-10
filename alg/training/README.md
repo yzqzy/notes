@@ -2576,19 +2576,21 @@ function trunZero (i, j, grid) {
 递归模板
 
 ```js
-function recursion (level, param1, param2, ...):
+function recursion (level, param1, param2, ...) {
 	// 1. recursion terminator	递归终结条件
-  if level > MAX_LEVEL:
+  if (level > MAX_LEVEL) {
   	process_result
     return
+  }
                
   // 2. process logic in current level	处理当前层逻辑
-  process(level, data...)
+  process(level, data...);
 
   // 3. drill down	下探到下一层
-  recursion(level + 1, p1, ...)
+  recursion(level + 1, p1, ...);
                  
   // 4. reverse the current level staus if needed	清理当前层
+}
 ```
 
 
@@ -3118,4 +3120,134 @@ var permuteUnique = function(nums) {
 ```
 
 ## 分治、回溯的实现和特性
+
+分治、回溯本质上就是一种特殊的递归，它是递归的一个细分类。
+
+遇见题目要找重复性，重复性分为最近重复性和最优重复性。
+最优重复性就是动态规划，最近重复性根据重复性如何构造，以及如何分解，就分为分治、回溯等各种办法。
+
+### 分治 Divide & Conquer
+
+分治针对递归状态树，可以将一个问题化解为多个子问题。
+
+**代码模板**
+
+```js
+function divide_conquer (problem, param1, params2, ... ){
+  // recursion terminator
+  if (!problem) {
+    process_result
+    return
+  };
+  
+  // prepare data
+  data = prepare_data(problem);
+  subprobems = split_problem(problem, data);
+  
+  // conquer subproblems
+  subresult1 = divide_conquer(subprobems[0], p1, ...);
+  subresult2 = divide_conquer(subprobems[1], p1, ...);
+  subresult3 = divide_conquer(subprobems[2], p1, ...);
+  ...
+                              
+  // process and generate the final result
+  result = process_result(subresult1, subresult2, subresult3, ...);
+  
+  // revert the current level states
+}
+```
+
+### 回溯 Backtracking
+
+回溯法采用试错的思想，尝试分步解决一个问题。在分步解决问题的过程中，如果发现现有的分步答案不能得到有效的正确解答，它将取消上一步甚至是上几步的计算，再通过其他的可能的分步解答再次尝试寻找问题的答案。
+
+回溯法通常用最简单的递归方法来实现，在反复重复上述的步骤后可能出现两种情况：
+
+* 找到一个可能存在的正确答案；
+* 尝试了所有可能的分布方法后宣告该问题没有答案。
+
+最坏情况下，回溯法会导致一次复杂度为指数时间的计算。
+
+### 相关题目
+
+[Pow(x, n) ](https://leetcode-cn.com/problems/powx-n/)（Facebook 在半年内面试常考）
+
+[子集](https://leetcode-cn.com/problems/subsets/)（Facebook、字节跳动、亚马逊在半年内面试中考过）
+
+参考链接：
+
+[牛顿迭代法原理](http://www.matrix67.com/blog/archives/361)
+
+[牛顿迭代法代码](http://www.voidcn.com/article/p-eudisdmk-zm.html)
+
+
+
+```js
+// Pow(x, n)
+
+// 思路1：暴力法，循环 n 次，O(n)
+
+// 思路2：分治 O(log n)
+// 	pow(x, n)
+// 		subproblem: subresult = pow(x, n / 2)
+//  merge：
+//		n % 2 == 1，result = subresult * subresult * x
+// 		else，subresult * subresult
+
+/**
+ * @param {number} x
+ * @param {number} n
+ * @return {number}
+ */
+var myPow = function (x, n) {
+  if (n === 0) return 1;
+
+  if (n < 0) return 1 / myPow(x, -n);
+
+  const mul = myPow(x * x, (n / 2) >> 0);
+
+  return n % 2 ? x * mul : mul;
+}
+```
+
+```js
+// 子集
+
+
+```
+
+
+
+[多数元素](https://leetcode-cn.com/problems/majority-element/description/) （亚马逊、字节跳动、Facebook 在半年内面试中考过）
+
+ [电话号码的字母组合](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/)（亚马逊在半年内面试常考）
+
+
+
+```js
+// 多数元素
+```
+
+```js
+// 电话号码的字母组合
+```
+
+
+
+[N 皇后](https://leetcode-cn.com/problems/n-queens/)（字节跳动、苹果、谷歌在半年内面试中考过）
+
+[二叉树的层次遍历](http://leetcode-cn.com/problems/binary-tree-level-order-traversal/#/description)
+
+[分发饼干](http://leetcode-cn.com/problems/assign-cookies/description/)
+
+[买卖股票的最佳时机 II](http://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/description/)
+
+[跳跃游戏](http://leetcode-cn.com/problems/jump-game/)
+
+[x 的平方根](http://leetcode-cn.com/problems/sqrtx/)
+
+[有效的完全平方数](http://leetcode-cn.com/problems/valid-perfect-square/)
+
+```js
+```
 
