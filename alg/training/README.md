@@ -3213,7 +3213,58 @@ var myPow = function (x, n) {
 ```js
 // 子集
 
+/**
+ * @param {number[]} nums
+ * @return {number[][]}
+ */
+var subsets = function(nums) {
+  const ans = [];
 
+  const backtrack = (path, l, start) => {
+    if (path.length === l) {
+      ans.push(path);
+      return;
+    }
+
+    for (let i = start; i < nums.length; i++) {
+      backtrack(path.concat(nums[i]), l, i + 1);
+    }
+  }
+
+  for (let i = 0; i <= nums.length; i++) {
+    backtrack([], i, 0);
+  }
+
+  return ans;
+};
+
+
+/**
+ * @param {number[]} nums
+ * @return {number[][]}
+ */
+var subsets = function(nums) {
+  const ans = [];
+
+  if (!nums) return ans;
+
+  const dfs = (nums, list, index) => {
+    if (index === nums.length) {
+      ans.push(list);
+      return;
+    }
+
+    dfs(nums, list.slice(), index + 1);
+
+    list.push(nums[index]);
+    
+    dfs(nums, list.slice(), index + 1);
+  };
+
+  dfs(nums, [], 0);
+
+  return ans;
+};
 ```
 
 
