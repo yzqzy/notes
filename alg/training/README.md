@@ -3119,7 +3119,7 @@ var permuteUnique = function(nums) {
 };
 ```
 
-## 分治、回溯的实现和特性
+## 分治、回溯的实现和特性 TODO
 
 分治、回溯本质上就是一种特殊的递归，它是递归的一个细分类。
 
@@ -3301,4 +3301,219 @@ var subsets = function(nums) {
 
 ```js
 ```
+
+## 深度/广度 优先搜索的实现和特性
+
+在树（图/状态集）中寻找特定结点。
+
+* 每个节点都会访问一次
+* 每个节点仅仅要访问一次
+* 对于节点的访问顺序不限
+  * 深度优先：depth first search
+  * 广度优先：breadth first search
+
+
+
+
+
+
+
+### 深度优先搜索
+
+```js
+function dfs () {
+  if (visited.has(node)) {
+    // already visited
+    return;
+  }
+  
+  visted.add(node);
+  
+  // process current node
+  dfs(node.left);
+  dfs(node.right);
+}
+```
+
+```js
+function dfs () {
+  visted.add(node);
+  // # process current node here.
+	
+  for (next_node in node.children()) {
+    if (!visited.has(next_node)) {
+      dfs(next_node, visited);
+    }
+  }
+}
+```
+
+```js
+function dfs (tree) {
+  if (!tree) return;
+  
+  visited, stack = [], [tree.root];
+  
+  while (stack.length) {
+    node = stack.pop();
+    
+    visited.add(node);
+    
+    process(node);
+    
+    nodes = generate_related_nodes(node);
+    
+    stack.push(nodes);
+  }
+}
+```
+
+### 广度优先搜索
+
+```js
+function bfs (graph, start, end) {
+  queue = [[start]];
+  visted.add(start);
+  
+  while (queue.length) {
+    node  = queue.shift();
+    
+    visited.add(node);
+    
+    process(data);
+    
+    nodes = generate_related_nodes(node);
+    
+    queue.push(...nodes);
+  }
+}
+```
+
+### 相关题目
+
+```js
+const dfs = (root) => {
+  console.log(root.val);
+  root.children.forEach(dfs);
+}
+```
+
+```js
+const bfs = (root) => {
+  const queue = [root];
+
+  while (queue.length) {
+    const n = queue.shift();
+
+    console.log(n.val);
+
+    n.children.forEach(child => {
+      queue.push(child);
+    });
+  }
+}
+```
+
+
+
+[二叉树的层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/#/description)（字节跳动、亚马逊、微软在半年内面试中考过）
+
+[最小基因变化](https://leetcode-cn.com/problems/minimum-genetic-mutation/#/description)
+
+[括号生成](https://leetcode-cn.com/problems/generate-parentheses/#/description)（字节跳动、亚马逊、Facebook     在半年内面试中考过）
+
+[在每个树行中找最大值](https://leetcode-cn.com/problems/find-largest-value-in-each-tree-row/#/description)（微软、亚马逊、Facebook 在半年内面试中考过）
+
+
+
+```js
+// 二叉树的层序遍历
+
+// 1. bfs 
+// 2. dfs
+
+/**
+ * bfs
+ * @param {TreeNode} root
+ * @return {number[][]}
+ */
+var levelOrder = function(root) {
+  if (!root) return [];
+
+  const ans = [];
+
+  const queue = [root];
+
+  while (queue.length) {
+    let len = queue.length;
+
+    ans.push([]);
+
+    while (len--) {
+      const n =  queue.shift();
+
+      ans[ans.length - 1].push(n.val);
+
+      n.left && queue.push(n.left);
+      n.right && queue.push(n.right);
+    }
+  }
+
+  return ans;
+};
+
+/**
+ * dfs
+ * @param {TreeNode} root
+ * @return {number[][]}
+ */
+var levelOrder = function(root) {
+  const ans = [];
+
+  const dfs = (root, l) => {
+    if (!root) return;
+
+    if (!ans[l]) ans[l] = [];
+
+    ans[l].push(root.val);
+
+    dfs(root.left, l + 1);
+    dfs(root.right, l + 1);
+  }
+
+  dfs(root, 0);
+
+  return ans;
+};
+```
+
+```js
+// 最小基因变化
+
+
+```
+
+```js
+// 括号生成
+
+
+```
+
+```js
+// 在每个树行中找最大值
+
+
+```
+
+
+
+[单词接龙](https://leetcode-cn.com/problems/word-ladder/description/)（亚马逊在半年内面试常考）
+
+[单词接龙 II ](https://leetcode-cn.com/problems/word-ladder-ii/description/)（微软、亚马逊、Facebook 在半年内面试中考过）
+
+[岛屿数量](https://leetcode-cn.com/problems/number-of-islands/)（近半年内，亚马逊在面试中考查此题达到 350 次）
+
+[扫雷游戏](https://leetcode-cn.com/problems/minesweeper/description/)（亚马逊、Facebook 在半年内面试中考过）
+
+
 
