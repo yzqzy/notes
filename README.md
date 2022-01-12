@@ -2,6 +2,7 @@
 这是我的前端学习笔记，目前仍在持续更新中，用于知识总结和技术分享。
 
 * ECMAScript
+  + [ECMA-262](https://www.ecma-international.org/publications-and-standards/standards/ecma-262/) 
   + [ECMAScript](https://github.com/iheora/notes/tree/master/ecmascript/base) 已完成
   + [ES6](https://github.com/iheora/notes/tree/master/ecmascript/es6) 已完成
   + [Promise源码实现](https://github.com/iheora/notes/tree/master/ecmascript/promise) 已完成
