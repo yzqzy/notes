@@ -3119,7 +3119,7 @@ var permuteUnique = function(nums) {
 };
 ```
 
-## 分治、回溯的实现和特性 TODO
+## 分治、回溯的实现和特性
 
 分治、回溯本质上就是一种特殊的递归，它是递归的一个细分类。
 
@@ -3549,4 +3549,18 @@ var minMutation = function(start, end, bank) {
 [扫雷游戏](https://leetcode-cn.com/problems/minesweeper/description/)（亚马逊、Facebook 在半年内面试中考过）
 
 
+
+```js
+// 单词接龙
+
+
+```
+
+```js
+// 岛屿数量
+
+
+```
+
+## 贪心的实现和特性
 
