@@ -96,5 +96,44 @@ git commit -m "perf: move reame to readme.md"
 ## 查看版本演变历史 
 
 ```js
+git log
 ```
+
+```js
+git log --oneline // 查看只包含提交信息的记录（一行简洁方式）
+```
+
+```js
+git log -n4	--oneline // 最近的 n 次
+```
+
+```js
+git branch -v // 查看本地分支
+```
+
+```js
+git log --all // 查看所有分支的日志信息
+```
+
+```js
+git log --all --graph // 图形化的日志信息
+```
+
+
+
+```js
+git log --oneline --all -n4 // 所有分支最近的 4 次提交记录
+```
+
+```js
+git log --oneline --all -n4 --graph // 所有分支最近的 4 次图形化提交记录
+```
+
+
+
+```js
+git help --web log // 查看 web 界面的 git log文档
+```
+
+## 图形界面工具
 
