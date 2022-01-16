@@ -1,15 +1,17 @@
 # Git
 
-## 最小配置
+## Git 基础
 
-**配置 user.name 和 user.email**
+### 基础配置
+
+#### 配置 user.name 和 user.email
 
 ```js
 git config --global user.name 'your_name'
 git config --global user.email 'your_email'
 ```
 
-**config 的三个作用域**
+#### config 的三个作用域
 
 缺省等同于 local
 
@@ -19,7 +21,7 @@ git config --global // global 只对当前用户所在仓库有效
 git config --system // system 对系统所有登录的用户有效
 ```
 
-**显示 config 的配置，加 --list**
+#### 显示 config 的配置，加 --list
 
 ```js
 git config --list --local
@@ -29,16 +31,16 @@ git config --list --system
 
 
 
-## 创建 git 仓库
+### 创建 git 仓库
 
-**已存在项目**
+#### 已存在项目
 
 ```js
 cd [your_project]
 git init
 ```
 
-**新建项目**
+#### 新建项目
 
 ```js
 git init [your_project]
@@ -46,7 +48,7 @@ git init [your_project]
 
 
 
-## 提交信息
+### 提交信息
 
 ```js
 git commit -m "init"
@@ -62,7 +64,9 @@ git log
 
 
 
-## 文件重命名
+### 文件重命名
+
+#### 基础操作
 
 ```js
 mv readme readme.md 
@@ -77,7 +81,7 @@ git rm readme
 git status
 ```
 
-**简化操作**
+#### 简化操作
 
 ```js
 git reset --hard // 清理暂存区所有工作信息
@@ -93,7 +97,7 @@ git commit -m "perf: move reame to readme.md"
 
 
 
-## 查看版本演变历史 
+### 查看版本演变历史 
 
 ```js
 git log
@@ -135,5 +139,258 @@ git log --oneline --all -n4 --graph // 所有分支最近的 4 次图形化提�
 git help --web log // 查看 web 界面的 git log文档
 ```
 
-## 图形界面工具
+
+
+### 图形界面工具
+
+```js
+gitk // 弹出 git 自带的图形化工具
+
+gitk --all // 查看所有信息
+```
+
+
+
+<img src="./images/gitk.png" style="zoom: 60%" />
+
+
+
+### .git 目录
+
+#### HEAD
+
+文本文件，指向当前分支。
+
+```js
+ref: refs/heads/master
+```
+
+
+
+#### config
+
+```js
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = git@github.com:iheora/notes.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[gui]
+	wmstate = normal
+	geometry = 1061x563+96+96 233 255
+```
+
+
+
+#### refs
+
+refs/tags      针对重要版本，可以打标签
+
+refs/heads   本地分支文件夹
+
+refs/remotes  远程分支文件夹
+
+
+
+> git cat-file -t   查看对象类型
+> git cat-file -p  查看对象内容
+> git cat-file -s   查看对象大小
+
+
+
+```js
+cd refs/heads
+
+cat .\master // aa4854071ab2fec2a08c9fcc58dfe939b09d6e9a
+
+git cat-file -t aa4854071ab2fec2a08c9fcc58dfe939b09d6e9a // commit 类型
+
+git branch -av // * master aa48540 [ahead 1] docs: update
+```
+
+master 指针指向 commit 。master 后 存在一个 hash 值，如果 hash 值足够标识唯一性，会截断进行显示。
+
+tag 包含的是 git 对象，指向 commit。
+
+
+
+#### objects
+
+objects 是 git 文件系统核心内容，存在多个目录。
+
+
+
+ **2个字符的文件夹，以 e8 为例。下面存在多个文件。**
+
+-- 0b9ebd39f834f536c1aaa96df56074ad5481ae
+-- 3b4ce5e9a33e0b41fe922d28093460085fe12d
+
+```js
+// 拼接规则：e8 + 文件名
+
+git cat-file -t e83b4ce5e9a33e0b41fe922d28093460085fe12d 
+// blob 可能存在多种文件类型 blob（文件对象），commit，tree 等，
+
+git cat-file -p e83b4ce5e9a33e0b41fe922d28093460085fe12d // 查看文件内容
+```
+
+
+
+**pack 目录**
+
+git 会做打包处理。
+
+
+### commit、tree 和 blob 关系
+
+git commit，commit 对象，一个 commit 肯定会对应一棵树（tree）。
+
+树相当于一个快照，存储当时 git 操作的所有信息。
+
+```js
+tree
+-- tree
+-- blob
+-- blod
+-- tree  // styles
+
+
+tree // styles
+-- blob // logo.png，对应 blob 二进制文件
+```
+
+blob 对应一个文件。只要文件内容相同，git 都将之视为一个 blob。可以节约内存空间。
+git 文件和文件名没有关系，会根据文件内容生成 blob。
+
+> commit 可以被看做是 tree 的根节点。
+
+> 文件生成 blob 对象后，再对文件进行修改，git 会把松散的 blob 做整理，把内容相近的 blob 做增量存储。
+
+
+
+### 数一数 tree 的个数
+
+新建的 Git 仓库，有且仅有 1 个 commit，仅包含 /doc/readme，请问内部含有多少个 tree，多少个 blob？
+
+```js
+git init watch_git_objects
+
+cd watch_git_objects
+
+mkdir doc
+
+cd doc
+
+echo "hello world" > readme
+
+cd ..
+
+find .git/objects -type -f // 空目录
+
+git add doc
+
+git status // 添加到暂存区，没有 commit
+
+find .git/objects -type -f
+// .git/objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad
+// 加入暂存区，git 会创建 blob 文件
+
+git cat-file -t 3b18e512db // blob
+
+git commit -m "add readme"
+
+find .git/objects -type -f 
+// .git/object/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad	blob
+// .git/object/f5/5a12e98ffd80349f3499cc52a06b8afb93ec90  tree
+// .git/object/25/0bfe7259457d05a1e29ced793fac74dc10e47f  commit
+// .git/object/2c/5264370f2630da80ee38f412213d59657af6e8	tree
+// 4 个
+```
+
+commit ，两个 tree 一个是 doc 目录，一个是 readme 文件，blob 是文件内容。
+
+### 分离头指针情况的注意事项
+
+detached HEAD。
+
+```js
+git checkout 415c5c8 // 切换分支的时候，切换成 commit
+```
+
+
+分离头指针的情况下，可以继续做开发，然后 commit，不会影响其他分支。
+
+```js
+提交 commit 时，git 会提示 HEAD detached at 415c5c8，即没有依赖分支做操作，只依赖 commit。
+
+git commit -am "update" // 不经过暂存区，直接提交
+```
+
+
+分支头指针其实就是说正工作在一个没有分支的状态下，如果这时候切换其他分支而不保存，就会丢失已变更信息。
+
+> 当你想做一些变更，只是尝试性的一些变更，如果发现效果不好，可以随时丢弃掉。
+>
+> 这时就可以使用分离头指针的现象，直接 checkout 切换到新的分支即可。
+
+```js
+gitk --all 
+
+// 图形化工具不会显示任何关于分离头指针情况的信息记录
+// git 眼中如果 commit 没和 branch 或者 tag 绑定，就是无效的提交信息，很可能会被 git 当作垃圾清理
+// 可以根据切换分支时的提示，对 commit 记录建立新分支
+```
+
+### HEAD 和 branch
+
+```js
+git checkout -b fix_readme master // 基于 master 分支创建新分支并切换
+
+git log -n1 // HEAD -> fix_readme
+cat .git/HEAD // ref: refs/heads/fix_readme
+```
+
+HEAD 可以指代新分支的最后一次提交，也可以不和分支挂钩，和 commit 挂钩，即分离头指针的状态。
+
+当分支切换时，HEAD 会指定新的分支。
+
+HEAD 最终还是指向 commit，HEAD 指向分支的时候，分支里面的内容指向的还是 commit，即最后一次 commit。
+不管是处于分离头状态，还是正常状态，HEAD 最后都会指向最新一次提交的 commit。
+
+#### 比较 commit 差异
+
+```js
+git diff 3d4731 415c5c8 // 比较两个 commit
+```
+
+```js
+git diff HEAD HEAD~1 // 比较当前及前一次提交
+git diff HEAD HEAD^^ // 比较当前及 HEAD 的前两次提交
+
+// ~ 和 ^ 两种用法都可以
+```
+
+## 个人开发使用场景
+
+## 多人协作使用场景
+
+## Git 集成使用注意点
+
+## Git 与 Gihub 简单同步
+
+## Github
+
+## Github 团队协作
+
+## Gitlab 实践
+
+
 
