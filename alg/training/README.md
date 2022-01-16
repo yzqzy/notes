@@ -3314,10 +3314,6 @@ var subsets = function(nums) {
 
 
 
-
-
-
-
 ### 深度优先搜索
 
 ```js
@@ -3562,7 +3558,7 @@ var minMutation = function(start, end, bank) {
 
 ```
 
-## 贪心的实现和特性
+## 贪心算法的实现和特性
 
 贪心算法 Greedy。
 
@@ -3592,7 +3588,29 @@ var minMutation = function(start, end, bank) {
 [coin change 题目](https://leetcode-cn.com/problems/coin-change/)
 
 ```js
+// coin change
+// 思路：动态规划
 
+/**
+ * @param {number[]} coins
+ * @param {number} amount
+ * @return {number}
+ */
+var coinChange = function(coins, amount) {
+  if (!amount) return 0;
+
+  const dp = new Array(amount + 1).fill(Infinity);
+
+  dp[0] = 0;
+
+  for (let i = 0; i < coins.length; i++) {
+    for (let j = coins[i]; j <= amount; j++) {
+      dp[j] = Math.min(dp[j - coins[i]] + 1, dp[j]);
+    }
+  }
+
+  return dp[amount] = Infinity ? -1: dp[amount];
+};
 ```
 
 
@@ -3603,8 +3621,6 @@ var minMutation = function(start, end, bank) {
 
 [分发饼干](https://leetcode-cn.com/problems/assign-cookies/description/)（亚马逊在半年内面试中考过）
 
-[模拟行走机器人](https://leetcode-cn.com/problems/walking-robot-simulation/description/)
-
 [跳跃游戏](https://leetcode-cn.com/problems/jump-game/) （亚马逊、华为、Facebook 在半年内面试中考过）
 
 [跳跃游戏 II ](https://leetcode-cn.com/problems/jump-game-ii/)（亚马逊、华为、字节跳动在半年内面试中考过）
@@ -3613,8 +3629,35 @@ var minMutation = function(start, end, bank) {
 
 ```js
 // 柠檬水找零
+// (●'◡'●) 没错，就是官方题解，没有更简单方法
 
+var lemonadeChange = function(bills) {
+  let five = 0,
+      ten = 0;
 
+  for (const bill of bills) {
+    if (bill === 5) {
+      five += 1;
+    } else if (bill === 10) {
+      if (five === 0) {
+        return false;
+      }
+      five -= 1;
+      ten += 1;
+    } else {
+      if (five > 0 && ten > 0) {
+        five -= 1;
+        ten -= 1;
+      } else if (five >= 3) {
+        five -= 3;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
 ```
 
 ```js
@@ -3664,12 +3707,6 @@ var findContentChildren = function(g, s) {
 ```
 
 ```js
-// 模拟行走机器人
-
-
-```
-
-```js
 // 跳跃游戏
 
 /**
@@ -3694,7 +3731,27 @@ var canJump = function(nums) {
 ```js
 // 跳跃游戏 II
 
+/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+var jump = function(nums) {
+  let farthest = 0,
+      curr = 0;
 
+  let steps = 0;
+
+  for (let i = 0; i < nums.length - 1; i++) {
+    farthest = Math.max(farthest, nums[i] + i);
+
+    if (curr == i) {
+      curr = farthest;
+      steps++;
+    }
+  }
+
+  return steps;
+};
 ```
 
 ## 二分查找的实现和特性
