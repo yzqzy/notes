@@ -3525,13 +3525,66 @@ var minMutation = function(start, end, bank) {
 ```js
 // 括号生成
 
+/**
+ * @param {number} n
+ * @return {string[]}
+ */
+var generateParenthesis = function(n) {
+  const ans = [];
 
+  function helper (left, right, n, s) {
+    if (left === n && right === n) {
+      ans.push(s);
+      return;
+    }
+
+    if (left < n) {
+      helper(left + 1, right, n, s + '(');
+    }
+    if (left > right) {
+      helper(left, right + 1, n, s + ')');
+    }
+  }
+
+  helper(0, 0, n, '');
+
+  return ans;
+};
 ```
 
 ```js
 // 在每个树行中找最大值
 
+/**
+ * 广度优先遍历
+ * @param {TreeNode} root
+ * @return {number[]}
+ */
+var largestValues = function(root) {
+  if (!root) return [];
 
+  const queue = [root];
+  const ans = [];
+
+  while (queue.length) {
+    let len = queue.length;
+
+    ans.push(-Infinity);
+
+    while (len--) {
+      const n = queue.shift();
+      const pervious = ans[ans.length - 1];
+
+      ans[ans.length - 1] = Math.max(pervious, n.val);
+      
+      n.left && queue.push(n.left);
+      n.right && queue.push(n.right);
+    }
+  }
+
+
+  return ans;
+};
 ```
 
 
