@@ -3573,9 +3573,9 @@ var largestValues = function(root) {
 
     while (len--) {
       const n = queue.shift();
-      const pervious = ans[ans.length - 1];
+      const previous = ans[ans.length - 1];
 
-      ans[ans.length - 1] = Math.max(pervious, n.val);
+      ans[ans.length - 1] = Math.max(previous, n.val);
       
       n.left && queue.push(n.left);
       n.right && queue.push(n.right);
