@@ -484,16 +484,14 @@ docs: update word # 保存即可
 git rebase -i [parent_commit]
 ```
 
-```bash
-pick 6e3f289 perf: git 修改最新提交信息
-pick 3eb39d8 perf: 修改旧 commit message
-pick f6e2241 perf: 二分查找的实现及特性
-pick 8264d17 perf: update git last commit
-pick 62a4efd perf: update
-pick 992e00c docs: update docs
-pick e764992 perf: update
+使用 s，squash，meld into pervious commit。
 
-# Rebase 1ae4b2e..e764992 onto 1ae4b2e (7 commands)
+```bash
+pick 992e00c docs: update docs
+pick d94225d perf: merge two update:
+pick 442ccb0 perf: update
+
+# Rebase 1d556bc..442ccb0 onto 1d556bc (3 commands)
 #
 # Commands:
 # p, pick <commit> = use commit
@@ -501,24 +499,108 @@ pick e764992 perf: update
 # e, edit <commit> = use commit, but stop for amending
 # s, squash <commit> = use commit, but meld into previous commit
 # f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit's
+# .       message (or the oneline, if no original merge commit was
+# .       specified); use -c <commit> to reword the commit message
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
 ```
+
+=>
 
 ```bash
-pick 6e3f289 perf: git 修改最新提交信息
-pick 3eb39d8 perf: 修改旧 commit message
-pick f6e2241 perf: 二分查找的实现及特性
-pick 8264d17 perf: update git last commit
-s 62a4efd perf: update
-s 992e00c docs: update docs
-pick e764992 perf: update
+pick 992e00c docs: update docs
+s d94225d perf: merge two update:
+s 442ccb0 perf: update
+
+# Rebase 1d556bc..442ccb0 onto 1d556bc (3 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit's
+# .       message (or the oneline, if no original merge commit was
+# .       specified); use -c <commit> to reword the commit message
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
 ```
+
+=> 
 
 ```bash
+# This is a combination of 3 commits.
+perf: git merge commit test
+# This is the 1st commit message:
+
+docs: update docs
+
+# This is the commit message #2:
+
+perf: merge two update:
+
+perf: update
+
+perf: update
+
+# This is the commit message #3:
+
+perf: update
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Mon Jan 17 22:02:12 2022 +0800
+#
+# interactive rebase in progress; onto 1d556bc
+# Last commands done (3 commands done):
+#    squash d94225d perf: merge two update:
+#    squash 442ccb0 perf: update
+# No commands remaining.
+# You are currently rebasing branch 'master' on '1d556bc'.
+#
+# Changes to be committed:
+#       modified:   git/README.md
+#
 ```
 
+=>
 
-
-
+```base
+[detached HEAD c3657c8] perf: git merge commit test
+ Date: Mon Jan 17 22:02:12 2022 +0800
+ 1 file changed, 39 insertions(+), 1 deletion(-)
+Successfully rebased and updated refs/heads/master.
+```
 
 ## Git 多人协作使用场景
 
