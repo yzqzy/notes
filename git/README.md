@@ -392,7 +392,8 @@ git branch -D [branch_name] // 强制删除本地分支
 ```
 
 ```js
-git branch -a // 显示全部分支，包括远程分支
+git branch -a // 显示全部分支
+git branch -v // 本地分支 详细信息
 ```
 
 ### 修改最新 commit 的 message
@@ -406,7 +407,52 @@ git commit --amend // 允许修改最新 commit 的 message
 ```js
 git rebase -i [commit parent hash] 
 
-git rebase -i 50234f8e848555b4995849e1c7564cd6b32b506d
+git rebase -i 50234f8e848555b4995849e1c7564scd6b32b506d
+```
+
+```bash
+pick bb4b896 docs: update words
+pick 1ae4b2e perf: 二分查找的实现及特性
+pick 6e3f289 perf: git 修改最新提交信息
+
+# Rebase 50234f8..6e3f289 onto 50234f8 (3 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit's
+# .       message (or the oneline, if no original merge commit was
+# .       specified); use -c <commit> to reword the commit message
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+
+
+->
+
+r bb4b896 docs: update words
+pick 1ae4b2e perf: 二分查找的实现及特性
+pick 6e3f289 perf: git 修改最新提交信息
+```
+
+### 整理连续多个 commit
+
+```js
 ```
 
 
