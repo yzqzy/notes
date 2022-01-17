@@ -378,9 +378,40 @@ git diff HEAD HEAD^^ // 比较当前及 HEAD 的前两次提交
 // ~ 和 ^ 两种用法都可以
 ```
 
-## 个人开发使用场景
+## Git 个人开发使用场景
 
-## 多人协作使用场景
+### 删除不需要的分支
+
+```js
+gitk --all
+```
+
+```js
+git branch -d [branch_name] // 删除本地分支
+git branch -D [branch_name] // 强制删除本地分支
+```
+
+```js
+git branch -a // 显示全部分支，包括远程分支
+```
+
+### 修改最新 commit 的 message
+
+```js
+git commit --amend // 允许修改最新 commit 的 message
+```
+
+### 修改旧的 commit 的 message
+
+```js
+git rebase -i [commit parent hash] 
+
+git rebase -i 50234f8e848555b4995849e1c7564cd6b32b506d
+```
+
+
+
+## Git 多人协作使用场景
 
 ## Git 集成使用注意点
 
