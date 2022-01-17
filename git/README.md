@@ -408,6 +408,7 @@ git commit --amend // 允许修改最新 commit 的 message
 git rebase -i [commit parent hash] 
 
 git rebase -i 50234f8e848555b4995849e1c7564scd6b32b506d
+// 团队协作时禁止使用，如果代码已经提交到远程分支，代码合并时会产生新的提交记录
 ```
 
 ```bash
@@ -475,10 +476,47 @@ docs: update words
 docs: update word # 保存即可
 ```
 
-### 整理连续多个 commit
+> 变基操作实际上也使用分离头指针操作。
+
+### 合并连续多个 commit
 
 ```js
+git rebase -i [parent_commit]
 ```
+
+```bash
+pick 6e3f289 perf: git 修改最新提交信息
+pick 3eb39d8 perf: 修改旧 commit message
+pick f6e2241 perf: 二分查找的实现及特性
+pick 8264d17 perf: update git last commit
+pick 62a4efd perf: update
+pick 992e00c docs: update docs
+pick e764992 perf: update
+
+# Rebase 1ae4b2e..e764992 onto 1ae4b2e (7 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+```
+
+```bash
+pick 6e3f289 perf: git 修改最新提交信息
+pick 3eb39d8 perf: 修改旧 commit message
+pick f6e2241 perf: 二分查找的实现及特性
+pick 8264d17 perf: update git last commit
+s 62a4efd perf: update
+s 992e00c docs: update docs
+pick e764992 perf: update
+```
+
+```bash
+```
+
+
 
 
 
