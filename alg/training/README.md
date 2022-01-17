@@ -3809,3 +3809,114 @@ var jump = function(nums) {
 
 ## 二分查找的实现和特性
 
+二分查找前提
+
+* 目标函数单调性（单调递增或者单调递减）
+* 存在上下界（bounded）
+* 能够通过索引访问（index accessible）
+  
+
+[Fast InvSqrt() 扩展阅读](https://www.beyond3d.com/content/articles/8/)
+
+
+代码实现
+
+```js
+function binarySearch (nums) {
+  let left = 0,
+      right = nums.length - 1;
+  
+  while (left <= right) {
+    const mid = left + ((right - left) >> 1);
+    const num = nums[mid];
+
+    if (num === target) {
+      return mid;
+    }
+    
+    if (num > target) {
+      right = mid - 1;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  return -1;
+}
+```
+
+
+
+[x 的平方根](https://leetcode-cn.com/problems/sqrtx/)（字节跳动、微软、亚马逊在半年内面试中考过）
+
+[有效的完全平方数](https://leetcode-cn.com/problems/valid-perfect-square/)（亚马逊在半年内面试中考过）
+
+```js
+// x 的平方根
+
+/**
+ * 二分查找
+ * y = x ^ 2，(x > 0)：抛物线，在 y 轴右侧单调递增；存在上下界
+ * @param {number} x
+ * @return {number}
+ */
+var mySqrt = function(x) {
+  if (x == 0 || x == 1) return x;
+
+  let left = 1,
+      right = x;
+
+  let mid = 1;
+
+  while (left <= right) {
+    mid = left + ((right - left) >> 1);
+    
+    if (mid * mid > x) {
+      right = mid - 1;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  return right;
+};
+
+
+/**
+ * 牛顿迭代法
+ * @param {number} x
+ * @return {number}
+ */
+var mySqrt = function(x) {
+  let r = x;
+
+  while (r * r > x) {
+    r = ((r + x / r) / 2) | 0;
+  }
+
+  return r;
+};
+```
+
+```js
+// 有效的完全平方数
+
+
+```
+
+
+
+[搜索旋转排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)（Facebook、字节跳动、亚马逊在半年内面试常考）
+
+[搜索二维矩阵](https://leetcode-cn.com/problems/search-a-2d-matrix/)（亚马逊、微软、Facebook 在半年内面试中考过）
+
+[寻找旋转排序数组中的最小值](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/)（亚马逊、微软、字节跳动在半年内面试中
+
+```js
+// 搜索旋转排序数组
+
+
+```
+
+## 动态规划的实现和特性
+
