@@ -450,6 +450,31 @@ pick 1ae4b2e perf: 二分查找的实现及特性
 pick 6e3f289 perf: git 修改最新提交信息
 ```
 
+```bash
+docs: update words
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Mon Jan 17 08:00:10 2022 +0800
+#
+# interactive rebase in progress; onto 50234f8
+# Last command done (1 command done):
+#    reword bb4b896 docs: update words
+# Next commands to do (4 remaining commands):
+#    pick 1ae4b2e perf: 二分查找的实现及特性
+#    pick 6e3f289 perf: git 修改最新提交信息
+# You are currently editing a commit while rebasing branch 'master' on '50234f8'.
+#
+# Changes to be committed:
+#       modified:   alg/training/README.md
+#
+
+->
+
+docs: update word # 保存即可
+```
+
 ### 整理连续多个 commit
 
 ```js
