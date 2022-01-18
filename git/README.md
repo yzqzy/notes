@@ -604,7 +604,97 @@ Successfully rebased and updated refs/heads/master.
 
 ### 合并间隔的 commit
 
+```js
+git log --graph // 查看 Git 提交日志
+```
 
+```js
+git rebase -i [commit_hash]	
+
+// 如果是根 commit 不显示，可以自己添加 commit_hash，或者使用 git rebase -i --root
+```
+
+```js
+pick [commit_hash] // 
+pick [commit_hash]
+s [commit_hash_123]
+
+=>
+
+pick [commit_hash]
+s [commit_hash_123] // 可以自主移动位置
+pick [commit_hash]
+```
+
+### 比较暂存区和 HEAD 文件差异
+
+```js
+git diff --cached
+```
+
+=>
+
+```bash
+diff --git a/git/README.md b/git/README.md
+index fbb6644..ff14cc2 100644
+--- a/git/README.md
++++ b/git/README.md
+@@ -604,6 +604,37 @@ Successfully rebased and updated refs/heads/master.
+
+ ### 合并间隔的 commit
+
++```js
++git log --graph // 查看 Git 提交日志
++```
++
++```js
++git rebase -i [commit_hash]    
++
++// 如果是根 commit 不显示，可以自己添加 commit_hash，或者使用 git rebase -i --root
++```
++
++```js
++pick [commit_hash] // 
++pick [commit_hash]
++s [commit_hash_123]
++
++=>
++
++pick [commit_hash]
++s [commit_hash_123] // 可以自主移动位置
++pick [commit_hash]
++```
++
++### 比较暂存区和 HEAD 文件差异
++
++```js
++git diff --cached // 比较暂存区和 HEAD
++```
+```
+
+### 比较工作区和暂存区文件差异
+
+```js
+git diff 
+```
+
+```bash
+diff --git a/git/README.md b/git/README.md
+index 17423f7..a146534 100644
+--- a/git/README.md
++++ b/git/README.md
+@@ -675,6 +675,7 @@ index fbb6644..ff14cc2 100644
+ ### 比较工作区和暂存区文件差异
+
+ ```js
++git diff
+```
+
+
+
+```js
+git diff -- .\git\README.md // 可以指定文件进行对比
+```
 
 ## Git 多人协作使用场景
 
