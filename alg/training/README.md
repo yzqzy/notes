@@ -3602,13 +3602,124 @@ var largestValues = function(root) {
 ```js
 // 单词接龙
 
+/**
+ * 广度优先搜索
+ * @param {string} beginWord
+ * @param {string} endWord
+ * @param {string[]} wordList
+ * @return {number}
+ */
+const ladderLength = (beginWord, endWord, wordList) => {
+  const words = new Set(wordList);
+  const queue = [];
 
+  queue.push([beginWord, 1]);
+
+  while (queue.length) {
+    const [word, level] = queue.shift();
+    
+    if (word == endWord) return level;
+
+    for (let i = 0; i < word.length; i++) {
+      for (let c = 97; c <= 122; c++) {
+        const newWord = word.slice(0, i) + String.fromCharCode(c) + word.slice(i + 1);
+        
+        if (words.has(newWord)) {
+          queue.push([newWord, level + 1]);
+          words.delete(newWord);
+        }
+      }
+    }
+  }
+
+  return 0;
+};
 ```
 
 ```js
 // 岛屿数量
 
+/**
+ * 深度优先搜索
+ * @param {character[][]} grid
+ * @return {number}
+ */
+var numIslands = function(grid) {
+  let count = 0;
 
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[0].length; j++) {
+      if (grid[i][j] === '1') {
+        count++;
+        trunZero(i, j, grid);
+      }
+    }
+  }
+
+  return count;
+};
+
+function trunZero (i, j, grid) {
+  if (
+    i < 0 || i >= grid.length ||
+    j < 0 || j >= grid[0].length || grid[i][j] === '0'
+  ) return;
+
+  grid[i][j] = '0';
+
+  trunZero(i, j + 1, grid);
+  trunZero(i, j - 1, grid);
+  trunZero(i + 1, j, grid);
+  trunZero(i - 1, j, grid);
+}
+
+
+/**
+ * 广度优先搜索
+ * @param {character[][]} grid
+ * @return {number}
+ */
+const numIslands = (grid) => {
+  const queue = [];
+  
+  let count = 0;
+
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[0].length; j++) {
+      if (grid[i][j] === '1') {
+        count++;
+        grid[i][j] = '0';
+        queue.push([i, j]);
+        turnZero(queue, grid);
+      }
+    }
+  }
+
+  return count;
+}
+
+function turnZero (queue, grid) {
+  const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+  while (queue.length) {
+    const cur = queue.shift();
+
+    for (const dir of dirs) {
+      const x = cur[0] + dir[0];
+      const y = cur[1] + dir[1];
+
+      if (
+        x < 0 || x >= grid.length ||
+        y < 0 || y >= grid[0].length ||
+        grid[x][y] !== '1'
+      ) continue;
+
+      grid[x][y] = '0';
+
+      queue.push([x, y]);
+    }
+  }
+}
 ```
 
 ## 贪心算法的实现和特性
