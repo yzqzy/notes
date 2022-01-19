@@ -749,7 +749,7 @@ git diff [commit_hash] [commit_hash]
 git rm ./README.md
 ```
 
-### 开发过程中临时加需求
+### 开发中临时加塞紧急任务
 
 ```bash
 # 保存当前工作区和暂存区内容，此时工作区和暂存区会恢复到 HEAD
@@ -764,6 +764,40 @@ git stash apply
 # 弹出保存内容，移除栈中信息
 git stash pop
 ```
+
+### 指定不需要 Git 管理文件
+
+.gitignore 
+
+```bash
+# 不管理 js 及其子目录
+*.js
+
+# 不管理 js 子目录
+*.js/ 
+```
+
+> 提交 commit 后，想再忽略一些已经提交的文件，可以这样处理：
+> 把想忽略的文件添加到 .gitignore ；然后通过 `git rm -- cached name_of_file`  的方式删除掉 git 仓库里面无需跟踪的文件。
+
+### 将 git 仓库备份到本地
+
+```bash
+# 备份仓库（哑协议，不存在进度条）
+git clone --bare xxxxxxx/.git test.git
+
+# 备份仓库（智能协议，存在进度条）
+git clone --bare file:///xxxxxxx/.git test2.git
+```
+
+```bash
+# 将本仓库推送到备份仓库
+git remote add test2 file:///xxxxxxx/.test2.git 
+git push --set-upstream test2
+```
+
+> --bare 克隆裸仓库。
+> 备份仓库只克隆版本库(.git)就可以了，节约空间,如果以后想恢复备份的仓库，用版本库就可以恢复出工作目录。
 
 ## Git 多人协作使用场景
 
