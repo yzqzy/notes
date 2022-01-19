@@ -715,15 +715,55 @@ git checkout ./
 ```
 
 > Git 2.23 之后用 git switch 和 git restore 来替代 git checkout 功能。
-> git switch 替换 git checkout 切换分支的功能，git restore 替换对工作区文件进行回复的功能。
+> git switch 替换 git checkout 切换分支的功能，git restore 替换对工作区文件进行恢复的功能。
 
 ### 取消暂存区部分文件更改
 
-
+```js
+git reset HEAD ./styles/style.css
+```
 
 ### 消除最近的几次提交
 
+```js
+git reset --hard [commit_hash] // 强制回退
+```
 
+### 比较不同提交文件差异
+
+```bash
+# 比较 master、develop 分支 README 文件的差异
+git diff master develop ./README.md
+```
+
+```bash
+# 比较不同提交记录文件的差异，可以指定不同分支的 commit
+git diff [commit_hash] [commit_hash]
+```
+
+> master、develop 其实也是一种 commit，指向最近的一次提交。
+
+### 正确删除文件的方法
+
+```bash
+git rm ./README.md
+```
+
+### 开发过程中临时加需求
+
+```bash
+# 保存当前工作区和暂存区内容，此时工作区和暂存区会恢复到 HEAD
+git stash 
+
+# 查看栈中的存储列表
+git stash list
+
+# 弹出保存内容，不移除栈中信息
+git stash apply
+
+# 弹出保存内容，移除栈中信息
+git stash pop
+```
 
 ## Git 多人协作使用场景
 
