@@ -711,7 +711,7 @@ git reset --mixed // 默认参数，把 HEAD，暂存区 修改为 你指定的 
 ### 将工作区恢复为暂存区
 
 ```js
-git checkout // 工作区恢复为暂存区
+git checkout ./
 ```
 
 > Git 2.23 之后用 git switch 和 git restore 来替代 git checkout 功能。
