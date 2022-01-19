@@ -696,6 +696,35 @@ index 17423f7..a146534 100644
 git diff -- .\git\README.md // 可以指定文件进行对比
 ```
 
+### 将暂存区恢复到 HEAD
+
+> 应用场景：已经确定不想保留暂存区的变更，其次工作区还没有改好，这时又想把暂存区恢复到 HEAD。
+
+```js
+git reset HEAD // 重置暂存区内容
+
+git reset --soft // 把 HEAD 指向的 commit 恢复到你指定的 commit，暂存区、工作区不变
+git reset --hard // 把 HEAD，暂存区，工作区 都修改为 你指定的 commit 的时候的文件状态
+git reset --mixed // 默认参数，把 HEAD，暂存区 修改为 你指定的 commit 的时候的文件状态，工作区保持不变 
+```
+
+### 将工作区恢复为暂存区
+
+```js
+git checkout // 工作区恢复为暂存区
+```
+
+> Git 2.23 之后用 git switch 和 git restore 来替代 git checkout 功能。
+> git switch 替换 git checkout 切换分支的功能，git restore 替换对工作区文件进行回复的功能。
+
+### 取消暂存区部分文件更改
+
+
+
+### 消除最近的几次提交
+
+
+
 ## Git 多人协作使用场景
 
 ## Git 集成使用注意点
