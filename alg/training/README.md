@@ -4012,7 +4012,33 @@ var mySqrt = function(x) {
 ```js
 // 有效的完全平方数
 
+/**
+ * 二分查找
+ * @param {number} num
+ * @return {boolean}
+ */
+var isPerfectSquare = function(num) {
+  let left = 0,
+      right = num;
 
+  let mid = 0,
+      square = 0;
+
+  while (left <= right) {
+    mid = left + ((right - left) >> 1);
+    square = mid * mid;
+    
+    if (square > num) {
+      right = mid - 1;
+    } else if (square < num) {
+      left = mid + 1;
+    } else {
+      return true;
+    }
+  }
+
+  return false;
+};
 ```
 
 
