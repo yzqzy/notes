@@ -3338,6 +3338,83 @@ function getCount (nums, target, left, right) {
 
 ```js
 // 电话号码的字母组合
+
+/**
+ * dfs
+ * @param {string} digits
+ * @return {string[]}
+ */
+var letterCombinations = function(digits) {
+  if (digits.length === 0) return [];
+
+  const ans = [];
+
+  const map = new Map([
+    ['2', 'abc'],
+    ['3', 'def'],
+    ['4', 'ghi'],
+    ['5', 'jkl'],
+    ['6', 'mno'],
+    ['7', 'pqrs'],
+    ['8', 'tuv'],
+    ['9', 'wxyz']
+  ]);
+
+  const dfs = (cur, i) => {
+    if (i > digits.length - 1) {
+      ans.push(cur);
+      return;
+    }
+
+    const letters = map.get(digits[i]);
+
+    for (const letter of letters) {
+      dfs(cur + letter, i + 1);
+    }
+  }
+
+  dfs('', 0);
+
+  return ans;
+};
+
+
+/**
+ * bfs
+ * @param {string} digits
+ * @return {string[]}
+ */
+var letterCombinations = function(digits) {
+  if (digits.length === 0) return [];
+
+  const map = new Map([
+    ['2', 'abc'],
+    ['3', 'def'],
+    ['4', 'ghi'],
+    ['5', 'jkl'],
+    ['6', 'mno'],
+    ['7', 'pqrs'],
+    ['8', 'tuv'],
+    ['9', 'wxyz']
+  ]);
+
+  const queue = [''];
+
+  for (let i = 0; i < digits.length; i++) {
+    let size = queue.length;
+
+    for (let j = 0; j < size; j++) {
+      const cur = queue.shift();
+      const letters = map.get(digits[i]);
+
+      for (const l of letters) {
+        queue.push(cur + l);
+      }
+    }
+  }
+
+  return queue;
+};
 ```
 
 
@@ -3346,17 +3423,104 @@ function getCount (nums, target, left, right) {
 
 [二叉树的层次遍历](http://leetcode-cn.com/problems/binary-tree-level-order-traversal/#/description)
 
-[分发饼干](http://leetcode-cn.com/problems/assign-cookies/description/)
+```js
+// N 皇后（困难）
 
-[买卖股票的最佳时机 II](http://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/description/)
+/**
+ * @param {number} n
+ * @return {string[][]}
+ */
+var solveNQueens = function (n) {
+  function isValid(row, col, chessBoard, n) {
 
-[跳跃游戏](http://leetcode-cn.com/problems/jump-game/)
+    for (let i = 0; i < row; i++) {
+      if (chessBoard[i][col] === 'Q') {
+        return false
+      }
+    }
 
-[x 的平方根](http://leetcode-cn.com/problems/sqrtx/)
+    for (let i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
+      if (chessBoard[i][j] === 'Q') {
+        return false
+      }
+    }
 
-[有效的完全平方数](http://leetcode-cn.com/problems/valid-perfect-square/)
+    for (let i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++) {
+      if (chessBoard[i][j] === 'Q') {
+        return false
+      }
+    }
+    return true
+  }
+
+  function transformChessBoard(chessBoard) {
+    let chessBoardBack = []
+    chessBoard.forEach(row => {
+      let rowStr = ''
+      row.forEach(value => {
+        rowStr += value
+      })
+      chessBoardBack.push(rowStr)
+    })
+
+    return chessBoardBack
+  }
+
+  const result = [];
+
+  function backtracing(row, chessBoard) {
+    if (row === n) {
+      result.push(transformChessBoard(chessBoard))
+      return
+    }
+    for (let col = 0; col < n; col++) {
+      if (isValid(row, col, chessBoard, n)) {
+        chessBoard[row][col] = 'Q'
+        backtracing(row + 1, chessBoard)
+        chessBoard[row][col] = '.'
+      }
+    }
+  }
+
+  const chessBoard = new Array(n).fill([]).map(() => new Array(n).fill('.'));
+
+  backtracing(0, chessBoard);
+
+  return result
+};
+```
 
 ```js
+// 二叉树的层次遍历
+
+/**
+ * @param {TreeNode} root
+ * @return {number[][]}
+ */
+var levelOrder = function(root) {
+  if (!root) return [];
+
+  const ans = [];
+
+  const queue = [root];
+
+  while (queue.length) {
+    let len = queue.length;
+
+    ans.push([]);
+
+    while (len--) {
+      const n =  queue.shift();
+
+      ans[ans.length - 1].push(n.val);
+
+      n.left && queue.push(n.left);
+      n.right && queue.push(n.right);
+    }
+  }
+
+  return ans;
+};
 ```
 
 ## 深度/广度 优先搜索的实现和特性
