@@ -3277,6 +3277,63 @@ var subsets = function(nums) {
 
 ```js
 // 多数元素
+
+// 思路1: hashTable
+// 思路2: 排序取中间值
+// 思路3：抵消（栈方法降维）
+// 思路4：分治
+
+/**
+ * 抵消（栈方法降维）
+ * @param {number[]} nums
+ * @return {number}
+ */
+var majorityElement = function(nums) {
+  let x = 0,
+      m = 0;
+
+  for (let n of nums) {
+    if(m === 0) x = n;
+    m += x === n ? 1 : -1;
+  }
+
+  return x;
+};
+
+/**
+ * 分治
+ * @param {number[]} nums
+ * @return {number}
+ */
+var majorityElement = function(nums) {
+  return getMode(nums, 0, nums.length - 1);
+};
+
+function getMode (nums, left, right) {
+  if (left === right) return nums[left];
+
+  const mid = left + ((right - left) >> 1);
+
+  const low = getMode(nums, left, mid),
+        high = getMode(nums, mid + 1, right);
+
+  if (low == high) return low;
+
+  const lowCount = getCount(nums, low, left, right),
+        highCount = getCount(nums, high, left, right);
+
+  return lowCount > highCount ? low : high;
+}
+
+function getCount (nums, target, left, right) {
+  let count = 0;
+
+  for (let i = left; i <= right; i++) {
+    if (nums[i] === target) count++;
+  }
+
+  return count;
+}
 ```
 
 ```js
