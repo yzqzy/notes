@@ -1,6 +1,6 @@
 # Git
 
-## Git 基础
+## 一、Git 基础
 
 ### 基础配置
 
@@ -378,7 +378,7 @@ git diff HEAD HEAD^^ // 比较当前及 HEAD 的前两次提交
 // ~ 和 ^ 两种用法都可以
 ```
 
-## Git 个人开发使用场景
+## 二、Git 个人开发使用场景
 
 ### 删除不需要的分支
 
@@ -799,19 +799,33 @@ git push --set-upstream test2
 > --bare 克隆裸仓库。
 > 备份仓库只克隆版本库(.git)就可以了，节约空间,如果以后想恢复备份的仓库，用版本库就可以恢复出工作目录。
 
-## Git 多人协作使用场景
+## 三、Git 多人协作使用场景
+
+### 多人单分支
+
+#### 多人修改不同文件
+
+```bash
+git clone [ssh_url] [project_name] # 克隆远端仓库，本地创建指定项目名称
+```
+
+```bash
+git config --local user.name "heora" # 设置本地用户名称
+git config --local user.email "yueluo.yang@qq.com" # 设置本地邮箱地址
+git config --local --list # 查看本地配置
+```
 
 
 
-## Git 集成使用注意点
+## 四、Git 集成使用注意点
 
-## Git 与 Gihub 简单同步
+## 五、Git 与 Gihub 简单同步
 
-## Github
+## 六、Github
 
-## Github 团队协作
+## 七、Github 团队协作
 
-## Gitlab 实践
+## 八、Gitlab 实践
 
 
 
