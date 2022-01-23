@@ -4455,13 +4455,167 @@ Divide & Conquer + Optimal substructure，分治 + 最优子结构。
 共性：找到重复子问题。
 差异性：最优子结构、中途可以**淘汰**次优解。
 
-### 相关题目
-
-斐波那契数列
+#### 斐波那契数列
 
 ```js
 // 斐波那契数列是指数级的 2^n，不是 n^2
 
-function ()
+// 无优化
+function fib (n) {
+  if (n <= 2) return n;
+  
+  return fib(n - 1) + fib(n - 2);
+};
+
+// 记忆化搜索
+function fib (n, memo = {}) {
+  if (n <= 2) return n;
+  
+  if (!memo[n]) {
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo);
+  }
+  return memo[n];
+};
+
+// 迭代
+function fib (n) {
+  if (n <= 1) {
+    return n;
+  }
+
+  let first = 1;
+  let second = 2;
+
+  for (let i = 3; i <= n; i++) {
+    let thrid = first + second;
+
+    first = second;
+    second = thrid;
+  }
+
+  return second;
+};
 ```
+
+#### 路径计算问题（二维）
+
+```js
+// opt[i, j] = opt[i + 1, j] + opt[i, j + 1]
+
+// 递推伪代码，状态转移方程（DP 方程、动态规划方程）
+if (a[i, j] === 'blank') {
+  opt[i, j] = opt[i + 1, j] + opt[i, j + 1]
+} else {
+  opt[j, j] = 0;
+}
+```
+
+#### 总结
+
+[MIT 动态规划课程最短路径算法](https://www.bilibili.com/video/av53233912?from=search&seid=2847395688604491997)
+
+**动态规划关键点**
+
+* 最优子结构：  `opt[n] = best_of(opt[n - 1], opt[n - 2], ...)`
+* 存储中间状态： `opt[i]`
+* 递推公式（状态转移方程或 DP 方程）
+  * Fib：`opt[i] = opt[n - 1] + opt[n - 2]`
+  * 二维路径：`opt[i, j] = opt[i + 1, j] + opt[i, j + 1] `
+
+### 相关题目
+
+[不同路径](https://leetcode-cn.com/problems/unique-paths/) （Facebook、亚马逊、微软在半年内面试中考过）
+
+[不同路径 II ](https://leetcode-cn.com/problems/unique-paths-ii/)（谷歌、美团、微软在半年内面试中考过）
+
+[最长公共子序列](https://leetcode-cn.com/problems/longest-common-subsequence/)（字节跳动、谷歌、亚马逊在半年内面试中考过）
+
+
+
+```js
+// 不同路径
+
+/**
+ * 自底向上
+ * @param {number} m
+ * @param {number} n
+ * @return {number}
+ */
+var uniquePaths = function(m, n) {
+  const dp = new Array(m).fill(0).map(() => new Array(n).fill(0));
+
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      if (i == m - 1 || j == n - 1) {
+        dp[i][j] = 1;
+      } else {
+        dp[i][j] = dp[i + 1][j] + dp[i][j + 1];
+      }
+    }
+  }
+
+  return dp[0][0];
+};
+
+/**
+ * 自顶向下
+ * @param {number} m
+ * @param {number} n
+ * @return {number}
+ */
+var uniquePaths = function(m, n) {
+  const dp = new Array(m).fill(0).map(() => new Array(n).fill(0));
+
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i == 0 || j == 0) {
+        dp[i][j] = 1;
+      } else {
+        dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+      }
+    }
+  }
+
+  return dp[m - 1][n - 1];
+};
+
+
+/**
+ * 算法优化
+ * @param {number} m
+ * @param {number} n
+ * @return {number}
+ */
+var uniquePaths = function(m, n) {
+  const dp = new Array(m).fill(0).map(() => new Array(n).fill(0));
+
+  for (let i = 0; i < m; i++) {
+    dp[i][0] = 1;
+  }
+  for (let j = 0; j < n; j++) {
+    dp[0][j] = 1;
+  }
+  for (let i = 1; i < m; i++) {
+    for (let j = 1; j < n; j++) {
+      dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+    }
+  }
+
+  return dp[m - 1][n - 1];
+};
+```
+
+```js
+// 不同路径Ⅱ
+
+
+```
+
+```js
+// 最长公共子序列
+
+
+```
+
+
 

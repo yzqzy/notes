@@ -1,80 +1,33 @@
-class BinaryHeap {
-  constructor (compare) {
-    this.heap = [];
-    this.compare = compare;
-  }
-
-  swap (i1, i2) {
-    [this.heap[i1], this.heap[i2]] = [this.heap[i2], this.heap[i1]];
-  }
-
-  getParentIndex (i) {
-    return (i - 1) >> 1;
-  }
-
-  getLeftIndex (i) {
-    return i * 2 + 1;
-  }
+function fib (n, memo = {}) {
+  if (n <= 2) return n;
   
-  getRightIndex (i) {
-    return i * 2 + 2;
+  if (!memo[n]) {
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo);
+  }
+  return memo[n];
+};
+
+function fib (n) {
+  if (n <= 2) {
+    return n;
   }
 
-  heapifyUp (curIdx) {
-    if (curIdx == 0) return;
+  let first = 1;
+  let second = 2;
 
-    const parentIdx = this.getParentIndex(curIdx);
+  for (let i = 3; i <= n; i++) {
+    let thrid = first + second;
 
-    if (this.compare(this.heap[curIdx], this.heap[parentIdx]) < 0) {
-      this.swap(parentIdx, curIdx);
-      this.heapifyUp(parentIdx);
-    }
+    first = second;
+    second = thrid;
   }
 
-  heapifyDown (curIdx) {
-    const leftIdx = this.getLeftIndex(curIdx),
-          rightIdx = this.getRightIndex(curIdx);
 
-    if (this.compare(this.heap[leftIdx], this.heap[curIdx]) < 0) {
-      this.swap(leftIdx, curIdx);
-      this.heapifyDown(leftIdx);
-    }
-    if (this.compare(this.heap[rightIdx], this.heap[curIdx]) < 0) {
-      this.swap(rightIdx, curIdx);
-      this.heapifyDown(rightIdx);
-    }
-  }
-  
-  insert (val) {
-    this.heap.push(val);
-    this.heapifyUp(this.heap.length - 1);
-  }
+  return second;
+};
 
-  pop () {
-    this.heap[0] = this.heap.pop();
-    this.heapifyDown(0);
-  }
+console.log(fib(3));
+console.log(fib(30));
+console.log(fib(300));
 
-  peek () {
-    return this.heap[0];
-  }
-
-  size () {
-    return this.heap.length;
-  }
-}
-
-const h = new BinaryHeap((a, b) => b - a);
-
-h.insert(3);
-h.insert(2);
-h.insert(1);
-h.insert(0);
-h.insert(0);
-h.insert(0);
-h.insert(15);
-h.insert(5);
-
-h.pop();
-
-console.log(h.heap)
+// 0 1 1 2 3 5 8 13 21 34 55
