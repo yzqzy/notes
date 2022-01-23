@@ -4377,3 +4377,91 @@ var findMin = function(nums) {
 
 ## 动态规划的实现和特性
 
+### 递归和分治
+
+ 递归代码模板
+
+```js
+function recur (level, param) {
+	// terminator
+  if (level > MAX_LEVEL) {
+    // process result
+    return;
+  }
+  
+  // process current logic
+  process(level, param);
+  
+  // drill down
+  recur(level + 1, newParam);
+  
+  // restore current status
+}
+```
+
+
+分治代码模板
+
+```js
+function divide_conquer (problem, param1, param2, ...) {
+	// recursion terminator
+  if (!problem) {
+    // process result
+    return;
+  }
+  
+  // prepare data
+  data = prepare_date(problem);
+  subproblems = split_problem(problem, data);
+  
+  // conquer subproblems
+  subresult1 = divide_conquer(subproblems[0], p1, ...);
+  subresult2 = divide_conquer(subproblems[1], p2, ...);
+  subresult3 = divide_conquer(subproblems[2], p3, ...);
+  
+  // process and generate the final result
+  result = process_result(subresult1, subresult2, subresult3, ...);
+  
+  // revert current level status
+}
+```
+
+**人肉递归低效、很累；**
+
+**找到最近最简方法，将其拆解为可重复解决的问题；**
+
+**数学归纳法思维（抵制人肉递归诱惑）**
+
+
+
+> 本质：寻找重复性 => 计算机指令集只会 if else、for、recur
+
+### 动态规划
+
+动态规划 Dynamic Programming。
+
+Divide & Conquer + Optimal substructure，分治 + 最优子结构。
+
+[动态规划定义](https://en.wikipedia.org/wiki/Dynamic_programming) https://en.wikipedia.org/wiki/Dynamic_programming
+
+```js
+"Simplifying a Complicated problem by breaking it down into simpler sub-problems" (in a recursive manner).
+```
+
+#### 关键点
+
+**动态规划** 和 **递归** 或者 **分治** 没有根本的区别（关键看有无最优子结构）。
+
+共性：找到重复子问题。
+差异性：最优子结构、中途可以**淘汰**次优解。
+
+### 相关题目
+
+斐波那契数列
+
+```js
+// 斐波那契数列是指数级的 2^n，不是 n^2
+
+function ()
+```
+

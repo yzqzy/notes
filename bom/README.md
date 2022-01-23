@@ -265,14 +265,15 @@ CSSOM（CSS树） DOM（DOM树）
 * 文档加载完成及异步资源加载完毕
 
   ```js
-document.readyState = 'complete' 文档加载完成
+  document.readyState = 'complete' 文档加载完成
   ```
 
   async scipt加载并执行完毕，img等资源加载完毕，window.onload事件触发。 
   
+
 async的script标签，可能在文档解析完成后才开始加载。
   async和defer不一定谁先加载，都是异步执行。
-  
+
   所有的异步都执行完毕，window.onload被触发，一直在阻塞中。
 
 ### 2. 页面加载的3个阶段
@@ -594,6 +595,7 @@ NodeJS本质是JavaScript V8引擎，但是执行环境不同（不是浏览器�
   
 
 
+
                 JS                    ->            webAPIs           
     
     Memory Heap     Call Stack                   DOM（document）
@@ -767,7 +769,7 @@ window.parent.obj // 可以访问父级对象属性
 window.top.test() // 可以访问顶级方法
 ```
 
-## navigator与history对象的属性和方法
+## 七、navigator与history对象的属性和方法
 
 ### 1. navigator
 
@@ -820,7 +822,7 @@ IE、mosaik后续都支持frame后，userAgent中的设置已经成为习惯，�
 * history.go() 跳转到某个页面
   参数是number类型，如0为当前页面，可以用来刷新页面。
 
-## screen与location对象的属性和方法
+## 八、screen与location对象的属性和方法
 
 ### 1. screen
 
@@ -875,3 +877,115 @@ window.onhashchange = function () { }
 ```
 hash值改变可以触发该事件处理函数，获取当前hash值，更改当前元素属性值。
 也可以点击某个事件，获取自定义属性，手动设置location.hash值。
+
+## 九、事件循环 Event Loop 
+
+### 进程与线程
+
+CPU 正在进行的一个任务的运行过程的调度单位；
+浏览器是一个多进程的应用程序；
+进程是计算机调度的基本单位。
+
+进程包括线程，线程在进程中运行，每个进程里包含多个线程运行。
+
+> tab 独立进程运行，页面的状态不会受到干扰。
+
+
+
+任务管理器（mac 活动监视器）查看 chrome 的进程情况。浏览器有一个主进程（用户界面），每一个 tab 都会开启进程。
+每一个 tab （非同源）各自有独立的渲染进程（浏览器内核 Render，渲染引擎）、网络进程（网络请求）、GPU 进程（动画与 3D 绘制）、插件进程（devtool）；
+
+### 渲染进程
+
+渲染进程包括 GUI 渲染线程（渲染页面）、JS 引擎线程。GUI 渲染与 JS 引擎线程运行互斥。
+
+#### GUI 渲染线程
+
+* 解析 HTML、CSS
+* 构建 DOM/Render 树
+* 初始布局与绘制
+* 重绘与回流
+
+#### JS 引擎线程
+
+主线程与多个辅助线程配合。
+
+浏览器只有一个 JS 引擎，用来解析 JS 脚本、运行 JS  代码。
+
+#### 渲染与脚本解析执行
+
+JS 引擎运行脚本与 GUI 渲染互斥。JS 引擎任务空闲时，进行 GUI 渲染更新。
+
+
+```html
+<div>Front of you</div>
+<script>while (true) { }</script>
+<div>End of you</div>
+```
+
+脚本和渲染是互斥的。
+
+
+
+```html
+<div>Front of you</div>
+<script>
+	setTimeout(() => {
+  	document.getElementsByTagName('div')[0].innerText = 'Front of me';
+  }, 1000);
+</script>
+<div>End of you</div>
+```
+
+正常运行。
+
+#### 事件
+
+事件触发线程：Event Loop 线程，事件环
+
+事件线程：用户交互事件、setTimeout、Ajax
+
+#### 宏任务与微任务
+
+创建线程的目的是为了实现异步的执行条件。
+
+
+宏任务：
+
+* 宿主提供的异步方法和任务
+* sript、setTimeout、UI 渲染等
+
+微任务：
+
+* 语言标准（ECMA262）提供的 API 运行
+* Promise、MutationObserver
+
+引入微任务：为了处理优先级问题，微任务在当前任务队列执行结束前，会清空微任务。
+
+
+
+<img src="./images/event_loop.png" style="zoom: 60%" />
+
+
+
+### 案例分析
+
+```js
+document.body.style.backgroundColor = 'orange';
+console.log('1');
+
+setTimeout(() => {
+	document.body.style.backgroundColor = 'green';
+  console.log('2');
+}, 100);
+
+Promise.resolve(3).then(num => {
+  document.body.style.backgroundColor = 'purple';
+  console.log(num);
+});
+
+console.log(4);
+
+// orange 1 4 purple 3 green 2
+```
+

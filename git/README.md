@@ -815,7 +815,27 @@ git config --local user.email "yueluo.yang@qq.com" # 设置本地邮箱地址
 git config --local --list # 查看本地配置
 ```
 
+```bash
+git fetch # 拉取远端分支
+```
 
+```bash
+git branch -av # 查看所有分支
+```
+
+```bash
+git merge [remote_branch] # 合并远端分支
+
+or
+
+git pull # 拉取远端分支内容
+```
+
+#### 多人修改同文件
+
+```bash
+
+```
 
 ## 四、Git 集成使用注意点
 
