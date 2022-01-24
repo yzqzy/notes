@@ -4641,6 +4641,17 @@ var uniquePathsWithObstacles = function(obstacleGrid) {
 ```js
 // 最长公共子序列
 
+// s1  s2
+// if (s1[length - 1] != s2[s2.length - 1]) lcs[s1, s2] = max(lcs[s1 - 1, s2], lcs[s1, s2 - 1]);
+// 	lcs[s1, s2] = max(lcs[s1 - 1, s2], lcs[s1, s2 - 1], lcs[s1 - 1, s2 - 1])
+// if (s1[length - 1] == s2[s2.length - 1]) lcs[s1, s2] = lcs[s1 - 1, s2 - 1] + 1
+//  lcs[s1, s2] = max(lcs[s1 - 1, s2], lcs[s1, s2 - 1], lcs[s1 - 1, s2 - 1], lcs[s1 -1, s2 - 1] + 1)
+
+=>
+
+// if (s1[length - 1] != s2[s2.length - 1]) lcs[s1, s2] = max(lcs[s1 - 1, s2], lcs[s1, s2 - 1]);
+// if (s1[length - 1] == s2[s2.length - 1]) lcs[s1, s2] = lcs[s1 - 1, s2 - 1] + 1
+
 
 ```
 
