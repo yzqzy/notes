@@ -596,6 +596,7 @@ NodeJS本质是JavaScript V8引擎，但是执行环境不同（不是浏览器�
 
 
 
+
                 JS                    ->            webAPIs           
     
     Memory Heap     Call Stack                   DOM（document）
@@ -986,6 +987,153 @@ Promise.resolve(3).then(num => {
 
 console.log(4);
 
-// orange 1 4 purple 3 green 2
+// 1 4 purple 3 green 2
+```
+
+```js
+Promise.resolve().then(() => {
+  console.log('p1');
+  
+  setTimeout(() => {
+    console.log('s2');
+  }, 0);
+});
+
+setTimeout(() => {
+	console.log('s1');
+  
+  Promise.resolve().then(() => {
+  	console.log('p2');
+  });
+});
+
+// 第一轮：p1
+// 第二轮：s1 p2
+// 第三轮：s2
+```
+
+```js
+Promise.resolve().then(() => {
+  console.log('p1');
+  
+  setTimeout(() => {
+    console.log('s2');
+  }, 0);
+  setTimeout(() => {
+    console.log('s3');
+  }, 0);
+});
+
+setTimeout(() => {
+	console.log('s1');
+  
+  Promise.resolve()
+    .then(() => {
+      console.log('p2-1');
+    })
+  	.then(() => {
+    	console.log('p2-2');
+  	});
+});
+
+// 第一轮：p1
+// 第二轮：s1 p2-1 p2-2
+// 第三轮：s2
+// 第四轮：s3
+```
+
+```js
+console.log(1);
+
+setTimeout(() => {
+	console.log(2);
+}, 10);
+
+new Promise((resolve) => {
+  console.log(3);
+  resolve('');
+  console.log(4);
+}).then(res => {
+  console.log(5);
+});
+
+console.log(6);
+
+// 1 3 4 6
+// 5
+// 2
+```
+
+```js
+console.log(1);
+
+setTimeout(() => {
+	console.log(2);
+}, 10);
+
+new Promise((resolve) => {
+  console.log(3);
+  console.log(4);
+}).then(res => {
+  console.log(5);
+});
+
+console.log(6);
+
+// 1 3 4 6
+// 2
+```
+
+```js
+console.log(1);
+
+setTimeout(() => {
+	console.log(2);
+}, 10);
+
+new Promise((resolve) => {
+  console.log(3);
+  reject('');
+  console.log(4);
+}).then(res => {
+  console.log(5);
+});
+
+console.log(6);
+
+// 1 3 4 6
+// Uncaught (in promise)
+// 2
+
+// 同步代码 =》微任务代码 => UI 渲染 => 宏任务
+```
+
+```js
+// async/await 其实是 generator + co 的语法糖
+// async 默认会返回一个 promise 实例，await 必须存在于 async 函数中
+
+let res = function () {
+  console.log(1);
+  return new Promise((resolve) => {
+  	console.log(2);
+    resolve(4);
+  });
+}
+
+new Promise(async () => {
+  console.log(3);
+  let test = await res();
+  console.log(test);
+});
+
+console.log(5);
+
+new Promise(() => {
+	console.log(6);
+});
+
+console.log(7);
+
+// 
 ```
 
