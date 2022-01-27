@@ -4512,6 +4512,9 @@ if (a[i, j] === 'blank') {
 
 #### 总结
 
+* 打破思维习惯，形成机器思维
+* 理解复杂逻辑的关键
+
 [MIT 动态规划课程最短路径算法](https://www.bilibili.com/video/av53233912?from=search&seid=2847395688604491997)
 
 **动态规划关键点**
@@ -4652,8 +4655,90 @@ var uniquePathsWithObstacles = function(obstacleGrid) {
 // if (s1[length - 1] != s2[s2.length - 1]) lcs[s1, s2] = max(lcs[s1 - 1, s2], lcs[s1, s2 - 1]);
 // if (s1[length - 1] == s2[s2.length - 1]) lcs[s1, s2] = lcs[s1 - 1, s2 - 1] + 1
 
+/**
+ * @param {string} text1
+ * @param {string} text2
+ * @return {number}
+ */
+var longestCommonSubsequence = function(text1, text2) {
+  const m = text1.length,
+        n = text2.length;
+  
+  const dp = new Array(m + 1).fill(0).map(() => new Array(n + 1).fill(0));
 
+  for (let i = 1; i <= m; i++) {
+    const c1 = text1[i - 1];
+
+    for (let j = 1; j <= n; j++) {
+      const c2 = text2[j - 1];
+
+      if (c1 == c2) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  return dp[m][n];
+};
 ```
+
+
+
+[爬楼梯](https://leetcode-cn.com/problems/climbing-stairs/description/)（阿里巴巴、腾讯、字节跳动在半年内面试常考）
+
+[三角形最小路径和](https://leetcode-cn.com/problems/triangle/description/)（亚马逊、苹果、字节跳动在半年内面试考过）
+
+[最大子序和](https://leetcode-cn.com/problems/maximum-subarray/)（亚马逊、字节跳动在半年内面试常考）
+
+[乘积最大子数组](https://leetcode-cn.com/problems/maximum-product-subarray/description/)（亚马逊、字节跳动、谷歌在半年内面试中考过）
+
+[零钱兑换](https://leetcode-cn.com/problems/coin-change/description/)（亚马逊在半年内面试中常考）
+
+
+
+[打家劫舍](https://leetcode-cn.com/problems/house-robber/)（字节跳动、谷歌、亚马逊在半年内面试中考过）
+
+[打家劫舍 II ](https://leetcode-cn.com/problems/house-robber-ii/description/)（字节跳动在半年内面试中考过）
+
+[买卖股票的最佳时机](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/#/description)（亚马逊、字节跳动、Facebook 在半年内面试中常考）
+
+[买卖股票的最佳时机 II ](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-ii/)（亚马逊、字节跳动、微软在半年内面试中考过）
+
+[买卖股票的最佳时机 III ](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iii/)（字节跳动在半年内面试中考过）
+
+[最佳买卖股票时机含冷冻期](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/)（谷歌、亚马逊在半年内面试中考过）
+
+[买卖股票的最佳时机 IV ](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iv/)（谷歌、亚马逊、字节跳动在半年内面试中考过）
+
+[买卖股票的最佳时机含手续费](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/)
+
+[股票问题系列通解](https://leetcode-cn.com/circle/article/qiAgHn/)https://leetcode-cn.com/circle/article/qiAgHn/
+
+
+
+高级 DP 题目
+
+[完全平方数](https://leetcode-cn.com/problems/perfect-squares/)（亚马逊、谷歌在半年内面试中考过）
+
+[编辑距离](https://leetcode-cn.com/problems/edit-distance/) **（重点）**
+
+[跳跃游戏](https://leetcode-cn.com/problems/jump-game/)（亚马逊在半年内面试中考过）
+
+[跳跃游戏 II ](https://leetcode-cn.com/problems/jump-game-ii/)（亚马逊、华为字节跳动在半年内面试中考过）
+
+[不同路径](https://leetcode-cn.com/problems/unique-paths/)（Facebook、亚马逊、微软在半年内面试中考过）
+
+[不同路径 II ](https://leetcode-cn.com/problems/unique-paths-ii/)（谷歌、美团、微软在半年内面试中考过）
+
+[不同路径      III ](https://leetcode-cn.com/problems/unique-paths-iii/)（谷歌在半年内面试中考过）
+
+[零钱兑换](https://leetcode-cn.com/problems/coin-change/)（亚马逊在半年内面试中常考）
+
+[零钱兑换 II ](https://leetcode-cn.com/problems/coin-change-2/)（亚马逊、字节跳动在半年内面试中考过）
+
+## Trie 树的基本实现和特性
 
 
 
