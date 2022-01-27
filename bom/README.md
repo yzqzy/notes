@@ -971,6 +971,8 @@ JS 引擎运行脚本与 GUI 渲染互斥。JS 引擎任务空闲时，进行 GU
 
 ### 案例分析
 
+#### 案例1
+
 ```js
 document.body.style.backgroundColor = 'orange';
 console.log('1');
@@ -989,6 +991,8 @@ console.log(4);
 
 // 1 4 purple 3 green 2
 ```
+
+#### 案例2
 
 ```js
 Promise.resolve().then(() => {
@@ -1041,6 +1045,8 @@ setTimeout(() => {
 // 第三轮：s2
 // 第四轮：s3
 ```
+
+#### 案例3
 
 ```js
 console.log(1);
@@ -1108,9 +1114,13 @@ console.log(6);
 // 同步代码 =》微任务代码 => UI 渲染 => 宏任务
 ```
 
+#### 案例4
+
 ```js
 // async/await 其实是 generator + co 的语法糖
+
 // async 默认会返回一个 promise 实例，await 必须存在于 async 函数中
+// await test() => test().then(res => {});
 
 let res = function () {
   console.log(1);
@@ -1134,6 +1144,204 @@ new Promise(() => {
 
 console.log(7);
 
-// 
+// 同步任务：3 1 2 5 6 7
+// 微任务：4
 ```
+
+```js
+let res = function () {
+  console.log(1);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+   		new Promise((resolve) => {
+        console.log(2);
+        
+        setTimeout(() => {
+          console.log(3);
+        }, 0);
+      });
+    }, 	0);
+    resolve(5);
+  });
+}
+
+new Promise(async () => {
+  setTimeout(() => {
+    Promise.resolve().then(() => {
+      console.log(4);
+    });
+  }, 0);
+  let test = await res();
+  console.log(test);
+});
+
+setTimeout(() => {
+	console.log(6);
+}, 0);	
+
+new Promise(() => {
+	setTimeout(() => {
+    console.log(7);
+  }, 0);
+});
+
+console.log(8);
+
+// 1 8
+// 5
+// 4
+// 2
+// 6
+// 7
+// 3
+```
+
+#### 案例5
+
+```js
+const oBtn = document.getElementById('btn');
+
+oBtn.addEventListener('click', () => {
+  console.log('1');
+  
+  Promise.resolve('m1').then(str => {
+    console.log(str);
+  });
+}, false);
+
+oBtn.addEventListener('click', () => {
+  console.log('2');
+  
+  Promise.resolve('m2').then(str => {
+    console.log(str);
+  });
+});
+
+oBtn.click();
+
+// 1 2
+// m1 m2
+```
+
+```js
+const handler1 = () => {
+  console.log('1');
+  
+  Promise.resolve('m1').then(str => {
+    console.log(str);
+  });
+}
+
+const handler2 = () => {
+  console.log('2');
+  
+  Promise.resolve('m2').then(str => {
+    console.log(str);
+  });
+}
+
+
+handler1();
+handler2();
+
+// 1 2
+// m1 m2
+```
+
+```js
+const oBtn = document.getElementById('btn');
+
+oBtn.addEventListener('click', () => {
+  console.log('1');
+  
+  Promise.resolve('m1').then(str => {
+    console.log(str);
+  });
+}, false);
+
+oBtn.addEventListener('click', () => {
+  console.log('2');
+  
+  Promise.resolve('m2').then(str => {
+    console.log(str);
+  });
+});
+
+// 特殊情况 ☆
+// 用户点击按钮触发会执行两次事件循环
+// JS 程序触发只会执行一次事件循环，相当于同步执行两个回调函数，添加微任务
+
+// 1 m1
+// 2 m2
+
+// 执行栈
+//  script
+//  addEvent1 cb -> 1
+//	m1Promise.then cb -> m1
+//  addEvent2 cb -> 2
+//  m2Promise.then cb -> m2
+
+// 宏任务
+// 	addEvent1
+//	  addEvent1 cb
+//  addEvent2
+//	  addEvent2 cb
+// 微任务
+// 	m1Promise
+//		m1Promise.then cb
+//  m2Promise
+//    m2Promise.then cb
+```
+
+```js
+const oBtn = document.getElementById('btn');
+
+oBtn.addEventListener('click', () => {
+  setTimeout(() => {
+  	console.log('1');
+  }, 0);
+  
+  Promise.resolve('m1').then(str => {
+    console.log(str);
+  });
+}, false);
+
+oBtn.addEventListener('click', () => {
+  setTimeout(() => {
+  	console.log('2');
+  }, 0);
+  
+  Promise.resolve('m2').then(str => {
+    console.log(str);
+  });
+});
+
+// m1 m2
+// 1 2
+
+// 执行栈
+// 	script
+//  addEvent1 cb => 
+//	m1Promise.then cb => m1
+//  addEvent2 cb
+//  m2Promise.then cb => m2
+//  setTimeout1
+//  setTimeout2
+// 宏任务
+//  addEvent1
+// 		addEvent1 cb
+// 	addEvent2
+//		addEvent2 cb
+//  setTimeout1
+//		setTimeout1 cb
+//  setTimeout2
+//		setTimeout2 cb
+// 微任务
+//  m1Promise
+//		m1Promise.then cb
+//	m2Promise
+//  	m2Promise.then cb
+```
+
+#### 案例6
 
