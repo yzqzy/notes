@@ -1900,3 +1900,212 @@ export function nextTick (cb?: Function, ctx?: Object) {
 
 ### setImmediate 和 setTimeout
 
+#### setImmediate
+
+该特性是非标准的，尽量不要在生产环境使用它。
+
+该方法用来把一些需要长时间运行的操作放到一个回调函数中，在浏览器完成后面的其他语句后，就立刻执行这个回调函数。
+
+> 该方法可能不会成为标准，目前只有最新版本的 Internet Explorer 和 Node.js 0.10+ 实现了该方法。
+
+
+
+```js
+setImmediate(() => {
+	console.log('over'); 
+  console.log('over'); 
+  console.log('over'); 
+  console.log('over'); 
+});
+
+console.log('starting');
+
+// starting
+// over
+// over
+// over
+```
+
+
+```js
+const immediateId = setImmediate(func, [ param1, param2, ... ]);
+                                        
+// Immediate {
+//   _idleNext: null,
+//   _idlePrev: null,
+//   _onImmediate: [Function (anonymous)],
+//   _argv: undefined,
+//   _destroyed: false,
+//   [Symbol(refed)]: true,
+//   [Symbol(asyncId)]: 2,
+//   [Symbol(triggerId)]: 1
+// }
+```
+
+immediateId 是 setImmediate 方法设置的唯一 ID，可以作为 window.clearImmediate 的参数。
+
+该方法可以替代 setTimeout(fn, 0) 执行繁重的操作。
+
+#### setTimeout
+
+```js
+const timeoutId = setTimeout(function[, delay, arg1, arg2, ...]);
+```
+
+delay 延迟的毫秒数，函数的调用会在延迟之后发生。默认为 0，尽快执行。
+
+> setTimeout 实际延迟比设定值更久，最小延迟 >= 4ms。浏览器中，setTimeout / setInternal 的最小间隔是 4 ms。
+> 通常是由于函数嵌套导致，或者是由于已经执行的 setInternal 的回调函数阻塞导致。
+
+未被激活的 tabs 的定时最小延迟 >= 1000 ms。1000 ms 的间隔值可以通过 dom.min_background_timeout_value 改变。
+
+Firefox 从 version 5 开始采用这种机制，chrome 从 version 11 开始采用。
+
+Android 版本的 firefox 对未被激活的后台 tabs 使用 15 min 的最小延迟间隔时间，并且这些 tabs 也能完全不被加载。
+
+> 当 Web Audio API AudioContext 正在播放音频时，Firefox 50 不会再限制后台 tabs 的加载。后续的 Firefox 51 版本，即使在没有音频播放的时候，也不再限制后台 tabs 的加载。
+
+#### 两者对比
+
+https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/#setimmediate-vs-settimeout
+
+```js
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+setImmediate(() => {
+  console.log('setImmediate');
+});
+
+// setImmediate
+// setTimeout
+```
+
+```js
+setImmediate(() => {
+  console.log('setImmediate');
+});
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+// setTimeout
+// setImmediate
+```
+
+setImmediate 和 setTimeout 是相似的
+
+* setImmediate 在本次的 poll 阶段完成时执行
+* setTimeout 在设置时间结束时执行
+
+它们的执行顺序依赖于 context，如果它们都存在于主模块，它们的执行时机被进程性能影响。
+所以上述代码的执行顺序其实是不能够被确定的，它们会被进程性能所影响。
+
+setImmediate 相对于 setTimeout 的优势是，如果当前执行在 I/O 循环，setImmediate 会在所有 timers 执行之前执行。
+
+```js
+const fs = require('fs');
+
+fs.readFile(__filename, () => {
+  setTimeout(() => {
+    console.log('timeout');
+  }, 0);
+  setImmediate(() => {
+    console.log('immediate');
+  });
+});
+```
+
+此时执行顺序是固定的，setImmediate 会优先于 setTimeout。
+
+### MessageChannel 与 postMessage
+
+Channel Messaging API 的 MessageChannel 接口允许我们创建一个新的消息通道，并通过它的两个 MessagePort 属性发送数据。
+
+> 此特性在 Web Worker 中可用。
+
+```js
+const channel = new MessageChannel();
+
+console.log(channel);
+
+// MessageChannel {
+//   port1: MessagePort [EventTarget] {
+//     active: true,
+//     refed: false,
+//     [Symbol(kEvents)]: SafeMap(2) [Map] {
+//       'newListener' => [Object],
+//       'removeListener' => [Object]
+//     },
+//     [Symbol(events.maxEventTargetListeners)]: 10,
+//     [Symbol(events.maxEventTargetListenersWarned)]: false,
+//     [Symbol(kNewListener)]: [Function (anonymous)],
+//     [Symbol(kRemoveListener)]: [Function (anonymous)],
+//     [Symbol(nodejs.internal.kCurrentlyReceivingPorts)]: undefined
+//   },
+//   port2: MessagePort [EventTarget] {
+//     active: true,
+//     refed: false,
+//     [Symbol(kEvents)]: SafeMap(2) [Map] {
+//       'newListener' => [Object],
+//       'removeListener' => [Object]
+//     },
+//     [Symbol(events.maxEventTargetListeners)]: 10,
+//     [Symbol(events.maxEventTargetListenersWarned)]: false,
+//     [Symbol(kNewListener)]: [Function (anonymous)],
+//     [Symbol(kRemoveListener)]: [Function (anonymous)],
+//     [Symbol(nodejs.internal.kCurrentlyReceivingPorts)]: undefined
+//   }
+// }
+
+const { port1, port2 } = channel;
+
+console.log(port1);
+console.log(port2);
+
+// MessagePort {onmessage: null, onmessageerror: null}
+// MessagePort {onmessage: null, onmessageerror: null}
+```
+
+MessageChannel 继承于 MessagePort 构造函数。MessagePort 原型上存在 postMessage 方法。
+
+```html
+<div id="J-msg1">No Message</div>
+<button id="J-btn1">Send Message</button>
+
+<div id="J-msg2">No Message</div>
+<button id="J-btn2">Send Message</button>
+
+
+<script>
+  const oMsg1 = document.querySelector('#J-msg1'),
+        oMsg2 = document.querySelector('#J-msg2'),
+        oBtn1 = document.querySelector('#J-btn1'),
+        oBtn2 = document.querySelector('#J-btn2');
+
+
+  const channel = new MessageChannel();
+  const { port1, port2 } = channel;
+
+  oBtn1.addEventListener('click', sendMessage1, false);
+  oBtn2.addEventListener('click', sendMessage2, false);
+
+  port1.onmessage = getMessage1;
+  port2.onmessage = getMessage2;
+
+  function sendMessage1 () {
+    port1.postMessage('I am PORT-1');
+  }
+  function sendMessage2 () {
+    port2.postMessage('I am PORT-2');
+  }
+
+  function getMessage1 (e) {
+    oMsg1.textContent = e.data;
+  }
+  function getMessage2 (e) {
+    oMsg2.textContent = e.data;
+  }
+</script>
+```
+
