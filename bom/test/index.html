@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+</head>
+<body>
+
+  <div id="J-msg1">No Message</div>
+  <button id="J-btn1">Send Message</button>
+
+  <div id="J-msg2">No Message</div>
+  <button id="J-btn2">Send Message</button>
+
+
+  <script>
+    const oMsg1 = document.querySelector('#J-msg1'),
+          oMsg2 = document.querySelector('#J-msg2'),
+          oBtn1 = document.querySelector('#J-btn1'),
+          oBtn2 = document.querySelector('#J-btn2');
+
+
+    const channel = new MessageChannel();
+    const { port1, port2 } = channel;
+
+    oBtn1.addEventListener('click', sendMessage1, false);
+    oBtn2.addEventListener('click', sendMessage2, false);
+
+    port1.onmessage = getMessage1;
+    port2.onmessage = getMessage2;
+
+    function sendMessage1 () {
+      port1.postMessage('I am PORT-1');
+    }
+    function sendMessage2 () {
+      port2.postMessage('I am PORT-2');
+    }
+
+    function getMessage1 (e) {
+      oMsg1.textContent = e.data;
+    }
+    function getMessage2 (e) {
+      oMsg2.textContent = e.data;
+    }
+  </script>
+  
+</body>
+</html>
