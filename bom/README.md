@@ -1717,7 +1717,7 @@ console.log(8);
 链式操作
 
 ```js
-const lazyMan = function (name) {
+const LazyMan = function (name) {
   console.log(`Hi i am ${ name }`);
   
   function _eat (food) {
@@ -1731,18 +1731,172 @@ const lazyMan = function (name) {
       setTimeout(() => {
         console.log(`等待了${ timeout }秒...`);
         callbacks.forEach(cb => cb());
-      }, timeout);
+      }, timeout * 1000);
+      return this;
+    }
+    
+    eat (food) {
+      callbacks.push(_eat.bind(null, food));
       return this;
     }
   }
   
-  eat (food) {
-    callabcks.push(_eat.bind(null, food));
-    return this;
+  return new F();
+}
+
+LazyMan('Tony').sleep(5).eat('lunch').eat('fish');
+// Hi i am Tony
+// 等待了5秒...
+// I am eating lunch
+// I am eating finsh
+```
+
+### 宏任务与微任务
+
+新版 nodejs，11 及以上版本与浏览器事件环的执行结果是一致的，但也存在很多不同点。
+
+
+**宏任务 MacroTask**
+
+* script /  ui render
+* setTimeout
+* setInternal
+* setImmediate
+  * IE 新版本浏览器 edge
+  * NodeJS 0.10+ 版本
+* messageChannel / requestAnimationFrame 
+* 用户交互事件
+* ajax
+
+**微任务 MicroTask**
+
+* promise.then
+* mutationObserver
+* process.nextTick
+  * node 环境下的方法
+  * vuejs 存在 $nextTick 方法，存在其内部实现
+
+
+
+vue，nextTick 实现
+
+
+```js
+/* @flow */
+/* globals MutationObserver */
+
+import { noop } from 'shared/util'
+import { handleError } from './error'
+import { isIE, isIOS, isNative } from './env'
+
+export let isUsingMicroTask = false // 是否使用微任务
+
+const callbacks = []
+let pending = false
+
+function flushCallbacks () {
+  pending = false
+  const copies = callbacks.slice(0)
+  callbacks.length = 0
+  for (let i = 0; i < copies.length; i++) {
+    copies[i]()
   }
 }
 
-LazyMan('Tony').sleep(10).eat('lunch');
-// Hi i am Tony
+// Here we have async deferring wrappers using microtasks.
+// In 2.5 we used (macro) tasks (in combination with microtasks).
+// However, it has subtle problems when state is changed right before repaint
+// (e.g. #6813, out-in transitions).
+// Also, using (macro) tasks in event handler would cause some weird behaviors
+// that cannot be circumvented (e.g. #7109, #7153, #7546, #7834, #8109).
+// So we now use microtasks everywhere, again.
+// A major drawback of this tradeoff is that there are some scenarios
+// where microtasks have too high a priority and fire in between supposedly
+// sequential events (e.g. #4521, #6690, which have workarounds)
+// or even between bubbling of the same event (#6566).
+let timerFunc
+
+// The nextTick behavior leverages the microtask queue, which can be accessed
+// via either native Promise.then or MutationObserver.
+// MutationObserver has wider support, however it is seriously bugged in
+// UIWebView in iOS >= 9.3.3 when triggered in touch event handlers. It
+// completely stops working after triggering a few times... so, if native
+// Promise is available, we will use it:
+/* istanbul ignore next, $flow-disable-line */
+if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  const p = Promise.resolve()
+  timerFunc = () => {
+    p.then(flushCallbacks)
+    // In problematic UIWebViews, Promise.then doesn't completely break, but
+    // it can get stuck in a weird state where callbacks are pushed into the
+    // microtask queue but the queue isn't being flushed, until the browser
+    // needs to do some other work, e.g. handle a timer. Therefore we can
+    // "force" the microtask queue to be flushed by adding an empty timer.
+    if (isIOS) setTimeout(noop)
+  }
+  isUsingMicroTask = true
+} else if (!isIE && typeof MutationObserver !== 'undefined' && (
+  isNative(MutationObserver) ||
+  // PhantomJS and iOS 7.x
+  MutationObserver.toString() === '[object MutationObserverConstructor]'
+)) {
+  // Use MutationObserver where native Promise is not available,
+  // e.g. PhantomJS, iOS7, Android 4.4
+  // (#6466 MutationObserver is unreliable in IE11)
+  let counter = 1
+  const observer = new MutationObserver(flushCallbacks)
+  const textNode = document.createTextNode(String(counter))
+  observer.observe(textNode, {
+    characterData: true
+  })
+  timerFunc = () => {
+    counter = (counter + 1) % 2
+    textNode.data = String(counter)
+  }
+  isUsingMicroTask = true
+} else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
+  // Fallback to setImmediate.
+  // Technically it leverages the (macro) task queue,
+  // but it is still a better choice than setTimeout.
+  timerFunc = () => {
+    setImmediate(flushCallbacks)
+  }
+} else {
+  // Fallback to setTimeout.
+  timerFunc = () => {
+    setTimeout(flushCallbacks, 0)
+  }
+}
+
+export function nextTick (cb?: Function, ctx?: Object) {
+  let _resolve
+  callbacks.push(() => {
+    if (cb) {
+      try {
+        cb.call(ctx)
+      } catch (e) {
+        handleError(e, ctx, 'nextTick')
+      }
+    } else if (_resolve) {
+      _resolve(ctx)
+    }
+  })
+  if (!pending) {
+    pending = true
+    timerFunc()
+  }
+  // $flow-disable-line
+  if (!cb && typeof Promise !== 'undefined') {
+    return new Promise(resolve => {
+      _resolve = resolve
+    })
+  }
+}
 ```
+
+> Promise > MutationObserver > setImmediate > setTimeout
+
+> vue 1.0 版本还用到 MessageChannel，当前版本使用 MutationObsever。
+
+### setImmediate 和 setTimeout
 
