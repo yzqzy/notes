@@ -1546,7 +1546,203 @@ console.log('13');
 #### 案例10
 
 ```js
+async function async1 () {
+  console.log('a1 start');
+  await async2();
+  console.log('a1 end');
+}
+
+async function async2 () {
+  console.log('async2');
+}
+
+console.log('script start');
+
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+async1();
+
+new Promise((resolve) => {
+	console.log('promise1');
+  resolve();
+}).then(() => {
+  console.log('promise2');
+});
+
+console.log('script end');
+
+// script start、a1 start、async2、promise1、script end
+// a1 end、promise2
+// setTimeout
 ```
 
+```js
+async function async1 () {
+  console.log('a1 start');
+  await async2();
+  console.log('a1 end');
+}
 
+async function async2 () {
+	new Promise((resolve) => {
+    console.log('promise1');
+    resolve();
+  }).then(() => {
+    console.log('promise2');
+  });
+}
+
+console.log('script start');
+
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+async1();
+
+new Promise((resolve) => {
+	console.log('promise3');
+  resolve();
+}).then(() => {
+  console.log('promise4');
+});
+
+console.log('script end');
+
+// script start、a1 start、promise1、promise3、script end
+// promise2、a1 end、promise4 // 微任务的添加顺序和执行顺序有关，a1 end 添加顺序晚于 promise2
+// setTimeout
+```
+
+```js
+async function async1 () {
+  console.log('a1 start');
+  await async2();
+  /**
+   * awaitPromsie
+   * async2().then(() => {
+   * 	setTimeout(() => {
+   *   console.log('setTimeout1');
+   *  })
+   * }) 
+   */
+  setTimeout(() => {
+    console.log('setTimeout1');
+  })
+}
+
+async function async2 () {
+  setTimeout(() => {
+    console.log('setTimeout2');
+  }, 0);
+}
+
+console.log('script start');
+
+setTimeout(() => {
+  console.log('setTimeout3');
+}, 0);
+
+async1();
+
+new Promise((resolve) => {
+	console.log('promise1');
+  resolve();
+}).then(() => {
+  console.log('promise2');
+});
+
+console.log('script end');
+
+// 执行栈
+// script start
+// a1 start
+// promise1
+// script end
+// // awaitPromsie.then cb
+// promsie2.then -> promise2
+// setTimeout3
+// setTimeout2
+// setTimeout1
+
+// 宏任务
+//	setTimeout3
+//		setTimeout3 cb
+//  setTimeout2
+//		setTimeout2 cb
+//  setTimeout1
+//		setTimeout1 cb
+//  
+// 微任务
+//	awaitPromsie
+//  promsie2
+//	  promsie2.then cb
+```
+
+#### 案例11
+
+```js
+var promise = new Promise((resolve) => {
+  console.log(1);
+  resolve();
+});
+
+setTimeout(() => {
+  console.log(2);
+});
+
+promise.then(() => {
+  console.log(3);
+});
+
+var promise2 = getPromise();
+
+async function getPromise () {
+  console.log(5);
+  await promise;
+  console.log(6);
+}
+
+console.log(8);
+
+// 1 5 8 // promise 变量是已经执行过的变量，不会反复执行
+// 3 6
+// 2
+```
+
+#### 案例12
+
+链式操作
+
+```js
+const lazyMan = function (name) {
+  console.log(`Hi i am ${ name }`);
+  
+  function _eat (food) {
+    console.log(`I am eating ${ food }`);
+  }
+  
+  const callbacks = [];
+  
+  class F {
+    sleep (timeout) {
+      setTimeout(() => {
+        console.log(`等待了${ timeout }秒...`);
+        callbacks.forEach(cb => cb());
+      }, timeout);
+      return this;
+    }
+  }
+  
+  eat (food) {
+    callabcks.push(_eat.bind(null, food));
+    return this;
+  }
+}
+
+LazyMan('Tony').sleep(10).eat('lunch');
+// Hi i am Tony
+```
 
