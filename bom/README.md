@@ -597,6 +597,7 @@ NodeJS本质是JavaScript V8引擎，但是执行环境不同（不是浏览器�
 
 
 
+
                 JS                    ->            webAPIs           
     
     Memory Heap     Call Stack                   DOM（document）
@@ -879,7 +880,7 @@ window.onhashchange = function () { }
 hash值改变可以触发该事件处理函数，获取当前hash值，更改当前元素属性值。
 也可以点击某个事件，获取自定义属性，手动设置location.hash值。
 
-## 九、事件循环 Event Loop 
+## 九、事件环 Event Loop 
 
 ### 进程与线程
 
@@ -1344,4 +1345,208 @@ oBtn.addEventListener('click', () => {
 ```
 
 #### 案例6
+
+```js
+console.log('start');
+
+const interval = setInterval(() => {
+	console.log('setInterval');
+}, 0);
+
+// setTimout1
+setTimeout(() => {
+	console.log('setTimeout1');
+  Promise.resolve()
+  	// promise3
+  	.then(() => {
+    	console.log('promise 3');
+  	})
+    // promise4
+  	.then(() => {
+    	console.log('promise 4');
+  	})
+  	// promise5
+  	.then(() => {
+    	// setTimout2
+    	setTimeout(() => {
+      	console.log('setTimeout2');
+        // promise6
+        Promise.resolve()
+        	.then(() => {
+          	console.log('promise 5');
+        	})
+        	// promise7
+        	.then(() => {
+          	console.log('promise 6');
+        	})
+        	// promise8
+        	.then(() => {
+          	clearInterval(interval);
+        	})
+      }, 0);
+  	})
+}, 0);
+
+Promise.resolve()
+	// promise1
+	.then(() => {
+  	console.log('promise 1');
+	})
+	// promise2
+	.then(() => {
+  	console.log('promise 2');
+	});
+
+// 执行栈
+//  script
+//  start
+//  promise1
+//  promise2
+//	setInterval cb => setInterval
+//  setTimeout1 cb => setTimeout1
+//  promise3 cb => promise3
+//  promise4 cb => promise4
+//  setInterval cb => setInterval
+//  setTimeout2 cb => setTimeout2
+//  promise6 cb => promise5
+//  promise7 cb => promise7
+//  promise8 cb => cleartInterval
+
+// 宏任务
+//	setInterval
+//		setInterval cb
+// 	setTimeout1
+//		setTimeout1 cb
+//	setInterval
+//		setInterval cb
+//  setTimeout2
+//		setTimeout2 cb
+//	setInterval
+//		setInterval cb
+// 	
+
+// 微任务
+//	promise1
+//  	promise1.then cb
+//  promise2
+//		promise2.then cb
+//  promise3
+//		promise3.then cb
+//  promise4
+//		promise4.then cb
+//  promise5
+//		promise5.then cb
+//  promise6
+//		promise6.then cb
+//  promise7
+//		promise7.then cb
+//  promise8
+//		promise8.then cb
+```
+
+#### 案例7
+
+```js
+setTimeout(() => {
+	console.log('setTimeout1');
+  setTimeout(() => {
+  	console.log('setTimeout3');
+  }, 1000);
+  Promise.resolve().then(() => {
+  	console.log('then3');
+  });
+}, 1000);
+Promise.resolve().then(() => {
+	console.log('then1');
+  console.log('then4');
+  Promise.resolve().then(() => console.log('then6'));
+});
+Promise.resolve().then(() => {
+	console.log('then2');
+  console.log('then5');
+  setTimeout(() => {
+  	console.log('setTimeout2');
+  }, 1000);
+});
+
+// then1 then4 then2 then5 then6 本轮循环产生的微任务都会在本次循环清空
+// setTimeout1 then3
+// setTimeout2
+// setTimeout3
+```
+
+#### 案例8
+
+```js
+setTimeout(() => {
+  console.log(1);
+}, 0);
+
+new Promise((resolve) => {
+  console.log(2);
+  resolve();
+}).then(() => {
+  console.log(3);
+}).then(() => {
+  console.log(4);
+});
+
+console.log(6);
+
+// new Promise 内部的代码相当于同步执行，Promise.then 才会产生微任务
+// 2 6 3 4
+// 1
+```
+
+#### 案例9
+
+```js
+console.log('1');
+setTimeout(() => {
+	console.log('2');
+  new Promise((resolve) => {
+    console.log('3');
+    resolve();
+  }).then(() => {
+  	console.log('4');
+  });
+});
+new Promise((resolve) => {
+	console.log('5');
+  resolve();
+}).then(() => {
+  console.log('6');
+})
+setTimeout(() => {
+  console.log('7');
+});
+setTimeout(() => {
+  console.log('8');
+  new Promise((resolve) => {
+  	console.log('9');
+    resolve();
+  }).then(() => {
+  	console.log('10');
+  });
+});
+new Promise((resolve) => {
+  console.log('11');
+  resolve();
+}).then(() => {
+  console.log('12');
+});
+console.log('13');
+
+// 1 5 11 13 6 12
+// 2 3 4
+// 7 
+// 8 9 10
+```
+
+#### 案例10
+
+```js
+```
+
+
 
