@@ -598,6 +598,8 @@ NodeJS本质是JavaScript V8引擎，但是执行环境不同（不是浏览器�
 
 
 
+
+
                 JS                    ->            webAPIs           
     
     Memory Heap     Call Stack                   DOM（document）
@@ -2230,5 +2232,26 @@ requestAnimationFrame VS setInterval
 
 ### MutationObserver 与 nextTick
 
+`MutationObserver` 接口提供了监视对 DOM 树所做更改的能力。
 
+它被设计为旧的 MutationEvents 功能的替代品，该功能是 DOM3 Events 规范的一部分。
+
+* MutationObserver 构造函数
+  * 创建并返回一个新的 MutationObserver，它会在指定的 DOM 发生变化时被调用。
+* disconnect
+  * 阻止 MutationObserver 实例继续接收通知，直到再次调用 observe 方法，该观察者对象包含的回调函数都不会再被调用。 
+* observe
+  * 配置 MutationObserver 在 DOM 更改匹配给定选项时，通过其回调函数开始接收通知。
+* takeRecords
+  * 从 MutationObserver 的通知队列中删除所有待处理的通知，并将它们返回到 MutationRecord 对象的新 Array 中。
+
+
+
+mutate v，mutation 变化。
+observe v，observer n. 观察者。
+
+object => ob => 相反的，对面的
+oppsite => 相反的 => ob op => 对面的，相反的
+ject => 物体，object => 对面的物体 => 对象，物件
+ob serve/keep=> 看对面的东西，observe 观察
 

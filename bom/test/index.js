@@ -106,19 +106,31 @@
 
 // window.requestAnimationFrame(step);
 
-const oElem = document.getElementById('box');
+// const oElem = document.getElementById('box');
 
-let px = 0;
-let t = null
+// let px = 0;
+// let t = null
 
-function step () {
-  px++;
+// function step () {
+//   px++;
 
-  oElem.style.transform = `translateX(${ px }px)`;
+//   oElem.style.transform = `translateX(${ px }px)`;
 
-  if (px >= 200) {
-    clearInterval(t);
-  }
+//   if (px >= 200) {
+//     clearInterval(t);
+//   }
+// }
+
+// t = setInterval(step, 1000 / 60);
+
+
+function cb (mutationList, observer) {
+  console.log(mutationList, observer);
 }
 
-t = setInterval(step, 1000 / 60);
+const oTarget = document.getElementById('app');
+const observer = new MutationObserver(cb);
+
+observer.observe(oTarget, {
+  attributes: true, // 监视元素属性变更
+});
