@@ -2109,3 +2109,126 @@ MessageChannel 继承于 MessagePort 构造函数。MessagePort 原型上存在 
 </script>
 ```
 
+
+
+模块化案例
+
+```js
+// demo.js
+
+const channel = new MessageChannel();
+
+const { port1, port2 } = channel;
+
+const oTitle = document.querySelector('h1');
+
+
+port1.onmessage = (e) => {
+  oTitle.textContent = e.data;
+  
+  console.log('dom rendering');
+
+  port1.postMessage('dom rendered');
+}
+
+export default port2;
+```
+
+```js
+// index.js
+
+import port2 from './demo.js';
+
+;(() => {
+  port2.postMessage('This is new title');
+
+  port2.onmessage = (e) => {
+    console.log(e.data);
+  }
+})();
+```
+
+```html
+<h1>Title</h1>
+
+<script type="module" src="./index.js"></script>
+```
+
+### requestAnimationFrame 与 setInterval
+
+`window.requestAnimationFrame() `要求浏览器在下次重绘之前调用指定的回调函数更新动画。该方法需要传入一个回调函数作为参数，该回调函数会在浏览器下一次重绘之前执行。
+
+> 如果你想在浏览器下一次重绘之前继续更新下一帧动画，那么回调函数自身必须再次调用 window.requestAnimationFrame()。
+
+
+
+```html
+<div id="box" style="width: 100px; height: 100px; background-color: red;"></div>
+
+<script type="module" src="./index.js"></script>
+```
+
+```js
+// index.js
+
+const oElem = document.getElementById('box');
+
+let start;
+
+function step (timestamp) {
+  if (start === undefined) start = timestamp;
+    
+  const elapsed = timestamp - start;
+
+  oElem.style.transform = `translateX(${ Math.min(0.1 * elapsed, 200) }px)`;
+
+  if (elapsed < 2000) {
+    window.requestAnimationFrame(step);
+  }
+}
+
+window.requestAnimationFrame(step);
+```
+
+
+回调函数会被传入 `DOMHighResTimeStamp`  参数，`DOMHighResTimeStamp`  指示当前 `requestAnimationFrame()`  排序的回调函数被触发的时间。在同一帧中的多个回调函数，它们每一个都会接收到一个相同的时间戳，即使在计算上一个回调函数的工作负载期间已经消耗了一些时间。该时间戳是一个十进制数，单位毫秒，最小精度为 1ms。
+
+```js
+// setTimeout 版本实现
+
+const oElem = document.getElementById('box');
+
+let px = 0;
+let t = null
+
+function step () {
+  px++;
+
+  oElem.style.transform = `translateX(${ px }px)`;
+
+  if (px >= 200) {
+    clearInterval(t);
+  }
+}
+
+t = setInterval(step, 1000 / 60);
+```
+
+
+
+requestAnimationFrame VS setInterval
+
+* 布局绘制逻辑不同
+  * setInterval：回调逻辑存在多次 DOM 操作，就会进行多次计算、绘制
+  * requestAnimationFrame：把所有DOM 操作集中起来，一次性进行统一计算、统一绘制，性能较好
+* 窗口最小化时，运行情况不同
+  * setInterval：一直执行回调函数
+  * requestAnimationFrame：最小化时，暂停程序执行；页面打开时，从暂停的位置重新开始
+* 是否导致无意义的回调执行，重绘重排（计时间隔小于刷新率）
+  * setInterval(step, 0)：导致多次无意义的回调执行，
+  * requestAnimationFrame：只会在下次重绘时执行
+
+### MutationObserver 与 nextTick
+
+
+

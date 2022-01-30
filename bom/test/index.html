@@ -8,42 +8,48 @@
 </head>
 <body>
 
-  <div id="J-msg1">No Message</div>
+
+  <!-- <div id="J-msg1">No Message</div>
   <button id="J-btn1">Send Message</button>
 
   <div id="J-msg2">No Message</div>
-  <button id="J-btn2">Send Message</button>
+  <button id="J-btn2">Send Message</button> -->
 
+  <!-- <h1>Title</h1> -->
+
+  <div id="box" style="width: 100px; height: 100px; background-color: red;"></div>
+
+  <script type="module" src="./index.js"></script>
 
   <script>
-    const oMsg1 = document.querySelector('#J-msg1'),
-          oMsg2 = document.querySelector('#J-msg2'),
-          oBtn1 = document.querySelector('#J-btn1'),
-          oBtn2 = document.querySelector('#J-btn2');
+    // const oMsg1 = document.querySelector('#J-msg1'),
+    //       oMsg2 = document.querySelector('#J-msg2'),
+    //       oBtn1 = document.querySelector('#J-btn1'),
+    //       oBtn2 = document.querySelector('#J-btn2');
 
 
-    const channel = new MessageChannel();
-    const { port1, port2 } = channel;
+    // const channel = new MessageChannel();
+    // const { port1, port2 } = channel;
 
-    oBtn1.addEventListener('click', sendMessage1, false);
-    oBtn2.addEventListener('click', sendMessage2, false);
+    // oBtn1.addEventListener('click', sendMessage1, false);
+    // oBtn2.addEventListener('click', sendMessage2, false);
 
-    port1.onmessage = getMessage1;
-    port2.onmessage = getMessage2;
+    // port1.onmessage = getMessage1;
+    // port2.onmessage = getMessage2;
 
-    function sendMessage1 () {
-      port1.postMessage('I am PORT-1');
-    }
-    function sendMessage2 () {
-      port2.postMessage('I am PORT-2');
-    }
+    // function sendMessage1 () {
+    //   port1.postMessage('I am PORT-1');
+    // }
+    // function sendMessage2 () {
+    //   port2.postMessage('I am PORT-2');
+    // }
 
-    function getMessage1 (e) {
-      oMsg1.textContent = e.data;
-    }
-    function getMessage2 (e) {
-      oMsg2.textContent = e.data;
-    }
+    // function getMessage1 (e) {
+    //   oMsg1.textContent = e.data;
+    // }
+    // function getMessage2 (e) {
+    //   oMsg2.textContent = e.data;
+    // }
   </script>
   
 </body>

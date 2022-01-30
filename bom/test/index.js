@@ -31,13 +31,13 @@
 // });
 
 
-const channel = new MessageChannel();
+// const channel = new MessageChannel();
 
-const { port1, port2 } = channel;
+// const { port1, port2 } = channel;
 
 
-port1.postMessage('I am PORT-1');
-port2.postMessage('I am PORT-2');
+// port1.postMessage('I am PORT-1');
+// port2.postMessage('I am PORT-2');
 
 
 
@@ -73,3 +73,52 @@ port2.postMessage('I am PORT-2');
 //     [Symbol(nodejs.internal.kCurrentlyReceivingPorts)]: undefined
 //   }
 // }
+
+
+
+// import port2 from './demo.js';
+
+// ;(() => {
+//   port2.postMessage('This is new title');
+
+//   port2.onmessage = (e) => {
+//     console.log(e.data);
+//   }
+// })();
+
+
+
+// const oElem = document.getElementById('box');
+
+// let start;
+
+// function step (timestamp) {
+//   if (start === undefined) start = timestamp;
+    
+//   const elapsed = timestamp - start;
+
+//   oElem.style.transform = `translateX(${ Math.min(0.1 * elapsed, 200) }px)`;
+
+//   if (elapsed < 2000) {
+//     window.requestAnimationFrame(step);
+//   }
+// }
+
+// window.requestAnimationFrame(step);
+
+const oElem = document.getElementById('box');
+
+let px = 0;
+let t = null
+
+function step () {
+  px++;
+
+  oElem.style.transform = `translateX(${ px }px)`;
+
+  if (px >= 200) {
+    clearInterval(t);
+  }
+}
+
+t = setInterval(step, 1000 / 60);
