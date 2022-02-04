@@ -124,13 +124,52 @@
 // t = setInterval(step, 1000 / 60);
 
 
-function cb (mutationList, observer) {
-  console.log(mutationList, observer);
-}
+// function callback (target) {
+//   console.log(target);
+// }
 
-const oTarget = document.getElementById('app');
-const observer = new MutationObserver(cb);
+// function cb (mutationList, observer) {
+//   mutationList.forEach(mutation => {
+//     callback(mutation.target);
+//   });
+// }
 
-observer.observe(oTarget, {
-  attributes: true, // 监视元素属性变更
+// const oTarget = document.getElementById('app');
+// const oTitle = oTarget.querySelector('h1');
+
+// const observer = new MutationObserver(cb);
+
+// observer.observe(oTarget, {
+//   attributes: true, // 监视元素属性变更
+//   childList: true, // 监视目标节点添加或删新的子节点
+//   subtree: true, // 将监视范围扩展至目标节点整个节点树中的所有节点
+// });
+
+// oTitle.innerText = 'This is a title';
+// oTitle.className = 'title';
+
+// const oParent = document.createElement('p');
+
+// oParent.innerText = 'This is content';
+
+// oTarget.appendChild(oParent);
+
+process.nextTick(() => {
+  console.log('nextTick1');
+});
+
+Promise.resolve().then(() => {
+  console.log('Promise');
+});
+
+process.nextTick(() => {
+  console.log('nextTick2');
+});
+
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+process.nextTick(() => {
+  console.log('nextTick3');
 });

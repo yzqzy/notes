@@ -600,6 +600,7 @@ NodeJS本质是JavaScript V8引擎，但是执行环境不同（不是浏览器�
 
 
 
+
                 JS                    ->            webAPIs           
     
     Memory Heap     Call Stack                   DOM（document）
@@ -2254,4 +2255,105 @@ object => ob => 相反的，对面的
 oppsite => 相反的 => ob op => 对面的，相反的
 ject => 物体，object => 对面的物体 => 对象，物件
 ob serve/keep=> 看对面的东西，observe 观察
+
+
+
+MutationObserver 使用案例
+
+```html
+<div id="app">
+  <h1>Loading...</h1>
+</div>
+
+<script type="module" src="./index.js"></script>
+```
+
+```js
+function callback (target) {
+  console.log(target);
+}
+
+function cb (mutationList, observer) {
+  mutationList.forEach(mutation => {
+    callback(mutation.target);
+  });
+}
+
+const oTarget = document.getElementById('app');
+const oTitle = oTarget.querySelector('h1');
+
+const observer = new MutationObserver(cb);
+
+observer.observe(oTarget, {
+  attributes: true, // 监视元素属性变更
+  childList: true, // 监视目标节点添加或删新的子节点
+  subtree: true, // 将监视范围扩展至目标节点整个节点树中的所有节点
+});
+
+oTitle.innerText = 'This is a title';
+oTitle.className = 'title';
+
+const oParent = document.createElement('p');
+
+oParent.innerText = 'This is content';
+
+oTarget.appendChild(oParent);
+```
+
+
+
+
+```js
+Promise.resolve().then(() => {
+  console.log('Promise');
+});
+
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+process.nextTick(() => {
+  console.log('nextTick');
+});
+
+// nextTick
+// Promise
+// setTimeout
+```
+
+```js
+process.nextTick(() => {
+  console.log('nextTick1');
+});
+
+Promise.resolve().then(() => {
+  console.log('Promise');
+});
+
+process.nextTick(() => {
+  console.log('nextTick2');
+});
+
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+process.nextTick(() => {
+  console.log('nextTick3');
+});
+
+// nextTick1
+// nextTick2
+// nextTick3
+// Promise
+// setTimeout
+```
+
+node 中的 nextTick 作为微任务优先于 promise 执行。
+
+process.nextTick 同一阶段立即执行，微任务。setImmediate 在一个 event 完成或者下一个 tick 执行。
+
+nextTickQueue 在当前事件环每一个步骤结束都会执行一次。
+
+### NodeJS 基本认知
 
