@@ -2488,6 +2488,68 @@ this is my second text.
 const { readFileSync } = require('fs');
 
 console.log(readFileSync('1.txt', 'utf-8'));
+console.log('1.txt');
+
 console.log(readFileSync('2.txt', 'utf-8'));
+console.log('2.txt');
 ```
+
+
+
+**异步非阻塞**
+
+```js
+// index.js
+
+const { readFile } = require('fs');
+
+readFile('1.txt', 'utf-8', function (err, data) {
+  console.log(data);
+});
+console.log('1.txt');
+
+readFile('2.txt', 'utf-8', function (err, data) {
+  console.log(data);
+});
+console.log('2.txt');
+```
+
+NodeJS IO 操作 建议都使用异步非阻塞的 API。
+
+### NodeJS 事件环
+
+NodeJS 主线程还是单线程，事件交于其他线程处理。
+
+* Node 通过事件环机制运行 JS 代码。
+* Node 提供线程池处理 I/O 操作任务
+* Node 存在两种线程：
+  * 事件循环线程：负责任务调度	require，同步执行回调、注册新任务
+  * 线程池（libuv 实现）：负责处理任务  I/O 操作、CPU 密集型任务（不擅长）
+
+
+<img src="./images/node_event_loop.png" style="zoom: 60%" />
+
+
+
+Node 内核 Libuv 实现了线程池和事件环。
+NodeJS 实际上并不存在事件队列，只是讲事件交于线程池处理，处理完成通知主线程进行下一步操作。
+
+
+事件环阶段：
+
+1. **Timers：setTimeout/setInterval**
+2. Pending callbacks：执行延迟到下一个事件环迭代的 I/O 回调（内部机制使用）
+3. IdIe, prepare：系统内部机制使用
+4. **Poll：检查新的 I/O 事件与执行 I/O 事件回调**
+5. **Check：setImmediate**
+6. Close callbacks：关闭的回调函数（内部机制使用）
+
+
+
+NodeJS 主执行栈执行完代码之后，清空微任务，然后进入事件环阶段。
+Timers 阶段意味着执行所有任务，并不代表任务执行完成。
+
+当 setTimeout 和 SetImmediate 同时存在。
+如果执行到 Poll 阶段，Timers 中任务已经执行完毕，就会先执行 Timers 阶段中的事件回调，再执行 SetImmediate，
+如果执行到 Poll 阶段，Timers 中任务并没有执行完毕，就会先执行 SetImmediate，在执行 Timers 阶段中的事件回调。
 
