@@ -2465,6 +2465,29 @@ console.log(4);
 
 阻塞是一种现象，同步异步是一种方式。
 
-
-
 NodeJS 是异步非阻塞，文件读取过程中可以做其他任务。
+
+
+**同步阻塞**
+
+```js
+// 1.txt
+
+this is my first text.
+```
+
+```js
+// 2.txt
+
+this is my second text.
+```
+
+```js
+// index.js
+
+const { readFileSync } = require('fs');
+
+console.log(readFileSync('1.txt', 'utf-8'));
+console.log(readFileSync('2.txt', 'utf-8'));
+```
+
