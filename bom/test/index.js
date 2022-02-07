@@ -154,22 +154,124 @@
 
 // oTarget.appendChild(oParent);
 
+// process.nextTick(() => {
+//   console.log('nextTick1');
+// });
+
+// Promise.resolve().then(() => {
+//   console.log('Promise');
+// });
+
+// process.nextTick(() => {
+//   console.log('nextTick2');
+// });
+
+// setTimeout(() => {
+//   console.log('setTimeout');
+// }, 0);
+
+// process.nextTick(() => {
+//   console.log('nextTick3');
+// });
+
+
+// const fs = require('fs');
+// const { readFile } = fs;
+
+// Promise.resolve().then(() => {
+//   console.log(1);
+// });
+
+// process.nextTick(() => {
+//   console.log(2);
+// });
+
+// console.log('start');
+
+// readFile('1.txt', 'utf-8', () => {
+//   setTimeout(() => {
+//     console.log(3);
+//   }, 0);
+
+//   process.nextTick(() => {
+//     console.log(4);
+//   });
+
+//   setImmediate(() => {
+//     console.log(5);
+//   });
+
+//   console.log(6);
+// });
+
+// console.log(7);
+
+// setTimeout(() => {
+//   console.log(8);
+// }, 0);
+
+// setImmediate(() => {
+//   console.log(9);
+// });
+
+// console.log('end');
+
+
+const fs = require('fs');
+const { readFile } = fs;
+
 process.nextTick(() => {
-  console.log('nextTick1');
+  console.log(1);
 });
 
-Promise.resolve().then(() => {
-  console.log('Promise');
-});
-
-process.nextTick(() => {
-  console.log('nextTick2');
-});
+console.log('start');
 
 setTimeout(() => {
-  console.log('setTimeout');
+  console.log(2);
 }, 0);
 
-process.nextTick(() => {
-  console.log('nextTick3');
+setTimeout(() => {
+  console.log(3);
+}, 0);
+
+setImmediate(() => {
+  console.log(4);
+
+  process.nextTick(() => {
+    console.log(5);
+
+    Promise.resolve().then(() => {
+      console.log(6);
+    });
+  })
 });
+
+readFile('1.txt', 'utf-8', () => {
+  process.nextTick(() => {
+    console.log(7);
+  });
+
+  setTimeout(() => {
+    console.log(8);
+  }, 0);
+
+  setImmediate(() => {
+    console.log(9);
+  });
+});
+
+readFile('2.txt', 'utf-8', () => {
+  process.nextTick(() => {
+    console.log(10);
+  });
+
+  setTimeout(() => {
+    console.log(11);
+  }, 0);
+
+  setImmediate(() => {
+    console.log(12);
+  });
+});
+
+console.log('end');

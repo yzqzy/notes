@@ -2555,3 +2555,136 @@ Timers 阶段意味着执行所有任务，并不代表任务执行完成。
 
 ### NodeJS 事件环案例分析
 
+#### 案例1
+
+```js
+const fs = require('fs');
+const { readFile } = fs;
+
+// 微任务
+Promise.resolve().then(() => {
+  console.log(1);
+});
+
+// 微任务
+process.nextTick(() => {
+  console.log(2);
+});
+
+console.log('start');
+
+// Poll
+readFile('1.txt', 'utf-8', () => {
+  setTimeout(() => {
+    console.log(3);
+  }, 0);
+
+  process.nextTick(() => {
+    console.log(4);
+  });
+
+  setImmediate(() => {
+    console.log(5);
+  });
+  
+  console.log(6);
+});
+
+console.log(7);
+
+// Timers
+setTimeout(() => {
+  console.log(8);
+}, 0);
+
+// Check
+setImmediate(() => {
+  console.log(9);
+});
+
+console.log('end');
+
+// 主执行栈：start、7、end
+// 清空微任务：2、1 （nextTick 优先于 promise 执行）
+// 事件环：8、9 or 9、8 （Timers 如果先执行完，就会先输出 8，反之先输出 9）
+// 主执行栈：6
+// 清空微任务：4
+// 事件环：5、3（IO 中，setImmediate 优先于 setTimeout）
+```
+
+#### 案例2
+
+Node 10 及以下版本和 Node 11 主要区别：
+
+* Node 10 及以下版本会在切换阶段的时候清空微任务；
+* Node 11 及以上版本会在宏任务执行完毕或者切换阶段时，清空微任务。
+
+```js
+const fs = require('fs');
+const { readFile } = fs;
+
+process.nextTick(() => {
+  console.log(1);
+});
+
+console.log('start');
+
+setTimeout(() => {
+  console.log(2);
+}, 0);
+
+setTimeout(() => {
+  console.log(3);
+}, 0);
+
+setImmediate(() => {
+  console.log(4);
+
+  process.nextTick(() => {
+    console.log(5);
+
+    Promise.resolve().then(() => {
+      console.log(6);
+    });
+  })
+});
+
+readFile('1.txt', 'utf-8', () => {
+  process.nextTick(() => {
+    console.log(7);
+  });
+
+  setTimeout(() => {
+    console.log(8);
+  }, 0);
+
+  setImmediate(() => {
+    console.log(9);
+  });
+});
+
+readFile('2.txt', 'utf-8', () => {
+  process.nextTick(() => {
+    console.log(10);
+  });
+
+  setTimeout(() => {
+    console.log(11);
+  }, 0);
+
+  setImmediate(() => {
+    console.log(12);
+  });
+});
+
+console.log('end');
+
+// 主执行栈：start、end
+// 微任务：1
+// 事件环：2、3、4 or 4、2、3
+// 微任务：5、6
+// 事件环
+// 微任务：7、10（读取速度一致时）
+// 事件环：9、12、8、11（读取速度一致时）
+```
+
