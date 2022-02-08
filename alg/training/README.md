@@ -4740,4 +4740,75 @@ var longestCommonSubsequence = function(text1, text2) {
 
 ## Trie 树的基本实现和特性
 
+### 树和二叉搜索树
+
+**树 Tree**
+
+<img src="./images/tree.png" style="zoom: 40%" />
+
+
+
+**二叉搜索树**
+
+二叉搜索树任何一个结点，它的左子树的所有结点都要小于这个根结点，它的右子树的所有结点都要大于根结点。
+
+二叉树搜索树中序遍历是一个升序的序列。
+
+二叉搜索树查找的效率更高。
+
+
+
+<img src="./images/binary_search_tree.png" style="zoom: 50%" />
+
+### Trie 树
+
+#### 基本结构
+
+字典树，即 Trie 树，又称单词查找树或键树，是一种树形结构。
+典型应用是用于统计和排序大量的字符串（不仅限于字符串），所以经常被搜索引擎系统用于文本词频统计。
+
+> Trie 树不是一颗二叉树，是多叉树。
+
+优点：最大限度地减少无谓的字符串比较，查找效率比哈希表高。
+
+
+
+<img src="./images/trie.webp" style="zoom: 60%" />
+
+
+
+#### 基本性质
+
+* 结点本身不存完整单词；
+* 从根结点到某一结点，路径上经过的字符连接起来，为该结点对应的字符串；
+* 每个结点的所有子结点路径代表的字符都不相同。
+
+#### 核心思想
+
+Trie 树的核心思想就是空间换时间。
+
+利用字符串的公共前缀来降低查询时间的开销以达到提高效率的目的。
+
+### 相关题目
+
+[二叉树的层次遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
+
+[实现 Trie (前缀树)](https://leetcode-cn.com/problems/implement-trie-prefix-tree/#/description)（亚马逊、微软、谷歌在半年内面试中考过）
+
+[单词搜索 II ](https://leetcode-cn.com/problems/word-search-ii/)（亚马逊、微软、苹果在半年内面试中考过）
+
+```js
+// 二叉树的层次遍历
+
+
+```
+
+```js
+// 实现 Trie (前缀树)
+```
+
+```js
+// 单词搜索Ⅱ
+
+```
 
