@@ -4789,6 +4789,14 @@ Trie 树的核心思想就是空间换时间。
 
 利用字符串的公共前缀来降低查询时间的开销以达到提高效率的目的。
 
+#### 字典树结构
+
+
+
+<img src="./images/trie_struct.png" style="zoom: 40%" />
+
+
+
 ### 相关题目
 
 [二叉树的层次遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
@@ -4800,16 +4808,99 @@ Trie 树的核心思想就是空间换时间。
 ```js
 // 二叉树的层次遍历
 
+/**
+ * 广度优先搜索
+ * @param {TreeNode} root
+ * @return {number[][]}
+ */
+var levelOrder = function(root) {
+  if (!root) return [];
 
+  const ans = [];
+
+  const queue = [root];
+
+  while (queue.length) {
+    let len = queue.length;
+
+    ans.push([]);
+
+    while (len--) {
+      const n =  queue.shift();
+
+      ans[ans.length - 1].push(n.val);
+
+      n.left && queue.push(n.left);
+      n.right && queue.push(n.right);
+    }
+  }
+
+  return ans;
+};
 ```
 
 ```js
 // 实现 Trie (前缀树)
-```
 
-```js
-// 单词搜索Ⅱ
+var Trie = function() {
+  this.children = {};
+};
 
+/** 
+ * @param {string} word
+ * @return {void}
+ */
+Trie.prototype.insert = function(word) {
+  let nodes = this.children;
+
+  for (const ch of word) {
+    if (!nodes[ch]) {
+      nodes[ch] = {};
+    }
+    nodes = nodes[ch];
+  }
+
+  nodes.isEnd = true;
+};
+
+Trie.prototype.searchPrefix = function(word) {
+  let nodes = this.children;
+
+  for (const ch of word) {
+    if (!nodes[ch]) {
+      return false;
+    }
+    nodes = nodes[ch];
+  }
+
+  return nodes;
+};
+
+/** 
+ * @param {string} word
+ * @return {boolean}
+ */
+Trie.prototype.search = function(word) {
+  const nodes = this.searchPrefix(word);
+
+  return nodes != undefined && nodes.isEnd !== undefined;
+};
+
+/** 
+ * @param {string} prefix
+ * @return {boolean}
+ */
+Trie.prototype.startsWith = function(prefix) {
+  return this.searchPrefix(prefix);
+};
+
+/**
+ * Your Trie object will be instantiated and called as such:
+ * var obj = new Trie()
+ * obj.insert(word)
+ * var param_2 = obj.search(word)
+ * var param_3 = obj.startsWith(prefix)
+ */
 ```
 
 ## 并查集的基本实现和特性
