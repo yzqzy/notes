@@ -601,6 +601,7 @@ NodeJS本质是JavaScript V8引擎，但是执行环境不同（不是浏览器�
 
 
 
+
                 JS                    ->            webAPIs           
     
     Memory Heap     Call Stack                   DOM（document）
@@ -958,7 +959,7 @@ JS 引擎运行脚本与 GUI 渲染互斥。JS 引擎任务空闲时，进行 GU
 宏任务：
 
 * 宿主提供的异步方法和任务
-* sript、setTimeout、UI 渲染等
+* script、setTimeout、UI 渲染等
 
 微任务：
 

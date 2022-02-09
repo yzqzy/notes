@@ -4905,3 +4905,115 @@ Trie.prototype.startsWith = function(prefix) {
 
 ## 并查集的基本实现和特性
 
+并查集 Disjoint Set。
+
+并查集用来解决组团、配对问题。
+
+### 基本操作
+
+makeSet(s)：建立一个新的并查集，其中包含 s 个单元素集合；
+
+unionSet(x, y)：把元素 x 和元素 y 所在的集合合并，要求 x 和 y 所在的集合不相交，如果相交则不合并；
+
+find(x)：找到元素 x 所在的集合的代表，该操作也可以用于判断两个元素是否位于同一个集合，只要将它们各自的代表比较一下就可以。
+
+### 并查集结构
+
+#### 初始化
+
+
+
+<img src="./images/disjoint_set.png" style="zoom: 50%" />
+
+
+
+每一个元素拥有一个 parent 数组指向自己，表示它自己的集合。
+
+#### 查询、合并
+
+
+
+<img src="./images/disjoint_set2.png" style="zoom: 50%" />
+
+
+查询：对任何一个元素，向上寻找 parent，直到它的 parent 等于它自己，说明找到领头元素，即集合的代表元素。
+合并：找出集合的领头元素，讲 parent[e] 指向 a，或者将 parent[a] 指向 e。
+
+#### 路径压缩
+
+
+
+<img src="./images/disjoint_set3.png" style="zoom: 50%" />
+
+
+
+关系和原来一致，查询时间会快很多。
+
+#### 代码实现
+
+```js
+class UnionFind {
+  count = 0;
+  parent = [];
+  
+  const
+}
+```
+
+### 相关题目
+
+[朋友圈](https://leetcode-cn.com/problems/friend-circles)（亚马逊、Facebook、字节跳动在半年内面试中考过）
+
+[岛屿数量](https://leetcode-cn.com/problems/number-of-islands/)（近半年内，亚马逊在面试中考查此题达到 361 次）
+
+[被围绕的区域](https://leetcode-cn.com/problems/surrounded-regions/)（亚马逊、eBay、谷歌在半年内面试中考过）
+
+
+
+```java
+// 朋友圈
+// 解法1：DFS、BFS 类似岛屿问题
+// 解法2：并查集
+
+// DFS
+class Solution {
+  public int findCircleNum (int[][] M) {
+    boolean[] visited = new boolen[M.length];
+    
+    int ret = 0;
+    	
+    // 使用 visited 数组，依次判断每个节点
+    // 如果未访问，朋友圈数加 1 并对该节点进行 dfs 搜索标记所有访问到的节点
+    for (int i = 0; i < M.length; i++) {
+      if (!visted[i]) {
+        dfs(M, visited, i);
+        ret++;
+      }
+    }
+    
+    return ret;
+  }
+  
+  private void dfs (int[][] m, boolean[] visited, int i) {
+    for (int j = 0; j < m.length; j++) {
+      if (m[i][j] == 1 && !visited[j]) {
+        visited[j] = true;
+        dfs(m, visited, j);
+      }
+    }
+  } 
+}
+```
+
+```js
+// 岛屿问题
+
+
+```
+
+```js
+// 被围绕的区域
+
+
+```
+
