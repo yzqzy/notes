@@ -4953,10 +4953,41 @@ find(x)：找到元素 x 所在的集合的代表，该操作也可以用于判�
 
 ```js
 class UnionFind {
-  count = 0;
-  parent = [];
-  
-  const
+  constructor (n) {
+    this.count = n;
+    this.parent = new Array(n);
+
+    for (let i = 0; i < n; i++) {
+      this.parent[i] = i;
+    }
+  }
+
+  find (p) {
+    let root = p;
+
+    while (this.parent[root] != root) {
+      root = this.parent[root];
+    }
+
+    while (this.parent[p] != p) {
+      let x = p;
+      p = this.parent[p];
+      this.parent[x] = root;
+    }
+
+    return root;
+  }
+
+  union (p, q) {
+    let rootP = this.find(p);
+    let rootQ = this.find(q);
+
+    if (rootP === rootQ) return;
+
+    this.parent[rootP] = rootQ;
+
+    this.count--;
+  }
 }
 ```
 
@@ -4973,9 +5004,8 @@ class UnionFind {
 ```java
 // 朋友圈
 // 解法1：DFS、BFS 类似岛屿问题
-// 解法2：并查集
 
-// DFS
+// DFS Java
 class Solution {
   public int findCircleNum (int[][] M) {
     boolean[] visited = new boolen[M.length];
@@ -5005,15 +5035,124 @@ class Solution {
 }
 ```
 
-```js
-// 岛屿问题
+```python
+# 朋友圈
+# 解法2：并查集
 
-
+# 并查集 Python
+class Solution (object):
+	def findCricleNum(self, M)
+  	  if not M: return 0
+    
+      n = len(M)
+      p = [i for i in range(n)]
+      
+      for i in range(n):
+        	for j in range(n):
+            if M[i][j] == 1:
+              	self._union(p, i, j)
+                
+      return len(set[self._parent(p, i) for i in range(n)])
+    
+    def _union(self, p, i, j):
+      p1 = self._parent(p, i)
+      p2 = self._parent(p, j)
+      p[p2] = p1
+      
+    def _parent(self, p, i)
+    	root = i
+      while p[root] != root:
+        root = p[root]
+      while p[i] != i:
+        x = i; i = p[i]; p[x] = root
+      return root
 ```
 
+
+
 ```js
-// 被围绕的区域
+// 岛屿数量
+
+/**
+ * 深度优先搜索
+ * @param {character[][]} grid
+ * @return {number}
+ */
+var numIslands = function(grid) {
+  let count = 0;
+
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[0].length; j++) {
+      if (grid[i][j] === '1') {
+        count++;
+        trunZero(i, j, grid);
+      }
+    }
+  }
+
+  return count;
+};
+
+function trunZero (i, j, grid) {
+  if (
+    i < 0 || i >= grid.length ||
+    j < 0 || j >= grid[0].length || grid[i][j] === '0'
+  ) return;
+
+  grid[i][j] = '0';
+
+  trunZero(i, j + 1, grid);
+  trunZero(i, j - 1, grid);
+  trunZero(i + 1, j, grid);
+  trunZero(i - 1, j, grid);
+}
 
 
+/**
+ * 广度优先搜索
+ * @param {character[][]} grid
+ * @return {number}
+ */
+const numIslands = (grid) => {
+  const queue = [];
+  
+  let count = 0;
+
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[0].length; j++) {
+      if (grid[i][j] === '1') {
+        count++;
+        grid[i][j] = '0';
+        queue.push([i, j]);
+        turnZero(queue, grid);
+      }
+    }
+  }
+
+  return count;
+}
+
+function turnZero (queue, grid) {
+  const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+  while (queue.length) {
+    const cur = queue.shift();
+
+    for (const dir of dirs) {
+      const x = cur[0] + dir[0];
+      const y = cur[1] + dir[1];
+
+      if (
+        x < 0 || x >= grid.length ||
+        y < 0 || y >= grid[0].length ||
+        grid[x][y] !== '1'
+      ) continue;
+
+      grid[x][y] = '0';
+
+      queue.push([x, y]);
+    }
+  }
+}
 ```
 
