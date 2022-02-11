@@ -5156,3 +5156,59 @@ function turnZero (queue, grid) {
 }
 ```
 
+## 剪枝的实现和特性
+
+### 初级搜索
+
+优化方式：不重复（fibonacci）、剪枝（生成括号问题）
+
+搜索方向：
+
+* DFS：深度优先搜索
+* BFS：广度优先搜索
+
+双向搜索、启发式搜索（优先级搜索）
+
+### 剪枝
+
+状态树进行搜索的时候，如果发现这个分支已经处理过，我们可以把它暂存在缓存里面，整个分支就可以剪掉，不需要手动进行计算。
+
+有些时候分支不够好，是比较差的分支或者次优的分支，我们也可以把它剪掉。
+
+[AlphaZero Explained](https://nikcheerla.github.io/deeplearningschool/2018/01/01/AlphaZero-Explained/)
+
+[棋类复杂度](https://en.wikipedia.org/wiki/Game_complexity)
+
+### 回溯法
+
+回溯法采用试错的思想，尝试分布的去解决一个问题。在分布解决问题的过程中，当它通过尝试发现现有的分布答案不能得到有效的正确的解答的时候，它讲取消上一步甚至是上几步的计算，再通过其它的可能的分布解答再次尝试寻找问题的答案。
+
+回溯法通常用最简单的递归方法来实现，在反复重复上述的步骤后可能出现两种情况：
+
+* 找到一个可能存在的正确的答案
+* 在尝试了所有可能的分布方法后宣告该问题没有答案
+
+在最坏的情况下，回溯法会导致一次复杂度为指数时间的计算。
+
+### 相关题目
+
+[爬楼梯](https://leetcode-cn.com/problems/climbing-stairs/)（阿里巴巴、腾讯、字节跳动在半年内面试常考）
+
+[括号生成](https://leetcode-cn.com/problems/generate-parentheses/)（亚马逊、Facebook、字节跳动在半年内面试中考过）
+
+[N 皇后](https://leetcode-cn.com/problems/n-queens/)（亚马逊、苹果、字节跳动在半年内面试中考过）
+
+[有效的数独](https://leetcode-cn.com/problems/valid-sudoku/description/)（亚马逊、苹果、微软在半年内面试中考过）
+
+[解数独](https://leetcode-cn.com/problems/sudoku-solver/#/description)（亚马逊、华为、微软在半年内面试中考过）
+
+
+
+```js
+// 有效的数独
+```
+
+```js
+// 解数独
+```
+
