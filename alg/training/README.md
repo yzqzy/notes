@@ -5206,9 +5206,106 @@ function turnZero (queue, grid) {
 
 ```js
 // 有效的数独
+
+/**
+ * @param {character[][]} board
+ * @return {boolean}
+ */
+var isValidSudoku = function(board) {
+  const rows = new Array(9).fill(0).map(() => new Array(9).fill(0));
+  const columns = new Array(9).fill(0).map(() => new Array(9).fill(0));
+  const subboxes = new Array(3).fill(0).map(() => new Array(3).fill(0).map(() => new Array(9).fill(0)));
+  
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
+      const c = board[i][j];
+
+      if (c !== '.') {
+        const index = c.charCodeAt() - '0'.charCodeAt() - 1;
+
+        rows[i][index]++;
+        columns[j][index]++;
+        subboxes[Math.floor(i / 3)][Math.floor(j / 3)][index]++;
+
+        if (
+          rows[i][index] > 1 ||
+          columns[j][index] > 1 ||
+          subboxes[Math.floor(i / 3)][Math.floor(j / 3)][index] > 1
+        ) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+};
 ```
 
 ```js
 // 解数独
+
+/**
+ * @param {character[][]} board
+ * @return {void} Do not return anything, modify board in-place instead.
+ */
+var solveSudoku = function(board) {
+  backTracking(board);
+  return board;
+    
+};
+
+function backTracking(board) {
+  for(let i = 0; i < board.length; i++) {
+    for(let j = 0; j < board[0].length; j++) {
+      if(board[i][j] !== '.') continue;
+
+      for(let val = 1; val <= 9; val++) {
+        if(isValid(i, j, `${val}`, board)) {
+          board[i][j] = `${val}`
+          if (backTracking(board)) {
+              return true;
+          }
+          
+          board[i][j] = `.`;
+        }
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function isValid(row, col, val, board) {
+  let len = board.length;
+  
+  for(let i = 0; i < len; i++) {
+    if(board[row][i] === val) {
+      return false;
+    }
+  }
+
+  for(let i = 0; i < len; i++) {
+    if(board[i][col] === val) {
+      return false;
+    }
+  }
+  let startRow = Math.floor(row / 3) * 3;
+  let startCol = Math.floor(col / 3) * 3;
+
+  for(let i = startRow; i < startRow + 3; i++) {
+    for(let j = startCol; j < startCol + 3; j++) {
+      if(board[i][j] === val) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+```
+
+## 双向 BFS 的实现和特性
+
+```js
 ```
 
