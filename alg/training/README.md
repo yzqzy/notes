@@ -5362,7 +5362,104 @@ a ^ b ^ c = a ^ (b ^ c) = (a ^ b) ^ c  // associative
 ### 位运算要点
 
 * 判断奇偶
-  * x % 2 == 1  =>  x & 1 == 1
-  * x % 2 ==  0  => x & 1 == 0
+  * `x % 2 == 1`  =>  `x & 1 == 1`
+  * `x % 2 ==  0`  => `x & 1 == 0`
 * x >> 1  =>  x / 2
-  * 即
+  * `x = x / 2` => `x = x >> 1`
+  * `mid = (left + right) / 2` => `mid = (left + right) >> 1`
+* x = x & (x - 1)  清零最低位的 1
+* x & -x  => 得到最低位的 1
+* x & ~x  => 0
+* !!~(x) 判断下标是否存在
+  * !!~“xx”.indexOf(x)
+
+### 相关题目
+
+[位1的个数](https://leetcode-cn.com/problems/number-of-1-bits/)
+
+[2的幂](https://leetcode-cn.com/problems/power-of-two/)	
+
+[颠倒二进制位](https://leetcode-cn.com/problems/reverse-bits/)
+
+[N 皇后](https://leetcode-cn.com/problems/n-queens/)
+
+[N皇后 II](https://leetcode-cn.com/problems/n-queens-ii/)
+
+
+
+```js
+// 位1的个数
+
+/**
+ * @param {number} n - a positive integer
+ * @return {number}
+ */
+var hammingWeight = function(n) {
+  let sum = 0;
+
+  while (n != 0) {
+    sum++;
+    n &= (n - 1);
+  }
+
+  return sum;
+};
+```
+
+```js
+// 2的幂
+// 这个数的表示形式，有且仅有二进制位是 1
+
+/**
+ * @param {number} n
+ * @return {boolean}
+ */
+var isPowerOfTwo = function(n) {
+  return n > 0 && (n & (n - 1)) == 0;
+};
+```
+
+```js
+// 颠倒二进制位
+
+/**
+ * @param {number} n - a positive integer
+ * @return {number} - a positive integer
+ */
+var reverseBits = function(n) {
+  let ans = 0;
+
+  for (let i = 0; i < 32; i++) {
+    ans = (ans << 1) + (n & 1);
+    n >>= 1;
+  }
+
+  return ans >>> 0;
+};
+```
+
+
+
+[比特位计数](https://leetcode-cn.com/problems/counting-bits/)
+
+```js
+// 比特位计数
+// 位运算 + DP
+
+/**
+ * @param {number} n
+ * @return {number[]}
+ */
+var countBits = function(n) {
+  const ans = new Array(n + 1).fill(0);
+
+  for (let i = 1; i <= n; i++) {
+    ans[i] = ans[i & (i - 1)] + 1;
+  }
+  
+  return ans;
+};
+```
+
+## 布隆过滤器的实现及应用
+
