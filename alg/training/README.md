@@ -5479,14 +5479,173 @@ var countBits = function(n) {
 
 布隆过滤器优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率、删除困难。
 
-#### 布隆过滤器示意图
+#### 示意图
 
 
 
 <img src="./images/bloom_filter.png" />
 
 如果一个元素它所对应的二进制位只要一个为 0，就说明这个元素不在布隆过滤器的索引中。
+但是当一个元素刚好分配的三个二进制都为 1 时，我们不能肯定说元素存在于布隆过滤器的索引中，只能说是可能存在。
 
-但是当一个元素刚好分配的三个二进制都为 1 时，我们不能肯定说元素存在于布隆过滤器的索引中。
+在布隆过滤器中查询元素，如果查不到，说明肯定不在，如果元素在布隆过滤器中二进制位都是 1，只能说它可能存在。
 
- 
+布隆过滤器，只适合在外面当缓存使用，进行快速判断。当元素查到，就会继续在数据库中去查。布隆过滤器可以节省访问数据库时间。
+
+#### 案例
+
+* 比特币网络
+* 分布式系统（Map-Reduce）- Hadoop、search engine
+* Redis 缓存
+* 垃圾邮件、评论过滤等
+
+#### 实现
+
+* Python
+  * https://www.geeksforgeeks.org/bloom-filters-introduction-and-python-implementation/
+  * https://github.com/jhgg/pybloof
+* Java
+  * https://github.com/lovasoa/bloomfilter/blob/master/src/main/java/BloomFilter.java
+  * https://github.com/Baqend/Orestes-Bloomfilter
+
+### LRU Cache
+
+* 两个要素：大小、替换策略
+* Hash Table + Double LinkedList
+* O(1) 查询、O(1) 修改、更新
+
+LRU:  least recent use 最近最少使用
+
+#### 工作示例
+
+
+
+<img src="./images/LRU_Cache.png" style="zoom: 50%" />
+
+
+#### 替换策略
+
+* LFU - least frequently used
+  *  统计每个元素被使用的频次最少的，放到最下面，最先被淘汰掉
+* LRU - least recently used
+  * 最先淘汰不常使用的
+
+替换算法总览：https://en.wikipedia.org/wiki/Cache_replacement_policies
+
+#### 相关题目
+
+[LRU 缓存](https://leetcode-cn.com/problems/lru-cache/)
+
+
+
+```js
+// LRU 缓存
+// 双向链表 + HashTable
+
+/**
+ * @param {number} capacity
+ */
+var LRUCache = function(capacity) {
+  this.capacity = capacity;
+
+  this.hash = {};
+  this.count = 0;
+
+  this.dummyHead = new ListNode();
+  this.dummyTail = new ListNode();
+  this.dummyHead.next = this.dummyTail;
+  this.dummyTail.prev = this.dummyHead;
+};
+
+/** 
+ * @param {number} key
+ * @return {number}
+ */
+LRUCache.prototype.get = function(key) {
+  const node = this.hash[key];
+
+  if (node == null) return -1;
+
+  this.moveToHead(node);
+
+  return node.value;
+};
+
+/** 
+ * @param {number} key 
+ * @param {number} value
+ * @return {void}
+ */
+LRUCache.prototype.put = function(key, value) {
+  const node = this.hash[key];
+
+  if (node == null) {
+    if (this.count == this.capacity) {
+      this.remove();
+    }
+
+    const newNode = new ListNode(key, value);
+
+    this.hash[key] = newNode;
+    this.unshift(newNode);
+    this.count++;
+  } else {
+    node.value = value;
+    this.moveToHead(node);
+  }
+};
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * var obj = new LRUCache(capacity)
+ * var param_1 = obj.get(key)
+ * obj.put(key,value)
+ */
+
+ function ListNode (key, value) {
+  this.key = key;
+  this.value = value;
+  this.prev = null;
+  this.next = null;
+}
+
+LRUCache.prototype.swap = function (node) {
+  const temp1 = node.prev,
+        temp2 = node.next;
+
+  temp1.next = temp2;
+  temp2.prev = temp1;
+}
+
+LRUCache.prototype.unshift = function (node) {
+  node.prev = this.dummyHead;
+  node.next = this.dummyHead.next;
+
+  this.dummyHead.next.prev = node;
+  this.dummyHead.next = node;
+}
+
+LRUCache.prototype.moveToHead = function (node) {
+  this.swap(node);
+  this.unshift(node);
+}
+
+LRUCache.prototype.remove = function () {
+  const tail = this.pop();
+
+  delete this.hash[tail.key];
+
+  this.count--;
+}
+
+LRUCache.prototype.pop = function () {
+  const tail = this.dummyTail.prev;
+
+  this.swap(tail);
+
+  return tail;
+}
+```
+
+## 初级排序和高级排序
+
