@@ -5461,7 +5461,7 @@ var countBits = function(n) {
 };
 ```
 
-## 布隆过滤器和 LRU Cache
+## 布隆过滤器、LRU Cache
 
 ### 布隆过滤器（Bloom Filter）
 
