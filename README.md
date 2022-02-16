@@ -61,7 +61,8 @@
   + [VirtualDOM及DIFF算法](https://github.com/iheora/notes/tree/master/react/virtual_dom) 已完成
   + [Fiber](https://github.com/iheora/notes/tree/master/react/Fiber) 已完成
   + [react源码阅读](https://github.com/iheora/notes/tree/master/react/react_source) 暂停中...
-* [TypeScipt](https://github.com/iheora/notes/tree/master/typescript) 已完成
+* TypeScipt
+  + [TypeScipt基础](https://github.com/iheora/notes/tree/master/base/typescript) 已完成
 * NodeJS
   + [Node基础](https://github.com/iheora/notes/tree/master/node/base) 已完成
   + [Node进阶](https://github.com/iheora/notes/tree/master/node/plus) 暂停中...
