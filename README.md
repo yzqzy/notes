@@ -86,8 +86,8 @@
   + [数据结构与算法](https://github.com/iheora/notes/tree/master/alg/algorithm_google) 已完成
   + [算法训练营](https://github.com/iheora/notes/tree/master/alg/training) 更新中...
 * 读书笔记
-  + [数据结构与算法之美](https://www.yuque.com/yyne87/lcqfte) 已完成
-  + [透视HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
-  + [浏览器工作原理与实践](https://www.yuque.com/yyne87/wwaov6) 已完成
-  + [玩转webpack](https://www.yuque.com/yyne87/bx73hd) 已完成
+  + [算法相关](https://www.yuque.com/yyne87/lcqfte) 已完成
+  + [网络相关](https://www.yuque.com/yyne87/mw1l9v) 已完成
+  + [浏览器相关](https://www.yuque.com/yyne87/wwaov6) 已完成
+  + [webpack相关](https://www.yuque.com/yyne87/bx73hd) 已完成
   
