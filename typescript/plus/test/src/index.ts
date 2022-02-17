@@ -1,5 +1,3 @@
-function say (word: string) {
-  console.log(word);
-}
-
-say('Hello World');
+import './01.hello';
+import './02.base_type';
+import './03.complex_type';

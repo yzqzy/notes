@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "watch": "tsc ./src/index.ts --strict --alwaysStrict false --watch",
-    "dev": "ts-node ./src/index.ts"
+    "watch:tsc": "tsc ./src/index.ts --strict --alwaysStrict false --watch",
+    "dev": "ts-node ./src/index.ts --watch",
+    "watch": "nodemon -e ts --exec ts-node ./src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
+    "nodemon": "^2.0.15",
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"
   }
