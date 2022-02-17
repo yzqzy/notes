@@ -5659,3 +5659,153 @@ LRUCache.prototype.pop = function () {
 
 不通过比较来决定元素间的相对次序，它可以突破基于比较排序的时间下界，以线性时间运行，因此也称为线性时间非比较类排序。
 
+
+<img src="./images/sort.png" style="zoom: 70%" />
+
+
+
+<img src="./images/sort_compare.png" style="zoom: 50%" />
+
+
+
+> 重点看堆排序、快速排序、归并排序，面试通常会考 O(nlogn) 的排序。
+
+
+
+### 初级排序 O(n^2)
+
+#### 选择排序（Selection Sort）
+
+每次选最小值，然后放到待排序数组的起始位置。
+
+```js
+function selectionSort (arr) {
+  const len = arr.length;
+  let minIdx, temp;
+  
+  for (let i = 0; i < len - 1; i++) {
+    minIdx = i;
+    
+    for (let j = i + 1; j < len; j++) {
+      if (arr[j] < arr[minIdx]) {
+        minIdx = j;
+      }
+    }
+    
+    temp = arr[i];
+    arr[i] = arr[minIdx];
+    arr[minIdx] = temp;
+  }
+  
+  return arr;
+}
+```
+
+#### 插入排序（Insertion Sort）
+
+从前到后逐步构建有序序列，对于未排序数据，在已排序序列中从后向前扫描，找到相应位置并插入。
+
+```js
+function insertionSort (arr) {
+  const len = arr.length;
+  let preIdx, current;
+
+  for (let i = 1; i < len; i++) {
+    preIdx = i - 1;
+    current = arr[i];
+
+    while (preIdx >= 0 && arr[preIdx] > current) {
+      arr[preIdx + 1] = arr[preIdx];
+      preIdx--;
+    }
+
+    arr[preIdx + 1] = current;
+  }
+
+  return arr;
+}
+```
+
+#### 冒泡排序（Bubble Sort）
+
+嵌套循环，每次查看相邻的元素如果逆序，则交换。
+
+```js
+function bubbleSort (arr) {
+  const len = arr.length;
+
+  let temp, finish;
+
+  for (let i = 0; i < len - 1; i++) {
+    finish = true;
+
+    for (let j = 0; j < len - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        temp = arr[j + 1];
+        arr[j + 1] = arr[j];
+        arr[j] = temp;
+
+        finish = false;
+      }
+    }
+
+    if (finish) break;
+  }
+
+  return arr;
+}
+```
+
+### 高级排序 O(N*LogN)
+
+#### 快速排序（Quick Sort）
+
+数组取标杆 pivot，将小元素放到 pivot 左边，大元素放右侧，然后依次对左边和右边的子数组继续快排。以达到整个序列有序。
+
+> pivot 可以选在任意位置，左边、中间、右边。
+
+```js
+function partition (arr, start, end) {
+  const pivot = end;
+
+  let counter = start;
+
+  for (let i = start; i < end; i++) {
+    if (arr[i] < arr[pivot]) {
+      if (counter == i) {
+        counter++;
+      } else {
+        const temp = arr[counter];
+        arr[counter] = arr[i];
+        arr[i] = temp;
+        counter++;
+      }
+    }
+  }
+
+  const temp = arr[pivot];
+  arr[pivot] = arr[counter];
+  arr[counter] = temp;
+
+  return counter;
+}
+
+function quickSort (arr, begin, end) {
+  if (end < begin) return;
+
+  const pivot = partition(arr, begin, end);
+
+  quickSort(arr, begin, pivot - 1);
+  quickSort(arr, pivot + 1, end);
+}
+```
+
+#### 归并排序（Merge Sort）
+
+* 把长度为 n 的输入序列分成两个长度为 n / 2 的子序列；
+* 对这两个子序列分别采用归并排序；
+* 将两个排序好的子序列合并成一个最终的排序序列。
+
+```js
+```
+
