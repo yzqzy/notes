@@ -5647,7 +5647,7 @@ LRUCache.prototype.pop = function () {
 }
 ```
 
-## 初级排序和高级排序
+## 排序算法
 
 ### 排序算法分类
 
@@ -5670,7 +5670,11 @@ LRUCache.prototype.pop = function () {
 
 > 重点看堆排序、快速排序、归并排序，面试通常会考 O(nlogn) 的排序。
 
+#### 排序动画
 
+* https://www.cnblogs.com/onepixel/p/7674659.html
+* https://www.bilibili.com/video/av25136272
+* https://www.bilibili.com/video/av63851336
 
 ### 初级排序 O(n^2)
 
@@ -5807,5 +5811,388 @@ function quickSort (arr, begin, end) {
 * 将两个排序好的子序列合并成一个最终的排序序列。
 
 ```js
+function merge (arr, left, mid, right) {
+  const temp = new Array(right - left + 1);
+
+  let i = left,
+      j = mid + 1,
+      k = 0;
+
+  while (i <= mid && j <= right) {
+    temp[k++] = arr[i] <= arr[j] ? arr[i++] : arr[j++];
+  }
+
+  while (i <= mid) temp[k++] = arr[i++];
+  while (j <= right) temp[k++] = arr[j++];
+
+  for (i = 0; i < temp.length; i++) {
+    arr[left + i] = temp[i];
+  }
+}
+
+function mergeSort (arr, left, right) {
+  if (right <= left) return;
+
+  const mid = (left + right) >> 1;
+
+  mergeSort(arr, left, mid);
+  mergeSort(arr, mid + 1, right);
+
+  merge(arr, left, mid, right);
+}
 ```
+
+#### 堆排序（Heap Sort）
+
+堆插入 O(logN)，取最大值/最小值 O(1)。
+
+* 数组元素依次建立小顶堆
+* 依次取堆顶元素，并删除
+
+```js
+class Heap {
+  constructor (arr) {
+    this.len = arr.length;
+    
+    for (let i = Math.floor(this.len / 2); i >= 0; i--) {
+      this.heapify(arr, i);
+    }
+  }
+
+  heapify (arr, i) {
+    let left = 2 * i + 1,
+        right = 2 * i + 2,
+        largest = i;
+
+    if (left < this.len && arr[left] > arr[largest]) {
+      largest = left;
+    }
+    if (right < this.len && arr[right] > arr[largest]) {
+      largest = right;
+    }
+
+    if (largest != i) {
+      this.swap(arr, i, largest);
+      this.heapify(arr, largest);
+    }
+  }
+
+  swap (arr, i, j) {
+    const temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
+}
+
+
+function heapSort (arr) {
+  const heap = new Heap(arr);
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    heap.swap(arr, 0, i);
+    heap.len--;
+    heap.heapify(arr, 0);
+  }
+}
+```
+
+#### 总结
+
+归并和快排具有相似性，但步骤顺序相反。
+
+归并排序：先排序左右子数组，然后合并两个有序子数组；
+快速排序：先调配出左右子数组，然后对于左右子数组进行排序；
+
+### 特殊排序 O(n)
+
+#### 计数排序（Counting Sort）
+
+计数排序要求输入的数组必须是有确定范围的整数。
+将输入的数据值转化为键存储在额外开辟的数组空间中，然后依次把计数大于 1 的填充回原数组。
+
+```js
+function countingSort (arr, maxVal) {
+  const bucket = new Array(maxVal + 1);
+
+  let sortedIndex = 0,
+      arrLen = arr.length,
+      bucketLen = bucket.length;
+
+  for (let i = 0; i < arrLen; i++) {
+    if (!bucket[arr[i]]) {
+      bucket[arr[i]] = 0;
+    }
+    bucket[arr[i]]++;
+  }
+
+  for (let j = 0; j < bucketLen; j++) {
+    while (bucket[j] > 0) {
+      arr[sortedIndex++] = j;
+      bucket[j]--;
+    }
+  }
+}
+```
+
+#### 桶排序（Bucket Sort）
+
+桶排序的工作原理：假设输入数据均匀分布，将数据分到有限的桶里，每个桶再分别排序（可能使用别的排序算法或者以递归方式继续使用桶排序）。
+
+```js
+function insertionSort (arr) {
+  const len = arr.length;
+  let preIdx, current;
+
+  for (let i = 1; i < len; i++) {
+    preIdx = i - 1;
+    current = arr[i];
+
+    while (preIdx >= 0 && arr[preIdx] > current) {
+      arr[preIdx + 1] = arr[preIdx];
+      preIdx--;
+    }
+
+    arr[preIdx + 1] = current;
+  }
+
+  return arr;
+}
+
+function bucketSort (arr, bucketSize) {
+  if (arr.length === 0) return [];
+
+  let i,
+      minVal = arr[0],
+      maxVal = arr[0];
+
+  for (i = 1; i < arr.length; i++) {
+    if (arr[i] < minVal) {
+      minVal = arr[i];
+    } else if (arr[i] > maxVal) {
+      maxVal = arr[i];
+    }
+  }
+
+
+  // 初始化桶
+  bucketSize = bucketSize || 5;
+
+  const bucketCount = Math.floor((maxVal - minVal) / bucketSize) + 1,
+        buckets = new Array(bucketCount);
+
+  for (i = 0; i < buckets.length; i++) {
+    buckets[i] = [];
+  }
+
+
+  // 利用映射函数分配数据
+  for (i = 0; i < arr.length; i++) {
+    buckets[Math.floor((arr[i] - minVal) / bucketSize)].push(arr[i]);
+  }
+
+
+  arr.length = 0;
+  
+  for (i = 0; i < buckets.length; i++) {
+    insertionSort(buckets[i]); // 桶排序，使用插入排序
+
+    for (let j = 0; j < buckets[i].length; j++) {
+      arr.push(buckets[i][j]);
+    }
+  }
+}
+```
+
+#### 基数排序（Radix Sort）
+
+基数排序是按照低位先排序，然后收集；再按照高位排序，然后再收集；依次类推，直到最高位。有时候有些属性是有优先级顺序的，先按低优先级排序，再按高优先级排序。
+
+```js
+function radixSort (arr, maxDigit) {
+  const counter = [];
+
+  let mod = 10,
+      dev = 1;
+
+  for (let i = 0; i < maxDigit; i++, dev *= 10, mod *= 10) {
+    for (let j = 0; j < arr.length; j++) {
+      const bucket = parseInt((arr[j] % mod) / dev);
+
+      if (counter[bucket] == null) counter[bucket] = [];
+
+      counter[bucket].push(arr[j]);
+    }
+
+    let pos = 0;
+
+    for (let j = 0; j < counter.length; j++) {
+      let val = null;
+
+      if (counter[j]) {
+        while ((val = counter[j].shift()) != null) {
+          arr[pos++] = val;
+        }
+      }
+    }
+  }
+}
+```
+
+### 相关题目
+
+[数组的相对排序](https://leetcode-cn.com/problems/relative-sort-array/)
+
+[有效的字母异位词](https://leetcode-cn.com/problems/valid-anagram/)
+
+[合并区间](https://leetcode-cn.com/problems/merge-intervals/)
+
+[翻转对](https://leetcode-cn.com/problems/reverse-pairs/)
+
+
+
+```js
+// 数组的相对排序
+
+// 计数排序
+/**
+ * @param {number[]} arr1
+ * @param {number[]} arr2
+ * @return {number[]}
+ */
+var relativeSortArray = function (arr1, arr2) {
+  const counts = new Array(1001).fill(0);
+
+  for (const n of arr1) {
+    counts[n]++;
+  }
+
+  const ans = [];
+
+  for (const n of arr2) {
+    while (counts[n] > 0) {
+      ans.push(n);
+      counts[n]--;
+    }
+  }
+
+  for (let i = 0; i < counts.length; i++) {
+    while (counts[i] > 0) {
+      ans.push(i);
+      counts[i]--;
+    }
+  }
+
+  return ans;
+};
+```
+
+```js
+// 有效的字母异位词，可以使用快排和计数排序
+
+/**
+ * @param {string} s
+ * @param {string} t
+ * @return {boolean}
+ */
+var isAnagram = function(s, t) {
+  if (s.length != t.length) return false;
+
+  const map = new Map();
+
+  for (const i of s) {
+    map.set(i, s);
+  }
+  for (const i of t) {
+    if (!map.has(i)) return false;
+    map.delete(i);
+  }
+
+  return true;
+};
+```
+
+```js
+// 合并区间
+
+/**
+ * @param {number[][]} intervals
+ * @return {number[][]}
+ */
+var merge = function(intervals) {
+  intervals.sort((a, b) => a[0] - b[0]);
+
+  const ans = [];
+
+  for (let i = 0; i < intervals.length; i++) {
+    const start = intervals[i][0];
+    
+    let cur = intervals[i][1];
+
+    while(i < intervals.length-1 && cur >= intervals[i+1][0]) {
+      cur = Math.max(intervals[i+1][1], cur);
+      i++;
+    }
+
+    ans.push([start, cur]);
+  }
+
+  return ans;
+};
+```
+
+```js
+// 翻转对
+
+var reversePairs = function(nums) {
+  if (nums.length === 0) return 0;
+  return reversePairsRecursive(nums, 0, nums.length - 1);
+};
+
+const reversePairsRecursive = (nums, left, right) => {
+  if (left === right) return 0;
+
+  const mid = Math.floor((left + right) / 2),
+        n1 = reversePairsRecursive(nums, left, mid),
+        n2 = reversePairsRecursive(nums, mid + 1, right);
+
+  let ret = n1 + n2,
+      i = left,
+      j = mid + 1;
+
+  while (i <= mid) {
+    while (j <= right && nums[i] > 2 * nums[j]) j++;
+
+    ret += j - mid - 1;
+    i++;
+  }
+
+  const sorted = new Array(right - left + 1);
+
+  let p1 = left,
+      p2 = mid + 1,
+      p = 0;
+
+  while (p1 <= mid || p2 <= right) {
+    if (p1 > mid) {
+      sorted[p++] = nums[p2++];
+    } else if (p2 > right) {
+      sorted[p++] = nums[p1++];
+    } else {
+      if (nums[p1] < nums[p2]) {
+        sorted[p++] = nums[p1++];
+      } else {
+        sorted[p++] = nums[p2++];
+      }
+    }
+  }
+
+  for (let k = 0; k < sorted.length; k++) {
+    nums[left + k] = sorted[k];
+  }
+
+  return ret;
+}
+```
+
+## 字符串算法
 
