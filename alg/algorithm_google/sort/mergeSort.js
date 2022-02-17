@@ -33,9 +33,11 @@ const merge = (p, r, q) => {
 function mergeSort (arr, n) {
   const next = (arr, p, r) => {
     if (p >= r) return;
-
+    
     const q = Math.floor(p + (r - p) / 2);
 
+    console.log(p, r, q);
+    
     next(arr, p, q);
     next(arr, q + 1, r);
 

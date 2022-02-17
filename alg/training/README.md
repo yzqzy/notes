@@ -5765,5 +5765,47 @@ function bubbleSort (arr) {
 > pivot 可以选在任意位置，左边、中间、右边。
 
 ```js
+function partition (arr, start, end) {
+  const pivot = end;
+
+  let counter = start;
+
+  for (let i = start; i < end; i++) {
+    if (arr[i] < arr[pivot]) {
+      if (counter == i) {
+        counter++;
+      } else {
+        const temp = arr[counter];
+        arr[counter] = arr[i];
+        arr[i] = temp;
+        counter++;
+      }
+    }
+  }
+
+  const temp = arr[pivot];
+  arr[pivot] = arr[counter];
+  arr[counter] = temp;
+
+  return counter;
+}
+
+function quickSort (arr, begin, end) {
+  if (end < begin) return;
+
+  const pivot = partition(arr, begin, end);
+
+  quickSort(arr, begin, pivot - 1);
+  quickSort(arr, pivot + 1, end);
+}
+```
+
+#### 归并排序（Merge Sort）
+
+* 把长度为 n 的输入序列分成两个长度为 n / 2 的子序列；
+* 对这两个子序列分别采用归并排序；
+* 将两个排序好的子序列合并成一个最终的排序序列。
+
+```js
 ```
 
