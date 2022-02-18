@@ -1,33 +1,12 @@
-function fib (n, memo = {}) {
-  if (n <= 2) return n;
-  
-  if (!memo[n]) {
-    memo[n] = fib(n - 1, memo) + fib(n - 2, memo);
-  }
-  return memo[n];
-};
+const str = 'hello world';
 
-function fib (n) {
-  if (n <= 2) {
-    return n;
-  }
-
-  let first = 1;
-  let second = 2;
-
-  for (let i = 3; i <= n; i++) {
-    let thrid = first + second;
-
-    first = second;
-    second = thrid;
-  }
+// for (let i = 0; i < str.length; i++) {
+//   console.log(str[i]);
+// }
 
 
-  return second;
-};
+// for (const k in str) {
+//   console.log(str[k]);
+// }
 
-console.log(fib(3));
-console.log(fib(30));
-console.log(fib(300));
-
-// 0 1 1 2 3 5 8 13 21 34 55
+console.log(str[7]);

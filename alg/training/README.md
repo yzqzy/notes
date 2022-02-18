@@ -6196,3 +6196,91 @@ const reversePairsRecursive = (nums, left, right) => {
 
 ## 字符串算法
 
+### 基础字符串算法
+
+#### 遍历字符串
+
+```js
+const str = 'hello world';
+
+for (let i = 0; i < str.length; i++) {
+  console.log(str[i]);
+}
+
+for (const k of str) {
+  console.log(k);
+}
+
+for (const k in str) {
+  console.log(str[k]);
+}
+```
+
+> Java 中字符串是不可变的，字符串比较使用 equals、equalsIgnoreCase 方法。
+
+#### 基础问题
+
+[转换成小写字母](https://leetcode-cn.com/problems/to-lower-case/)
+
+[最后一个单词的长度](https://leetcode-cn.com/problems/length-of-last-word/)
+
+[宝石与石头](https://leetcode-cn.com/problems/jewels-and-stones/)
+
+[字符串中的第一个唯一字符](https://leetcode-cn.com/problems/first-unique-character-in-a-string/)
+
+[字符串转换整数 (atoi)](https://leetcode-cn.com/problems/string-to-integer-atoi/)
+
+#### 字符串操作问题
+
+[最长公共前缀](https://leetcode-cn.com/problems/longest-common-prefix/)
+
+[反转字符串](https://leetcode-cn.com/problems/reverse-string/)
+
+[反转字符串 II](https://leetcode-cn.com/problems/reverse-string-ii/)
+
+[翻转字符串里的单词](https://leetcode-cn.com/problems/reverse-words-in-a-string/)
+
+[反转字符串中的单词 III](https://leetcode-cn.com/problems/reverse-words-in-a-string-iii/)
+
+[仅仅反转字母](https://leetcode-cn.com/problems/reverse-only-letters/)
+
+#### Anagram 异位词问题
+
+[有效的字母异位词](https://leetcode-cn.com/problems/valid-anagram/)
+
+[字母异位词分组](https://leetcode-cn.com/problems/group-anagrams/)
+
+[找到字符串中所有字母异位词](https://leetcode-cn.com/problems/find-all-anagrams-in-a-string/)
+
+#### 回文串问题
+
+[验证回文串](https://leetcode-cn.com/problems/valid-palindrome/)
+
+[验证回文字符串 Ⅱ](https://leetcode-cn.com/problems/valid-palindrome-ii/)
+
+[最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+
+### 高级字符串算法
+
+动态规划和字符串相结合。
+
+#### 公共子串、子序列
+
+[编辑距离](https://leetcode-cn.com/problems/edit-distance/)
+
+[最长公共子序列](https://leetcode-cn.com/problems/longest-common-subsequence/)
+
+最长公共子串
+
+[最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+
+#### 字符串 + 递归/DP
+
+[正则表达式匹配](https://leetcode-cn.com/problems/regular-expression-matching/)
+
+[通配符匹配](https://leetcode-cn.com/problems/wildcard-matching/)
+
+[不同的子序列](https://leetcode-cn.com/problems/distinct-subsequences/)
+
+### 字符串匹配算法
+
