@@ -6284,3 +6284,101 @@ for (const k in str) {
 
 ### 字符串匹配算法
 
+* 暴力法（brute force）O(MN)
+* Rabin-Karp 算法
+* KMP 算法
+  
+
+[Boye-Moore算法](https://www.ruanyifeng.com/blog/2013/05/boyer-moore_string_search_algorithm.html)
+
+[Sunday算法](https://blog.csdn.net/u012505432/article/details/52210975)
+
+#### 暴力法
+
+```js
+function forceSearch (text, pattern) {
+  const M = text.length,
+        N = pattern.length;
+
+  for (let i = 0; i < M - N + 1; i++) {
+    let matched = true;
+
+    for (let j = 0; j < N; j++) {
+      if (text[i + j] !== pattern[j]) {
+        matched = false;
+        break;
+      }
+    }
+
+    if (matched) return i;
+  }
+
+  return -1;
+}
+```
+
+#### Rabin-Karp 算法
+
+* 朴素算法中，我们需要挨个比较所有字符，才知道目标字符串是否包含子串。
+* 为了避免挨个字符对目标字符串和子串进行比较，我们可以尝试一次性判断两者是否相等。因此，我们需要一个好的哈希函数（hash function）。通过哈希函数，我们可以算出子串的哈希值，然后将它和目标字符串的子串的哈希值进行比较。这个新方法在速度上比暴力法有显著提升。
+  
+
+**算法思想**
+
+1. 假设子串的长度为 M（Pat），目标字符串的长度为 N（txt）
+2. 计算子串的 hash 值 hash_pat
+3. 计算目标字符串 txt 中的每个长度为 M 的子串的 hash 值（总共需要计算 N-M+1 次）
+4. 比较 hash 值，如果 hash 值不同，字符串必然不匹配，如果 hash 值相同，还需要使用朴素算法再次判断
+
+
+
+```js
+function rabinKarpSearch (text, pattern) {
+  const D = 256,
+    Q = 9997;
+
+  let N = text.length,
+    M = pattern.length;
+
+  let patHash = 0,
+    txtHash = 0;
+
+  for (let i = 0; i < M; i++) {
+    patHash = (D * patHash + pattern[i].codePointAt(0)) % Q;
+    txtHash = (D * txtHash + text[i].codePointAt(0)) % Q;
+  }
+
+  let highestPow = 1; // 256 ** (M - 1);
+  for (let i = 0; i < M - 1; i++) {
+    highestPow = (highestPow * D) % Q;
+  }
+
+  let i, j;
+  for (i = 0; i < N - M + 1; i++) {
+    if (patHash === txtHash) {
+      for (j = 0; j < M; j++) {
+        if (pattern[j] !== text[i + j]) break;
+      }
+      if (j === M) return i;
+    }
+    if (i < N - M) {
+      txtHash = (D * (txtHash - text[i].codePointAt(0) * highestPow) + text[i + M].codePointAt(0)) % Q;
+      if (txtHash < 0) {
+        txtHash += Q;
+      }
+    }
+  }
+  return -1;
+}
+```
+
+
+
+#### KMP 算法
+
+KMP 算法（Knuth-Morris-Pratt）的思想就是，当子串与目标字符串不匹配时，其实已经知道前面已经匹配成功的那一部分字符（包括子串与目标字符串）。KMP 算法会设法利用这个已知信息，不要把 "搜索位置" 移回已经比较过的位置，继续把它向后移，这样就会提高效率。
+
+[KMP 字符串匹配算法视频](https://www.bilibili.com/video/av11866460?from=search&seid=17425875345653862171)
+
+[字符串匹配的 KMP 算法](http://www.ruanyifeng.com/blog/2013/05/Knuth–Morris–Pratt_algorithm.html)
+
