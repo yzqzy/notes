@@ -15,7 +15,7 @@
 * [HTML5](https://github.com/iheora/notes/tree/master/html5/base) 已完成
 * [CSS3](https://github.com/iheora/notes/tree/master/css3) 已完成
 * [工具函数](https://github.com/iheora/notes/tree/master/utils) 已完成
-* [Git](https://github.com/iheora/notes/tree/master/git) 更新中
+* [Git](https://github.com/iheora/notes/tree/master/git) 更新中...
 * NPM
   + [NPM基础](https://github.com/iheora/notes/tree/master/npm/base) 已完成
   + [NPM私服](https://github.com/iheora/notes/tree/master/npm/repos) 已完成
@@ -84,7 +84,7 @@
 * 数据结构与算法
   + [JS数据结构与算法](https://github.com/iheora/notes/tree/master/alg/algorithm) 已完成
   + [数据结构与算法](https://github.com/iheora/notes/tree/master/alg/algorithm_google) 已完成
-  + [算法训练营](https://github.com/iheora/notes/tree/master/alg/training) 更新中...
+  + [算法训练营](https://github.com/iheora/notes/tree/master/alg/training) 已完成
 * 读书笔记
   + [算法相关](https://www.yuque.com/yyne87/lcqfte) 已完成
   + [网络相关](https://www.yuque.com/yyne87/mw1l9v) 已完成
