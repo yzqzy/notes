@@ -831,21 +831,70 @@ or
 git pull # 拉取远端分支内容
 ```
 
-#### 多人修改同文件
+#### 多人修改同文件不同区域
 
 ```bash
-
+git pull # 同步远端代码
 ```
 
-## 四、Git 集成使用注意点
+or
 
-## 五、Git 与 Gihub 简单同步
+```bash
+git fetch # 拉取远端分支
+git merge # 合并远端分支
+```
 
-## 六、Github
+#### 多人修改同文件同区域
 
-## 七、Github 团队协作
+```bash
+git pull # 同步远端代码，发生内容冲突
 
-## 八、Gitlab 实践
+vim index.html # 根据提示直接打开文件进行修改，这里假设是 index.html
+
+git status # 查看 merge 是否完成
+
+git commit # 如果确实已经合并完毕
+or
+git merge --abort # 如果不想 merge，重新退回，这时可以丢弃 merge 的代码
+```
+
+#### 同时变更文件内容和文件内容
+
+```bash
+git pull # git 可以感知到文件名变化，直接合并，可以很智能的处理
+```
+
+#### 同一文件改成不同文件
+
+```bash
+git pull # 本地文件名已修改，线上也被修改，拉取代码时会发生冲突
+
+git status # 查看 git 状态及提示信息，根据提示进行操作
+```
+
+### 集成分支使用禁忌
+
+#### git push -f
+
+强制提交，会覆盖线上已有内容。
+
+```bash
+git push -f # git push --force
+```
+
+gitlab、github 都提供了禁止使用这条命令的机制。（非必要比建议使用）
+
+#### git rebase
+
+变基会修改历史记录，可能会覆盖其他成员的劳动成果（心怀不轨），会导致其他成员的代码提交报错（指针前移的情况）。
+
+```bash
+git reabse
+```
+
+## 四、Git 与 Github
 
 
+
+## 五、Gitlab 实践
 
