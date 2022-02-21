@@ -3,4 +3,5 @@
 // import './03.complex_type';
 // import './04.ilteral';
 // import './05.function_type';
-import './06.class_type';
+// import './06.class_type';
+import './07.interface';
