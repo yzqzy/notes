@@ -4,4 +4,6 @@
 // import './04.ilteral';
 // import './05.function_type';
 // import './06.class_type';
-import './07.interface';
+// import './07.interface';
+// import './08.unions_intersection_types';
+import './09.enum_type';
