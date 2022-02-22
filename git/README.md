@@ -894,6 +894,65 @@ git reabse
 
 ## 四、Git 与 Github
 
+### Github 初识
+
+GIt 通过引入 fork 概念使得开源项目的合作变得容易，但是 Git 仍有局限性。
+Git 无法帮助开发人员寻找开源项目，许多程序员开发了优秀的开源项目，也很难被别人发现。
+
+#### Github 核心功能
+
+* Code Review
+  * comment
+* Project management 项目管理
+  * issue
+  * cards board
+* Integrations 项目集成
+  * provided by a third companies
+* Team management 团队管理
+* Social coding 开源
+  * follow projects
+  * explore your intersets
+  * share your achievement
+* Documentation 文档、静态站点、wikis
+  * Github Pages
+  * Wikis 说明手册
+* Code hosting
+  * 代码托管
+
+#### 高效搜索项目
+
+Advanced search 高级搜索。
+
+https://github.com/search?q=&type=Repositories
+
+
+
+<img src="./images/github_search.png" style="zoom: 40%" />
+
+
+
+假设搜索 Git 相关内容：
+
+```js
+// 如果直接输入名称关键字，查询的只是仓库名称和描述信息。
+
+git 学习资料
+```
+
+```js
+// 可以指定查询范围
+
+git 学习资料 in:readme
+git 学习资料 in:readme stars:>1000
+```
+
+
+根据高级搜索面板可以自己组合关键字。
+
+> Github 支持 code 和 repository options 同时搜索
+
+#### Github 搭建个人博客
+
 
 
 ## 五、Gitlab 实践
