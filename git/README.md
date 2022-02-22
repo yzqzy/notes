@@ -951,7 +951,80 @@ git 学习资料 in:readme stars:>1000
 
 > Github 支持 code 和 repository options 同时搜索
 
-#### Github 搭建个人博客
+#### 如何保证开源项目质量
+
+Pull Request，可以给开源项目提交申请，也可以审查别人的申请。
+
+Code Review。
+
+#### 为何需要组织类型的仓库
+
+settings - organizations，可以创建组织。
+
+存在以下功能：
+
+* Repositories
+* People manage
+* Teams：对仓库进行精细化的管控
+* Projects
+* Settings
+
+可以对团队成员进行权限管控，组织成员可以看到所有仓库（无权限时）以及所有团队，可以自主申请加入团队。
+
+### Github 与 Git 简单同步
+
+#### 配置 SSH 公私钥
+
+ ```bash
+ ssh-keygen -t rsa -b 4096 -C "your_email@example.com" # 一直回车即可
+ ```
+
+```bash
+cat ~/.ssh/id_rsa.pub # 查看公钥，粘贴到 Github（SSH and GPG Keys）
+```
+
+#### 本地仓库同步到 Github
+
+create repository，将本地代码同步到远端仓库。
+
+
+
+首次创建仓库
+
+```bash
+git remote add [custom_name] [remote_ssh_url]	# 添加远程仓库地址
+git remote -v # 查看远端地址
+
+git pull # 如果远端仓库已存在内容，需要先拉取代码	git pull => git fetch + merge
+
+git push --set-upstream origin master
+```
+
+
+
+拉取分支合并
+
+```bash
+git remote -v # 查看远程版本库信息
+git remote add githup <url> # 添加githup远程版本库
+git fetch githup # 拉取远程版本库
+git merge -h # 查看合并帮助信息
+git merge --allow-unrelated-histories githup/master # 合并githup上的master分支（两分支不是父子关系，所以合并需要添加 --allow-unrelated-histories）
+git push githup # 推送同步到githup仓库
+```
+
+
+
+rebase 情况，不使用 merge
+
+```bash
+1）先把远端的分支 fetch到本地，然后，再执行 rebase
+2）直接 git pull --rebase
+```
+
+### Github 团队协作
+
+#### 创建团队项目
 
 
 
