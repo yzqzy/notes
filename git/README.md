@@ -1026,6 +1026,55 @@ rebase 情况，不使用 merge
 
 #### 创建团队项目
 
+Create a new repository - Owner（select organization）- private type  ，其他选择可以任意。
+
+
+settings - Collaborators & teams，角色权限控制，可以建一个组织进行测试。
+
+#### 选择适合团队的工作流
+
+**需要考虑的因素**
+
+* 团队人员的组成
+* 研发设计能力
+* 输出产品的特征
+* 项目难易程度
+
+**主干开发**
+
+适用于开发团队系统设计和开发能力强。有一套有效的特性切换的实施机制，保证上线后无需修改代码就能修改系统行为。
+适用于组件开发的团队，成员能力强，人员少，沟通顺畅。用户升级组件成本低的环境。
+
+适用范围比较少。
+
+**Git Flow**
+
+适用于不具备主干开发能力。有预定的发布周期，需要执行严格的发布流程。
+
+
+<img src="./images/git_flow.png" style="zoom: 80%" />
+
+**Github Flow**
+
+适用于不具备主干开发能力。随时集成随时发布：分支集成时经过代码评审和自动化测试，就可以立即发布。
+
+
+
+<img src="./images/github_flow.png" />
+
+**Gitlab Flow**
+
+适用于不具备主干开发能力。无法控制准确的发布时间，但又要求不停地集成。
+
+
+<img src="./images/gitlab_flow.png" />
+
+#### 选择合适的分支集成策略
+
+
+
+#### 启用 issue 跟踪需求和任务
+
 
 
 ## 五、Gitlab 实践
