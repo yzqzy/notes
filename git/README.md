@@ -1113,6 +1113,26 @@ vue/.github/_.md，vue 提供了很多 issue 模板，可以参考使用。
 
 #### 使用 project 管理 issue
 
+Projects - New Project - Create project   （可以选择不同模板）
+
+
+<img src="./images/projects.png" style="zoom: 40%" />
+
+
+
+#### 项目内部实施 Code Review
+
+Settings - Branches - Branch protection rules 、add rule
+
+
+ <img src="./images/branch_rule.png" style="zoom: 40%" />
+
+
+
+建立一个 Pull Request，可选中 Reviewers 人员，被添加人员会受到邮件通知。Review 通过后，也会通知开源人员。
+
+#### 团队协作多分支集成
+
 
 
 ## 五、Gitlab 实践
