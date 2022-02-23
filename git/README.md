@@ -1071,9 +1071,47 @@ settings - Collaborators & teams，角色权限控制，可以建一个组织进
 
 #### 选择合适的分支集成策略
 
+Insigts - Network  可以查看分支情况
 
+Settings - MergeButton
+
+* Allow merge commits：	
+* Allow squash merging：
+* Allow rebase merging ：允许线性的合并、期望历史记录就是一条线
+
+
+
+
+Pull requests - new pull request 
+
+=> compare -> base  
+
+=> create pull request 
+
+=> merge pull request，select merge way
+
+* create a merge commit
+* squash and merge
+* rebase and merge
 
 #### 启用 issue 跟踪需求和任务
+
+Issues 面板
+
+* label 标签
+* milestones 里程碑
+
+
+
+<img src="./images/issues.png" style="zoom: 40%" />
+
+
+
+create issues。
+
+vue/.github/_.md，vue 提供了很多 issue 模板，可以参考使用。
+
+#### 使用 project 管理 issue
 
 
 
