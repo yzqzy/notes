@@ -1133,7 +1133,51 @@ Settings - Branches - Branch protection rules 、add rule
 
 #### 如何保证集成质量
 
+项目做好工程化配置，做好代码检查和提交信息审核。
 
+Settings - Branches - Branch protection rules，配置 codereview 集成检查、CI 要求。
+
+Marketplace 中提供了很多第三方服务，如 Travis CI、Codecov 、jenkins 等。
+
+Settings - Integrations & services - Installed Github Apps  可以查看已安装服务。
+
+#### 发布产品包 release
+
+需要借助 CI 工具，打包完毕自动添加到 releases 中。
+
+以 Travis CI 为例。
+
+```yaml
+deploy:
+	provider: releases
+	api_key: $github_oauth_token
+	file: xxx
+	skip_cleanup: true
+	on:
+		branch: master
+```
+
+Settings - Installed Github Apps - Travis CI - Configure。
+
+ 
+
+<img src="./images/ci_config.png" style="zoom: 40%" />
+
+
+
+<img src="./images/ci_secret.png" style="zoom: 50%" />
+
+
+
+配置完毕，重新构建即可。
+
+[travis ci 前端工程化](https://juejin.cn/post/6942675520022642719)
+
+#### 项目增加指导文档
+
+Github Wiki 功能，可以用 markdown 编写。Wiki 其实也是一个仓库。
+
+vue wiki  https://github.com/vuejs/vue/wiki。
 
 ## 五、Gitlab 实践
 
