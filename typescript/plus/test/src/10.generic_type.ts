@@ -160,11 +160,59 @@
 /** 泛型类型 end */
 
 /** 泛型约束 start */
+{
+  // 泛型就像是类型的函数，它可以抽象、封装并接收（类型）入参，而泛型的入参也拥有类似函数入参的特性。
+  // 因此，我们可以把泛型入参限定在一个相对更明确的集合内，以便对入参进行约束。
 
+  // 我们希望把接收参数的类型限定在几种原始类型的集合中，此时就可以使用“泛型入参名 extends 类型”语法达到这个目的
+  function reflectSpecified<P extends number | string | boolean>(param: P):P {
+    return param;
+  }
+
+  reflectSpecified('string'); // ok
+  reflectSpecified(1); // ok
+  reflectSpecified(true); // ok
+  // reflectSpecified(null); // ts(2345) 'null' 不能赋予类型 'number | string | boolean'
+
+
+  // 我们也可以把接口泛型入参约束在特定的范围内
+  interface ReduxModelSpecified<State extends { id: number; name: string }> {
+      state: State
+  }
+
+  type ComputedReduxModel1 = ReduxModelSpecified<{ id: number; name: string; }>; // ok
+  type ComputedReduxModel2 = ReduxModelSpecified<{ id: number; name: string; age: number; }>; // ok
+  // type ComputedReduxModel3 = ReduxModelSpecified<{ id: string; name: number; }>; // ts(2344)
+  // type ComputedReduxModel4 = ReduxModelSpecified<{ id: number;}>; // ts(2344)
+
+  
+  // 我们还可以在多个不同的泛型入参之间设置约束关系
+  // 在设置对象属性值的函数类型时，它拥有 3 个泛型入参：第 1 个是对象，第 2 个是第 1 个入参属性名集合的子集，第 3 个是指定属性类型的子类型
+  interface ObjSetter {
+    <O extends {}, K extends keyof O, V extends O[K]>(obj: O, key: K, value: V): V; 
+  }
+
+  const setValueOfObj: ObjSetter = (obj, key, value) => (obj[key] = value);
+  setValueOfObj({ id: 1, name: 'name' }, 'id', 2); // ok
+  setValueOfObj({ id: 1, name: 'name' }, 'name', 'new name'); // ok
+  // setValueOfObj({ id: 1, name: 'name' }, 'age', 2); // ts(2345)
+  // setValueOfObj({ id: 1, name: 'name' }, 'id', '2'); // ts(2345)
+
+
+  // 泛型入参与函数入参还有一个相似的地方在于，它也可以给泛型入参指定默认值（默认类型），且语法和指定函数默认参数完全一致
+  // 我们定义了入参有默认类型的泛型 ReduxModelSpecified2，因此使用 ReduxModelSpecified2 时类型入参可缺省。
+  // 而 ReduxModelSpecified 的入参没有默认值，所以缺省入参时会提示一个类型错误。
+  interface ReduxModelSpecified2<State = { id: number; name: string }> {
+    state: State
+  }
+  type ComputedReduxModel5 = ReduxModelSpecified2; // ok
+  type ComputedReduxModel6 = ReduxModelSpecified2<{ id: number; name: string; }>; // ok
+  // type ComputedReduxModel7 = ReduxModelSpecified; // ts(2314) 缺少一个类型参数
+
+
+  // 泛型入参的约束与默认值还可以组合使用
+  interface ReduxModelMixed<State extends {} = { id: number; name: string }> {
+    state: State
+  }
+}
 /** 泛型约束 end */
-
-/** 泛型类型参数 start */
-/** 泛型类型参数 end */
-
-/** 泛型类型参数 start */
-/** 泛型类型参数 end */
