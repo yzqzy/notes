@@ -1131,7 +1131,7 @@ Settings - Branches - Branch protection rules 、add rule
 
 建立一个 Pull Request，可选中 Reviewers 人员，被添加人员会受到邮件通知。Review 通过后，也会通知开源人员。
 
-#### 团队协作多分支集成
+#### 如何保证集成质量
 
 
 
