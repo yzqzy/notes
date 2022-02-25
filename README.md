@@ -9,7 +9,7 @@
   + [内置对象](https://github.com/iheora/notes/tree/master/ecmascript/Built_in_objects) 暂停中...
   + [函数式编程](https://github.com/iheora/notes/tree/master/ecmascript/functional) 已完成
   + [JavaScript性能优化](https://github.com/iheora/notes/tree/master/ecmascript/optimize) 已完成
-  + [前端性能优化](https://github.com/iheora/notes/tree/master/ecmascript/front_end_optimize) 暂停中...
+  + [前端性能优化](https://github.com/iheora/notes/tree/master/ecmascript/front_end_optimize) 已废弃
 * [DOM](https://github.com/iheora/notes/tree/master/dom) 已完成
 * [BOM](https://github.com/iheora/notes/tree/master/bom) 已完成
 * [HTML5](https://github.com/iheora/notes/tree/master/html5/base) 已完成
@@ -30,12 +30,12 @@
 * webpack
   * [webpack基础](https://github.com/iheora/notes/tree/master/webpack/webpack) 已完成
   * [webpack提升](https://github.com/iheora/notes/tree/master/webpack/webpack_tencent) 已完成
-  * [webpack进阶](https://github.com/iheora/notes/tree/master/webpack/webpack_plus) 暂停中...
+  * [webpack进阶](https://github.com/iheora/notes/tree/master/webpack/webpack_plus) 已废弃
   * [自定义loader、plugins](https://github.com/iheora/notes/tree/master/webpack/webpack_write) 已完成
   * [webpack源码实现](https://github.com/iheora/notes/tree/master/webpack/webpack_write) 已完成
   * [webpack源码进阶实现](https://github.com/iheora/notes/tree/master/webpack/webpack_write_plus) 已完成
 * vue
-  + [vue基础](https://github.com/iheora/notes/tree/master/vue/vue_base) 暂停中...
+  + [vue基础](https://github.com/iheora/notes/tree/master/vue/vue_base) 已废弃
   + [vue3自定义渲染器](https://github.com/iheora/notes/tree/master/vue/vue3_renderer) 已完成
   + [vue源码阅读](https://github.com/iheora/notes/tree/master/vue/vue_source) 已完成
   + [vue源码实现](https://github.com/iheora/notes/tree/master/vue/vue_source_design) 已完成
@@ -65,7 +65,7 @@
   + [TypeScipt基础](https://github.com/iheora/notes/tree/master/base/typescript) 已完成
 * NodeJS
   + [Node基础](https://github.com/iheora/notes/tree/master/node/base) 已完成
-  + [Node进阶](https://github.com/iheora/notes/tree/master/node/plus) 暂停中...
+  + [Node进阶](https://github.com/iheora/notes/tree/master/node/plus) 已废弃
   + [koa架构分析与源码重写](https://github.com/iheora/notes/tree/master/node/koa) 已完成
 * threejs
   + [跳一跳案例](https://github.com/iheora/notes/tree/master/three.js/jump) 已完成
@@ -77,10 +77,10 @@
   + [模块联邦](https://github.com/iheora/notes/tree/master/micro_frontends/module_federation) 已完成
   + [single-spa源码实现](https://github.com/iheora/notes/tree/master/micro_frontends/source) 已完成
 * [Superset](https://github.com/iheora/notes/tree/master/superset) 已完成
-* [Nginx](https://github.com/iheora/notes/tree/master/nginx) 暂停中...
+* [Nginx](https://github.com/iheora/notes/tree/master/nginx) 已废弃
 * jenkins
   + [react项目构建部署](https://github.com/iheora/notes/tree/master/jenkins/practice) 已完成
-  + [Jenkins2.x实践指南](https://github.com/iheora/notes/tree/master/jenkins/jenkins2.x) 暂停中...
+  + [Jenkins2.x实践指南](https://github.com/iheora/notes/tree/master/jenkins/jenkins2.x) 已废弃
 * 数据结构与算法
   + [JS数据结构与算法](https://github.com/iheora/notes/tree/master/alg/algorithm) 已完成
   + [数据结构与算法](https://github.com/iheora/notes/tree/master/alg/algorithm_google) 已完成
