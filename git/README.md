@@ -1178,6 +1178,3 @@ Settings - Installed Github Apps - Travis CI - Configure。
 Github Wiki 功能，可以用 markdown 编写。Wiki 其实也是一个仓库。
 
 vue wiki  https://github.com/vuejs/vue/wiki。
-
-## 五、Gitlab 实践
-

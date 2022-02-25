@@ -6,7 +6,7 @@
   + [ECMAScript](https://github.com/iheora/notes/tree/master/ecmascript/base) 已完成
   + [ES6](https://github.com/iheora/notes/tree/master/ecmascript/es6) 已完成
   + [Promise源码实现](https://github.com/iheora/notes/tree/master/ecmascript/promise) 已完成
-  + [内置对象](https://github.com/iheora/notes/tree/master/ecmascript/Built_in_objects) 暂停中 😀
+  + [内置对象](https://github.com/iheora/notes/tree/master/ecmascript/Built_in_objects) 更新中... 😁
   + [函数式编程](https://github.com/iheora/notes/tree/master/ecmascript/functional) 已完成
   + [JavaScript性能优化](https://github.com/iheora/notes/tree/master/ecmascript/optimize) 已完成
   + ~~[前端性能优化](https://github.com/iheora/notes/tree/master/ecmascript/front_end_optimize) 已废弃~~ 😅
@@ -15,7 +15,7 @@
 * [HTML5](https://github.com/iheora/notes/tree/master/html5/base) 已完成
 * [CSS3](https://github.com/iheora/notes/tree/master/css3) 已完成
 * [工具函数](https://github.com/iheora/notes/tree/master/utils) 已完成
-* [Git](https://github.com/iheora/notes/tree/master/git) 更新中... 😁
+* [Git](https://github.com/iheora/notes/tree/master/git) 已完成
 * NPM
   + [NPM基础](https://github.com/iheora/notes/tree/master/npm/base) 已完成
   + [NPM私服](https://github.com/iheora/notes/tree/master/npm/repos) 已完成
