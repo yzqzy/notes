@@ -8,4 +8,5 @@
 // import './08.unions_intersection_types';
 // import './09.enum_type';
 // import './10.generic_type';
-import './11.type_guard';
+// import './11.type_guard';
+import './12.type_compat';
