@@ -31,3 +31,16 @@ Render(obj, document.body);
 // const obj = Compiler(hmtl);
 
 // Render(obj, document.body);
+
+
+//   <div>
+//     <span>hello world</span>
+//   </div>
+
+const div = document.createElement('div');
+const span = document.createElement('span');
+
+span.innerText = 'hello world'
+div.appendChild(span);
+
+document.body.appendChild(div);
