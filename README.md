@@ -86,6 +86,7 @@
   + [数据结构与算法](https://github.com/iheora/notes/tree/master/alg/algorithm_google) 已完成
   + [算法训练营](https://github.com/iheora/notes/tree/master/alg/training) 已完成
 * 读书笔记
+  + [Vue.js设计与实现](https://github.com/iheora/notes/tree/master/notes/Vue.js设计与实现) 更新中... 😁
   + [算法相关](https://www.yuque.com/yyne87/lcqfte) 已完成
   + [网络相关](https://www.yuque.com/yyne87/mw1l9v) 已完成
   + [浏览器相关](https://www.yuque.com/yyne87/wwaov6) 已完成
