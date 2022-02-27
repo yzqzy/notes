@@ -457,6 +457,3 @@ function validtor (a, b) {
 
 
 
-```js
-```
-
