@@ -468,3 +468,145 @@ new webpack.DefinePlugin({
 
 #### 错误处理
 
+错误处理是框架开发过程中非常重要的环节。框架错误处理机制的好坏直接决定用户应用程序的健壮性，决定用户开发体验的好坏。
+
+```js
+// utils.js
+export default {
+  foo (fn) {
+    fn && fn();
+  }
+}
+```
+
+该模块导出一个对象。如果用户在使用 foo 函数 过程中传入的毁掉函数执行出错，要怎么办？
+
+第一个办法是用户自行处理，需要用户执行 try...catch。
+
+```js
+import utils from 'utils.js';
+
+utils.foo(() => {
+  try {
+    // ...
+  } catch (e) {
+    // ...
+  }
+});
+```
+
+但是这会增加用户负担。如果 utils.js 提供了很多函数，用户都需要逐一添加错误处理程序。
+
+第二个办法是我们代替用户统一处理错误。
+
+```js
+// utils.js
+export default {
+  foo (fn) {
+    try {
+      fn && fn();
+    } catch (error) { }
+  },
+  bar (fn) {
+    try {
+      barfn && bar();
+    } catch (error) { }
+  }
+}
+```
+
+每个函数都增加 try...catch，我们还可以优化下。
+
+```js
+export default {
+  foo (fn) {
+    callWithErrorHandling(fn);
+  },
+  bar (fn) {
+    callWithErrorHandling(fn);
+  }
+}
+
+function callWithErrorHandling (fn) {[
+  try {
+    fn && fn();
+  } catch (error) {
+    console.log(error);
+  }
+]}
+```
+
+代码变的简洁很多。但简洁不是目的，这样做的好处是我们可以为用户提供统一的错误处理接口。
+
+```js
+let handleError = null;
+
+export default {
+  foo (fn) {
+    callWithErrorHandling(fn);
+  },
+  bar (fn) {
+    callWithErrorHandling(fn);
+  },
+  // 用户注册错误处理函数
+  registerErrorHandler (fn) {
+    handleError = fn;
+  }
+}
+
+function callWithErrorHandling (fn) {[
+  try {
+    fn && fn();
+  } catch (error) {
+    // 抛出错误
+    handleError && handleError(error);
+  }
+]}
+```
+
+我们提供 registerErrorHandler 函数，用户可以使用它注册错误处理程序。这时错误处理的能力交由用户控制，即可以选择忽略错误，也可以调用上报程序将错误上报给监控系统。
+
+其实这就是 vue.js 错误处理的原理，你可以在源码中搜索到 callWithErrorHandling 函数。
+另外，在 vue.js 中，我们也可以注册统一的错误处理函数。
+
+```js
+import App from 'App.vue';
+
+const app = createApp(App);
+
+app.config.errorHandler = () => {
+  // 错误处理程序
+}
+```
+
+#### typescript 支持
+
+ts，它是 js 的超集，能够为 js 提供类型支持。使用 ts 的好处有很多，如编译器自动提示、一定程度避免低级 bug、代码的可维护强。因此对 ts 的支持是否完善也是评价一个框架的重要指标。
+
+如何衡量一个框架对 ts 类型的支持水平？并不是只要是使用 ts 编写框架，就等价于对 ts 类型支持友好。
+
+```js
+function foo (val: any) {
+  return val;
+}
+```
+
+这个函数很简单，接收参数 val 并返回该参数，返回值的类型是由参数决定的。上述代码显然不能满足我们的要求，正确的做法如下。
+
+```js
+function foo<T extends any>(val: T) {
+  return val;
+}
+```
+
+编写大型框架时，想要做到完善的 ts 类型支持很不容易，vue.js 源码中的 `runtime-core/src/apiDefineComponent.ts`文件，整个文件真正会在浏览器中中运行的代码其实只有 3 行，但是全部代码接近 200 行，这些代码都是在为类型支持服务。
+
+#### 总结
+
+框架设计中开发体验时衡量一个框架的重要指标之一。提供友好的警告信息又处于开发者快速定位维提，大多数情况下 "框架" 要比开发者更清楚问题出在哪里，因此在框架层面抛出有意义的警告信息是非常有必要的。
+
+为了框架体积不受警告信息的影响（提供警告信息越详细，框架体积越大），我们需要利用 Tree-Shaking 机制，配置构建工具预定义变量的能力，从而实现仅在开发环境中打印警告信息，生产环境中则不包含这些用于提升开发体验的代码，实现线上代码的可控性。
+
+框架不同类型的输出产物用于满足不同需求。我们需要结合实际使用情况，可以针对性输出构建产物。
+
+框架会提供多种能力。
