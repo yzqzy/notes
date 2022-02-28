@@ -199,7 +199,7 @@ console.log(count);
 
 直接打印 count，我们会看到一个对象，而不是 `count.value` 的值。
 
-vue.js 3 的源码中，可以搜到 `iitCustomFormatter`  的函数，该函数用来在开发环境初始化自定义 formatter。
+vue.js 3 的源码中，可以搜到 `initCustomFormatter`  的函数，该函数用来在开发环境初始化自定义 formatter。
 
 浏览器允许我们编写自定义的 formatter，以 Chrome 为例，我们可以打开 DevTools，勾选 Console => Enable custom formatters 选项。刷新浏览器再查看，就可以直接看到 `count.value`  的值。
 
@@ -209,4 +209,67 @@ vue.js 3 的源码中，可以搜到 `iitCustomFormatter`  的函数，该函数
 
 
 #### 控制代码体积
+
+框架的大小也是衡量框架的标准之一。
+实现同样功能的前提下，编写的代码让燃石越少越好，这样体积就会越小，浏览器加载资源的时间也越少。
+
+vue.js 源码，每一个 warn 函数的调用都会配置 `_DEV_` 常量的检查：
+
+```js
+if (_DEV_ && !res) {
+  warn(
+    'Failed to moune app: mount target selector "${ container }" returned null.'
+  )
+}
+```
+
+ vue.js 使用 rollup.js 对项目进行构建，这里的 `_DEV_`  是通过 rollup.js 的插件配置来预定义的，功能类似于 webpack 中的 DefinePlugin 插件。生产环境中，这段代码不会出现在最终产物中，在构建资源的时候就会被移除。
+
+这样我们就可以做到开发环境中为用户提供友好的警告信息的同时，不会增加生产环境代码的体积。
+
+#### 良好的 Tree-Shaking
+
+vue.js 内置了很多组件，我们的项目并没有使用这么多组件，还有前面提到的变量的打印，生产环境不需要这些代码出现。
+
+Tree-Shaking 就是消除那些永远都不会执行的代码，也就是排除 dead code，无论是 rollup.js 和 webpack，都支持 Tree-Shaking。
+
+要想实现 Tree-Shaking，必须满足一个条件，模块必须要 ESM（ES Module），Tree-Shaking 依赖 ESM 的静态结果。
+
+
+
+以 rollup.js 为例
+
+```js
+|- demo
+|  - package.json
+|  - input.js
+|  - utils.js
+```
+
+```js
+yarn add rollup -D
+```
+
+```js
+// input.js
+import { foo } from './utils.js';
+
+foo();
+```
+
+```js
+// utils.js
+export function foo (obj) {
+  obj && obj.foo;
+}
+export function bar (obj) {
+  obj && obj.bar;
+}
+```
+
+上述代码我们在 utils.js 中导出了两个函数，在 input.js 中我们只是用到 foo 函数。
+
+```js
+npx rollup input.js -f esm -o dist/bundle.js // rollup 构建
+```
 
