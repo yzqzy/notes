@@ -1,4 +1,3 @@
-// input.js
 import { foo } from './utils.js';
 
-foo();
+/*#__PURE__*/ foo();

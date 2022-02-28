@@ -1,4 +1,3 @@
-// utils.js
 export function foo (obj) {
   obj && obj.foo;
 }
