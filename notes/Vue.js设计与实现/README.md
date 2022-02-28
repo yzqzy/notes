@@ -1,8 +1,10 @@
 # Vue.js 设计与实现
 
-## 权衡的艺术
+## 一、框架设计概览
 
-### 命令式和声明式
+### 权衡的艺术
+
+#### 命令式和声明式
 
 视图层框架通常分为命令式和声明式，它们各有优缺点。
 
@@ -52,8 +54,7 @@ div.textContent = 'hello vue3';
 声明式代码会把命令式代码多出很多性能消耗（compiler、diff），框架本身就是封装了命令式代码实现了面向用户的声明式。
 
 
-
-### 为什么 vue.js 要选择声明式的设计方案？
+#### 为什么 vue.js 要选择声明式的设计方案？
 
 声明式代码的可维护性更强。
 
@@ -66,7 +67,7 @@ div.textContent = 'hello vue3';
 
 
 
-### 虚拟 DOM 的性能到底如何？
+#### 虚拟 DOM 的性能到底如何？
 
 采用虚拟 DOM 的更新技术的性能理论上不可能比原生 js 操作 DOM 更高。
 
@@ -74,7 +75,7 @@ div.textContent = 'hello vue3';
 
 
 
-### 运行时和编译时
+#### 运行时和编译时
 
 设计框架，我们有三种选择，纯运行时、运行时 + 编译时、编译时。
 
@@ -129,5 +130,146 @@ Render(obj, document.body);
 这时我们的框架就变成一个 **运行时 + 编译时** 的框架。既支持提供数据对象直接渲染，也可以提供 HTML 字符串编译后渲染。
 
 
-
 **为什么不将 html 字符串直接编译成命令式代码？**
+
+```html
+<div>
+	<span>hello world</span>
+</div>
+```
+
+```js
+const div = document.createElement('div');
+const span = document.createElement('span');
+
+span.innerText = 'hello world'
+div.appendChild(span);
+
+document.body.appendChild(div);
+```
+
+将 html 字符串编译成命令式代码，我们只需要一个 Compiler 函数就可以。这样其实就变成一个纯编译时的框架，我们不支持任何运行时内容，用户的代码通过编译器编译后才能运行。
+
+纯运行时的框架，没有编译的过程，因此也没办法分析用户提供的内容；
+运行时 + 编译时的框架，由于加入编译步骤，我们可以分析用户提供的内容，提取信息再传给 Render 函数，可以做进一步的优化；
+纯编译时框架，也可以分析用户内容，可以直接将代码编译成可执行代码，因此性能可能会更好，但是不够灵活。
+
+这三个方向业内都有探索，Svelte 就是纯编译时框架，它的真实性能可能达不到理论高度。vue.js 保持运行时 + 编译时的架构，在保持灵活性的基础上尽可能去优化。
+
+
+#### 总结
+
+命令式更加关注过程，声明式更加关注结果。
+命令式理论上可以做到极致优化，但是用户要承担巨大的心智负担，
+声明式能够减轻用户的心智负担，但是性能有一定牺牲，框架设计者需要想办法使性能损耗最小化。
+
+声明式更新性能损耗 = 找出差异的性能消耗 + 直接修改的性能消耗。虚拟 DOM 的意义在于使找出差异的性能消耗最小化。
+
+vue.js 是一个编译时 + 运行时的框架，它在保持灵活性的基础上，能够通过编译手段分析用户提供的内容，从而进一步提升更新性能。
+
+### 框架设计的核心要素
+
+框架设计远比想象复杂，并不是把功能开发完就算大功告成。
+
+还需要考虑框架应该给用户提供哪些构建产物？产物的模块格式如何？用户以错误的方式使用框架，如何打印合适的警告信息，让用户快速定位问题？开发版本的构建和生产版本构建有何区别？热更新需要框架层面的支持，我们是否应该支持？你的框架提供多个功能，用户只需要其中几个功能，用户能否可以走到按需使用，从而减少资源打包体积？这都应该是我们在设计框架的过程中应该考虑的。
+
+
+#### 提升用户的开发体验
+
+框架设计和开发过程中，提供友好的警告信息至关重要。
+友好的警告信息不仅能够帮助用户快速定位问题，还能够让框架收获良好的口碑，让用户任何框架的专业性。
+
+vue.js 源码 warn 函数
+
+```js
+warn(
+	'Failed to moune app: mount target selector "${ container }" returned null.'
+)
+```
+
+warn 函数，最终调用了 `console.warn` 函数。
+
+
+除了提供必要警告信息，还有很多其他方面可以作为切入口，进一步提升用户开发体验。
+
+```js
+const count = ref(0);
+console.log(count);
+```
+
+直接打印 count，我们会看到一个对象，而不是 `count.value` 的值。
+
+vue.js 3 的源码中，可以搜到 `initCustomFormatter`  的函数，该函数用来在开发环境初始化自定义 formatter。
+
+浏览器允许我们编写自定义的 formatter，以 Chrome 为例，我们可以打开 DevTools，勾选 Console => Enable custom formatters 选项。刷新浏览器再查看，就可以直接看到 `count.value`  的值。
+
+
+<img src="./images/custom_formatters.png" style="zoom: 60%" />
+
+
+
+#### 控制代码体积
+
+框架的大小也是衡量框架的标准之一。
+实现同样功能的前提下，编写的代码让燃石越少越好，这样体积就会越小，浏览器加载资源的时间也越少。
+
+vue.js 源码，每一个 warn 函数的调用都会配置 `_DEV_` 常量的检查：
+
+```js
+if (_DEV_ && !res) {
+  warn(
+    'Failed to moune app: mount target selector "${ container }" returned null.'
+  )
+}
+```
+
+ vue.js 使用 rollup.js 对项目进行构建，这里的 `_DEV_`  是通过 rollup.js 的插件配置来预定义的，功能类似于 webpack 中的 DefinePlugin 插件。生产环境中，这段代码不会出现在最终产物中，在构建资源的时候就会被移除。
+
+这样我们就可以做到开发环境中为用户提供友好的警告信息的同时，不会增加生产环境代码的体积。
+
+#### 良好的 Tree-Shaking
+
+vue.js 内置了很多组件，我们的项目并没有使用这么多组件，还有前面提到的变量的打印，生产环境不需要这些代码出现。
+
+Tree-Shaking 就是消除那些永远都不会执行的代码，也就是排除 dead code，无论是 rollup.js 和 webpack，都支持 Tree-Shaking。
+
+要想实现 Tree-Shaking，必须满足一个条件，模块必须要 ESM（ES Module），Tree-Shaking 依赖 ESM 的静态结果。
+
+
+
+以 rollup.js 为例
+
+```js
+|- demo
+|  - package.json
+|  - input.js
+|  - utils.js
+```
+
+```js
+yarn add rollup -D
+```
+
+```js
+// input.js
+import { foo } from './utils.js';
+
+foo();
+```
+
+```js
+// utils.js
+export function foo (obj) {
+  obj && obj.foo;
+}
+export function bar (obj) {
+  obj && obj.bar;
+}
+```
+
+上述代码我们在 utils.js 中导出了两个函数，在 input.js 中我们只是用到 foo 函数。
+
+```js
+npx rollup input.js -f esm -o dist/bundle.js // rollup 构建
+```
+
