@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "cz": "git cz"
+    "cz": "git add ./ &&　git cz"
   },
   "repository": {
     "type": "git",

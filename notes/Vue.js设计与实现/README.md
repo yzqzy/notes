@@ -778,11 +778,108 @@ const MyComponent = function () {
 ```js
 const vnode = {
   tag: MyComponent
-}l
+};
 ```
 
 `tag: myComponent` 用户描述组件。为了能够渲染组件，我们还需要修改 renderer 函数。
 
 ```js
+function renderer (vnode, container) {
+  if (typeof vnode.children === 'string') {
+    mountElement(vnode, container);
+  } else if (typeof vnode.tag === 'function') {
+    mountComponent(vnode, container);
+  }
+}
+
+function mountElement (vnode, container) {
+  const el = document.createElement(vnode.tag);
+
+  for (const key in vnode.props) {
+    if (/^on/.test(key)) {
+      el.addEventListener(
+        key.substr(2).toLowerCase(),
+        vnode.props[key]
+      )
+    }
+  }
+
+  if (typeof vnode.children === 'string') {
+    el.appendChild(document.createTextNode(vnode.children));
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => renderer(child, el));
+  }
+
+  container.appendChild(el);
+}
+
+function mountComponent (vnode, container) {
+  const subtree = vnode.tag(); 
+  renderer(subtree, container);
+}
+
+renderer(vnode, document.body);
+```
+
+组件一定是函数吗？我们完全可以使用 JavaScript 对象来表达组件。
+
+```js
+const MyComponent = {
+  render () {
+    return {
+      tag: 'div',
+      props: {
+        onClick: () => alert('hello')
+      },
+      children: 'click me'
+    }
+  }
+}
+```
+
+为此，我们还需要修改 renderer 方法和 mountComponent 方法。
+
+```js
+function renderer (vnode, container) {
+  if (typeof vnode.children === 'string') {
+    mountElement(vnode, container);
+  } else if (typeof vnode.tag === 'object') {
+    mountComponent(vnode, container);
+  }
+}
+
+function mountComponent (vnode, container) {
+  const subtree = vnode.tag.render(); 
+  renderer(subtree, container);
+}
+```
+
+vue.js 的有状态组件就是使用对象结构来表达的。
+
+#### 模板工作原理
+
+无论是手写虚拟 DOM（渲染函数）还是使用模板，都属于声明式地描述 UI，vue.js 同时支持这两种描述 UI 的方式。
+
+我们已经知道虚拟 DOM 如何渲染成真实 DOM，那模板是如何工作的，这就要提高 vue.js 另一个重要组成部分，编译器。
+
+编译器的作用就是将模板编译为渲染函数。
+
+```vue
+<div @click="handler">
+  click me
+</div>
+```
+
+```js
+render () {
+  return h('div', { onClick: handler }, 'click me')
+}
+```
+
+对于编译器来说，模板就是一个普通的字符串它会分析该字符串并生成一个功能与之相同的渲染函数。
+
+以 `.vue` 文件为例，一个 `.vue` 文件就是一个组件。
+
+```vue
 ```
 
