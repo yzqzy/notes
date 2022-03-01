@@ -609,4 +609,180 @@ function foo<T extends any>(val: T) {
 
 框架不同类型的输出产物用于满足不同需求。我们需要结合实际使用情况，可以针对性输出构建产物。
 
-框架会提供多种能力。
+框架会提供多种能力。有时会出于兼容性和灵活性考虑，对于同样的任务，框架会提供多种解决方案。vue.js 中就可以使用选项对象式 API 和组合式 API两种方法完成页面开发。从框架设计来看，这完全是基于兼容性考虑的。如果用户只想使用组合式 API，这时就可以通过特性开关关闭对应的特性。
+
+框架的错误处理决定了用户应用程序的健壮性，也决定了用户开发应用时处理错误的负担。框架需要为用户提供统一的错误处理接口，用户可以通过注册自定义的错误处理函数来处理全部的框架异常。
+
+框架对于 ts 的支持程序也是考量框架的重要指标。
+有时候为了让框架提供更加友好的类型支持，甚至会花费比实现框架更多的时间和精力。
+
+### vue.js 3 的设计思路
+
+从全局视角了解 vue.js 3 的设计思路、工作机制及其重要的组成部分。
+
+#### 声明式 UI
+
+vue.js 是一个声明式的 UI 框架，用户在使用 vue.js 3 开发页面时是声明式地描述  UI 的。
+
+* 使用与 html 标签一致的方式描述 DOM 元素，例如描述一个 div 标签时可以使用 `<div></div>` ；
+* 使用与 html 标签一致的方式来描述属性，例如 `<div :id="app"></div>` ；
+* 使用 `:` 或 `v-bind` 描述动态绑定的属性，例如 `<div :id="dynamicId"></div>` ；
+* 使用 `@` 或 `v-on` 描述事件，例如点击事件 `<div @click="handler"></div>` ；
+* 使用与 html 标签一致的方式来描述层级结果，例如一个具有 `span` 子结点的 `div` 标签 `<div><span></span></div>` 。
+
+除了使用模板来声明式地描述 UI 之外，还可以使用 JavaScript 对象来描述。
+
+```js
+const title = {
+  tag: 'h1',
+  props: {
+    onClick: handler
+  },
+  children: [
+    { tag: 'span' }
+  ]
+}
+```
+
+对应到 vue.js 模板
+
+```html
+<h1 @click="handler">
+  <span></span>
+</h1>
+```
+
+两种方式对比，使用 JavaScript 对象描述 UI 更加灵活。比如我们要表示一个标题，根据标题级别不同，采用 `h1~h6` 这几个标签。
+
+```js
+const level = 3;
+const title = {
+  tag: `h${ level }`
+}
+```
+
+```vue
+<h1  v-if="level == 1"></h1>
+<h2  v-else-if="level == 2"></h2>
+<h3  v-else-if="level == 3"></h3>
+<h4  v-else-if="level == 4"></h4>
+<h5  v-else-if="level == 5"></h5>
+<h6  v-else-if="level == 6"></h6>
+```
+
+使用 JavaScript 对象描述 UI 的方式，其实就是所谓的虚拟 DOM。
+
+vue.js 3 除了支持使用模板描述 UI 外，还支持使用虚拟 DOM 描述 UI。
+
+```vue
+import { h } from 'vue';
+
+export default {
+	render() {
+		return h('h1', { onCllick: handler })
+	}
+}
+```
+
+h 函数的返回值就是一个对象，它的作用是让我们编写虚拟 DOM 更加轻松。h 函数就是一个辅助创建虚拟 DOM 的工具函数。
+
+#### 渲染器
+
+虚拟 DOM 就是用 JavaScript 对象描述真实 DOM 结构，然后再通过渲染器将虚拟 DOM 渲染到页面。
+
+渲染器的作用就是把虚拟 DOM 渲染为真实 DOM。假设我们有以下虚拟 DOM。
+
+```js
+const vnode = {
+  tag: 'div',
+	props: {
+    onClick: () => alert('hello')
+  },
+  children: 'click me'
+};
+```
+
+我们可以实现一个渲染器，将上面这段虚拟 DOM 渲染为真实 DOM。
+
+```js
+const vnode = {
+  tag: 'div',
+	props: {
+    onClick: () => alert('hello')
+  },
+  children: 'click me'
+};
+
+function renderer (vnode, container) {
+  const el = document.createElement(vnode.tag);
+
+  for (const key in vnode.props) {
+    if (/^on/.test(key)) {
+      el.addEventListener(
+        key.substr(2).toLowerCase(),
+        vnode.props[key]
+      )
+    }
+  }
+
+  if (typeof vnode.children === 'string') {
+    el.appendChild(document.createTextNode(vnode.children));
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => renderer(child, el));
+  }
+
+  container.appendChild(el);
+}
+
+renderer(vnode, document.body);
+```
+
+简单说下渲染器的实现思路：
+
+* 创建元素：以 `vnode.tag` 作为标签名称来创建 DOM 元素；
+* 为元素添加属性和事件；
+* 处理 children；
+
+我们现在处理的仅仅是创建节点，渲染器的精髓都在更新节点的阶段，
+
+```js
+const vnode = {
+  tag: 'div',
+	props: {
+    onClick: () => alert('hello')
+  },
+  children: 'click again' // click me 改成 click again
+};
+```
+
+对于渲染器来说，需要精确找到 `vnode` 对象的变更点并且只更新变更的内容。
+
+#### 组件的本质
+
+虚拟 DOM 除了可以描述真实 DOM 之外，还可以描述组件。组件本质上就是一组 DOM 元素的封装，这组 DOM 元素就是组件要渲染的内容，因此我们可以定义一个函数代表组件，函数的返回值就代表组件要渲染的内容。
+
+```js
+const MyComponent = function () {
+  return {
+    tag: 'div',
+    props: {
+      onClick: () => alert('hello')
+    },
+    children: 'click me'
+  }
+};
+```
+
+组件的返回值也是虚拟 DOM，它代表组件要渲染的内容。我们可以让虚拟 DOM 对象中的 tag 属性来存储组件函数。
+
+```js
+const vnode = {
+  tag: MyComponent
+}l
+```
+
+`tag: myComponent` 用户描述组件。为了能够渲染组件，我们还需要修改 renderer 函数。
+
+```js
+```
+
