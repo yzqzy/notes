@@ -975,3 +975,195 @@ vue.js 的模板会编译器编译为渲染函数。编译器和渲染器都是 
 
 ## 二、响应系统
 
+### 作用与实现
+
+响应系统是 vue.js 的重要组成部分。
+
+#### 响应式数据与副作用函数
+
+副作用函数指的是会产生副作用的函数。
+
+```js
+function effect () {
+  document.body.innerText = 'hello vuew';
+}
+```
+
+当函数执行时，会设置 body 的文本内容，除了 effect 函数之外的任何函数都可以读取或设计 body 的文本内容。
+
+effect 函数的执行会直接或间接影响其他函数的执行，effect 函数产生了副作用。
+
+一个函数修改全局变量，也是一个副作用。
+
+```js
+let val = 1;
+
+function effect () {
+  val = 2;
+}
+```
+
+下面再来说一下响应式数据。
+
+```js
+const obj = { text: 'hello world' };
+
+function effect () {
+  document.body.innerText = obj.text;
+}
+```
+
+副作用函数 effect 会设置 body 元素的 innerText 属性，当 obj.text 的值发生变化时，我们希望副作用函数 effect 会重新执行。
+
+```js
+obj.text = 'hello vue3';
+```
+
+目前 obj 是一个普通对象，当我们修改它的值时，除了值本身发生变化之外，不会有任何其他反应。
+
+#### 响应式数据的基本实现
+
+如何让 obj 变成响应式数据？
+
+* 当副作用函数 effect 执行时，会触发字段 obj.text 的读取操作；
+* 当修改 obj.text，会触发字段 obj.text 设置操作。
+
+我们可以拦截一个对象的读取和设置操作，当读取字段 obj.text 时，我们可以把副作用函数 effect 存储到  “桶” 里。当设置 obj.text 时，再把副作用函数 effect 从 “桶” 中取出并执行。
+
+如何拦截一个对象属性的读取和设置操作？
+
+ES2015 之前，只能通过 Object.defineProperty 函数实现，这也是 vue.js 2 采用的方式。
+ES2015+ 中，我们可以使用代理对象 Proxy 来实现，这是 vue.js 3 所采用的方式。
+
+```js
+const bucket = new Set();
+
+const data = { text: 'hello world' };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    bucket.add(effect);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    bucket.forEach(fn => fn());
+    return true;
+  }
+});
+
+
+function effect () {
+  document.body.innerText = obj.text;
+}
+
+effect();
+
+setTimeout(() => {
+  obj.text = 'hello vue3';
+}, 1000);
+
+```
+
+目前这种实现还存在很多缺陷，例如我们直接通过名字（effect）来获取副作用函数，这种硬编码的方式很不灵活。
+副作用函数的名字可以任意取，我们可以把副作用函数命令为 myEffect，甚至是一个匿名函数，我们要想办法去掉这种硬编码机制。
+
+#### 设计一个完善的响应系统
+
+一个响应系统的工作流程如下：
+
+* 读取操作发生时，将副作用函数收集到 “桶” 中；
+* 设置操作发生时，从 “桶” 中取出副作用函数并执行。
+
+基于之前的案例，我们希望无论副作用什么是什么形式，都能够被正确地收集到 "桶" 中。我们需要提供一个用来注册副作用的函数。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  activeEffect = fn;
+  fn();
+}
+```
+
+我们定义一个全局变量 activeEffect，它的作用是存储被注册的副作用函数。重新定义了 effect 函数，作用是用来注册副作用函数的函数，effect 接收一个参数 fn，即要注册的副作用函数。
+
+```js
+effect(() => {
+  document.body.innerText = obj.text;
+});
+```
+
+我们使用一个匿名的副作用函数作为 effect 函数的参数。
+当 effect 函数执行时，首先会把匿名的副作用函数 fn 赋值给全局变量 activeEffect。接着执行被注册的匿名副作用函数 fn，这将会触发响应式数据 obj.text 的读取操作，进行触发代理对象 Proxy 的 get 拦截操作。
+
+```js
+const obj = new Proxy(data, {
+  get (target, key) {
+    if (activeEffect) {
+      bucket.add(activeEffect);
+    }
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    bucket.forEach(fn => fn());
+    return true;
+  }
+});
+```
+
+副作用函数已经存储到 activeEffect 中，在 get 拦截函数内需要把 activeEffect 收集到 “桶” 中。响应系统也不再依赖副作用函数的名字。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  activeEffect = fn;
+  fn();
+}
+
+const bucket = new Set();
+
+const data = { text: 'hello world' };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    if (activeEffect) {
+      bucket.add(activeEffect);
+    }
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    bucket.forEach(fn => fn());
+    return true;
+  }
+});
+
+effect(() => {
+  document.body.innerText = obj.text;
+});
+
+setTimeout(() => {
+  obj.text = 'hello vue3';
+}, 1000);
+```
+
+当我们在响应式数据 obj 上设置一个不存在的属性时：
+
+```js
+effect(() => {
+  console.log('effect run');
+  document.body.innerText = obj.text;
+});
+
+setTimeout(() => {
+  obj.notExist = 'hello vue3';
+}, 1000);
+
+// effect run
+// effect run
+```
+
+执行上述代码，effect 函数会被打印两次。
