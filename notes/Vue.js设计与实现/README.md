@@ -1167,3 +1167,186 @@ setTimeout(() => {
 ```
 
 执行上述代码，effect 函数会被打印两次。
+理想情况，effect 只会被执行一次，匿名副作用函数只会与字段 obj.text 之间建立关系，不应该和 obj.notExist 建立响应关系。
+定时器内语句的执行不应该触发匿名副作用函数重新执行，但是定时器到时候，匿名副作用函数确重新执行了。
+
+为了解决这个问题，我们需要重新设计 “桶” 的数据结构。
+
+之前我们使用一个 Set 数据结构作为存在副作用函数的 “桶”。导致该问题的根本原因是，我们没有在副作用函数与被操作的目标字段之间建立明确的联系。例如当读取属性时，无论读取哪个属性，都会收集副作用函数到 “桶” 中；同样，无论设置哪个属性，也都会执行 “桶” 中的副作用函数。副作用函数与被炒作的字段之间没有明确的联系。解决方案其实也很简单，只需要在副作用函数与被操作的字段之间建立联系即可，我们不能简单地使用一个 Set 类型的数据作为 “桶”。
+
+```js
+effect(function effectFn() {
+  document.body.innerText = obj.text;
+});
+```
+
+上面代码中存在三个角色：
+
+* 被操作（读取）的代理对象 obj；
+* 被操作（读取）的字段名 text；
+* 使用 effect 函数注册的副作用函数 effectFn。
+
+如果用 `target` 来表示一个代理对象所代理的原理对象，用 `key` 来表示被操作的字段名，用 `effectFn` 来表示被注册的副作用函数，
+
+```js
+target
+	- key
+		- effectFn
+```
+
+这是一种树形结构，我们可以通过例子对其进行补充说明。
+
+如果有两个副作用函数同时读取同一个对象的属性值：
+
+```js
+effect(function effectFn1() {
+  obj.text;
+});
+effect(function effectFn2() {
+  obj.text;
+});
+```
+
+```js
+target
+	- text
+		-	effectFn1
+   	- effectFn2
+```
+
+如果一个副作用函数读取了同一个对象的两个不同的属性
+
+```js
+effect(function effectFn() {
+  obj.text1;
+  obj.text2;
+});
+```
+
+```js
+target
+	-	text1
+		- effectFn
+	- test2
+		- effectFn
+```
+
+如果在不同的副作用函数中读取了两个不同对象的不同属性
+
+```js
+effect(function effectFn1() {
+  obj1.text1;
+});
+effect(function effectFn1() {
+  obj2.text2;
+});
+```
+
+```js
+target1
+	- text1
+			- effectFn1
+target2
+	-	text2
+			- effectFn2
+```
+
+上面形成的关系其实就是一个树型数据结构。这个联系建立起来之后，就可以解决前文提到的问题。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  activeEffect = fn;
+  fn();
+}
+
+const data = { text: 'hello world' };
+
+const bucket = new WeakMap();
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    if (!activeEffect) return;
+
+    // 使用 target 在 bucket 中获取 depsMap，key -> effects
+    let depsMap = bucket.get(target);
+
+    // 如果不存在 depsMap，新建 map 与 target 关联
+    if (!depsMap) {
+      bucket.set(target, (depsMap = new Map()));
+    }
+
+    // 使用 key 在 depsMap 中获取 deps，deps 是一个 set 类型
+    let deps = depsMap.get(key);
+
+    // 如果 deps 不存在，新建 set 与 key 关联
+    if (!deps) {
+      depsMap.set(key, (deps = new Set()));
+    }
+
+    // 将激活的副作用函数添加到 bucket 中
+    deps.add(activeEffect);
+
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+
+    // 使用 target 从 bucket 中获取 depsMap，key -> effects
+    const depsMap = bucket.get(target);
+
+    if (!depsMap) return;
+
+    // 根据 key 从 depsMap 中获取 effects
+    const effects = depsMap.get(key);
+
+    effects && effects.forEach(fn => fn());
+  }
+});
+
+
+effect(() => {
+  console.log('effect run');
+  document.body.innerText = obj.text;
+});
+
+setTimeout(() => {
+  obj.notExist = 'hello vue3';
+}, 1000);
+```
+
+从这段代码我们就可以看出构建数据结构的方式，我们分别使用了 WeakMap、Map、Set。
+
+* WeakMap 由 target => map 构成；
+* Map 由 key => Set 构成。
+
+
+
+<img src="./images/effect.png" />
+
+
+
+我们把图中的 Set 数据结构所存储的副作用函数集合称为 key 的依赖集合。
+
+这里解释一下为什么要使用 WeakMap。
+
+```js
+const map = new Map();
+const weakmap = new WeakMap();
+
+(function () {
+  const foo = { foo: 1 };
+  const bar = { bar: 2 };
+  
+  map.set(foo, 1);
+  weakmap.set(bar, 2);
+})();
+```
+
+定义了一个立即执行函数（IIFE），在函数表达式内部定义了两个对象：foo 和 bar，这两个对象分别最为 map 和 weakmap 的 key。
+
+当该函数执行完毕后，对于对象 foo 来说，它仍然作为 map 的 key 被引用着，因此垃圾回收器（garbage collector）不会把它从内存中移除，我们仍然可以通过 map.keys 打印出对象 foo。对于对象 bar 来说，由于 WeakMap 的 key 是弱引用，它不影响垃圾回收期的工作，所以一旦表达式执行完毕，垃圾回收期就会把对象 bar 从内存中移除，并且我们无法获取 weakmap 的 key 值，也无法通过 weakmap 取得对象 bar。
+
+WeakMap 对 key 是弱引用，不影响垃圾回收器的工作。一旦 key 被垃圾回收器回收，那么对应的键和值就访问不到了。所以 WeakMap 经常用于存储哪些只有当 key 所引用的对象存在是（没有被回收）才有价值的信息。例如上面的场景中，如果 target 对象没有任何引用，说明用户不在需要它，这时垃圾回收器会完成回收任务。但是如果使用 Map 来替代 WeakMap，即使用户对 target 没用引用，target 也不会被回收，最终可能会导致内存溢出。
+
