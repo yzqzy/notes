@@ -1285,7 +1285,7 @@ const obj = new Proxy(data, {
       depsMap.set(key, (deps = new Set()));
     }
 
-    // 将激活的副作用函数添加到 bucket 中
+    // 将激活的副作用函数添加到 deps 中
     deps.add(activeEffect);
 
     return target[key];
@@ -1349,4 +1349,204 @@ const weakmap = new WeakMap();
 当该函数执行完毕后，对于对象 foo 来说，它仍然作为 map 的 key 被引用着，因此垃圾回收器（garbage collector）不会把它从内存中移除，我们仍然可以通过 map.keys 打印出对象 foo。对于对象 bar 来说，由于 WeakMap 的 key 是弱引用，它不影响垃圾回收期的工作，所以一旦表达式执行完毕，垃圾回收期就会把对象 bar 从内存中移除，并且我们无法获取 weakmap 的 key 值，也无法通过 weakmap 取得对象 bar。
 
 WeakMap 对 key 是弱引用，不影响垃圾回收器的工作。一旦 key 被垃圾回收器回收，那么对应的键和值就访问不到了。所以 WeakMap 经常用于存储哪些只有当 key 所引用的对象存在是（没有被回收）才有价值的信息。例如上面的场景中，如果 target 对象没有任何引用，说明用户不在需要它，这时垃圾回收器会完成回收任务。但是如果使用 Map 来替代 WeakMap，即使用户对 target 没用引用，target 也不会被回收，最终可能会导致内存溢出。
+
+最后，我们对以上代码做一下封装处理。我们可以把 get 拦截函数里依赖收集的路基封装到 track 函数中。同理，我们也可以把触发副作用的函数封装到 trigger 函数中。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  activeEffect = fn;
+  fn();
+}
+
+const bucket = new WeakMap();
+
+function track (target, key) {
+  if (!activeEffect) return;
+
+  // 使用 target 在 bucket 中获取 depsMap，key -> effects
+  let depsMap = bucket.get(target);
+
+  // 如果不存在 depsMap，新建 map 与 target 关联
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()));
+  }
+
+  // 使用 key 在 depsMap 中获取 deps，deps 是一个 set 类型
+  let deps = depsMap.get(key);
+
+  // 如果 deps 不存在，新建 set 与 key 关联
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()));
+  }
+
+  // 将激活的副作用函数添加到 deps 中
+  deps.add(activeEffect);
+}
+
+function trigger (target, key) {
+ // 使用 target 从 bucket 中获取 depsMap，key -> effects
+ const depsMap = bucket.get(target);
+
+ if (!depsMap) return;
+
+ // 根据 key 从 depsMap 中获取 effects
+ const effects = depsMap.get(key);
+
+ effects && effects.forEach(fn => fn());
+}
+
+const data = { text: 'hello world' };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+
+effect(() => {
+  console.log('effect run');
+  document.body.innerText = obj.text;
+});
+
+setTimeout(() => {
+  obj.notExist = 'hello vue3';
+}, 1000);
+```
+
+#### 分支切换与 cleanup
+
+首先，我们需要明确分支切换的定义
+
+```js
+const data = { ok: true, text: 'hello world' };
+const obj = new Proxy(data, {});
+
+effect(function effectFn () {
+	document.body.innerText = obj.ok ? obj.text : 'not';
+});
+```
+
+effect 函数内部存在一个三元表达式，根据 `obj.ok` 的值不同会执行不同的代码分支。
+当字段 `obj.ok` 的值发生变化时，代码执行的分支会跟着变化，这就是所谓的分支切换。
+
+分支切换可能会产生遗留的副作用函数。
+
+```js
+data
+	-	ok
+		- effectFn
+	- text
+		-	effectFn
+```
+
+副作用函数 `effectFn` 分别被字段 `data.ok` 和字段 `data.text` 所依赖集合收集。当字段 `obj.ok` 的值修改为 false，并触发副作用函数重新执行后，字段 `obj.text` 不会被读取，只会触发字段 `obj.ok` 的读取操作，理想情况下副作用函数 `effectFn` 不应该被字段 `obj.text` 所对应的依赖集合收集。
+
+```js
+data
+	-	ok
+		- effectFn
+	- text
+```
+
+我们之前的实现还做不到这一点，当字段修改为 false，并触发副作用函数重新执行之后，会产生遗留的副作用函数。
+
+遗留的副作用函数会导致不必要的更新。
+
+解决这个问题的思路很简单，每次副作用函数执行时，我们可以先把它所有与之关联的依赖删除。当副作用函数执行完毕后，会重新建立联系，但在新的联系中不会包含遗留的副作用函数。
+
+要将一个副作用函数从所有与之关联的依赖集合中移除，就需要明确知道哪些依赖集合中包含他，因此我们需要重新设计副作用函数。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+    activeEffect = effectFn;
+    fn();
+  }
+
+  // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
+  effectFn.deps = [];
+
+  // 执行副作用函数
+  effectFn();
+}
+
+const bucket = new WeakMap();
+
+function track (target, key) {
+  if (!activeEffect) return;
+
+  // 使用 target 在 bucket 中获取 depsMap，key -> effects
+  let depsMap = bucket.get(target);
+
+  // 如果不存在 depsMap，新建 map 与 target 关联
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()));
+  }
+
+  // 使用 key 在 depsMap 中获取 deps，deps 是一个 set 类型
+  let deps = depsMap.get(key);
+
+  // 如果 deps 不存在，新建 set 与 key 关联
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()));
+  }
+
+  // 将激活的副作用函数添加到 deps 中
+  deps.add(activeEffect);
+
+  // 将依赖添加到 activeEffect.deps 数组中
+  activeEffect.deps.push(deps);
+}
+```
+
+在 track 函数中我们将当前执行的副作用函数 activeEffect 添加到依赖收集 deps 中，deps 是一个与当前副作用函数存在联系的依赖集合，于是我们也把它添加到 `activeEffect.deps` 数组中，这样就完成对依赖集合的收集。
+
+
+
+<img src="./images/effect_cleanup.png" />
+
+
+
+有了联系后，我们可以在副作用函数执行时，根据 `effect.deps` 获取所有相关的依赖集合，将副作用函数从依赖集合中删除。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+    cleanup(effectFn); // 依赖清理
+    activeEffect = effectFn;
+    fn();
+  }
+
+  // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
+  effectFn.deps = [];
+
+  // 执行副作用函数
+  effectFn();
+}
+
+function cleanup (effectFn) {
+  for (let i = 0; i < effectFn.deps.length; i++) {
+    // deps 是依赖集合
+    const deps = effect.deps[i];
+    // 将 effectFn 从依赖集合中移除
+    deps.delete(effectFn);
+  }
+  // 重置 effectFn.deps 数组
+  effect.deps.length = 0;
+}
+```
 

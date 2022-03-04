@@ -29,7 +29,7 @@ const obj = new Proxy(data, {
       depsMap.set(key, (deps = new Set()));
     }
 
-    // 将激活的副作用函数添加到 bucket 中
+    // 将激活的副作用函数添加到 deps 中
     deps.add(activeEffect);
 
     return target[key];
