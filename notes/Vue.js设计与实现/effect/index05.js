@@ -63,7 +63,9 @@ function trigger (target, key) {
  // 根据 key 从 depsMap 中获取 effects
  const effects = depsMap.get(key);
 
- effects && effects.forEach(fn => fn());
+ //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+ const effectsToRun = new Set(effects);
+ effectsToRun.forEach(effectFn => effectFn());
 }
 
 const data = { text: 'hello world' };
