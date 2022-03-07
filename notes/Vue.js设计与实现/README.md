@@ -1671,4 +1671,65 @@ obj.foo = false;
 // effectFn2 process
 ```
 
-我们修改 `obj.foo` 的值，发现 `effectFn1` 与 `effectFn2` 
+我们修改 `obj.foo` 的值，会发现第三行打印不符合我们预期，`effectFn1` 并没有重新执行，反而 `effectFn2` 重新执行。
+
+问题出在我们实现 effect 函数与 activeEffect 上。
+
+```js
+let activeEffect;
+
+function effect (fn) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+    // 依赖清理
+    cleanup(effectFn);
+    // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
+    activeEffect = effectFn;
+    fn();
+  }
+
+  // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
+  effectFn.deps = [];
+
+  // 执行副作用函数
+  effectFn();
+}
+```
+
+我们使用全局变量 activeEffect 来存储通过 effect 函数注册的副作用函数，同一时间 activeEffect 所存储的副作用函数只能有一个。当副作用函数发生嵌套时，内层副作用函数执行会覆盖 activeEffect 的值，并且永远不会恢复到原来的值。这时如果再有响应式数据进行依赖收集，即使这个响应式数据是在外层副作用函数中读取的，它们收集到的副作用函数也都是内层副作用函数。
+
+我们可以使用副作用函数栈 `effectStack`，在副作用函数执行时，将当前副作用函数压入栈中，副作用函数执行完毕后将其从栈中弹出，始终让 activeEffect 指向栈顶的副作用函数。
+
+```js
+let activeEffect;
+
+const effectStack = [];
+
+function effect (fn) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+    // 依赖清理
+    cleanup(effectFn);
+    // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
+    activeEffect = effectFn;
+    // 将当前副作用函数压入栈中
+    effectStack.push(effectFn);
+    // 执行函数
+    fn();
+    // 将当前副作用函数弹出栈，并还原 activeEffect
+    effectStack.pop();
+    activeEffect = effectStack[effectStack.length - 1];
+  }
+
+  // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
+  effectFn.deps = [];
+
+  // 执行副作用函数
+  effectFn();
+}
+```
+
+通过定义 `effectStack` 数组，用它模拟栈， 使 activeEffect 始终指向正在执行的副作用函数，响应式数据只会收集直接读取其值的副作用函数作为依赖，从而避免产生错误。
+
+#### 避免无限递归循环
+

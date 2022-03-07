@@ -1,11 +1,21 @@
 let activeEffect;
 
+const effectStack = [];
+
 function effect (fn) {
   // effectFn 执行时，将其设置为当前激活的副作用函数
   const effectFn = () => {
-    cleanup(effectFn); // 依赖清理
+    // 依赖清理
+    cleanup(effectFn);
+    // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
     activeEffect = effectFn;
+    // 将当前副作用函数压入栈中
+    effectStack.push(effectFn);
+    // 执行函数
     fn();
+    // 将当前副作用函数弹出栈，并还原 activeEffect
+    effectStack.pop();
+    activeEffect = effectStack[effectStack.length - 1];
   }
 
   // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
