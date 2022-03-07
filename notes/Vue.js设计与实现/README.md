@@ -1733,3 +1733,79 @@ function effect (fn) {
 
 #### 避免无限递归循环
 
+实现一个完善的响应系统要考虑很多细节。
+
+```js
+const data = { foo: 1 };
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+effect(() => {
+  obj.foo++;
+});
+```
+
+如果在 effect 注册的副作用函数内存在一个自增操作，该操作会引起栈溢出。
+
+```e
+obj.foo => obj.foo + 1
+```
+
+在这个语句中，既会读取 `obj.foo` 的值，也会设置 `obj.foo` 的值，这就是导致问题出现的根本原因。
+
+代码执行流程如下：
+
+首先读取 `obj.foo` 的值，会触发 track 操作，将副作用函数收集到 “桶” 中，接着将其加 1 后再赋值给 `obj.foo`，此时会触发 trigger 操作，即把 “桶” 中副作用函数取出并执行。但是该副作用函数正在执行中，还没有执行完毕，就要开始下一次的执行。这样会导致无限递归地调用自己，于是就产生了栈溢出。
+
+```js
+function trigger (target, key) {
+ // 使用 target 从 bucket 中获取 depsMap，key -> effects
+ const depsMap = bucket.get(target);
+
+ if (!depsMap) return;
+
+ // 根据 key 从 depsMap 中获取 effects
+ const effects = depsMap.get(key);
+
+ //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+ const effectsToRun = new Set(effects);
+ effectsToRun.forEach(effectFn => effectFn());
+}
+```
+
+解决方法并不难，由于读取和设置操作是在同一个副作用函数执行的。无论是 track 收集的副作用函数，还是 trigger 出发执行的副作用函数，都是 activeEffect。我们可以在 trigger 动作发生时增加守卫条件：如果 trigger 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行。
+
+```js
+function trigger (target, key) {
+ // 使用 target 从 bucket 中获取 depsMap，key -> effects
+ const depsMap = bucket.get(target);
+
+ if (!depsMap) return;
+
+ // 根据 key 从 depsMap 中获取 effects
+ const effects = depsMap.get(key);
+
+ const effectsToRun = new Set();
+  
+ effect && effects.forEach(effectFn => {
+   // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+   if (effectFn !== activeEffect) {
+     effectsToRun.add(effectFn);
+   }
+ })
+ 
+ //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+ effectsToRun.forEach(effectFn => effectFn());
+}
+```
+
+#### 调度执行
+
