@@ -68,7 +68,8 @@ function trigger (target, key) {
  effectsToRun.forEach(effectFn => effectFn());
 }
 
-const data = { text: 'hello world' };
+
+const data = { foo: true, bar: true };
 
 const obj = new Proxy(data, {
   get (target, key) {
@@ -81,12 +82,17 @@ const obj = new Proxy(data, {
   }
 });
 
+let temp1, temp2;
 
-effect(() => {
-  console.log('effect run');
-  document.body.innerText = obj.text;
+effect(function effectFn1() {
+  console.log('effectFn1 process');
+  
+  effect(function effectFn2() {
+    console.log('effectFn2 process');
+    temp2 = obj.bar;
+  });
+  
+  temp1 = obj.foo;
 });
 
-setTimeout(() => {
-  obj.notExist = 'hello vue3';
-}, 1000);
+obj.foo = false;

@@ -1541,12 +1541,12 @@ function effect (fn) {
 function cleanup (effectFn) {
   for (let i = 0; i < effectFn.deps.length; i++) {
     // deps 是依赖集合
-    const deps = effect.deps[i];
+    const deps = effectFn.deps[i];
     // 将 effectFn 从依赖集合中移除
     deps.delete(effectFn);
   }
   // 重置 effectFn.deps 数组
-  effect.deps.length = 0;
+  effectFn.deps.length = 0;
 }
 ```
 
@@ -1596,5 +1596,78 @@ effect 是可以发生嵌套的。
 effect(function effectFn1 () {
   effect(function effectFn2 () { });
 }};
+```
+
+上述代码，`effetFn1` 内部嵌套了 `effectFn2`，`effectFn1` 的执行会导致 `effectFn2` 的执行。
+
+vue.js 的渲染函数就是在一个 effect 中执行的，如果组件发生嵌套，这时就发生了 effect 嵌套。
+
+```js
+const Bar = {
+  render() {}
+}
+
+const Foo = {
+  render() { return <Bar /> }
+}
+```
+
+```js
+effect(() => {
+  Foo.render();
+  effect(() => {
+    Bar.render();
+  })
+})
+```
+
+如果 effect 不支持嵌套会发生什么？我们实现的响应系统并不支持 effect 嵌套，我们可以测试一下。
+
+```js
+const data = { foo: true, bar: true };
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+let temp1, temp2;
+
+effect(function effectFn1() {
+  console.log('effectFn1 process');
+  
+  effect(function effectFn2() {
+    console.log('effectFn2 process');
+    temp2 = obj.bar;
+  });
+  
+  temp1 = obj.foo;
+});
+```
+
+理想情况下，我们希望副作用函数与对象属性之间的关系如下：
+
+```js
+data
+	- foo
+		- effectFn1
+	- bar
+		- effectFn2
+```
+
+我们希望当修改 `data.foo` 时会触发 `effectFn1` 执行。
+由于 `effectFn2` 嵌套在 `effectFn1` 里，所以会间接触发 `effectFn2` 执行。当修改 `obj.bar` 时，只会触发 `effectFn2` 执行。
+
+```js
+obj.foo = false;
+
+// effectFn1 process
+// effectFn2 process
+// effectFn2 process
 ```
 
