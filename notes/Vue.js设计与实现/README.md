@@ -2048,3 +2048,56 @@ obj.foo++;
 
 之前介绍了 effect 函数，它用来注册副作用函数，它允许指定一些选项参数 options。例如指定 scheduler 调度器来控制副作用函数的执行时机和方式。还介绍了用来追踪和收集依赖的 track 函数，以及用来触发副作用函数重新执行的 trigger 函数。实际上，综合这些内容，我们就可以实现 vue.js 中一个非常重要并且非常有特色的能力 - 计算属性。
 
+```js
+effect(() => {
+  console.log(obj.foo);
+});
+```
+
+我们实现的 effect 函数会立即执行传递给它的副作用函数。但有些场景下，我们并不希望它立即执行，而是希望它在需要的时候才执行，例如计算属性。我们通过在 options 中添加 lazy 属性来达到目的。
+
+```js
+effect(() => {
+  console.log(obj.foo);
+}, {
+  lazy: true
+});
+```
+
+lazy 选项和 scheduler 一样，可以通过 options 选项对象指定。当 `options.lazy` 为 true 时，不立即执行副作用函数。
+
+```js
+function effect (fn, options = {}) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+    // 依赖清理
+    cleanup(effectFn);
+    // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
+    activeEffect = effectFn;
+    // 将当前副作用函数压入栈中
+    effectStack.push(effectFn);
+    // 执行函数
+    fn();
+    // 将当前副作用函数弹出栈，并还原 activeEffect
+    effectStack.pop();
+    activeEffect = effectStack[effectStack.length - 1];
+  }
+
+  // 挂载 options
+  effectFn.options = options;
+  // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
+  effectFn.deps = [];
+
+  // 非 lazy 属性才执行
+  if (!options.lazy) {
+    effectFn();
+  }
+	
+  // 返回 effectFn
+  return effectFn;
+}
+```
+
+```js
+```
+
