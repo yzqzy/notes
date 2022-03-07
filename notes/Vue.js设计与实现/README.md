@@ -1809,3 +1809,242 @@ function trigger (target, key) {
 
 #### 调度执行
 
+可调度性是响应系统非常重要的特性。所谓可调度性，指的是当 trigger 动作触发副作用重新执行时，有能力决定副作用函数执行的时机、次数以及方式。
+
+先来看一下如何决定副作用函数的执行方式。
+
+```js
+const data = { foo: 1 };
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+effect(() => {
+  console.log(obj.foo);
+});
+
+obj.foo++;
+
+console.log('end');
+```
+
+上面这段代码的输出结果如下：
+
+```js
+// 1
+// 2
+// end
+```
+
+如果我们需要调整输出顺序为：
+
+```js
+// 1
+// end
+// 2
+```
+
+这时我们很容易想到对策，把语句 `obj.foo++` 和 `console.log('end')` 位置互换即可。那么是否还有其他方法在不调整代码的情况下实现需求？这时就需要响应系统支持调度。
+
+我们可以为 effect 函数设计一个选项参数 options，允许用户指定调度器：
+
+```js
+effect(() => {
+  console.log(obj.foo)
+}, {
+  scheduler (fn) {
+    // ...
+  }
+})
+```
+
+用户在调用 effect 函数注册副作用函数时，可以传递第二个参数 options。它是一个对象，允许指定 scheduler 调度函数，同时在 effect 函数内部我们需要把 options 选项挂载到对应的副作用函数上。
+
+```js
+function effect (fn, options = {}) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+    // 依赖清理
+    cleanup(effectFn);
+    // 当调用 effect 注册副作用函数时，将副作用函数复制给 activeEffect
+    activeEffect = effectFn;
+    // 将当前副作用函数压入栈中
+    effectStack.push(effectFn);
+    // 执行函数
+    fn();
+    // 将当前副作用函数弹出栈，并还原 activeEffect
+    effectStack.pop();
+    activeEffect = effectStack[effectStack.length - 1];
+  }
+
+  // 挂载 options
+  effectFn.options = options;
+  // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
+  effectFn.deps = [];
+
+  // 执行副作用函数
+  effectFn();
+}
+```
+
+有了调度函数，我们在 trigger 函数中触发副作用函数重新执行时，就可以直接调用用户传递的调度器函数，从而把控制权交给用户。
+
+```js
+function trigger (target, key) {
+ // 使用 target 从 bucket 中获取 depsMap，key -> effects
+ const depsMap = bucket.get(target);
+
+ if (!depsMap) return;
+
+ // 根据 key 从 depsMap 中获取 effects
+ const effects = depsMap.get(key);
+
+ const effectsToRun = new Set();
+  
+ effect && effects.forEach(effectFn => {
+   // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+   if (effectFn !== activeEffect) {
+     effectsToRun.add(effectFn);
+   }
+ })
+ 
+ //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+ effectsToRun.forEach(effectFn => {
+   // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+   if (effectFn.options.scheduler) {
+      effectFn.options.scheduler(effectFn);
+   } else {
+    effectFn();
+   }
+ });
+}
+```
+
+现在我们就可以实现前文的需求了。
+
+```js
+const data = { foo: 1 };
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+effect(() => {
+  console.log(obj.foo);
+}, {
+  scheduler (fn) {
+    setTimeout(fn);
+  }
+});
+
+obj.foo++;
+
+console.log('end');
+```
+
+我们使用 `setTimeout` 开启一个宏任务来执行副作用函数 fn，这样就可以实现期望的打印顺序。
+
+除了控制副作用函数的执行顺序，通过调度器我们还可以控制它的执行次数。
+
+```js
+const data = { foo: 1 };
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+effect(() => {
+  console.log(obj.foo);
+});
+
+obj.foo++;
+obj.foo++;
+```
+
+这段代码的打印结果如下：
+
+```js
+// 1
+// 2
+// 3
+```
+
+如果我们只关心结果而不关心过程，我们期望的打印结果是：
+
+```js
+// 1
+// 3
+```
+
+基于调度器，我们可以很容易地实现此功能。
+
+```js
+/** task queue start */
+const jobQueue = new Set();
+const p = Promise.resolve();
+
+let isFlushing = false;
+
+function flushJob () {
+  if (isFlushing) return;
+
+  isFlushing = true;
+
+  p.then(() => {
+    jobQueue.forEach(job => job());
+  }).finally(() => {
+    isFlushing = false;
+  });
+}
+/** task queue end */
+
+const data = { foo: 1 };
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+effect(() => {
+  console.log(obj.foo);
+}, {
+  scheduler (fn) {
+    jobQueue.add(fn);
+    flushJob();
+  }
+});
+
+obj.foo++;
+obj.foo++;
+```
+
+这个功能类似于 vue.js 连续多次修改响应式数据但只会触发一次更新，vue.js 内部实现了一个更加完善的调度器。
+
+#### 计算属性 computed 与 lazy
+
+之前介绍了 effect 函数，它用来注册副作用函数，它允许指定一些选项参数 options。例如指定 scheduler 调度器来控制副作用函数的执行时机和方式。还介绍了用来追踪和收集依赖的 track 函数，以及用来触发副作用函数重新执行的 trigger 函数。实际上，综合这些内容，我们就可以实现 vue.js 中一个非常重要并且非常有特色的能力 - 计算属性。
+
