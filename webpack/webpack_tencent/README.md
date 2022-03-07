@@ -3802,9 +3802,9 @@ const SpeedMeasureWebpackPlugin = require('speed-measure-webpack-plugin');
 
 const smp = new SpeedMeasureWebpackPlugin();
 
-module.exports = {
+module.exports = smp.wrap({
   // ...
-  plugins: smp.wrap([
+  plugins: [
     new MiniCssExtractPlugin({
       filename: '[name]_[contenthash:8].css'
     }),
@@ -3826,11 +3826,33 @@ module.exports = {
     //     }
     //   })
     // }
-  ]).concat(htmlWebpackPlugins)
-}
+  ].concat(htmlWebpackPlugins)
+})
 ```
 
-**测试证明，没啥用。**
+打印信息如下。
+
+```html
+  module count = 13
+raw-loader, and
+babel-loader, and
+thread-loader, and
+babel-loader took 0.922 secs
+  module count = 1
+css-loader, and
+less-loader, and
+postcss-loader, and
+px2rem-loader took 0.734 secs
+  module count = 2
+raw-loader took 0.183 secs
+  module count = 1
+url-loader took 0.022 secs
+  module count = 1
+html-webpack-plugin took 0.017 secs
+  module count = 2
+modules with no loaders took 0.011 secs
+  module count = 1
+```
 
 ### 体积分析：使用 webpack-bundle-analyzer
 

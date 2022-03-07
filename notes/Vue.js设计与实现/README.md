@@ -1671,3 +1671,4 @@ obj.foo = false;
 // effectFn2 process
 ```
 
+我们修改 `obj.foo` 的值，发现 `effectFn1` 与 `effectFn2` 
