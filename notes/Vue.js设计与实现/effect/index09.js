@@ -13,10 +13,12 @@ function effect (fn, options = {}) {
     // 将当前副作用函数压入栈中
     effectStack.push(effectFn);
     // 执行函数
-    fn();
+    const ans = fn();
     // 将当前副作用函数弹出栈，并还原 activeEffect
     effectStack.pop();
     activeEffect = effectStack[effectStack.length - 1];
+    // 返回结果
+    return ans;
   }
 
   // 挂载 options
@@ -102,7 +104,44 @@ function trigger (target, key) {
 }
 /** effect end */
 
-const data = { foo: 1 };
+/** computed start */
+function computed (getter) {
+  // 缓存上一次的值
+  let value;
+  // 标识是否需要重新计算值，true 意味要重新计算
+  let dirty = true;
+
+  const effectFn = effect(
+    getter,
+    {
+      lazy: true,
+      // 添加调度器，调度器中重置 dirty
+      scheduler () {
+        dirty = true;
+        // 计算属性依赖的响应式数据发生变化时，手动调用 trigger 函数触发响应
+        trigger(obj, 'value');
+      }
+    }
+  );
+
+  const obj = {
+    get value () {
+      if (dirty) {
+        value = effectFn();
+        dirty = false;
+      }
+      // 读取 value 时，手动调用 track 函数进行追踪
+      track(obj, 'value');
+      return value;
+    }
+  }
+
+  return obj;
+}
+/** computed end */
+
+const data = { foo: 1, bar: 2 };
+
 const obj = new Proxy(data, {
   get (target, key) {
     track(target, key);
@@ -114,10 +153,22 @@ const obj = new Proxy(data, {
   }
 });
 
+const ans = computed(() => obj.foo + obj.bar);
+
 effect(() => {
-  console.log(obj.foo);
-}, {
-  lazy: true
+  console.log(ans.value);
 });
 
-obj.foo++;
+obj.bar++;
+
+// const effectFn = effect(
+//   () => obj.foo + obj.bar, 
+//   { lazy: true }
+// );
+
+// obj.foo++;
+
+// const value = effectFn();
+
+// console.log(value);
+

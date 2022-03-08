@@ -2098,6 +2098,230 @@ function effect (fn, options = {}) {
 }
 ```
 
+通过这个判断，副作用函数不会立即执行。我们将副作用函数 effectFn 作为 effect 函数的返回值，我们可以手动执行该副作用函数。
+
 ```js
+const effectFn = effect(() => {
+  console.log(obj.foo);
+}, {
+  lazy: true
+});
+
+obj.foo++;
+
+effectFn();
 ```
+
+如果仅能够手动执行副作用函数，意义并不大。如果我们把传递给 effect 函数看做一个 getter，那么这个 getter 函数可以返回任何值。
+
+```js
+const effectFn = effect(
+  () => obj.foo + obj.bar, {
+  lazy: true
+});
+```
+
+手动执行副作用函数时，就可以拿到其返回值。
+
+```js
+const value = effectFn();
+```
+
+我们还需要对 effect 函数做一些修改。
+
+```js
+function effect (fn, options = {}) {
+  // effectFn 执行时，将其设置为当前激活的副作用函数
+  const effectFn = () => {
+ 		// ...
+    // 执行函数
+    const ans = fn();
+    // 将当前副作用函数弹出栈，并还原 activeEffect
+    effectStack.pop();
+    activeEffect = effectStack[effectStack.length - 1];
+    // 返回结果
+    return ans;
+  }
+
+ 	// ...
+
+  // 非 lazy 属性才执行
+  if (!options.lazy) {
+    effectFn();
+  }
+
+  // 返回 effectFn
+  return effectFn;
+}
+```
+
+现在我们就可以实现懒执行的副作用函数，并且可以拿到副作用函数的执行结果，接下就可以实现计算属性。
+
+```js
+function computed (getter) {
+  const effectFn = effect(getter, { lazy: true });
+
+  const obj = {
+    get value () {
+      return effectFn();
+    }
+  }
+
+  return obj;
+}
+```
+
+我们定义一个 computed 函数，它接收一个 getter 函数作为参数，我们把 getter 函数作为副作用函数，用它创建一个 lazy 的 effect。computed 函数的执行会返回一个对象，该对象的 value 属性是一个访问器属性，只有读取 value 的值时，才会执行 effectFn 并将其结果作为返回值返回。
+
+```js
+const data = { foo: 1, bar: 2 };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+const ans = computed(() => obj.foo + obj.bar);
+
+console.log(ans.value);
+```
+
+可以看到 computed 函数可以正确工作。不过我们实现的计算属性只做到了懒计算，只有当你读取 `ans.value` 的值，它才会计算并得到值。但是并没有做到对值进行缓存，如果我们访问 `ans.value` 的值，会导致 effectFn 多次计算，即使 `obj.foo` 和 `obj.bar` 的值本身没有变化。
+
+我们在实现 computed 函数时，可以添加对值进行缓存的功能。
+
+```js
+function computed (getter) {
+  // 缓存上一次的值
+  let value;
+  // 标识是否需要重新计算值，true 意味要重新计算
+  let dirty = true;
+
+  const effectFn = effect(
+    getter,
+    {
+      lazy: true,
+      // 添加调度器，调度器中重置 dirty
+      scheduler () {
+        dirty = true;
+      }
+    }
+  );
+
+  const obj = {
+    get value () {
+      if (dirty) {
+        value = effectFn();
+        dirty = false;
+      }
+      return value;
+    }
+  }
+
+  return obj;
+}
+```
+
+新增两个变量 value 和 dirty，value 用来缓存值，dirty 用于标识是否需要重新计算，只会 dirty 为 true 的时候才会调用 effectFn 重新取值。同时增加 scheduler 调度器函数，它会在 getter 函数中所依赖的响应式数据变化时执行，将 dirty 设置为 true。
+
+```js
+const data = { foo: 1, bar: 2 };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+const ans = computed(() => obj.foo + obj.bar);
+
+console.log(ans.value);
+
+obj.bar++;
+
+console.log(ans.value);
+```
+
+现在我们设计的计算属性已经趋于完美，但它还存在一个缺陷，体现在当我们在另外一个 effect 中读取计算属性值时。
+
+```js
+const ans = computed(() => obj.foo + obj.bar);
+
+effect(() => {
+  console.log(ans.value);
+});
+
+obj.bar++;
+```
+
+ans 是一个计算属性，我们在 effect 函数中读取了 `ans.value` 的值。如果此时修改 `obj.bar` 的值，我们期望副作用函数重新执行，但是上述代码并不会触发副作用函数的渲染，这是一个缺陷。
+
+从本质上来看，这是一个典型的 effect 嵌套。一个计算属性内部拥有自己的 effect，并且它是懒执行的，只有当真正地读取计算属性的值时才会执行。对于计算属性的 getter 函数来说，它里面访问的响应式数据只会把 computed 内部的 effect 收集为依赖。当把计算属性用于另外一个 effect 时，就会发生 effect 嵌套，外层的 effect 不会被内层 effect 中的响应式数据收集。
+
+解决方法很简单，当读取计算属性的值时，我们可以手动调用 track 函数进行追踪；当计算属性依赖的响应式数据发生变化时，我们可以手动调用 trigger 函数触发响应。
+
+```js
+function computed (getter) {
+  // 缓存上一次的值
+  let value;
+  // 标识是否需要重新计算值，true 意味要重新计算
+  let dirty = true;
+
+  const effectFn = effect(
+    getter,
+    {
+      lazy: true,
+      // 添加调度器，调度器中重置 dirty
+      scheduler () {
+        dirty = true;
+        // 计算属性依赖的响应式数据发生变化时，手动调用 trigger 函数触发响应
+        trigger(obj, 'value');
+      }
+    }
+  );
+
+  const obj = {
+    get value () {
+      if (dirty) {
+        value = effectFn();
+        dirty = false;
+      }
+      // 读取 value 时，手动调用 track 函数进行追踪
+      track(obj, 'value');
+      return value;
+    }
+  }
+
+  return obj;
+}
+```
+
+如上代码所示，当读取一个计算属性的 value 值时，我们可以手动调用 track 函数，把计算属性返回的对象 obj 作为 target，同时作为第一个参数传递给 track 函数。当计算属性所依赖的响应式数据发生变化时，会执行调度器函数，在调度器函数内部手动调用 trigger 函数触发响应即可。
+
+```js
+effect(() => {
+  console.log(ans.value);
+});
+```
+
+它会建立这样的联系。
+
+```js
+compute(obj)
+	- value
+		- effectFn
+```
+
+#### watch 的实现原理
 
