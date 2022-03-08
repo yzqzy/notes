@@ -242,6 +242,66 @@
 /** 变型 start */
 {
   // TypeScript 中的变型指的是根据类型之间的子类型关系推断基于它们构造的更复杂类型之间的子类型关系。
+
+  // 协变
+  {
+    // 协变也就是说如果 Dog 是 Animal 的子类型，则 F(Dog) 是 F(Animal) 的子类型，这意味着在构造的复杂类型中保持了一致的子类型关系
+    // 因为 Covariant<Dog> 是 Covariant<Animal> 的子类型，所以类型 isCovariant 是 true，这就是协变。
+
+    type isChild<Child, Par> = Child extends Par ? true : false;
+
+    interface Animal {
+      name: string;
+    }
+
+    interface Dog extends Animal {
+      woof: () => void;
+    }
+
+    type Covariance<T> = T;
+    type isCovariant = isChild<Covariance<Dog>, Covariance<Animal>>; // true
+
+    // 实际上接口类型的属性、数组类型、函数返回值的类型都是协变的
+    type isPropAssignmentCovariant = isChild<{ type: Dog }, { type: Animal }>; // true
+    type isArrayElementCovariant = isChild<Dog[], Animal[]>; // true
+    type isReturnTypeCovariant  = isChild<() => Dog, () => Animal>; // true
+  }
+
+  // 逆变
+  {
+    type isChild<Child, Par> = Child extends Par ? true : false;
+    interface Animal {
+      name: string;
+    }
+    interface Dog extends Animal {
+      woof: () => void;
+    }
+
+    // 逆变也就是说如果 Dog 是 Animal 的子类型，则 F(Dog) 是 F(Animal) 的父类型，这与协变正好反过来。
+    // 我们可以从安全性的角度理解函数参数是逆变的设定
+    // 如果函数参数类型是协变而不是逆变，那么意味着函数类型 (param: Dog) => void 和 (param: Animal) => void 是兼容的，
+    // 这与 Dog 和 Animal 的兼容一致，所以我们可以用 (param: Dog) => void 代替 (param: Animal) => void 遍历 Animal[] 类型数组。
+    // 但是，这样是不安全的，因为它不能确保 Animal[] 数组中的成员都是 Dog（可能混入 Animal 类型的其他子类型，比如 Cat），
+    // 这就会导致 (param: Dog) => void 类型的函数可能接收到 Cat 类型的入参。
+    type Contravariance<T> = (param: T) => void;
+    type isNotContravariance = isChild<Contravariance<Dog>, Contravariance<Animal>>; // false;
+    type isContravariance = isChild<Contravariance<Animal>, Contravariance<Dog>>; // true;
+
+    // 在示例中，如果函数参数类型是协变的，那么第 5 行就可以通过静态类型检测，而不会提示一个 ts(2345) 类型的错误。
+    // 这样第 1 行定义的 visitDog 函数在运行时就能接收到 Dog 类型之外的入参，并调用不存在的 woof 方法，从而在运行时抛出错误。
+    // 正是因为函数参数是逆变的，所以使用 visitDog 函数遍历 Animal[] 类型数组时，在第 5 行提示了类型错误，因此也就不出现 visitDog 接收到一只 cat 的情况。
+    const visitDog = (animal: Dog) => {
+      animal.woof();
+    };
+    // let animals: Animal[] = [{ name: 'Cat', miao: () => void 0, }];
+    // animals.forEach(visitDog); // ts(2345)
+  }
+
+  // 双向协变
+  {
+    // 双向协变也就是说如果 Dog 是 Animal 的子类型，则 F(Dog) 是 F(Animal) 的子类型，也是父类型，既是协变也是逆变。
+
+  }
 }
 /** 变型 end */
 
