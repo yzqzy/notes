@@ -1795,7 +1795,7 @@ function trigger (target, key) {
 
  const effectsToRun = new Set();
   
- effect && effects.forEach(effectFn => {
+ effects && effects.forEach(effectFn => {
    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
    if (effectFn !== activeEffect) {
      effectsToRun.add(effectFn);
@@ -1908,7 +1908,7 @@ function trigger (target, key) {
 
  const effectsToRun = new Set();
   
- effect && effects.forEach(effectFn => {
+ effects && effects.forEach(effectFn => {
    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
    if (effectFn !== activeEffect) {
      effectsToRun.add(effectFn);
@@ -2324,4 +2324,196 @@ compute(obj)
 ```
 
 #### watch 的实现原理
+
+watch 本质就是观测一个响应式数据，当数据发生变化时通知并执行相应的回调函数。
+
+```js
+watch(obj, () => {
+  console.log('data change');
+});
+
+obj.foo++;
+```
+
+watch 的实现本质是就是利用了 effect 以及 `options.scheduler` 选项。下面是最简单的 watch 实现。
+
+```js
+function watch (soure, cb) {
+  effect(
+  	() => source.foo,
+    {
+      scheduler () {
+        cb()
+      }
+    }
+  )
+}
+```
+
+```js
+const data = { foo: 1, bar: 2 };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+watch(obj, () => {
+  console.log('data change');
+});
+
+obj.foo++;
+obj.bar++;
+```
+
+上面这段代码可以正常工作，但是在实现 watch 函数，硬编码了对 `source.foo` 的读取操作。我们需要封装一个通用的读取操作。
+
+```js
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
+}
+
+function watch (source, cb) {
+  effect(
+  	() => traverse(source),
+    {
+      scheduler () {
+        cb()
+      }
+    }
+  )
+}
+```
+
+在 watch 内部的 effect 中调用 traverse 函数进行递归读取操作，这样就能读取一个对象上的任意属性，从而当任意属性发生变化时都能触发回调函数执行。
+
+watch 函数除了可以观测响应式数据，还可以接收一个 getter 函数。
+
+```js
+watch(
+  () => obj.foo,
+  () => {
+    console.log('data change');
+  }
+);
+```
+
+传递给 watch 函数的第一个参数不再是一个响应属性，而是一个 getter 函数。getter 函数内部，用户可以指定 watch 依赖哪些响应式数据，只有当这些数据变化时，才会触发回调函数执行。
+
+```js
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
+}
+
+function watch (source, cb) {
+  let getter;
+
+  if (typeof source === 'function') {
+    getter = source;
+  } else {
+    getter = () => traverse(source);
+  }
+
+  effect(
+  	() => getter(),
+    {
+      scheduler () {
+        cb()
+      }
+    }
+  )
+}
+```
+
+我们可以判断 source 类型，如果用户传递函数，直接使用用户的 getter 函数；如果用户没有传递函数，自定义一个函数调用 traverse 方法。这样就实现了自定义 getter 的功能。
+
+目前 watch 还缺少一个重要的能力，就是在回调函数中拿不到旧值和新值。
+
+```js
+watch(
+  () => obj.foo,
+  (newVal, oldVal) => {
+    console.log('data change', newVal, oldVal);
+  }
+);
+
+obj.foo++;
+```
+
+我们可以利用 effect 函数的 lazy 现象，获取新值与旧值。
+
+```js
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
+}
+
+function watch (source, cb) {
+  let getter;
+
+  if (typeof source === 'function') {
+    getter = source;
+  } else {
+    getter = () => traverse(source);
+  }
+
+  let oldValue, newValue;
+
+  const effectFn = effect(
+  	() => getter(),
+    {
+      lazy: true,
+      scheduler () {
+        newValue = effectFn();
+        cb(newValue, oldValue);
+        oldValue = newValue;
+      }
+    }
+  );
+
+  oldValue = effectFn();
+}
+```
+
+我们手动调用 effectFn 函数得到的返回值就是旧值，即第一次执行得到得知。当变化发生并处罚 scheduler 调度函数执行时，会重新调用 effectFn 函数并得到新值，这样我们就可以拿到旧值与新值，接着把它们作为参数传递给回调函数就可以了。
+
+#### 立即执行的 watch 与回调执行时机
+
+watch 的本质其实是对 effect 的二次封装。关于 watch 还有两个特性：一个是立即执行的回调函数，另一个时回调函数的执行时机。
+
+
+
+
 

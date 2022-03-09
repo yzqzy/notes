@@ -85,7 +85,7 @@ function trigger (target, key) {
 
  const effectsToRun = new Set();
   
- effect && effects.forEach(effectFn => {
+ effects && effects.forEach(effectFn => {
    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
    if (effectFn !== activeEffect) {
      effectsToRun.add(effectFn);

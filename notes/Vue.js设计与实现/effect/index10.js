@@ -1,8 +1,9 @@
+/** effect start */
 let activeEffect;
 
 const effectStack = [];
 
-function effect (fn) {
+function effect (fn, options = {}) {
   // effectFn 执行时，将其设置为当前激活的副作用函数
   const effectFn = () => {
     // 依赖清理
@@ -12,17 +13,26 @@ function effect (fn) {
     // 将当前副作用函数压入栈中
     effectStack.push(effectFn);
     // 执行函数
-    fn();
+    const ans = fn();
     // 将当前副作用函数弹出栈，并还原 activeEffect
     effectStack.pop();
     activeEffect = effectStack[effectStack.length - 1];
+    // 返回结果
+    return ans;
   }
 
+  // 挂载 options
+  effectFn.options = options;
   // activeEffect.deps 用来存储所有与该副作用函数相关联的依赖集合
   effectFn.deps = [];
 
-  // 执行副作用函数
-  effectFn();
+  // 非 lazy 属性才执行
+  if (!options.lazy) {
+    effectFn();
+  }
+
+  // 返回 effectFn
+  return effectFn;
 }
 
 function cleanup (effectFn) {
@@ -74,7 +84,7 @@ function trigger (target, key) {
  const effects = depsMap.get(key);
 
  const effectsToRun = new Set();
-  
+
  effects && effects.forEach(effectFn => {
    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
    if (effectFn !== activeEffect) {
@@ -83,10 +93,97 @@ function trigger (target, key) {
  })
  
  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
- effectsToRun.forEach(effectFn => effectFn());
+ effectsToRun.forEach(effectFn => {
+   // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+   if (effectFn.options.scheduler) {
+      effectFn.options.scheduler(effectFn);
+   } else {
+    effectFn();
+   }
+ });
+}
+/** effect end */
+
+/** computed start */
+function computed (getter) {
+  // 缓存上一次的值
+  let value;
+  // 标识是否需要重新计算值，true 意味要重新计算
+  let dirty = true;
+
+  const effectFn = effect(
+    getter,
+    {
+      lazy: true,
+      // 添加调度器，调度器中重置 dirty
+      scheduler () {
+        dirty = true;
+        // 计算属性依赖的响应式数据发生变化时，手动调用 trigger 函数触发响应
+        trigger(obj, 'value');
+      }
+    }
+  );
+
+  const obj = {
+    get value () {
+      if (dirty) {
+        value = effectFn();
+        dirty = false;
+      }
+      // 读取 value 时，手动调用 track 函数进行追踪
+      track(obj, 'value');
+      return value;
+    }
+  }
+
+  return obj;
+}
+/** computed end */
+
+
+/** watch start */
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
 }
 
-const data = { foo: 1 };
+function watch (source, cb) {
+  let getter;
+
+  if (typeof source === 'function') {
+    getter = source;
+  } else {
+    getter = () => traverse(source);
+  }
+
+  let oldValue, newValue;
+
+  const effectFn = effect(
+  	() => getter(),
+    {
+      lazy: true,
+      scheduler () {
+        newValue = effectFn();
+        cb(newValue, oldValue);
+        oldValue = newValue;
+      }
+    }
+  );
+
+  oldValue = effectFn();
+}
+/** watch end */
+
+const data = { foo: 1, bar: 2 };
+
 const obj = new Proxy(data, {
   get (target, key) {
     track(target, key);
@@ -98,6 +195,32 @@ const obj = new Proxy(data, {
   }
 });
 
-effect(() => {
-  obj.foo++;
-});
+
+// watch(obj, () => {
+//   console.log('data change');
+// });
+
+// obj.foo++;
+// obj.bar++;
+
+
+// watch(
+//   () => obj.foo,
+//   () => {
+//     console.log('data change');
+//   }
+// );
+
+// obj.foo++;
+// obj.bar++;
+
+
+watch(
+  () => obj.foo,
+  (newVal, oldVal) => {
+    console.log('data change', newVal, oldVal);
+  }
+);
+
+obj.foo++;
+obj.foo++;
