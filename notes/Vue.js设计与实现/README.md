@@ -2513,7 +2513,23 @@ function watch (source, cb) {
 
 watch 的本质其实是对 effect 的二次封装。关于 watch 还有两个特性：一个是立即执行的回调函数，另一个时回调函数的执行时机。
 
+首先来看下立即执行的回调函数。默认情况下，一个 watch 的回调只会在响应式数据发生变化时才执行。
 
+```js
+watch(obj, () => {
+  console.log('data change');
+});
+```
 
+vue.js 中可以通过选项参数 immediate 指定回调是否需要立即执行。
 
+```js
+watch(obj, () => {
+  console.log('data change');
+}, {
+  immediate: true
+});
+```
+
+当 immediate 选项存在并且为 true 时，回调函数会在该 watch 创建时立即执行一次。
 
