@@ -67,8 +67,10 @@
   + [Node基础](https://github.com/iheora/notes/tree/master/node/base) 已完成
   + ~~[Node进阶](https://github.com/iheora/notes/tree/master/node/plus) 已废弃~~ 😅
   + [koa架构分析与源码重写](https://github.com/iheora/notes/tree/master/node/koa) 已完成
-* threejs
-  + [跳一跳案例](https://github.com/iheora/notes/tree/master/three.js/jump) 已完成
+* 可视化
+  + threejs
+    + [跳一跳案例](https://github.com/iheora/notes/tree/master/visualization/three.js/jump) 已完成
+  + [g6](https://github.com/iheora/notes/tree/master/visualization/g6) 更新中... 😁
 * Electron
   + [Electron基础](https://github.com/iheora/notes/tree/master/electron/base) 已完成
   + [Electron实战](https://github.com/iheora/notes/tree/master/electron/combat) 已完成
