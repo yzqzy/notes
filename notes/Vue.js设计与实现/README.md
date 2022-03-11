@@ -2535,3 +2535,258 @@ watch(obj, () => {
 
 回调函数的立即执行与后续执行本质是没有任何差别，我们可以把 scheduler 调度函数封装为一个函数，分别在初始化和变更时执行它。
 
+```js
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
+}
+
+function watch (source, cb, options = {}) {
+  let getter;
+
+  if (typeof source === 'function') {
+    getter = source;
+  } else {
+    getter = () => traverse(source);
+  }
+
+  let oldValue, newValue;
+
+  // 提取 scheduler 调度函数为一个独立的 job 函数
+  const job = () => {
+    newValue = effectFn();
+    cb(newValue, oldValue);
+    oldValue = newValue;
+  }
+
+  const effectFn = effect(
+  	() => getter(),
+    {
+      lazy: true,
+      scheduler: job
+    }
+  );
+
+  if (options.immediate) {
+    job();
+  } else {
+    oldValue = effectFn();
+  }
+}
+```
+
+```js
+const data = { foo: 1, bar: 2 };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+watch(
+  () => obj.foo,
+  (newVal, oldVal) => {
+    console.log('data change', newVal, oldVal);
+  },
+  {
+    immediate: true
+  }
+);
+
+obj.foo++;
+obj.foo++;
+```
+
+这样就实现了回调函数的立即执行功能。除了指定回调函数为立即执行之外，还可以通过其他选项参数来指定回调函数的执行时机，例如 vue.js 3 中使用 flush 选项。
+
+```js
+watch(
+  obj,
+  () => {
+    console.log('data change');
+  },
+  {
+    // 回调函数会在 watch 创建时立即执行一次
+    flush: 'pre'
+  }
+);
+```
+
+flush 选项可以指定为 `pre`，`post` 或者 `sync`。flush 本质是在指定调度函数的执行时机。
+
+当 flush 的值为 `post` 时，代表调度函数需要将副作用函数放到一个微任务队列中，并等待 DOM 更新结束后执行。
+
+我们可以用以下代码模拟 `post` 的效果。
+
+```js
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
+}
+
+function watch (source, cb, options = {}) {
+  let getter;
+
+	// ...
+  
+  const effectFn = effect(
+  	() => getter(),
+    {
+      lazy: true,
+      scheduler: () => {
+        if (options.flush === 'post') {
+          const p = Promise.resolve();
+          p.then(job);
+        } else {
+          job();
+        }
+      }
+    }
+  );
+	
+  // ...
+}
+```
+
+我们修改了调度器函数 scheduler 的实现方式，当 `options.flush` 的值为 `post` 时，将 job 函数放到微任务队列中，从而实现异步延迟执行。否则执行执行 job 函数，这本质是相当于 `sync` 的实现机制，及同步执行。对于 `pre` 的情况，我们暂时没有办法模拟，这涉及组件的更新时机，其中 `pre` 和 `post` 原本的语义指的就是组件更新前和更新后。
+
+#### 过期的副作用
+
+竞态问题通常在多进程或多线程编程中被提及，我们在编程中也会遇见这种问题。
+
+```js
+let finalData;
+
+watch(obj, async () => {
+  const res = await fetch('/path/request');
+  finalData = res;
+})
+```
+
+我们使用 watch 观测 obj 对象的变化，当 obj 对象发生变化都会发送网络请求，等数据请求成功之后，将结果赋值给 `finalData` 变量。
+
+这段代码会发生竞态问题，当 obj 对象发生多次修改，发起多个网络请求，你无法确定哪一个请求会先返回。
+
+假设我们有两个请求，第一次修改 obj，发出请求 A，第二次修改 obj，发出请求 B。我们认为请求 B 返回的数据才是最新的，而请求 A 则应该被视为过期的。我们希望 `finalData` 存储的值应该请求 B 返回的结果。
+
+我们需要一个让副作用过期的手段。为了让问题更加清晰，我们可以用 watch 函数复现场景。
+
+在 vue.js 中，watch 函数的回调函数接收第三个参数 `onInvalidate`，它是一个函数，类似于事件监听器，我们可以使用 `onInvalidate` 函数注册一个回调，这个回调会在当前副作用函数过期时执行。
+
+```js
+let finalData;
+
+watch(obj, async (newVal, oldVal, onInvalidate) => {
+  let expired = false;
+
+  onInvalidate(() => {
+    expired = true;
+  });
+
+  const res = await fetch('https://service.yueluo.club/');
+  const data = await res.json();
+
+  if (!expired) {
+    console.log(data); // 只打印一次结果
+    finalData = data;
+  }
+})
+
+obj.foo++;
+obj.foo++;
+```
+
+在 watch 内部每次检查到变更后，有副作用函数重新执行之前，会先调用我们通过 `onInvalidate` 函数注册的过期回调。
+
+```js
+function traverse (value, seen = new Set()) {
+  if (typeof value !== 'object' || value === null || seen.has(value)) return;
+
+  seen.add(value);
+
+  // 假设 value 是一个对象，不考虑数组等其他结构
+  for (const k in value) {
+    traverse(value[k], seen);
+  }
+
+  return value;
+}
+
+function watch (source, cb, options = {}) {
+  let getter;
+
+  if (typeof source === 'function') {
+    getter = source;
+  } else {
+    getter = () => traverse(source);
+  }
+
+  let oldValue, newValue;
+
+  // cleanup 存储用户注册的过期回调
+  let cleanup;
+
+  function onInvalidate (fn) {
+    cleanup = fn;
+  }
+
+  // 提取 scheduler 调度函数为一个独立的 job 函数
+  const job = () => {
+    newValue = effectFn();
+    // 调用回调函数前，先调用过期回调
+    if (cleanup) {
+      cleanup();
+    }
+    // 返回第三个参数
+    cb(newValue, oldValue, onInvalidate);
+    oldValue = newValue;
+  }
+
+  const effectFn = effect(
+  	() => getter(),
+    {
+      lazy: true,
+      scheduler: () => {
+        if (options.flush === 'post') {
+          const p = Promise.resolve();
+
+          p.then(job);
+        } else {
+          job();
+        }
+      }
+    }
+  );
+
+  if (options.immediate) {
+    job();
+  } else {
+    oldValue = effectFn();
+  }
+}
+```
+
+#### 总结
+
