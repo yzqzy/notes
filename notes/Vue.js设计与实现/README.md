@@ -2808,3 +2808,76 @@ function watch (source, cb, options = {}) {
 
 ### 非原始值的响应式方案
 
+#### 理解 Proxy 和 Reflect
+
+vue.js 3 的响应式数据是基于 Proxy 实现的，因此我们也有必要了解 Proxy 以及与之关联的 Reflect。
+
+使用 Proxy 创建一个对象，可以实现对其他对象的代理。Proxy 只能代理对象，无法代理非对象值，例如字符串、布尔值等。
+
+所以代理，指的是对一个对象基本语义的代理。它允许我们拦截并重新定义对一个对象的基本操作。
+
+类似读取、设置属性值的操作，就属于基本语义的操作，即基本操作。
+
+```js
+let obj = { foo: 1 };
+
+obj.foo; // 读取属性 foo 的值
+obj.foo++; // 读取和设置属性 foo 的值
+```
+
+既然是基本操作，就可以使用 Proxy 拦截。
+
+```js
+const p = new Proxy(obj, {
+  get () {},
+  set () {}
+})
+```
+
+Proxy 构造函数接收两个参数。第一个参数是被代理的对象，第二个参数也是一个对象，这个对象是一组夹子（trap）。其中 get 函数用来拦截读取操作，set 函数用来拦截设置操作。
+
+在 JavaScript 世界里，万物皆对象。例如一个函数也是一个对象，所以调用函数也是对一个对象的基本操作。因此，我们可以用 Proxy 拦截函数的调用操作，这里我们使用 apply 拦截函数的调用。
+
+```js
+const fn = name => { console.log('我是: ', name); }
+
+const p2 = new Proxy(fn, {
+  apply (target, thisArg, argArray) {
+    target.call(thisArg, ...argArray);
+  }
+});
+
+p2('heora'); // 我是:  heora
+```
+
+Proxy 只能够拦截对一个对象的基本操作。调用对象下的方法属于非基本操作，我们叫它复合操作。
+
+```js
+obj.fn();
+```
+
+调用一个对象下的方法， 是由两个基本语义组成的。第一个基本语义是 get，即先通过 get 操作得到 `obj.fn` 属性。第二个语义是函数调用，即通过 get 得到 `obj.fn` 的值后在调用它，也就是我们上面说到的 apply。理解 Proxy 只能代理对象的基本语义很重要。当我们实现对数组或 Map、Set 等数据类型的代理时，都利用了 Proxy 的这个特点。
+
+了解了 Proxy，我们再来讨论 Reflect。Reflect 是一个全局对象，它有很多方法。
+
+```js
+Reflect.get();
+Reflect.set();
+Reflect.apply();
+// ...
+```
+
+Reflect 下的方法与 Proxy 拦截器方法名字相同，任何在 Proxy 的拦截器中找到的方法， 都可以在 Reflect 中找到同名函数，那么这些函数的作用是什么？以 `Reflect.get` 函数来说，它的功能就是提供访问一个对象属性的默认行为。
+
+```js
+const obj = { foo: 1 };
+
+console.log(obj.foo); // 直接读取
+console.log(Reflect.get(obj, 'foo')); // 通过 Reflect.get 读取
+```
+
+`Refelct.*` 方法与响应式数据的实现密切相关。
+
+```js
+```
+
