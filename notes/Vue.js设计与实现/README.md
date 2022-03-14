@@ -2879,5 +2879,59 @@ console.log(Reflect.get(obj, 'foo')); // 通过 Reflect.get 读取
 `Refelct.*` 方法与响应式数据的实现密切相关。
 
 ```js
+const data = { foo: 1 };
+
+const obj = new Proxy(data, {
+  get (target, key) {
+    track(target, key);
+    return target[key];
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+```
+
+这是我们实现响应式数据最基本的代码。在 get 和 set 拦截函数中直接使用原始对象 target 来完成对属性的读取和设置操作。
+
+这段代码其实还有问题。
+
+```js
+const data = {
+  foo: 1,
+  get bar () {
+    return this.foo
+  }
+};
+
+// ...
+
+effect(() => {
+  console.log(obj.bar);
+});
+```
+
+bar 属性是一个访问器属性，它返回了 `this.foo` 属性的值。我们在 effect 副作用函数中通过代理对象 p 访问 bar 属性。
+
+当 effect 注册的副作用函数执行时，会读取 `obj.bar` 属性值，它发现 `obj.bar` 是一个访问器属性，因此会执行 getter 函数。由于在 getter 函数中通过 `this.foo` 读取了 foo 属性值，因此我们认为副作用函数与属性 foo 之间也会建立联系。当我们修改 `obj.foo` 时应该能够触发响应，使得副作用函数重新执行。实际并非如此，当我们修改 `obj.foo` 值时，副作用函数并不会重新执行。
+
+问题出在 bar 属性的访问起函数 getter 里。
+
+```js
+const data = {
+  foo: 1,
+  get bar () {
+    return this.foo
+  }
+};
+```
+
+在 get 拦截函数内，通过 `target[key]` 返回属性值。其中 target 是原始值 `data`，key 就是字符串 `bar`，所以 `target[key]` 相当于 `data.bar`。因此当我们使用 `obj.bar` 访问 bar 属性时，它的 getter 函数内的 this 指向的其实是原始对象 `data`，这说明最终访问的其实是 `data.foo`。在副作用函数内通过原始对象访问它的某个属性是不会建立响应联系的。
+
+```js
+effect(() => {
+  data.foo; // data 是原始数据，不是代理对象，不能建立响应联系
+});
 ```
 
