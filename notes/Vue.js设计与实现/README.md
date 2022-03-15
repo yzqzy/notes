@@ -2910,6 +2910,8 @@ const data = {
 effect(() => {
   console.log(obj.bar);
 });
+
+obj.foo++;
 ```
 
 bar 属性是一个访问器属性，它返回了 `this.foo` 属性的值。我们在 effect 副作用函数中通过代理对象 p 访问 bar 属性。
@@ -2934,4 +2936,78 @@ effect(() => {
   data.foo; // data 是原始数据，不是代理对象，不能建立响应联系
 });
 ```
+
+我们可以使用 `Reflect.get` 函数解决这个问题。
+
+```js
+const data = {
+  foo: 1,
+  get bar () {
+    return this.foo
+  }
+};
+
+const obj = new Proxy(data, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  }
+});
+
+effect(() => {
+  console.log(obj.bar);
+});
+
+obj.foo++;
+```
+
+> receiver 用来处理定义在 prototype 上的 getter 。
+
+我们在代理对象的 get 拦截函数接收第三个参数 receiver，它代表谁在读取属性。
+
+```js
+obj.bar
+```
+
+当我们使用代理对象 obj 访问 bar 属性时，那么 receiver 就是 obj，你可以简单地理解为函数调用中的 this。我们使用 `Reflect.get(target, key, receiver)` 代替之前的 `target[key]`，这里的关键点就是第三个参数。它会使访问器属性中 bar 的 getter 函数内的 this 指向代理对象 obj。
+
+```js
+const data = {
+  foo: 1,
+  get bar () {
+    // this 为 obj 对象
+    return this.foo
+  }
+};
+```
+
+this 由原始对象 data 变成代理对象 obj。这会在副作用函数与响应式数据之间建立响应联系，从而达到依赖收集的效果。如果此时再对 `obj.foo` 进行自增操作，会发现已经可以触发副作用函数重新执行了。
+
+#### JavaScript 对象及 Proxy 的工作原理
+
+我们经常听说 “JavaScript 中一切皆对象”，那么到底什么是对象那？
+
+根据 ECMAScript  规范，在 JavaScript 中有两种对象，一种叫做常规对象（ordinary object），另一种叫做异质对象（exotic object）。这两种对象包含了 JavaScript 世界中的所有对象，任何不属于常规对象的对象都是异质对象。
+
+我们知道，在 JavaScript 中，函数其实也是对象。假设给出一个对象 obj，如何区分它是普通对象还是函数呢？实际上，在 JavaScript 中，对象的实际语义是由对象的内部方法（internal method）指定的。所谓内部方法，指的是当我们对一个对象进行操作时在引擎内部调用的方法，这些方法对于 JavaScript 使用者来说是不可见的。当我们访问对象属性时：
+
+```js
+obj.foo
+```
+
+引擎内部会调用 `[[Get]]` 这个内部方法来读取属性值。在 ECMAScript 规范中使用 `[[xxx]]` 来代表内部方法或内部槽。当然，一个对象不仅部署了 `[[Get]]` 这个内部方法。
+
+**对象必要的内部方法**
+
+> https://tc39.es/ecma262/#sec-invariants-of-the-essential-internal-methods
+
+| 内部方法           | 签名                       | 描述                                                         |
+| ------------------ | -------------------------- | ------------------------------------------------------------ |
+| [[GetPrototypeOf]] | () => Object \| Null       | 查明为该对象提供继承属性的对象，null 代表没有继承属性        |
+| [[SetPrototypeOf]] | (Object \|Null) -> Boolean | 将该对象与提供继承属性的另一个对象相关联。传递 null 表示没有继承属性，返回 true 表示操作成功完成，返回 false 表示操作失败 |
+|                    |                            |                                                              |
 
