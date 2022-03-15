@@ -2987,7 +2987,7 @@ const data = {
 
 this 由原始对象 data 变成代理对象 obj。这会在副作用函数与响应式数据之间建立响应联系，从而达到依赖收集的效果。如果此时再对 `obj.foo` 进行自增操作，会发现已经可以触发副作用函数重新执行了。
 
-#### JavaScript 对象及 Proxy 的工作原理
+#### 对象及 Proxy 的工作原理
 
 我们经常听说 “JavaScript 中一切皆对象”，那么到底什么是对象那？
 
@@ -3001,13 +3001,154 @@ obj.foo
 
 引擎内部会调用 `[[Get]]` 这个内部方法来读取属性值。在 ECMAScript 规范中使用 `[[xxx]]` 来代表内部方法或内部槽。当然，一个对象不仅部署了 `[[Get]]` 这个内部方法。
 
-**对象必要的内部方法**
+#####　对象必要的内部方法
 
 > https://tc39.es/ecma262/#sec-invariants-of-the-essential-internal-methods
 
-| 内部方法           | 签名                       | 描述                                                         |
-| ------------------ | -------------------------- | ------------------------------------------------------------ |
-| [[GetPrototypeOf]] | () => Object \| Null       | 查明为该对象提供继承属性的对象，null 代表没有继承属性        |
-| [[SetPrototypeOf]] | (Object \|Null) -> Boolean | 将该对象与提供继承属性的另一个对象相关联。传递 null 表示没有继承属性，返回 true 表示操作成功完成，返回 false 表示操作失败 |
-|                    |                            |                                                              |
+| 内部方法                | 签名                                             | 描述                                                         |
+| ----------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| `[[GetPrototypeOf]]`    | () => Object \| Null                             | 查明为该对象提供继承属性的对象，null 代表没有继承属性        |
+| `[[SetPrototypeOf]]`    | (Object \|Null) => Boolean                       | 将该对象与提供继承属性的另一个对象相关联。传递 null 表示没有继承属性，返回 true 表示操作成功完成，返回 false 表示操作失败 |
+| `[[IsExtensible]]`      | () => Boolean                                    | 查明是否允许向该对象添加其他属性                             |
+| `[[PreventExtensions]]` | () => Boolean                                    | 控制能否向该对象添加新属性。如果操作成功则返回 true，操作失败则返回 false |
+| `[[GetOwnProperty]]`    | (propertyKey) => Undefined \| PropertyDescriptor | 返回该对象自身属性的描述符，其键为 propertyKey，如果不存在这样的属性，则返回 undefined |
+| `[[DefineOwnProperty]]` | (propertyKey, PropertyDescriptor) => Boolean     | 创建或更改自己的属性，其键为 propertyKey，以具有由 PropertyDescriptor 描述的状态。如果该属性已创建或更新，则返回 true；如果无法创建或更新该属性，则返回 false |
+| `[[HasProperty]]`       | (propertyKey) => Boolean                         | 返回一个布尔值，指示该对象是否已经拥有键为 propertyKey 的自己的或继承的属性 |
+| `[[Get]]`               | (propertyKey, Receiver) => any                   | 从该对象返回键为 propertyKey 的属性的至。如果必须运行 ECMAScript 代码来检索属性值，则在运行代码时使用 Receiver 作为 this 值 |
+| `[[Set]]`               | (propertyKey, value, Receiver) => Boolean        | 将键值为 propertyKey 的属性的值设置为 value。如果必须运行 ECMAScript 代码来设置属性值，则在运行代码时使用 Receiver 作为 this 值。如果成功设置了属性值，则返回 true；如果无法设置，则返回 false |
+| `[[Delete]]`            | (propertyKey) => Boolean                         | 从该对象删除属于自身的键为 propertyKey 的属性。如果该属性未被删除并且仍然存在，则返回 false；如果该属性已被删除或不存在，则返回 true |
+| `[[OwnPropertyKeys]]`   | () => List of propertyKey                        | 返回一个 List，其元素都是对象自身的属性值                    |                                         
 
+包括 `[[Get]]` 在内，一个对象必须部署 11 必要的内部方法。除了上面的内部方法之外，还有两个额外的必要内部方法。
+
+#####　额外的必要内部方法
+
+| 内部方法        | 签名                              | 描述                                                         |
+| --------------- | --------------------------------- | ------------------------------------------------------------ |
+| `[[Call]]`      | (any, a list of any) => any       | 将运行的代码与 this 对象关联。由函数调用触发。该内部方法的参数是一个 this 值和参数列表 |
+| `[[Construct]]` | (a list of any, Object) => Object | 创建一个对象。通过 new 运算符或 super 调用触发。该内部方法的第一个参数是一个 List，该 List 的元素是构造函数调用或 Super 调用的参数，第二个参数是最初应用 new 运算符的对象。实现该内部方法的对象称为构造函数 |
+
+如果一个对象需要作为函数调用，那么这个对象就必须部署内部方法 `[[call]]`。我们可以通过内部方法和内部槽来区分对象，例如函数对象会部署内部方法 `[[Call]]` ，而普通对象不会。
+
+内部方法具有多态性。不同类型的对象可能部署了相同的内部方法，但是具有不同的逻辑。例如，普通对象和 Proxy 对象都部署了 `[[Get]]` 这个内部方法，但它们的逻辑是不同的，普通对象部署的 `[[Get]]` 内部方法的逻辑是由 ECMA 规范的 10.1.8 节定义的，而 Proxy 对象部署的 `[[Get]]` 内部方法的逻辑在 ECMA 规范的 10.5.8 节定义。
+
+https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver
+
+https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
+
+了解内部方法后，就可以解释什么是常规对象，什么是异质对象。
+
+* 对于对象必要的内部方法，必须使用 ECMA 规范 `10.1.x ` 节给出的定义实现；
+* 对于内部方法 `[[Call]]`，必须使用 ECMA 规范 10.2.1 节给出的定义实现；
+* 对于内部方法 `[[Construct]]` ，必须使用 ECMA 规范 10.2.2 节给出的定义实现。
+
+所有不符合这三点要求的对象都是异质对象。例如，由于 Proxy 对象的内部方法 `[[Get]]` 没有使用 ECMA 规范 10.1.8 节给出的定义实现，所以 Proxy 是一个异质对象。
+
+Proxy 是一个对象，它本身部署了上述必要的内部方法，当我们通过代理对象访问属性值时：
+
+```js
+const p = new Proxy(obj, { /** ... */ });
+p.foo
+```
+
+引擎会调用部署在在对象 p 上的内部方法 `[[Get]]` 。代理对象和普通对象没有太大区别。它们的区别在于对于内部方法 `[[Get]]` 的实现，这里就体现了内部方法的多态性，即不同的对象部署相同的内部方法，但它们的行为可能不同。具体体现在，如果在创建代理对象时没有指定对应的拦截函数，例如没有指定 `get()` 拦截函数，那么当我们通过代理对象访问属性值时，代理对象的内部方法 `[[Get]]` 会调用原始对象的内部方法 `[[Get]]` 来获取属性值，这其实就是代理透明性质。
+
+创建代理对象时指定的拦截函数，实际上是用来自定义代理对象本身的内部方法和行为，而不是用来指定被代理对象的内部方法和行为的。下面列出了 Proxy 对象部署的所有内部方法以及用来自定义内部方法和行为的拦截函数名字。
+
+##### Proxy 对象部署的内部方法
+
+Proxy 对象部署的所有内部方法。
+
+| 内部方法                | 处理器函数               |
+| ----------------------- | ------------------------ |
+| `[[GetPrototypeOf]]`    | getPrototyeOf            |
+| `[[SetPrototypeOf]]`    | setPrototypeOf           |
+| `[[IsExtensible]]`      | isExtensible             |
+| `[[PreventExtensions]]` | preventExtensions        |
+| `[[GetOwnProperty]]`    | getOwnPropertyDescriptor |
+| `[[DefineOwnProperty]]` | defineProperty           |
+| `[[HasProperty]]`       | has                      |
+| `[[Get]]`               | get                      |
+| `[[Set]]`               | set                      |
+| `[[Delete]]`            | deleteProperty           |
+| `[[OwnPropertyKeys]]`   | ownKeys                  |
+| `[[Call]]`              | apply                    |
+| `[[Construct]]`         | construct                |
+
+其中 `[[Call]]` 和 `[[Construct]]` 这两个内部方法只有当被代理的对象是函数和构造函数时才会部署。
+
+我们要拦截删除属性操作时，可以使用 deleteProperty 拦截函数实现。
+
+```js
+const data = { foo: 1 };
+
+const obj = new Proxy(data, {
+  deleteProperty (target, key) {
+    return Reflect.deleteProperty(target, key);
+  }
+});
+
+console.log(obj.foo);
+delete obj.foo;
+console.log(obj.foo);
+```
+
+deleteProperty 实现的是大力对象 obj 的内部方法和行为，所以为了删除被代理对象上的属性值，我们需要使用 `Reflect.deleteProperty(target, key)` 来完成。
+
+#### 如何代理对象
+
+之前我们使用 get 拦截函数去拦截对属性的读取操作。在响应系统中，“读取” 是一个很宽泛的概念，例如使用 in 操作符检查对象上是否具有给定的 key 也属于 “读取” 操作。
+
+```js
+effect(() => {[
+  'foo' on obj
+]});
+```
+
+这本质是也是在进行 “读取” 操作。响应系统应该拦截一切读取操作，以便当数据变化时能够正确地触发响应。
+
+* 访问属性：`obj.foo`
+* 判断对象或原型上是否存在给定的 key：`key in obj`
+* 使用 `for ... in` 循环遍历对象: `for (const key in obj) {}`
+
+接下来，我们逐步讨论如何拦截这些读取操作。对于属性的读取，例如 `obj.foo`，我们可以使用 get 拦截函数实现。
+
+```js
+const obj = { foo: 1 };
+
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  },
+});
+```
+
+对于 in 操作符，应该如何拦截？在 ECMA-262 规范的 13.10.1 节中，明确定义了 in 操作符的运行时逻辑。
+
+https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
+
+```js
+RelationalExpression : RelationalExpression in ShiftExpression
+1. Let lref be the result of evaluating RelationalExpression.
+2. Let lval be ? GetValue(lref).
+3. Let rref be the result of evaluating ShiftExpression.
+4. Let rval be ? GetValue(rref).
+5. If Type(rval) is not Object, throw a TypeError exception.
+6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).
+```
+
+1. 让 `lref` 的值为 `RelationalExpression` 的执行结果；
+2. 让 `lval` 的值为 `? GetValue(lref)` ;
+3. 让 `rref` 的值为 `ShiftExpression` 的执行结果；
+4. 让 `rval` 的值为 `? GetValue(rref)` ;
+5. 如果 `Type(rval)` 不是对象，则抛出异常；
+6. 返回 `? HasProperty(rval, ? ToPropertyKey(lval))`.
+
+关键点在第 6 步，
+
+ 
