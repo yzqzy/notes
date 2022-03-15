@@ -45,6 +45,10 @@ const p = new Proxy(obj, {
     track(target, key);
     return Reflect.get(target, key, receiver);
   },
+  has (target, key) {
+    track(target, key);
+    return Reflect.has(target, key);
+  },
   set (target, key, newVal) {
     target[key] = newVal;
     trigger(target, key);

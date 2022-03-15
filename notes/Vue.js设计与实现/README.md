@@ -3149,6 +3149,92 @@ RelationalExpression : RelationalExpression in ShiftExpression
 5. 如果 `Type(rval)` 不是对象，则抛出异常；
 6. 返回 `? HasProperty(rval, ? ToPropertyKey(lval))`.
 
-关键点在第 6 步，
+关键点在第 6 步，可以发现，in 操作符的运算结果是通过调用一个叫做 `HasProperty` 的抽象方法得到的。
 
- 
+`HasProperty` 抽象方法，可以在 ECMA-262 规范中的 7.3.12 找到。
+
+https://tc39.es/ecma262/#sec-hasproperty
+
+```js
+1. Return ? O.[[HasProperty]](P).
+```
+
+ `HasProperty` 抽象方法的返回值是通过调用对象的内部方法 `[[HasProperty]]` 得到的。`[[HasProperty]]` 是对象必要的内部方法，它对应的拦截函数叫 has，因此我们可以通过 has 拦截函数实现对 in 操作符的处理。
+
+```js
+const obj = { foo: 1 };
+
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  has (target, key) {
+    track(target, key);
+    return Reflect.has(target, key);
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  },
+});
+```
+
+这样我们在副作用函数中通过 in 操作符操作响应式数据时，就能够建立依赖关系。
+
+接着来看如何拦截 `for...in` 循环。我们所有能够拦截的方法有 13 种，它们是一个对象的所有基本语义方法，也就是说，任何操作其实都是由这些基本语义方法及其组合实现的，`for...in` 循环也不例外。
+
+https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
+
+```js
+6. If iterationKind is enumerate, then
+	a. If exprValue is undefined or null, then
+		i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+	b. Let obj be ! ToObject(exprValue).
+	c. Let iterator be EnumerateObjectProperties(obj).
+	d. Let nextMethod be ! GetV(iterator, "next").
+	e. Return the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+```
+
+在 ECMA 262 规范的 14.7.5.6 节中定义了 `for...in` 头部的执行规则。
+
+6. 如果 `iterationKind` 是枚举（enumerate），则
+   1. 如果 `exprValue` 是 undefined 或 null，返回 `Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }`
+   2. 让 `obj` 的值为 `! ToObject(exprValue)`
+   3. 让 `iterator` 的值为 `EnumerateObjectProperties(obj)`
+   4. 让 `nextMethod` 的值为 `! GetV(iterator, "next")`
+   5. 返回 ` Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }`
+
+仔细观察这一子步骤：
+
+```js
+让 iterator 的值为 EnumerateObjectProperties(obj)
+```
+
+其中的关键点在于 `EnumerateObjectProperties(obj)` 。这里的 `EnumerateObjectProperties` 是一个抽象方法，该方法返回一个迭代器对象，规范中的 14.7.5.9 给出了满足该抽象方法的示例实现。
+
+https://tc39.es/ecma262/#sec-enumerate-object-properties
+
+```js
+function* EnumerateObjectProperties(obj) {
+  const visited = new Set();
+  for (const key of Reflect.ownKeys(obj)) {
+    if (typeof key === "symbol") continue;
+    const desc = Reflect.getOwnPropertyDescriptor(obj, key);
+    if (desc) {
+      visited.add(key);
+      if (desc.enumerable) yield key;
+    }
+  }
+  const proto = Reflect.getPrototypeOf(obj);
+  if (proto === null) return;
+  for (const protoKey of EnumerateObjectProperties(proto)) {
+    if (!visited.has(protoKey)) yield protoKey;
+  }
+}
+```
+
+可以看到，
+
+
+
