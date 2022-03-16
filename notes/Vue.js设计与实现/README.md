@@ -3234,7 +3234,201 @@ function* EnumerateObjectProperties(obj) {
 }
 ```
 
-可以看到，
+可以看到，该方法是一个 generator 函数，接收一个参数 obj。实际上，obj 就是被 `for...in` 循环遍历的对象，其关键点在于使用 `Reflect.ownKeys(obj)` 来获取只属于对象自身拥有的键。我们可以使用 `ownKeys` 拦截函数来拦截 `Reflect.ownKeys` 操作。
 
+```js
+const obj = { foo: 1 };
+const ITERATE_KEY = Symbol();
 
+const p = new Proxy(obj, {
+	// ...
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  }
+});
+```
+
+拦截 `ownKeys` 操作即可间接拦截 `for...in` 循环。但是我们为什么要使用 `ITERATE_KEY` 作为追踪的 key？
+
+`ownKeys` 拦截函数与 `get/set` 拦截函数不同，在 `get/set` 中，我们可以得到具体操作的 `key`，但是在 `ownKeys` 中，我们只能拿到目标对象 `target`。在读写属性值时，可以明确地知道当前正在操作哪一个属性，所以只需要在该属性与副作用函数之间建立联系即可。`ownKeys` 用来获取一个对象的所有属于自己的键值，这个操作明显不与任何具体的键进行绑定，因此我们只能构造唯一的 `key` 作为标识，即 `ITERATE_KEY`。
+
+既然追踪的是 `ITERATE_KEY`，在触发响应的时候也应该触发它才行：
+
+```js
+trigger(target, ITERATE_KEY);
+```
+
+我们用一段代码来说明。假设副作用函数内有一段 `for...in` 循环。
+
+```js
+const obj = { foo: 1 };
+const ITERATE_KEY = Symbol();
+
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  set (target, key, newVal) {
+    target[key] = newVal;
+    trigger(target, key);
+  },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  }
+});
+
+effect(() => {
+  for (const key in p) {
+    console.log(key);
+  }
+});
+
+p.bar = 2;
+```
+
+由于对象 p 原本只有 foo 属性，因此 for...in 循环只会执行一次。现在为它添加了新的属性 bar，所以 for...in 循环就会由执行一次变成执行两次。也就是说，当为对象添加新属性时，会对 for...in 循环产生影响，所以需要触发与 `ITERATE_KEY` 相关联的副作用函数重新执行。但我们之前的 effect 实现还做不到这一点。
+
+```js
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  set (target, key, newVal) {
+    const res = Reflect.set(target, key, newVal);
+    trigger(target, key);
+    return res;
+  },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  }
+});
+```
+
+当为对象 p 添加新的 bar 属性时，会触发 set 拦截函数执行。此时 set 拦截函数接收到的 key 就是字符串 'bar'，因此最终调用 trigger 函数时也只是触发与 'bar' 相关联的副作用函数重新执行。但根据前文的介绍，我们知道 for...in 循环是在副作用函数与 `ITERATE_KEY` 之间建立联系，这和 'bar' 一点关系都没有，因此当我们尝试执行 `p.bar = 2` 操作时，并不会正确地触发响应。
+
+弄清楚问题在哪，我们就可以解决这个问题了。当添加属性时，我们将那些与 `ITERATE_KEY` 相关联的副作用函数也取出来执行。
+
+```js
+function trigger (target, key) {
+ // 使用 target 从 bucket 中获取 depsMap，key -> effects
+ const depsMap = bucket.get(target);
+
+ if (!depsMap) return;
+
+ // 根据 key 从 depsMap 中获取 effects
+ const effects = depsMap.get(key);
+ // 获取与 ITERATE_KEY 相关联的副作用函数（☆☆☆）
+ const iterateEffects = depsMap.get(ITERATE_KEY);
+
+ const effectsToRun = new Set();
+
+ // 将与 key 相关联的副作用函数添加到 effctesToRun
+ effects && effects.forEach(effectFn => {
+   // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+   if (effectFn !== activeEffect) {
+     effectsToRun.add(effectFn);
+   }
+ })
+ // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun（☆☆☆）
+ iterateEffects && iterateEffects.forEach(effectFn => {
+  if (effectFn !== activeEffect) {
+    effectsToRun.add(effectFn);
+  }
+ });
+ 
+ //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+ effectsToRun.forEach(effectFn => {
+   // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+   if (effectFn.options.scheduler) {
+      effectFn.options.scheduler(effectFn);
+   } else {
+    effectFn();
+   }
+ });
+}
+```
+
+当 trigger 函数执行时，除了把那些直接与具体操作的 key 相关联的副作用取出来执行外，还要把那些与 `ITERATE_KEY` 相关联的副作用函数取出来执行。
+
+```js
+const obj = { foo: 1 };
+
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  set (target, key, newVal) {
+    const res = Reflect.set(target, key, newVal);
+    trigger(target, key);
+    return res;
+  },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  }
+});
+
+effect(() => {
+  for (const key in p) {
+    console.log(key);
+  }
+});
+
+p.bar = 2;
+```
+
+对于添加新的属性来说，这么做没有什么问题，但如果仅仅修改已有属性的值，就会存在问题。
+
+```js
+p.foo = 2;
+```
+
+与添加属性不同，修改属性不会对 `for...in` 循环产生影响。因为无论怎么修改一个属性的值，对于 `for...in` 玄幻来说都只会循环一次。所以在这种情况下，我们不需要触发副作用函数重新执行，否则会造成不必要的性能开销。然而无论是添加新属性，还是修改已有的属性值，其基本语义都是 `[[Set]]`，我们都是通过 set 拦截函数来实现拦截的。
+
+```js
+const p = new Proxy(obj, {
+	// ...
+  set (target, key, newVal) {
+    const res = Reflect.set(target, key, newVal);
+    trigger(target, key);
+    return res;
+  },
+	// ...
+});
+```
+
+所以如果相解决上述问题，当设置属性操作发生时，就需要我们在 set 拦截函数内能够区分操作的类型，区分出是添加新属性还是设置已有属性。
+
+```js
+const obj = { foo: 1 };
+
+const hasOwnProperty = (target, key) => Object.prototype.hasOwnProperty.call(target, key);
+
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  },
+  set (target, key, newVal, receiver) {
+    const type = hasOwnProperty(target, key) ? 'SET' : 'ADD';
+    const res = Reflect.set(target, key, newVal, receiver);
+    trigger(target, key, type);
+    return res;
+  },
+});
+```
+
+我们优先使用 `Object.prototype.hasOwnProperty` 检查当前操作的属性是否已经存在于目标对象上，如果存在，则说明当前操作类型为 'SET'，即修改属性值；否则认为当前操作类型为 'ADD'，即添加新属性。我们把类型作为第三个参数传递给 trigger 函数。
+
+在 trigger 函数内就可以通过类型 type 来区分当前的操作类型，并且只有当操作类型 type 为 'ADD' 时，才会触发 `ITERATE_KEY` 相关联的副作用函数重新执行，这样就避免了不需要的性能损耗。
 

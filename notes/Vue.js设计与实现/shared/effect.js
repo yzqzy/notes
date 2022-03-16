@@ -1,3 +1,5 @@
+const ITERATE_KEY = Symbol();
+
 let activeEffect;
 
 const effectStack = [];
@@ -81,15 +83,25 @@ function trigger (target, key) {
 
  // 根据 key 从 depsMap 中获取 effects
  const effects = depsMap.get(key);
+ // 获取与 ITERATE_KEY 相关联的副作用函数
+ const iterateEffects = depsMap.get(ITERATE_KEY);
 
  const effectsToRun = new Set();
 
+ // 将与 key 相关联的副作用函数添加到 effctesToRun
  effects && effects.forEach(effectFn => {
    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
    if (effectFn !== activeEffect) {
      effectsToRun.add(effectFn);
    }
  })
+ // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+ iterateEffects && iterateEffects.forEach(effectFn => {
+  if (effectFn !== activeEffect) {
+    effectsToRun.add(effectFn);
+  }
+ });
+
  
  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
  effectsToRun.forEach(effectFn => {
@@ -106,5 +118,6 @@ function trigger (target, key) {
 module.exports = {
   effect,
   trigger,
-  track
+  track,
+  ITERATE_KEY
 }
