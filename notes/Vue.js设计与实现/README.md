@@ -3432,3 +3432,226 @@ const p = new Proxy(obj, {
 
 在 trigger 函数内就可以通过类型 type 来区分当前的操作类型，并且只有当操作类型 type 为 'ADD' 时，才会触发 `ITERATE_KEY` 相关联的副作用函数重新执行，这样就避免了不需要的性能损耗。
 
+```js
+function trigger (target, key, type) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
+
+  if (!depsMap) return;
+
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
+
+  const effectsToRun = new Set();
+
+  // 将与 key 相关联的副作用函数添加到 effctesToRun
+  effects && effects.forEach(effectFn => {
+    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+    if (effectFn !== activeEffect) {
+      effectsToRun.add(effectFn);
+    }
+  })
+
+  if (type === 'ADD') {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+    
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
+}
+```
+
+通常我们会将操作类型封装为一个枚举值。
+
+```js
+const TRIGGER_TYPE = {
+  SET: 'SET',
+  ADD: 'ADD'
+};
+```
+
+这样无论是对后期代码维护，还是对代码的清晰度，都是非常有帮助的。
+
+关于对象的代理，还剩下最后一部分，就是删除属性操作的代理。
+
+```js
+delete p.foo;
+```
+
+如何代理 delete 操作符呢？规范的 13.5.1.2 节中明确定义了 delete 操作符的行为。
+
+```js
+13.5.1.2 Runtime Semantics: Evaluation
+UnaryExpression : delete UnaryExpression
+	1. Let ref be the result of evaluating UnaryExpression.
+	2. ReturnIfAbrupt(ref).
+	3. If ref is not a Reference Record, return true.
+	4. If IsUnresolvableReference(ref) is true, then
+		a. Assert: ref.[[Strict]] is false.
+		b. Return true.
+	5. If IsPropertyReference(ref) is true, then
+		a. Assert: IsPrivateReference(ref) is false.
+		b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
+		c. Let baseObj be ? ToObject(ref.[[Base]]).
+		d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
+		e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
+		f. Return deleteStatus.
+	6. Else,
+		a. Let base be ref.[[Base]].
+		b. Assert: base is an Environment Record.
+		c. Return ? base.DeleteBinding(ref.[[ReferencedName]]).
+```
+
+5. 如果 `IsPropertyReference(ref)` 是 true，那么
+   1. 断言：`IsPrivateReference(ref)` 是 false
+   2. 如果 `IsSuperReference(ref)` 也是 true，则抛出 `ReferenceError` 异常
+   3. 让 `baseObj`  的值为 `? ToObject(ref.[[Base]])`
+   4. 让 `deleteStatus` 的值为 `? baseObj.[[Delete]](ref.[[ReferencedName]])`
+   5. 如果 `deleteStatus` 的值为 false 并且 `ref.[[Strict]]` 的值是 true，则抛出 `TypeError` 异常
+   6. 返回 `deleteStatus`
+
+由第 5 步的 d 子步骤可知，delete 操作符的行为依赖 `[[Delete]]` 内部方法。该内部方法可以使用 `deleteProperty` 拦截。
+
+```js
+const TRIGGER_TYPE = {
+  SET: 'SET',
+  ADD: 'ADD',
+  DELETE: 'DELETE'
+};
+```
+
+```js
+const p = new Proxy(obj, {
+	// ...
+  deleteProperty (target, key) {
+    // 检查被操作的属性是否是对象自己的属性
+    const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+    // 使用 Reflect.deleteProperty 删除属性
+    const res = Reflect.deleteProperty(target, key);
+
+    if (res && hadKey) {
+      // 只有当被删除属性时对象自身属性并且删除成功时，才出发更新
+      trigger(target, key, TRIGGER_TYPE.DELETE);
+    }
+
+    return res;
+  }
+});
+```
+
+在调用 trigger 函数时，我们传递了新的操作类型 ‘DELETE’。由于删除操作会使得对象的建变少，它会影响 `for...in` 循环的次数，因此当操作类型为 'DELETE' 时，我们也应该触发那些与 `ITERATE_KEY` 相关联的副作用函数重新执行。
+
+```js
+function trigger (target, key, type) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
+
+  if (!depsMap) return;
+
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
+
+  const effectsToRun = new Set();
+
+  // 将与 key 相关联的副作用函数添加到 effctesToRun
+  effects && effects.forEach(effectFn => {
+    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+    if (effectFn !== activeEffect) {
+      effectsToRun.add(effectFn);
+    }
+  })
+
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  if (type === TRIGGER_TYPE.ADD || type === TRIGGER_TYPE.DELETE) {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+    
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
+}
+```
+
+在这段代码中，我们添加 `type === 'DELETE'` 判断，使得删除属性操作能够触发与 `ITERATE_KEY` 相关联的副作用函数重新执行。
+
+```js
+const {
+  effect, track, trigger,
+  ITERATE_KEY, TRIGGER_TYPE
+} = require('../shared/effect');
+
+const obj = { foo: 1 };
+
+const p = new Proxy(obj, {
+  get (target, key, receiver) {
+    track(target, key);
+    return Reflect.get(target, key, receiver);
+  },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  },
+  set (target, key, newVal, receiver) {
+    const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+    const res = Reflect.set(target, key, newVal, receiver);
+    trigger(target, key, type);
+    return res;
+  },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  },
+  deleteProperty (target, key) {
+    const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+    const res = Reflect.deleteProperty(target, key);
+
+    if (res && hadKey) {
+      trigger(target, key, TRIGGER_TYPE.DELETE);
+    }
+
+    return res;
+  }
+});
+
+effect(() => {
+  for (const key in p) {
+    console.log(key);
+  }
+});
+
+// p.bar = 2;
+// p.foo = 2;
+delete p.foo;
+```
+
+#### 合理地触发响应
+

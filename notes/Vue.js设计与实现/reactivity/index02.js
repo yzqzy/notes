@@ -1,4 +1,4 @@
-const { effect, track, trigger, ITERATE_KEY } = require('../shared/effect');
+// const { effect, track, trigger, ITERATE_KEY } = require('../shared/effect');
 
 // const data = {
 //   foo: 1,
@@ -60,11 +60,12 @@ const { effect, track, trigger, ITERATE_KEY } = require('../shared/effect');
 //   }
 // });
 
-
+const {
+  effect, track, trigger,
+  ITERATE_KEY, TRIGGER_TYPE
+} = require('../shared/effect');
 
 const obj = { foo: 1 };
-
-const hasOwnProperty = (target, key) => Object.prototype.hasOwnProperty.call(target, key);
 
 const p = new Proxy(obj, {
   get (target, key, receiver) {
@@ -76,11 +77,28 @@ const p = new Proxy(obj, {
     return Reflect.ownKeys(target);
   },
   set (target, key, newVal, receiver) {
-    const type = hasOwnProperty(target, key) ? 'SET' : 'ADD';
+    const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
     const res = Reflect.set(target, key, newVal, receiver);
     trigger(target, key, type);
     return res;
   },
+  ownKeys (target) {
+    track(target, ITERATE_KEY);
+    return Reflect.ownKeys(target);
+  },
+  deleteProperty (target, key) {
+    // 检查被操作的属性是否是对象自己的属性
+    const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+    // 使用 Reflect.deleteProperty 删除属性
+    const res = Reflect.deleteProperty(target, key);
+
+    if (res && hadKey) {
+      // 只有当被删除属性时对象自身属性并且删除成功时，才出发更新
+      trigger(target, key, TRIGGER_TYPE.DELETE);
+    }
+
+    return res;
+  }
 });
 
 effect(() => {
@@ -90,4 +108,5 @@ effect(() => {
 });
 
 // p.bar = 2;
-p.foo = 2;
+// p.foo = 2;
+delete p.foo;

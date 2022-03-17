@@ -1,5 +1,11 @@
 const ITERATE_KEY = Symbol();
 
+const TRIGGER_TYPE = {
+  SET: 'SET',
+  ADD: 'ADD',
+  DELETE: 'DELETE'
+};
+
 let activeEffect;
 
 const effectStack = [];
@@ -75,43 +81,47 @@ function track (target, key) {
   activeEffect.deps.push(deps);
 }
 
-function trigger (target, key) {
- // 使用 target 从 bucket 中获取 depsMap，key -> effects
- const depsMap = bucket.get(target);
+function trigger (target, key, type) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
 
- if (!depsMap) return;
+  if (!depsMap) return;
 
- // 根据 key 从 depsMap 中获取 effects
- const effects = depsMap.get(key);
- // 获取与 ITERATE_KEY 相关联的副作用函数
- const iterateEffects = depsMap.get(ITERATE_KEY);
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
 
- const effectsToRun = new Set();
+  const effectsToRun = new Set();
 
- // 将与 key 相关联的副作用函数添加到 effctesToRun
- effects && effects.forEach(effectFn => {
-   // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
-   if (effectFn !== activeEffect) {
-     effectsToRun.add(effectFn);
-   }
- })
- // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
- iterateEffects && iterateEffects.forEach(effectFn => {
-  if (effectFn !== activeEffect) {
-    effectsToRun.add(effectFn);
+  // 将与 key 相关联的副作用函数添加到 effctesToRun
+  effects && effects.forEach(effectFn => {
+    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+    if (effectFn !== activeEffect) {
+      effectsToRun.add(effectFn);
+    }
+  })
+
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  if (type === TRIGGER_TYPE.ADD || type === TRIGGER_TYPE.DELETE) {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
   }
- });
-
- 
- //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
- effectsToRun.forEach(effectFn => {
-   // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
-   if (effectFn.options.scheduler) {
-      effectFn.options.scheduler(effectFn);
-   } else {
-    effectFn();
-   }
- });
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
 }
 
 
@@ -119,5 +129,7 @@ module.exports = {
   effect,
   trigger,
   track,
-  ITERATE_KEY
+
+  ITERATE_KEY,
+  TRIGGER_TYPE
 }
