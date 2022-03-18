@@ -3655,3 +3655,144 @@ delete p.foo;
 
 #### 合理地触发响应
 
+我们从规范的角度介绍了如何代理对象，这个过程中，我们处理了很多边界条件。例如，我们需要明确知道操作的类型是 ‘ADD’ 还是 'SET'，或者是其他操作类型，从而正确地触发响应。但想要合理地触发响应，还有许多工作要做。
+
+下面我们来看第一个问题，即当值没有发生变化时，不需要触发影响。
+
+```js
+const obj = { foo: 1 };
+
+const p = new Proxy(obj, { /* ... */ });
+
+effect(() => {
+  console.log(p.foo);
+});
+
+p.foo = 1;
+```
+
+`p.foo` 的初始值为 1，当为 `p.foo` 设置新的值时，如果值没有发生变化，则不需要触发响应。为了满足需求，我们需要修改 set 拦截函数的代码，在调用 trigger 函数触发响应之前，需要检查值是否真的发生了变化。
+
+```js
+const p = new Proxy(obj, {
+	// ...
+  set (target, key, newVal, receiver) {
+    const oldVal = target[key];
+
+    const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+    const res = Reflect.set(target, key, newVal, receiver);
+
+    if (oldVal !== newVal) {
+      trigger(target, key, type);
+    }
+
+    return res;
+  },
+	// ...
+});
+```
+
+我们在 set 拦截函数内首先获取旧值 `oldVal`，接着比较新值与旧值，只有当它们不全等的时候才触发响应。
+
+但是仅仅进行全等比较是有缺陷的，体现在对 `NaN` 的处理上 。`NaN` 与 `NaN` 进行全等比较总会得到 false。
+
+```js
+const obj = { foo: NaN };
+
+effect(() => {
+  console.log(p.foo);
+});
+
+p.foo = NaN;
+
+// NaN
+// NaN
+```
+
+为了解决这个问题，我们需要再加一个条件，新值和旧值不全等的情况下，保证它们都不是 `NaN`。这样就解决了 `NaN` 的问题。
+
+```js
+const p = new Proxy(obj, {
+	// ...
+  set (target, key, newVal, receiver) {
+    const oldVal = target[key];
+
+    const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+    const res = Reflect.set(target, key, newVal, receiver);
+			
+    // 不全等且都不是 NaN
+    if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+      trigger(target, key, type);
+    }
+
+    return res;
+  },
+	// ...
+});
+```
+
+接下来，我们讨论一种从原型上继承属性的情况。为了讲解方便，我们需要封装一个  reactive 函数，该函数接收一个对象作为参数，并返回为其创建的响应式数据。
+
+```js
+const {
+  track, trigger,
+  ITERATE_KEY, TRIGGER_TYPE
+} = require('../shared/effect');
+
+function reactive (obj) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      track(target, key);
+      return Reflect.get(target, key, receiver);
+    },
+    ownKeys (target) {
+      track(target, ITERATE_KEY);
+      return Reflect.ownKeys(target);
+    },
+    set (target, key, newVal, receiver) {
+      const oldVal = target[key];
+  
+      const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+      const res = Reflect.set(target, key, newVal, receiver);
+  
+      if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+        trigger(target, key, type);
+      }
+  
+      return res;
+    },
+    ownKeys (target) {
+      track(target, ITERATE_KEY);
+      return Reflect.ownKeys(target);
+    },
+    deleteProperty (target, key) {
+      const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+      const res = Reflect.deleteProperty(target, key);
+  
+      if (res && hadKey) {
+        trigger(target, key, TRIGGER_TYPE.DELETE);
+      }
+      return res;
+    }
+  });
+}
+```
+
+reactive 函数只是对 Proxy 进行了一层封装。我们可以基于 reactive 创建一个例子。
+
+```js
+const obj = {};
+const proto = { bar: 1 };
+
+const child = reactive(obj);
+const parent = reactive(proto);
+
+Object.setPrototypeOf(child, parent);
+
+effect(() => {
+  console.log(child.bar);
+});
+
+child.bar = 2; // 会导致副作用函数重新执行两次
+```
+
