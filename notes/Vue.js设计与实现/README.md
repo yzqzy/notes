@@ -3793,6 +3793,6 @@ effect(() => {
   console.log(child.bar);
 });
 
-child.bar = 2; // 会导致副作用函数重新执行两次
+child.bar = 2; // 会导致副作用函数重新执行两次 1 2 2
 ```
 
