@@ -3796,3 +3796,35 @@ effect(() => {
 child.bar = 2; // 会导致副作用函数重新执行两次 1 2 2
 ```
 
+我们定义了空对象 obj 和对象 `proto`，分别为两者创建了对应的响应式数据 child 和 parent，并且使用 `Object.setProtypeOf` 方法将 parent 设置为 child 的原型。我们在副作用函数内访问 `child.bar` 的值。child 本身并没有 bar 属性，因此当访问 `child.bar` 时，值是从原型上继承而来的。但既然 child 是响应式数据，那么它与副作用函数之间就会建立联系，因此当我们执行 `child.bar = 2` 时，副作用函数会重新触发。但是执行代码你会发现，副作用函数不仅执行了，还执行了两次。
+
+ 当在副作用函数中读取 `child.bar` 的值时，会触发 child 代理对象的 get 拦截函数。在拦截函数内使用 `Reflect.get(target, key, receiver)` 来得到最终结果。
+
+```js
+Reflect.get(obj, 'bar', receiver);
+```
+
+这其实是实现通过 `obj.bar` 来访问属性值的默认行为。引擎内部是通过调用 obj 对象所部署的 `[[Get]]` 内部方法来得到最终结果的，因此我们有必要查看规范 10.1.8.1 节来了解 `[[Get]]` 内部方法的执行流程。
+
+```js
+1. Let desc be ? O.[[GetOwnProperty]](P).
+2. If desc is undefined, then
+	a. Let parent be ? O.[[GetPrototypeOf]]().
+	b. If parent is null, return undefined.
+	c. Return ? parent.[[Get]](P, Receiver).
+3. If IsDataDescriptor(desc) is true, return desc.[[Value]].
+4. Assert: IsAccessorDescriptor(desc) is true.
+5. Let getter be desc.[[Get]].
+6. If getter is undefined, return undefined.
+7. Return ? Call(getter, Receiver).
+```
+
+3. 如果 `desc` 是 undefined，那么
+   1. 让 parent 的值为 `? O.[[GetPrototypeOf]]()`
+   2. 如果 parent 是 null，则返回 `undefined`
+   3. 返回 `? parent.[[Get]](P, Receiver)`
+
+如果对象自身不存在该属性，那么会获取对象的原型，并调用原型的 `[[Get]]` 方法得到最终结果。也就是说，当读取 `child.bar` 属性值时，由于 child 代理的对象 obj 自身没有 bar 属性，因此会获取对象 obj 的原型，也就是 parent 对象，所以最终得到的实际上 `parent.bar` 的值。parent 本身也是响应式对象，因此在副作用函数中访问 `parent.bar` 的值时，会导致副作用函数被收集，从而建立响应联系。`child.bar` 和 `parent.bar` 都与副作用函数建立了响应联系。
+
+我们还需要看看设置操作发生时的具体执行流程。当执行 `child.bar = 2` 时，会调用 child 代理对象的 set 拦截函数。同样，在 set 拦截函数中，我们用 `Reflect.set(target, key, newVal, receiver)` 来完成默认的设置行为，即引擎会调用 obj 对象部署的 `[[Set]]` 内部方法，根据规范 10.1.9.2 节可知 `[[Set]]` 内部方法的执行流程。
+
