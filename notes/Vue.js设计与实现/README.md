@@ -3828,3 +3828,114 @@ Reflect.get(obj, 'bar', receiver);
 
 我们还需要看看设置操作发生时的具体执行流程。当执行 `child.bar = 2` 时，会调用 child 代理对象的 set 拦截函数。同样，在 set 拦截函数中，我们用 `Reflect.set(target, key, newVal, receiver)` 来完成默认的设置行为，即引擎会调用 obj 对象部署的 `[[Set]]` 内部方法，根据规范 10.1.9.2 节可知 `[[Set]]` 内部方法的执行流程。
 
+```js
+1. If ownDesc is undefined, then
+	a. Let parent be ? O.[[GetPrototypeOf]]().
+	b. If parent is not null, then
+		i. Return ? parent.[[Set]](P, V, Receiver).
+	c. Else,
+		i. Set ownDesc to the PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+```
+
+1. 如果 `ownDesc` 是 undefined，那么
+   1. 让 parent 的值为 `O.[[GetPrototypeOf]]()`
+   2. 如果 parent 不是 null，则
+      1. 返回 `? parent.[[Set]](P, V, Receiver)`
+   3. 否则
+      1. 将 `ownDesc` 设置为 `{ [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }`
+
+如果设置的属性不存在于对象上，那么会取得其原型，并调用原型的 `[[Set]]` 方法，也就是 parent 的 `[[Set]]` 内部方法。由于 parent 是代理对象，所以这就相当于执行它的 set 拦截函数。换句话说，虽然我们操作的是 `child.bar`，但这也会导致 parent 代理对象 set 拦截函数被执行。当读取 `child.bar` 的值时，副作用函数不仅会被 `child.bar` 收集，也会被 `parent.bar` 收集。所以当 parent    代理对象的 set 拦截函数执行时，就会触发副作用函数重新执行，那就是为什么修改 `child.bar` 的值会导致副作用函数重新执行两次。
+
+其实解决思路也很简单，既然执行两次，那么只要屏蔽其中一次就可以。我们可以把由 `parent.bar` 触发的那次副作用函数的重新执行屏蔽。两次更新是由于 set 拦截函数被触发两次导致的，所以只要我们能够在 set 拦截函数内区分这两次更新就可以了。当我们设置 `child.bar` 的值时，会执行 child 代理对象的 set 拦截函数。
+
+```js
+// child 的 set 拦截函数
+set (target, key, value, receiver) {
+  // target 是原始对象 obj
+  // receiver 是代理对象 child
+}
+```
+
+此时的 target 是原始对象 obj，receiver 是代理对象 child，我们发现 receiver 其实就是 target 的代理对象。
+
+但由于 obj 上不存在 bar 属性，所以会取得 obj 的原型 parent，并执行 parent 代理对象的 set 拦截函数：
+
+```js
+// parent 的 set 拦截函数
+set (target, key, value, receiver) {
+  // target 是原始对象 proto
+  // receiver 仍然是代理对象 child
+}
+```
+
+当 parent 代理对象的 set 拦截函数执行时，此时 target 是原始对象 `proto`，而 `receiver` 仍然是代理对象 `child`，而不再是 `target` 的代理对象。通过这个特点，我们可以看到 target 和 receiver 的区别。由于我们设置的是 `child.bar` 的值，所以无论是在什么情况下，receiver 都是 child，而 target 则是变化的。根据这个区别，我们很容易就可以想到解决办法，只需要判断 receiver 是否是 target 的代理对象即可。只有当 receiver 是 target 的代理对象时才触发更新，这样就能够屏蔽由原型引起的更新了。
+
+所以接下来的问题就变成如何确定 receiver 是不是 target 的代理对象，这需要我们为 get 拦截函数添加一个能力。
+
+```js
+function reactive (obj) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      track(target, key);
+      return Reflect.get(target, key, receiver);
+    }
+  });
+}
+```
+
+我们增加了一段代码，它可以让代理对象通过 raw 属性读取原始数据。
+
+```js
+console.log(child.raw === obj); // true
+console.log(parent.raw === proto); // true
+```
+
+有了它，我们就能够在 set 拦截函数中判断 receiver 是不是 target 的代理对象。
+
+```js
+function reactive (obj) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      track(target, key);
+      return Reflect.get(target, key, receiver);
+    },
+    set (target, key, newVal, receiver) {
+      const oldVal = target[key];
+      const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+      const res = Reflect.set(target, key, newVal, receiver);
+
+      // taget === receiver.raw 说明 receiver 是 target 的代理对象
+      if (target === receiver.raw) {
+        if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+          trigger(target, key, type);
+        }
+      }
+  
+      return res;
+    }
+  });
+}
+```
+
+我们新增了一个判断条件，只有当 receiver 是 target 的代理对象时才触发更新，这样就能屏蔽由原型引起的更新，从而避免不必要的更新操作。
+
+#### 浅响应与深响应
+
+这一节我们介绍 reactive 与 shallowReactive 的区别，即深响应和浅响应的区别。实际上，我们目前所实现的 reactive 是浅响应的。
+
+```js
+const obj = reactive({ foo: { bar: 1 } });
+
+effect(() => {
+  
+})
+```
+

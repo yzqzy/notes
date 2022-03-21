@@ -25,3 +25,6 @@ effect(() => {
 });
 
 child.bar = 2;
+
+// console.log(child.raw === obj); // true
+// console.log(parent.raw === proto); // true
