@@ -3935,7 +3935,115 @@ function reactive (obj) {
 const obj = reactive({ foo: { bar: 1 } });
 
 effect(() => {
-  
-})
+  console.log(obj.foo.bar);
+});
+
+obj.foo.bar = 2; // 修改 obj.foo.bar 的值，并不能触发响应
 ```
+
+我们创建 obj 代理对象，该对象的 foo 属性值也是一个对象，即 `{ bar: 1 }` 。在副作用函数内访问 `obj.foo.bar` 的值时，会发现后续对 `obj.foo.bar` 的修改不能触发副作用函数重新执行。
+
+```js
+
+function reactive (obj) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      track(target, key);
+      return Reflect.get(target, key, receiver);
+    }
+  });
+}
+```
+
+我们读取 `obj.foo.bar` 时，首先要读取 `obj.foo` 的值。这里我们直接用 `Reflect.get` 函数返回 `obj.foo` 的结果。由于通过 `Reflect.get`  得到 `obj.foo` 的结果是一个普通对象，即 `{ bar: 1 }`，它并不是一个响应式对象，所以在副作用函数中访问 `obj.foo.bar`  时，是不能建立响应联系的。要解决这个问题，我们需要对 `Reflect.get` 返回的结果做一层包装：
+
+```js
+const isPlainObject = (data) => typeof data === 'object' && data !== null;
+
+function reactive (obj) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      track(target, key);
+       
+      const res = Reflect.get(target, key, receiver);
+      if (isPlainObject(res)) {
+        return reactive(res);
+      }
+      return res;
+    },
+  });
+}
+```
+
+当读取属性值时，我们首先检测该值是否是对象，如果是对象，则递归地调用 reactive 函数将其包装成响应式数据并返回。这样当使用  `obj.foo` 读取 foo 属性值时，得到的就会是一个响应式数据，因此再通过 `obj.foo.bar` 读取 bar 属性值时，自然就会建立响应联系。这样，当修改 `obj.foo.bar` 的值时，就能够触发副作用函数重新执行了。
+
+但是，并非所有情况下我们都希望深响应，这就催生了 shallowReactive，即浅响应。所谓浅响应，指的是只有对象的第一层属性是响应的。
+
+```js
+const obj = shallowReactive({ foo: { bar: 1 } });
+
+effect(() => {
+  console.log(obj.foo.bar);
+});
+
+obj.foo = { bar: 2 }; // 响应的，可以触发副作用函数并执行
+obj.foo.bar = 3; // 不是响应的，不能触发副作用函数重新执行
+```
+
+我们使用 shallowReactive 函数创建了一个浅响应的代理对象 obj。可以发现，只有对象的第一层属性是响应的，第二层及更深层次的属性则不是响应的。
+
+```js
+function crateReactive (obj, isShallow = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      track(target, key);
+       
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return reactive(res);
+      }
+
+      return res;
+    }
+  });
+}
+```
+
+```js
+function reactive (obj) {
+  return crateReactive(obj);
+}
+
+function shallowReactive (obj) {
+  return crateReactive(obj, true);
+}
+```
+
+我们可以把对象创建的工作封装到一个新的函数  `createReactive`  中。该函数除了接收原始对象 obj 之外，还接收参数 `isShallow`，代表是否创建浅响应对象。默认情况下，`isShallow` 的值为 false，代表创建深响应对象。当读取属性操作发生时，在 get 拦截函数内如果发现是浅响应的，那么直接返回原始数据即可。
+
+#### 只读和浅只读
+
+我们希望一些数据是只读的，当用户尝试修改只读数据时，会收到警告信息。这样就可以实现对数据的保护，例如组件接收到的 props 对象应该是一个只读数据。这时就需要接下来要讨论的 readonly 函数，它能够将一个数据变成只读的。
+
+```js
+```
+
+
 

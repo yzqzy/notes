@@ -3,7 +3,9 @@ const {
   ITERATE_KEY, TRIGGER_TYPE
 } = require('../shared/effect');
 
-function reactive (obj) {
+const { isPlainObject } = require('./util');
+
+function crateReactive (obj, isShallow = false) {
   return new Proxy(obj, {
     get (target, key, receiver) {
       if (key === 'raw') {
@@ -11,7 +13,18 @@ function reactive (obj) {
       }
 
       track(target, key);
-      return Reflect.get(target, key, receiver);
+       
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return reactive(res);
+      }
+
+      return res;
     },
     ownKeys (target) {
       track(target, ITERATE_KEY);
@@ -46,6 +59,15 @@ function reactive (obj) {
   });
 }
 
+function reactive (obj) {
+  return crateReactive(obj);
+}
+
+function shallowReactive (obj) {
+  return crateReactive(obj, true);
+}
+
 module.exports = {
-  reactive
+  reactive,
+  shallowReactive
 }
