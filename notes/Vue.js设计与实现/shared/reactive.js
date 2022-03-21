@@ -5,14 +5,16 @@ const {
 
 const { isPlainObject } = require('./util');
 
-function crateReactive (obj, isShallow = false) {
+function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
     get (target, key, receiver) {
       if (key === 'raw') {
         return target;
       }
 
-      track(target, key);
+      if (!isReadonly) {
+        track(target, key);
+      }
        
       const res = Reflect.get(target, key, receiver);
 
@@ -21,7 +23,7 @@ function crateReactive (obj, isShallow = false) {
       }
 
       if (isPlainObject(res)) {
-        return reactive(res);
+        return isReadonly ? readonly(res) : reactive(res);
       }
 
       return res;
@@ -31,6 +33,11 @@ function crateReactive (obj, isShallow = false) {
       return Reflect.ownKeys(target);
     },
     set (target, key, newVal, receiver) {
+      if (isReadonly) {
+        console.warn(`属性 ${ key } 是只读的`);
+        return true;
+      }
+
       const oldVal = target[key];
       const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
       const res = Reflect.set(target, key, newVal, receiver);
@@ -48,6 +55,11 @@ function crateReactive (obj, isShallow = false) {
       return Reflect.ownKeys(target);
     },
     deleteProperty (target, key) {
+      if (isReadonly) {
+        console.warn(`属性 ${ key } 是只读的`);
+        return true;
+      }
+
       const hadKey = Object.prototype.hasOwnProperty.call(target, key);
       const res = Reflect.deleteProperty(target, key);
   
@@ -67,7 +79,16 @@ function shallowReactive (obj) {
   return crateReactive(obj, true);
 }
 
+function readonly (obj) {
+  return crateReactive(obj, false, true);
+}
+
+function shallowReadonly (obj) {
+  return crateReactive(obj, true, true);
+}
+
 module.exports = {
   reactive,
-  shallowReactive
+  shallowReactive,
+  readonly
 }

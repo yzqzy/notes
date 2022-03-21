@@ -4043,7 +4043,168 @@ function shallowReactive (obj) {
 我们希望一些数据是只读的，当用户尝试修改只读数据时，会收到警告信息。这样就可以实现对数据的保护，例如组件接收到的 props 对象应该是一个只读数据。这时就需要接下来要讨论的 readonly 函数，它能够将一个数据变成只读的。
 
 ```js
+const obj = readonly({ foo: 1 });
+
+obj.foo = 2;
 ```
 
+只读本质上也是对数据对象的代理，我们同样可以使用 `createReactive`  函数来实现。我们可以为 `createReactive`  函数增加第三个参数 `isReadonly` 。
 
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+		// ...
+    set (target, key, newVal, receiver) {
+      if (isReadonly) {
+        console.warn(`属性 ${ key } 是只读的`);
+        return true;
+      }
 
+      const oldVal = target[key];
+      const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+      const res = Reflect.set(target, key, newVal, receiver);
+
+      if (target === receiver.raw) {
+        if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+          trigger(target, key, type);
+        }
+      }
+  
+      return res;
+    },
+  	// ...
+    deleteProperty (target, key) {
+      if (isReadonly) {
+        console.warn(`属性 ${ key } 是只读的`);
+        return true;
+      }
+
+      const hadKey = Object.prototype.hasOwnProperty.call(target, key);
+      const res = Reflect.deleteProperty(target, key);
+  
+      if (res && hadKey) {
+        trigger(target, key, TRIGGER_TYPE.DELETE);
+      }
+      return res;
+    }
+  });
+}
+```
+
+```js
+function readonly (obj) {
+  return crateReactive(obj, false, true);
+}
+```
+
+我们使用 `createReactive`  创建代理对象时，可以通过第三个参数指定是否创建一个只读的代理对象。同时，我们还修改了 get 拦截函数和 deleteProperty 拦截函数的实现，对于一个对象来说，只读意味着既不可以设置对象的属性值，也不可以删除对象的属性。在这个两个拦截函数中，我们分别添加了是否是只读的判断，一旦数据是只读的，则当这些操作发生时，会打印警告信息，提示用户这是一个非法操作。
+
+其次，如果一个数据是只读的，那就意味着任何方式都无法修改它。因此，没有必要为制度数据建立响应联系。处于这个原因，当在副作用函数中读取一个只读属性的值时，不需要调用 track 函数追踪响应。
+
+```js
+const obj = readonly({ foo: 1 });
+
+effect(() => {
+  console.log(obj.foo); // 可以读取值，但是不需要在副作用函数与数据之间建立响应关系
+});
+
+obj.foo = 2;
+```
+
+为了实现这个功能，我们需要修改 get 拦截函数的实现。
+
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      // 非只读才需要建立响应关系
+      if (!isReadonly) {
+        track(target, key);
+      }
+       
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return reactive(res);
+      }
+
+      return res;
+    },
+		// ...
+  });
+}
+
+```
+
+在 get 拦截函数内检测 `isReadonly` 变量的值，判断是否是只读的，只有在非只读的情况下才会调用 track 函数建立响应关系。
+
+我们目前实现的 readonly 函数更应该叫做 `shallowReadonly` ，因为它没有做到深只读。
+
+```js
+const obj = readonly({ foo: { bar: 1 } });
+
+effect(() => {
+  console.log(obj.foo.bar);
+});
+
+obj.foo.bar = 2;
+
+// 1
+// 2
+```
+
+为了实现深只读，我们还应该在 get 函数内地递归地调用 readonly 将数据包装成只读的代理对象，并将其作为返回值返回。
+
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      if (!isReadonly) {
+        track(target, key);
+      }
+       
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return isReadonly ? readonly(res) : reactive(res);
+      }
+
+      return res;
+    },
+  });
+}
+```
+
+如上面的代码所示，我们在返回属性值之前，判断它是否是只读的，如果是只读的，则调用 readonly 函数对值进行包装，并把包装后的只读对象返回。
+
+对于 `shallowReadonly` ，我们只需要修改 `createReactive` 的第二个参数即可。
+
+```js
+function readonly (obj) {
+  return crateReactive(obj, false, true);
+}
+
+function shallowReadonly (obj) {
+  return crateReactive(obj, true, true);
+}
+```
+
+在 `shallowReadonly` 函数内调用 `createReactive` 函数创建代理对象时，将第二个参数 `isShallow` 设置为 true，这样就可以创建一个浅只读的代理对象了。
+
+####　代理数组
