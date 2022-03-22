@@ -4298,3 +4298,178 @@ https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc
    2. 让 succeeded 的值为 `OrdinaryDefineOwnProperty(A, 'length', oldLenDesc)`
    3. 断言：succeeded 是 true
 
+可以看到，规范中明确说明，如果设置的索引值大于数组当前的长度，那么要更新数组的 length 数组。所以当通过索引设置元素值时，可能会隐式地修改 length 的属性值。因此在触发响应响应时，也应该触发与 length 属性相关联的副作用函数重新执行。
+
+```js
+const arr = reactive(['foo']);
+
+effect(() => {
+	console.log(arr.length); // 1
+});
+
+// 设置索引为 1 的值，会导致数组的长度变为 2
+arr[1] = 'bar';
+```
+
+数据的原长度为 1，并且在副作用函数中访问了 length 属性。然后设置数组索引为 1 的元素值，这会导致数组的长度变为 2，因此应该触发副作用函数重新执行。但目前的实现还做不到这一点，为了实现目标，我们需要修改 set 拦截函数。
+
+```js
+
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+  	// ...
+    set (target, key, newVal, receiver) {
+      if (isReadonly) {
+        console.warn(`属性 ${ key } 是只读的`);
+        return true;
+      }
+
+      const oldVal = target[key];
+      const type = Array.isArray(target) 
+        // 如果代理目标是数组，则检测被设置的索引值是否小于数组长度，如果是，视为 SET 操作，否则是 ADD 操作
+        ? Number(key) < target.length ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD
+        : Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+
+      const res = Reflect.set(target, key, newVal, receiver);
+
+      if (target === receiver.raw) {
+        if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+          trigger(target, key, type);
+        }
+      }
+  
+      return res;
+    },
+   	// ...
+  });
+}
+```
+
+我们在判断操作类型时，新增了对数组类型的校验。如果代理的目标对象是数组，那么对于操作类型的判断会有所区别。即被设置的索引值如果小于数组长度，就视做 SET 操作，因为它不会改变数组长度；如果设置的索引值大于数组的当前长度，则视为 ADD 操作，因为这汇隐式地修改数组的 length 属性值。有了这些信息，我们就可以在 trigger 函数中正确地触发与数组对象的 length 属性相关联的副作用函数重新执行了。
+
+```js
+function trigger (target, key, type) {
+	// ...
+  
+  // 操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数 
+  if (type === TRIGGER_TYPE.ADD && Array.isArray(target)) {
+    // 取出与 length 相关联的副作用函数
+    const lengthEffects = depsMap.get('length');
+
+    // 将这些副作用函数添加到 effectsToRun 中，待执行
+    lengthEffects && lengthEffects.forEach((effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    }));
+  }
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
+}
+```
+
+反过来思考，其实修改数组的 length 属性也会隐式地影响数组元素。
+
+```js
+const arr = reactive(['foo']);
+
+effect(() => {
+  console.log(arr[0]);
+});
+
+// 将数组的长度修改为 0，导致第 0 个元素被删除，因此应该触发响应
+arr.length = 0;
+```
+
+在副作用函数内访问了数组的第 0 个元素，接着将数组的 length 属性修改为 0。这会隐式地影响数组元素，即所有元素都被删除，所以应该触发副作用函数重新执行。然后并非所有对 length 属性的修改都会影响数组中的已有元素。拿上面例子来说，如果我们将 length 属性设置为 100，这并不会影响第 0 个元素，所以也就不需要触发副作用函数重新执行。当修改 length 属性值时，只有那些索引值大于或等于新的 length 属性值的元素才需要触发响应。但无论如何，目前的实现还做不到这一点，为了实现目标，我们需要修改 set 拦截函数。在调用 trigger 函数触发响应时，应该把新的属性值传递过去。
+
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+  	// ... 	
+    set (target, key, newVal, receiver) {
+      if (isReadonly) {
+        console.warn(`属性 ${ key } 是只读的`);
+        return true;
+      }
+
+      const oldVal = target[key];
+      const type = Array.isArray(target) 
+        // 如果代理目标是数组，则检测被设置的索引值是否小于数组长度，如果是，视为 SET 操作，否则是 ADD 操作
+        ? Number(key) < target.length ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD
+        : Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+
+      const res = Reflect.set(target, key, newVal, receiver);
+
+      if (target === receiver.raw) {
+        if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
+          // 增加第四个参数，即触发响应的新值
+          trigger(target, key, type, newVal);
+        }
+      }
+  
+      return res;
+    },
+   	// ...
+  });
+}
+```
+
+接下来，我们还需要修改 trigger 函数。
+
+```js
+function trigger (target, key, type, newVal) {
+	// ...
+
+  // 操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数 
+  if (type === TRIGGER_TYPE.ADD && Array.isArray(target)) {
+    // 取出与 length 相关联的副作用函数
+    const lengthEffects = depsMap.get('length');
+
+    // 将这些副作用函数添加到 effectsToRun 中，待执行
+    lengthEffects && lengthEffects.forEach((effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    }));
+  }
+
+  // 如果操作目标是数组，并且修改了数组的 length 属性
+  if (Array.isArray(target) && key === 'length') {
+    // 对于索引大于或等于新的 length 值的元素
+    // 需要把所有相关联的副作用函数取出并添加到 effectsToRun 函数中
+    depsMap.forEach((effects, key) => {
+      if (key >= newVal) {
+        effects.forEach(effectFn => {
+          if (effectFn !== activeEffect) {
+            effectsToRun.add(effectFn);
+          }
+        });
+      }
+    });
+  }
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
+}
+```
+
+如上面的代码所示，为 trigger 函数增加了第四个参数，即触发响应时的新值。这里的新值指的是新的 length 属性值，它代表新的数组长度。接着，我们判断操作的目标是否是数组，如果是，则需要找到所有索引值大于或等于新的 length 值的元素，然后把它与它们相关联的副作用函数取出并执行。
+
+##### 遍历数组
+

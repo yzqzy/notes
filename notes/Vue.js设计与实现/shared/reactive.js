@@ -39,12 +39,17 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
       }
 
       const oldVal = target[key];
-      const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+      const type = Array.isArray(target) 
+        // 如果代理目标是数组，则检测被设置的索引值是否小于数组长度，如果是，视为 SET 操作，否则是 ADD 操作
+        ? Number(key) < target.length ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD
+        : Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
+
       const res = Reflect.set(target, key, newVal, receiver);
 
       if (target === receiver.raw) {
         if (oldVal !== newVal && (oldVal === oldVal || newVal === newVal)) {
-          trigger(target, key, type);
+          // 增加第四个参数，即触发响应的新值
+          trigger(target, key, type, newVal);
         }
       }
   

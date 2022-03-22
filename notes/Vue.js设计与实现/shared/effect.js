@@ -81,7 +81,7 @@ function track (target, key) {
   activeEffect.deps.push(deps);
 }
 
-function trigger (target, key, type) {
+function trigger (target, key, type, newVal) {
   // 使用 target 从 bucket 中获取 depsMap，key -> effects
   const depsMap = bucket.get(target);
 
@@ -109,6 +109,34 @@ function trigger (target, key, type) {
     iterateEffects && iterateEffects.forEach(effectFn => {
       if (effectFn !== activeEffect) {
         effectsToRun.add(effectFn);
+      }
+    });
+  }
+
+  // 操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数 
+  if (type === TRIGGER_TYPE.ADD && Array.isArray(target)) {
+    // 取出与 length 相关联的副作用函数
+    const lengthEffects = depsMap.get('length');
+
+    // 将这些副作用函数添加到 effectsToRun 中，待执行
+    lengthEffects && lengthEffects.forEach((effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    }));
+  }
+
+  // 如果操作目标是数组，并且修改了数组的 length 属性
+  if (Array.isArray(target) && key === 'length') {
+    // 对于索引大于或等于新的 length 值的元素
+    // 需要把所有相关联的副作用函数取出并添加到 effectsToRun 函数中
+    depsMap.forEach((effects, key) => {
+      if (key >= newVal) {
+        effects.forEach(effectFn => {
+          if (effectFn !== activeEffect) {
+            effectsToRun.add(effectFn);
+          }
+        });
       }
     });
   }
