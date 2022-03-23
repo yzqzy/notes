@@ -1,3 +1,221 @@
+## 声明文件
+
+常见库的格式以及如何为每种格式书写正确的声明文件。
+
+### 识别库的类型
+
+#### 全局库
+
+例如 jQuery，`$` 变量可以被简单的引用。
+
+```js
+$(() => { console.log('hello') });
+```
+
+可以在全局库的文档中看到如何在 HTML 里用脚本标签引用库
+
+```html
+<script src="http://a.great.cdn.for/somelib.js"></script>
+```
+
+代码识别全局库
+
+```js
+function createGreeting = function (s) {
+	return 'Hello, ' + s;
+}
+```
+
+or
+
+```js
+window.creatGreeting = function (s) {
+  return 'Hello, ' + s;
+}
+```
+
+#### 模板化库
+
+一些库只能工作在模块加载器的环境下。例如 express 只能在 `node.js` 中运行。
+
+```js
+const fs = require('fs');
+```
+
+```js
+define(..., ['somelib'], function (somelib) {
+  
+});
+```
+
+代码识别模块化库
+
+* 无条件的调用 require 或 define
+* `import * as a from “b”` 、`export c` 
+* 赋值给 `exports` 或 `module.exports`
+* 极少包含对 window 或 global 赋值
+
+#### UMD 模块（UMD 库）
+
+UMD 模块是指哪些即可以作为模块使用又可以作为全局使用的模块，例如 `Moment.js`，就是这样的形式。
+
+```js
+// node
+import moment = require('moment');
+
+console.log(moment.format())
+```
+
+```js
+// html
+console.log(moment.format())
+```
+
+识别 UMD 模块
+
+> UMD 模块会检查是否存在模块加载器环境。这是非常容易观察到的模块
+
+```js
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(['libName'], factory);
+  } else if (typeof module === 'object' && module.exports) {
+    module.exports = factory(require('libName'));
+  } else {
+    root.returnExports = factory(root.libName);
+  }
+})(this. function (b) {})
+```
+
+如果在库的源码中看到 `typeof define`、`typeof window` 或 `type module`  这样的测试，尤其是在文件顶端，它几乎就是一个 UMD 库。
+
+#### 模块插件、UMD 插件
+
+一个插件可以改变一个模块的结构（UMD或模块）。
+
+**全局插件**
+
+一个全局插件是全局代码，他们会改变全局对象的结构。一些库往 `Array.prototype` 或 `String.prototype`  里添加新的方法。
+
+###  全局库的声明文件
+
+目录结构
+
+```js
+src
+	-	typings
+		- index.d.ts
+	- index.ts
+- index.html
+- tsconfig.json
+```
+
+以 jQuery 为例。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+  <div class="box"></div>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+
+  <script type="module" src="./src/index.ts"></script>
+</body>
+</html>
+```
+
+```js
+// src/typings/index.d.ts
+
+declare const jQuery: (param: string) => void;
+
+declare let foo: number;
+declare const foo2: number = 2;
+
+declare function greet (greeting: string): void;
+
+// 命名空间
+declare namespace mylib {
+  function makeGreet (greeting: number): void;
+  let numberOfGreeting: number;
+
+  namespace fn {
+    function test(s: string): void;
+    let test1: string;
+  }
+}
+
+// 函数重载
+declare function getWidget(n: number): number;
+declare function getWidget(s: string): string[];
+
+// 可重用的类型接口
+interface GreetingSettings {
+  greeting: string;
+  duration?: number;
+  color?: string;
+}
+declare function greetFn(setting: GreetingSettings): void;
+
+// 类型
+type GreetingLike = string | (() => string) | GreetingSettings;
+declare function greetLike (g: GreetingLike): void;
+
+// 类
+declare class Greeter {
+  constructor(geeeting: string) { }
+
+  grerting: string;
+  showGreeting(): void;
+}
+```
+
+```js
+// src/index.ts
+
+console.log(jQuery('#box'));
+
+foo = 123;
+console.log(foo);
+
+function greet (str: string) { }
+greet('123');
+
+mylib.makeGreet(123);
+mylib.numberOfGreeting;
+mylib.fn.test('123');
+mylib.fn.test1;
+
+let x = getWidget(43);
+let arr = getWidget('all of them');
+
+greetFn({
+  greeting: '123'
+});
+const GreetingSettingsExtra: GreetingSettings = {
+  greeting: '234'
+}
+
+greetLike('123');
+greetLike(() => '123');
+greetLike({
+  greeting: '123'
+});
+
+const greeter = new Greeter('123');
+greeter.grerting;
+greeter.showGreeting();
+```
+
+```js
 {
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
@@ -108,3 +326,14 @@
   ]
   /** 默认配置 end */
 }
+```
+
+
+
+interface 和 type 不需要 declare 声明就可以直接使用。
+
+变量声明重复声明只有第一个声明生效。
+接口声明重复声明会发生声明合并。
+
+### 模块化库声明文件
+
