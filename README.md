@@ -70,7 +70,7 @@
 * 可视化
   + threejs
     + [跳一跳案例](https://github.com/iheora/notes/tree/master/visualization/three.js/jump) 已完成
-  + [g6](https://github.com/iheora/notes/tree/master/visualization/g6) 更新中... 😁
+  + [g6](https://github.com/iheora/notes/tree/master/visualization/g6) 已完成
 * Electron
   + [Electron基础](https://github.com/iheora/notes/tree/master/electron/base) 已完成
   + [Electron实战](https://github.com/iheora/notes/tree/master/electron/combat) 已完成
