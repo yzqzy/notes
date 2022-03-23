@@ -3616,10 +3616,6 @@ const p = new Proxy(obj, {
     track(target, key);
     return Reflect.get(target, key, receiver);
   },
-  ownKeys (target) {
-    track(target, ITERATE_KEY);
-    return Reflect.ownKeys(target);
-  },
   set (target, key, newVal, receiver) {
     const type = Object.prototype.hasOwnProperty.call(target, key) ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD;
     const res = Reflect.set(target, key, newVal, receiver);
@@ -3744,10 +3740,6 @@ function reactive (obj) {
     get (target, key, receiver) {
       track(target, key);
       return Reflect.get(target, key, receiver);
-    },
-    ownKeys (target) {
-      track(target, ITERATE_KEY);
-      return Reflect.ownKeys(target);
     },
     set (target, key, newVal, receiver) {
       const oldVal = target[key];
@@ -4473,3 +4465,267 @@ function trigger (target, key, type, newVal) {
 
 ##### 遍历数组
 
+数组也是对象，这意味着同样可以使用 `for...in` 循环遍历：
+
+```js
+const arr = reactive(['foo']);
+
+effect(() => {
+  for (const key in arr) {
+    console.log(key); // 0
+  }
+});
+```
+
+我们应该尽量避免使用  `for...in`  循环遍历数组。不过既然在语法上是可行的，我们当然也要考虑这个问题。数据对象和常规对象的不同体现在 `[[DefineOwnProperty]]` 这个内部方法上，也就是说，使用 `for...in` 循环遍历数组与遍历常规对象并无差异，因此同样可以使用 `ownKeys` 拦截函数进行拦截。
+
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+		// ...
+    ownKeys (target) {
+      track(target, ITERATE_KEY);
+      return Reflect.ownKeys(target);
+    },
+    // ...
+  });
+}
+```
+
+当初我们为了追踪对普通对象的 `for...in` 操作，创建了 `ITERATE_KEY` 作为追踪的 key。但这是为了代理普通对象而考虑的，对于一个普通对象来说，只有当添加或删除属性值才会影响 `for...in` 循环的结果。所以当添加或删除属性操作发生时，我们需要取出与 `ITERATE_KEY` 相关联的副作用函数重新执行。不过，对于数组来说情况有所不同，我们需要看看哪些操作会影响 `for...in`  循环对数组的遍历。
+
+* 添加新元素：`arr[100] = bar`
+* 修改数组长度：`arr.length = 0`
+
+无论是为数组添加新元素，还是直接修改数组的长度，本质上都是因为修改了数组的 `length` 属性。一旦数组的 `length` 属性被修改，那么 `for...in` 循环对数组的遍历结果就会改变，所以在这种情况下我们应该触发响应。我们可以在 `ownKeys` 拦截函数内，判断当前操作目标 `target` 是否是数组，如果是数组，则使用 `length` 作为 key 去建立响应联系。
+
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+		// ...
+    ownKeys (target) {
+      // 如果操作目标 target 是数组，使用 length 属性作为 key 建立响应联系
+      track(target, Array.isArray(target) ? 'length' : ITERATE_KEY);
+      return Reflect.ownKeys(target);
+    },
+    // ...
+  });
+}
+```
+
+这样无论是为数组添加新元素，还是直接修改 `length` 属性，都能够正确触发响应。
+
+```js
+const arr = reactive(['foo']);
+
+effect(() => {
+  for (const key in arr) {
+    console.log(key); // 0
+  }
+});
+
+arr[1] = 'bar';
+arr.length = 0;
+```
+
+接下来我们再看看使用 `for...of` 遍历数组的情况。与 `for...in` 不同，`for...of` 是用来遍历 `可迭代对象（iterable object）` 的，因此我们需要先搞清楚什么是可迭代对象。ES2015 为 JavaScript 定义了 `迭代协议（iteration protocol）` ，它不是新的语法，而是一种协议。具体来i说，一个对象是否能够被迭代，取决于该对象或者该对象的原型是否实现了 `@@iterator` 方法。这里的 `@@[name]` 标志在 ECMAScript 规范里用来代指 JavaScript 内建的 symbols 值，例如 `@@iterator` 指的就是 `Symbol.iterator` 这个值。如果一个对象实现了 `Symbol.iterator`  方法，那么这个对象就是可迭代的。
+
+```js
+const obj = {
+  value: 0,
+  [Symbol.iterator]() {
+    return {
+      next () {
+        return {
+          value: obj.value++,
+          done: obj.value > 10 ? true : false
+        }
+      }
+    }
+  }
+};
+
+for (const value of obj) {
+  console.log(value); // 0 1 2 3 4 5 6 7 8 9
+}
+```
+
+数组内建了 `Symbol.iterator` 方法的实现。
+
+```js
+const arr = [1, 2, 3, 4, 5];
+const itr = arr[Symbol.iterator]();
+
+console.log(itr.next()); // { value: 1, done: false }
+console.log(itr.next()); // { value: 1, done: false }
+console.log(itr.next()); // { value: 1, done: false }
+console.log(itr.next()); // { value: 1, done: false }
+console.log(itr.next()); // { value: 1, done: false }
+console.log(itr.next()); // { value: undefined, done: true }
+```
+
+可以看到，我们能够通过 `Symbol.iterator` 作为键，获取数组内建的迭代器方法。然后手动执行迭代器的 next 函数，这样也可以得到期望的结果。这也是默认情况下数据可以使用 `for...of` 遍历的原因。
+
+```js
+const arr = [1, 2, 3, 4, 5];
+
+for (const val of arr) {
+  console.log(val); // 1 2 3 4 5
+}
+```
+
+实际上，想要实现对数组进行 `for...of` 遍历的拦截，关键点就在于找到 `for...of` 操作依赖的基本语义。在规范的 23.1.5.1 节中定义了数组迭代器的执行流程。
+
+https://tc39.es/ecma262/#sec-createarrayiterator
+
+```js
+1. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:
+	a. Let index be 0.
+	b. Repeat,
+		i. If array has a [[TypedArrayName]] internal slot, then
+			1. If IsDetachedBuffer(array.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+			2. Let len be array.[[ArrayLength]].
+		ii. Else,
+			1. Let len be ? LengthOfArrayLike(array).
+		iii. If index ≥ len, return undefined.
+		iv. If kind is key, perform ? GeneratorYield(CreateIterResultObject(𝔽(index), false)).
+		v. Else,
+			1. Let elementKey be ! ToString(𝔽(index)).
+			2. Let elementValue be ? Get(array, elementKey).
+			3. If kind is value, perform ? GeneratorYield(CreateIterResultObject(elementValue, false)).
+			4. Else,
+				a. Assert: kind is key+value.
+				b. Let result be CreateArrayFromList(« 𝔽(index), elementValue »).
+				c. Perform ? GeneratorYield(CreateIterResultObject(result, false)).
+		vi. Set index to index + 1.
+2. Return CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
+```
+
+第 1 步的 b 子步骤所描述的内容如下：
+
+- 重复以下步骤
+  - 如果 array 有 `[[TypedArrayName]]` 内部槽，那么
+    - 如果 `IsDetachedBuffer(array.[[ViewedArrayBuffer]])` 是 true，则抛出 `TypeError` 异常
+    - 让 `len` 的值为 `array.[[ArrayLength]]`
+  - 否则
+    - 让 `len` 的值为 `LengthOfArrayLike(array)`
+  - 如果 `index >= len`，则返回 `undefined`
+  - 如果 `kind` 是 `key`，则执行 `? GeneratorYield(CreateIterResultObject(𝔽(index), false))`
+  - 否则
+    - 让 `elementKey` 的值为 `! ToString(𝔽(index))`
+    - 让 `elementValue` 的值为 `? Get(array, elementKey)`
+    - 如果 `kind` 是 `value`，执行 `? GeneratorYield(CreateIterResultObject(elementValue, false))`
+    - 否则
+      - 断言：`kind` 是 `key + value`
+      - 让结果是 `CreateArrayFromList(« 𝔽(index), elementValue »)`
+      - 执行：`? GeneratorYield(CreateIterResultObject(result, false)).`
+  - 将 index 设置为 `index + 1 `
+
+可以看到，数组迭代器的执行回去读数组的 `length` 属性。如果迭代的是数组元素值，还会读取数组的索引。其实我们可以给出一个数组迭代器的模拟实现。
+
+```js
+
+const arr = [1, 2, 3, 4, 5];
+
+arr[Symbol.iterator] = function () {
+  const target = this;
+  const len = target.length;
+  let index = 0;
+
+  return {
+    next () {
+      return {
+        value: index < len ? target[index] : undefined,
+        done: index++ >= len
+      }
+    }
+  }
+}
+
+for (const val of arr) {
+  console.log(val); // 1 2 3 4 5
+}
+```
+
+这个例子表明，迭代数组时，只需要在副作用函数与数组的长度和索引之间建立响应联系，就能够实现响应式的 `for...of` 迭代。
+
+```js
+const arr = reactive([1, 2, 3, 4, 5]);
+
+effect(() => {
+  for (const val in arr) {
+    console.log(val);
+  }
+});
+
+arr['1'] = 'bar';
+arr.length = 0; 
+```
+
+可以看到，不需要增加任何代理就能够使其正确地工作。这是因为只要数组的长度和元素值发生改变，副作用函数自然会重新执行。
+
+```js
+TypeError: Cannot convert a Symbol value to a number
+```
+
+无论是使用 `for...of` 循环，还是调用 `values` 等方法，它们都会去读数组的 `Symbol.iterator` 属性。该属性是一个 symbol 值，为了避免发生意外的错误，以及性能上的考虑，我们不应该在副作用函数与 `Symbol.iterator` 值之间建立响应联系，因此需要修改 `get` 拦截函数。
+
+```js
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      if (!isReadonly && typeof key !== 'symbol') {
+        track(target, key);
+      }
+      
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return isReadonly ? readonly(res) : reactive(res);
+      }
+
+      return res;
+    },
+    // ...
+    ownKeys (target) {
+      // 如果操作目标 target 是数组，使用 length 属性作为 key 建立响应联系
+      track(target, Array.isArray(target) ? 'length' : ITERATE_KEY);
+      return Reflect.ownKeys(target);
+    },
+   	// ...
+  });
+}
+```
+
+在调用 track 函数进行追踪之前，需要添加一个判断条件，即只有当 key 的类型不是 symbol 时才进行追踪，这样就避免了上述问题。
+
+数组的 values 方法的返回值实际上就是数组内建的迭代器，我们可以验证这一点。
+
+```js
+console.log(Array.prototype.values === Array.prototype[Symbol.iterator]); // true
+```
+
+在不增加任何代码的情况下，我们也能够让数组的迭代器方法正确地工作。
+
+```js
+const arr = reactive([1, 2, 3, 4, 5]);
+
+effect(() => {
+  for (const val of arr.values()) {
+    console.log(val);
+  }
+});
+
+arr['1'] = 'bar';
+arr.length = 0; 
+```
+
+##### 数组的查找方法

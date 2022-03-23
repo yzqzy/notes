@@ -12,10 +12,10 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
         return target;
       }
 
-      if (!isReadonly) {
+      if (!isReadonly && typeof key !== 'symbol') {
         track(target, key);
       }
-       
+      
       const res = Reflect.get(target, key, receiver);
 
       if (isShallow) {
@@ -28,10 +28,6 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
 
       return res;
     },
-    ownKeys (target) {
-      track(target, ITERATE_KEY);
-      return Reflect.ownKeys(target);
-    },
     set (target, key, newVal, receiver) {
       if (isReadonly) {
         console.warn(`属性 ${ key } 是只读的`);
@@ -39,6 +35,7 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
       }
 
       const oldVal = target[key];
+
       const type = Array.isArray(target) 
         // 如果代理目标是数组，则检测被设置的索引值是否小于数组长度，如果是，视为 SET 操作，否则是 ADD 操作
         ? Number(key) < target.length ? TRIGGER_TYPE.SET : TRIGGER_TYPE.ADD
@@ -56,7 +53,8 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
       return res;
     },
     ownKeys (target) {
-      track(target, ITERATE_KEY);
+      // 如果操作目标 target 是数组，使用 length 属性作为 key 建立响应联系
+      track(target, Array.isArray(target) ? 'length' : ITERATE_KEY);
       return Reflect.ownKeys(target);
     },
     deleteProperty (target, key) {
