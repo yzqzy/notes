@@ -5,11 +5,34 @@ const {
 
 const { isPlainObject } = require('./util');
 
+const arrayInstrumentations = {};
+
+;['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
+  const originMethod = Array.prototype[method];
+  arrayInstrumentations[method] =  function (...args) {
+    // this 是代理对象，现在代理对象中查找，将结果存储到 res 中
+    let res = originMethod.apply(this, args);
+
+    if (res === false) {
+      // res 为 false 说明没找到，通过 this.raw 拿到原始数组，再去其中查找并更新 res 值
+      res = originMethod.apply(this.raw, args);
+    }
+
+    return res;
+  }
+});
+
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
     get (target, key, receiver) {
       if (key === 'raw') {
         return target;
+      }
+
+      // 如果操作的目标对象是数组，并且 key 存在于 arrayInstrumentations 上
+      // 那么返回定义在 arrayInstrumentations 上的值
+      if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
       }
 
       if (!isReadonly && typeof key !== 'symbol') {
@@ -74,8 +97,20 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
   });
 }
 
+// 定义一个 Map 实例，存储原始对象到代理对象的映射
+const reactiveMap = new Map();
+
 function reactive (obj) {
-  return crateReactive(obj);
+  // 优先通过原始对象 obj 寻找之前创建的代理对象，如果找到了，直接返回已有的代理对象
+  const existionProxy = reactiveMap.get(obj);
+
+  if (existionProxy) return existionProxy;
+
+  const proxy = crateReactive(obj);
+
+  reactiveMap.set(obj, proxy);
+
+  return proxy;
 }
 
 function shallowReactive (obj) {

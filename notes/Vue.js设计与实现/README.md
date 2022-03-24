@@ -4729,3 +4729,254 @@ arr.length = 0;
 ```
 
 ##### 数组的查找方法
+
+数据的方法内部其实都依赖了对象的基本语义。所以大多数情况下，我们不需要做特殊处理即可让这些方法按预期工作。
+
+```js
+const arr = reactive([1, 2]);
+
+effect(() => {
+  console.log(arr.includes(1));
+});
+
+arr[0] = 3;
+```
+
+比如上面这个例子，includes 为了找到给定的值，它内部会访问数组的 `length` 属性以及数组的索引，因此当我们修改某个索引指向的元值后能够触发响应。
+
+但是 includes 也不总是按照预期工作。
+
+```js
+const obj = {};
+const arr = reactive([ obj ]);
+
+console.log(arr.includes(arr[0])) // false
+```
+
+如上面代码所示。我们首先定一个对象 obj，并将其作为数组的第一个元素，然后调用 reactive 函数为其创建一个响应式对象，接着尝试调用 includes 方法在数组中进行查找，看看其中是否包含第一个元素。很显然，这个操作应该返回 true，但如果你尝试运行这段代码，会发现它返回了 false。
+
+语言规范 23.1.3.14 节给出了 includes 方法的执行流程。
+
+https://tc39.es/ecma262/#sec-array.prototype.includes
+
+```js
+1. Let O be ? ToObject(this value).
+2. Let len be ? LengthOfArrayLike(O).
+3. If len is 0, return false.
+4. Let n be ? ToIntegerOrInfinity(fromIndex).
+5. Assert: If fromIndex is undefined, then n is 0.
+6. If n is +∞, return false.
+7. Else if n is -∞, set n to 0.
+8. If n ≥ 0, then
+			a. Let k be n.
+9. Else,
+			a. Let k be len + n.
+			b. If k < 0, set k to 0.
+10. Repeat, while k < len,
+			a. Let elementK be ? Get(O, ! ToString(𝔽(k))).
+			b. If SameValueZero(searchElement, elementK) is true, return true.
+			c. Set k to k + 1.
+11. Return false.
+```
+
+上面是数组的 includes 方法的执行流程，我们重点关注第 1 步和第 10 步。其中，第 1 步所描述的内容如下。
+
+* 让 `O` 的值为 `? ToObject(this value)`
+
+第 10 步的描述如下。
+
+* 重复，while 循环（条件 `k < len`）
+  * 让 `elementK` 的值为 `? Get(O, ! ToString(𝔽(k)))`
+  * 如果 `SameValueZero(searchElement, elementK)`  是 true，则返回 true
+  * 将 k 设置为 `k + 1`
+
+第 1 步，让  `O` 的值为 `? ToObject(this value)`，这里的 this 是谁？在  `arr.includes(arr[0])`  语句中，arr 是代理对象，所以 includes 函数执行时的 this 指向的就是代理对象，即 arr。接着我们看第  `10.a`  步，可以看到 includes 方法会通过索引读取数组元素的值，但是这里的 `O` 是代理对象 arr。我们知道，通过代理对象来访问元素值时，如果值仍然是可以被代理的，那么得到的值就是新的代理对象而非原始对象。下面这段 get 拦截函数内的代码可以证明这一点。
+
+```js
+const isPlainObject = (data) => typeof data === 'object' && data !== null;
+
+if (isPlainObject(res)) {
+  return isReadonly ? readonly(res) : reactive(res);
+}
+```
+
+知道这些后，我们再回头看这句代码：`arr.includes(arr[0])` 。其中，`arr[0]` 得到的是一个代理对象，而在 includes 方法内部也会通过 arr 访问数组元素，从而得到一个代理对象，问题是这两个代理对象是不同的。这是因为每次调用 reactive 函数时都会创建一个新的代理对象。
+
+```js
+function reactive (obj) {
+  return crateReactive(obj);
+}
+```
+
+即使参数 obj 相同的，每次调用 reactive 函数时，都会创建新的代理对象。这个问题的解决方案如下所示。
+
+```js
+// 定义一个 Map 实例，存储原始对象到代理对象的映射
+const reactiveMap = new Map();
+
+function reactive (obj) {
+  // 优先通过原始对象 obj 寻找之前创建的代理对象，如果找到了，直接返回已有的代理对象
+  const existionProxy = reactiveMap.get(obj);
+
+  if (existionProxy) return existionProxy;
+
+  const proxy = crateReactive(obj);
+
+  reactiveMap.set(obj, proxy);
+
+  return proxy;
+}
+```
+
+在上面这段代码中，我们定义了 `reactiveMap` ，用来存储原始对象到代理对象的映射。每次调用 reactive 函数创建代理对象之前，优先检查是否已经存在相应的代理对象。如果存在，则直接返回已有的代理对象，这样就避免了为同一个原始对象多次创建代理对象的我呢提。
+
+```js
+const obj = {};
+const arr = reactive([ obj ]);
+
+console.log(arr.includes(arr[0])) // true
+```
+
+现在输出的结果已经符合我们预期。然而还不能高兴的太早，再来看下面的代码。
+
+```js
+const obj = {};
+const arr = reactive([ obj ]);
+
+console.log(arr.includes(obj)) // false
+```
+
+在上面的代码中，我们直接把原始对象作为参数传递给 includes 方法，这是很符合直觉的行为。而从用户的角度来看，自己明明把 obj 作为数组的第一个元素了，为什么在数组中却仍然找不到 obj 对象？其实原因很简单，因为 includes 内部的 this 指向的是代理对象 arr，并且在获取数组元素时得到的值也是代理对象，所以拿原始对象 obj 去查找肯定查不到，因此返回 false。为此，我们需要重写数组的 includes 方法并实现自定义的行为，才能解决这个问题，首先，我们来看如何重写 includes 方法。
+
+```js
+const arrayInstrumentations = {
+  includes: function () {}
+}
+
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      // 如果操作的目标对象是数组，并且 key 存在于 arrayInstrumentations 上
+      // 那么返回定义在 arrayInstrumentations 上的值
+      if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
+      }
+
+      if (!isReadonly && typeof key !== 'symbol') {
+        track(target, key);
+      }
+      
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return isReadonly ? readonly(res) : reactive(res);
+      }
+
+      return res;
+    },
+		// ...
+  });
+}
+```
+
+上段代码中，我们修改了 get 拦截函数，目的是重写数组的 includes 方法。`arr.includes` 可以理解为读取代理对象 arr 的 includes 属性，这就会触发 get 拦截函数，在该函数内检查 target 是否是数组，如果是数组并且读取的键值存在于 `arrayInstrumentations` 上，则返回定义在 `arrayInstrumentations` 对象上相应的值。也就是说，当执行 `arr.includes` 时，实际执行的是定义在 `arrayInstrumentations` 上的 `includes` 函数，这样就实现了重写。
+
+```js
+const originMethod = Array.prototype.includes;
+const arrayInstrumentations = {
+  includes: function (...args) {
+    // this 是代理对象，现在代理对象中查找，将结果存储到 res 中
+    let res = originMethod.apply(this, args);
+
+    if (res === false) {
+      // res 为 false 说明没找到，通过 this.raw 拿到原始数组，再去其中查找并更新 res 值
+      res = originMethod.apply(this.raw, args);
+    }
+
+    return res;
+  }
+}
+```
+
+如上面这段代码所示，其中 includes 方法内的 this 指向的是代理对象，我们现在代理对象中进行查找，这其实是实现了 `arr.includes(obj)` 的默认行为。如果找不到，通过 `this.raw` 拿到原始数组，再去其中查找，最后返回结果，这样就解决了上述问题。
+
+```js
+const obj = {};
+const arr = reactive([ obj ]);
+
+console.log(arr.includes(obj)) // true
+```
+
+现在代码的行为已经符合预期。除了 includes 方法之外，还需要做类似处理的方法有 `indexOf` 和 `lastIndexOf` ，因为它们都属于根据给定的值返回查找结果的方法。
+
+```js
+const arrayInstrumentations = {};
+
+;['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
+  const originMethod = Array.prototype[method];
+  arrayInstrumentations[method] =  function (...args) {
+    // this 是代理对象，现在代理对象中查找，将结果存储到 res 中
+    let res = originMethod.apply(this, args);
+
+    if (res === false) {
+      // res 为 false 说明没找到，通过 this.raw 拿到原始数组，再去其中查找并更新 res 值
+      res = originMethod.apply(this.raw, args);
+    }
+
+    return res;
+  }
+});
+```
+
+##### 隐式修改数组长度的原型方法
+
+这一节我们讲解如何处理那些因是修改数组长度的方法，主要指的是数组的栈方法，例如 `push/pop/shift/unshift` 。除此之外，`splice` 方法也会隐式地修改数组长度，我们可以查阅规范来证实这一点。以 `push` 方法为例，规范 23.1.3.21 节定义了 push 方法的执行流程。
+
+https://tc39.es/ecma262/#sec-array.prototype.push
+
+```js
+1. Let O be ? ToObject(this value).
+2. Let len be ? LengthOfArrayLike(O).
+3. Let argCount be the number of elements in items.
+4. If len + argCount > 2^53 - 1, throw a TypeError exception.
+5. For each element E of items, do
+			a. Perform ? Set(O, ! ToString(𝔽(len)), E, true).
+			b. Set len to len + 1.
+6. Perform ? Set(O, "length", 𝔽(len), true).
+7. Return 𝔽(len).
+```
+
+当调用 push 方法并传递 0 个或多个参数时，会执行以下步骤。
+
+* 让 `O` 的值为 `? ToObject(this value)`
+* 让 `len` 的值为 `? LengthOfArrayLike(O)`
+* 让 `argCount` 的值为 `items` 的元素数组
+* 如果 `len + argCount > 2^53 - 1 ` ，抛出 `TypeError` 异常
+* 对于 items 中的每一个元素 `E`
+  * 执行 `? Set(O, ! ToString(𝔽(len)), E, true)`
+  * 将 `len`  设置为 `len + 1`
+* 执行 `? Set(O, "length", 𝔽(len), true)` 
+* 返回 `𝔽(len)`
+
+由第 2 步和第 6 步可知，当调用数组的 push 方法向数组中添加元素时，既会读取数组的 `length` 属性值，也会设置数组的 `length` 属性值。这会导致两个独立的副作用函数互相影响。
+
+```js
+const arr = reactive([]);
+
+effect(() => {
+  arr.push(1);
+});
+
+effect(() => {
+  arr.push(1);
+});
+```
+
