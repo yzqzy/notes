@@ -6,6 +6,40 @@ const TRIGGER_TYPE = {
   DELETE: 'DELETE'
 };
 
+const arrayInstrumentations = {};
+
+;['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
+  const originMethod = Array.prototype[method];
+  arrayInstrumentations[method] =  function (...args) {
+    // this 是代理对象，现在代理对象中查找，将结果存储到 res 中
+    let res = originMethod.apply(this, args);
+
+    if (res === false) {
+      // res 为 false 说明没找到，通过 this.raw 拿到原始数组，再去其中查找并更新 res 值
+      res = originMethod.apply(this.raw, args);
+    }
+
+    return res;
+  }
+});
+
+// 一个标记变量，代表是否进行追踪。默认值是 true，即允许追踪
+let shouldTrack = true;
+
+;['push', 'pop', 'shift', 'unshfit', 'splice'].forEach(method => {
+  const originMethod = Array.prototype[method];
+  arrayInstrumentations[method] = function (...args) {
+    // 调用原始方法之前禁止追踪
+    shouldTrack = false;
+    // push 方法的默认行为
+    let res = originMethod.call(this, args);
+    // 调用原始方法之后，恢复原来的行为，即允许追踪
+    shouldTrack = true;
+    return res;
+  }
+});
+
+
 let activeEffect;
 
 const effectStack = [];
@@ -56,7 +90,8 @@ function cleanup (effectFn) {
 const bucket = new WeakMap();
 
 function track (target, key) {
-  if (!activeEffect) return;
+  // 禁止追踪时，直接返回
+  if (!activeEffect || !shouldTrack) return;
 
   // 使用 target 在 bucket 中获取 depsMap，key -> effects
   let depsMap = bucket.get(target);
@@ -152,12 +187,13 @@ function trigger (target, key, type, newVal) {
   });
 }
 
-
 module.exports = {
   effect,
   trigger,
   track,
 
   ITERATE_KEY,
-  TRIGGER_TYPE
+  TRIGGER_TYPE,
+
+  arrayInstrumentations
 }

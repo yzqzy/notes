@@ -1,26 +1,9 @@
 const {
   track, trigger,
-  ITERATE_KEY, TRIGGER_TYPE
+  ITERATE_KEY, TRIGGER_TYPE, arrayInstrumentations
 } = require('../shared/effect');
 
 const { isPlainObject } = require('./util');
-
-const arrayInstrumentations = {};
-
-;['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
-  const originMethod = Array.prototype[method];
-  arrayInstrumentations[method] =  function (...args) {
-    // this 是代理对象，现在代理对象中查找，将结果存储到 res 中
-    let res = originMethod.apply(this, args);
-
-    if (res === false) {
-      // res 为 false 说明没找到，通过 this.raw 拿到原始数组，再去其中查找并更新 res 值
-      res = originMethod.apply(this.raw, args);
-    }
-
-    return res;
-  }
-});
 
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
