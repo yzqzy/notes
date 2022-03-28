@@ -3,11 +3,18 @@ const {
   ITERATE_KEY, TRIGGER_TYPE, arrayInstrumentations
 } = require('../shared/effect');
 
-const { isPlainObject } = require('./util');
+const { isPlainObject, isPlainMap, isPlainSet } = require('./util');
 
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
     get (target, key, receiver) {
+      if (isPlainMap(obj) || isPlainSet(obj)) {
+        if (key === 'size') {
+          return Reflect.get(target, key, target);
+        }
+        return target[key].bind(target);
+      }
+
       if (key === 'raw') {
         return target;
       }

@@ -5151,3 +5151,116 @@ Set.prototype.size is an accessor property whose set accessor function is undefi
    1. 如何 e 不是空的，则将 count 设置为 count + 1
 6. ` 𝔽(count)`
 
+由此可知，`Set.prototype.size` 是一个访问器属性。关键点在第 1 步和第 2 步。根据第 1 步的描述：让 S 的值为 this。这里的 this 是代理对象 p，因为我们是通过代理对象 p 来访问 size 属性的。在第 2 步中，调用抽象方法 `RequireInternalSlot(S. [[SetData]])` 来检查 S 是否存在内部槽 `[[SetData]]` 。很显然，代理对象 S 不存在 `[SetData]` 这个内部槽，于是会抛出错误。
+
+为了修复这个问题，我们需要修正访问器属性的 getter 函数执行的 this 指向。
+
+```js
+const s = new Set([1, 2, 3]);
+const p = new Proxy(s, {
+  get (target, key, receiver) {
+    if (key === 'size') {
+      // 如果读取的时 size 属性
+      // 通过指定第三个参数 receiver 为原始对象 target 从而修复问题 
+      return Reflect.get(target, key, target);
+    }
+    // 读取其他属性的默认行为
+    return Reflect.get(target, key, receiver);
+  }
+});
+
+console.log(p.size);
+```
+
+我们在创建代理对象时增加了 get 拦截函数。然后检查读取的属性名称是不是 size，如果是，则在调用 `Reflect.get` 函数时指定第三个参数为原始 Set 对象，这样访问器属性 size 的 getter 函数在执行时，其 this 指向的就是原始 Set 对象而非代理对象。由于原始 Set 对象上存在 `[[SetData]]` 内部槽，因此程序得以正确运行。
+
+接着，我们再来尝试从 Set 中删除数据。
+
+```js
+const s = new Set([1, 2, 3]);
+const p = new Proxy(s, {
+  get (target, key, receiver) {
+    if (key === 'size') {
+      return Reflect.get(target, key, target);
+    }
+    return Reflect.get(target, key, receiver);
+  }
+});
+p.delete(1); //  Method Set.prototype.delete called on incompatible receiver #<Set>
+```
+
+可以看到，调用 `p.delete` 方法时会得到一个错误，这个错误与前文讲解的访问 `p.size` 属性发生的错误相似。
+
+访问 `p.size` 与访问 `p.delete` 是不同的。因为 size 是属性，是一个访问器属性，而 delete 是一个方法。当访问 `p.size` 时，访问器的 getter 函数会立即执行，此时我们可以通过修改 receiver 来改变 getter 函数的 this 指向。而当访问 `p.delete` 时，`delete` 方法并没有执行，真正使其执行的语句是 `p.delete(1)`  这句函数调用。因此，无论如何修改 receiver，delete 方法执行时的 this 都会指向代理对象 p，而不会指向原始 Set 对象。想要修复这个问题也不难，只需要把 delete 方法与原始数据对象绑定即可。
+
+```js
+const s = new Set([1, 2, 3]);
+const p = new Proxy(s, {
+  get (target, key, receiver) {
+    if (key === 'size') {
+      return Reflect.get(target, key, target);
+    }
+    // 将方法与原始数据对象 target 绑定后返回
+    return target[key].bind(target);
+  }
+});
+p.delete(1);
+```
+
+上面这段代码中，我们使用 `target[key].bind(target)` 代替了 `Reflect.get(target, key, receiver)` 。可以看到，我们使用 bind 函数将用于操作数据的方法与原始数据对i选哪个 target 做了绑定。这样当 `p.delete` 语句执行时，delete 函数的 this 总是指向原始数据对象而非代理对象，于是代码可以正确执行。
+
+```js
+const isPlainSet = (obj) => Object.prototype.toString.call(obj) === '[object Set]';
+const isPlainMap = (obj) => Object.prototype.toString.call(obj) === '[object Map]';
+
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      // 针对 Set，Map 特殊处理
+      if (isPlainMap(obj) || isPlainSet(obj)) {
+        if (key === 'size') {
+          return Reflect.get(target, key, target);
+        }
+        return target[key].bind(target);
+      }
+
+      if (key === 'raw') {
+        return target;
+      }
+
+      if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
+      }
+
+      if (!isReadonly && typeof key !== 'symbol') {
+        track(target, key);
+      }
+      
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return isReadonly ? readonly(res) : reactive(res);
+      }
+
+      return res;
+    }
+  });
+}
+```
+
+这样，我们就饿可以很简单地创建代理数据。
+
+```js
+const p = reactive(new Set([1, 2, 3]));
+
+console.log(p.size);
+p.delete(1);
+console.log(p.size);
+```
+
+#### 建立响应关系
+
