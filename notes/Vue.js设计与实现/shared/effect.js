@@ -39,6 +39,13 @@ let shouldTrack = true;
   }
 });
 
+const mutableInstrumentations = {};
+
+;['add'].forEach(method => {
+  mutableInstrumentations[method] = function (...args) {
+    
+  }
+});
 
 let activeEffect;
 
@@ -195,5 +202,6 @@ module.exports = {
   ITERATE_KEY,
   TRIGGER_TYPE,
 
-  arrayInstrumentations
+  arrayInstrumentations,
+  mutableInstrumentations
 }

@@ -5264,3 +5264,100 @@ console.log(p.size);
 
 #### 建立响应关系
 
+了解如何为 Set 和 Map 类型数据创建代理后，我们就可以着手实现 Set 类型数据的响应式方案了了。
+
+```js
+const p = reactive(new Set([1, 2, 3]));
+
+effect(() => {
+  console.log(p.size);
+});
+
+p.add(1);
+```
+
+首先，在副作用函数内访问了 `p.size` 属性；接着，调用 `p.add` 函数想集合中添加数据。由于这个行为会间接改变集合中的 size 属性值，我们我们期望副作用函数会重新执行。我们需要在访问 size 属性时调用 track 函数进行依赖追踪，然后在 add 方法执行时调用 trigger 函数触发响应。
+
+```js
+const isPlainSet = (obj) => Object.prototype.toString.call(obj) === '[object Set]';
+const isPlainMap = (obj) => Object.prototype.toString.call(obj) === '[object Map]';
+
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      // 针对 Set，Map 特殊处理
+      if (isPlainMap(obj) || isPlainSet(obj)) {
+        if (key === 'size') {
+          // 调用 track 函数建立响应关系
+          track(target, ITERATE_KEY);
+          return Reflect.get(target, key, target);
+        }
+        return target[key].bind(target);
+      }
+			
+      // ...
+
+      return res;
+    }
+  });
+}
+```
+
+当读取 size 属性是，只需要调用 track 函数建立响应关系即可。这里需要注意，响应联系需要建立在 `ITERATE_KEY` 与副作用函数之间，这是因为任何新增、删除操作都会影响 size 属性。接下来，我们来看如何触发响应。当调用 add 方法向集中添加新元素时，应该怎么触发响应呢？我们需要实现一个自定义 add 方法。
+
+```js
+const mutableInstrumentations = {};
+
+;['add'].forEach(method => {
+  mutableInstrumentations[method] = function (...args) {
+    
+  }
+});
+
+function crateReactive (obj, isShallow = false, isReadonly = false) {
+  return new Proxy(obj, {
+    get (target, key, receiver) {
+      if (key === 'raw') {
+        return target;
+      }
+
+      // Set,Map 特殊处理
+      if (isPlainMap(obj) || isPlainSet(obj)) {
+        if (key === 'size') {
+          // 调用 track 函数建立响应关系
+          track(target, ITERATE_KEY);
+          return Reflect.get(target, key, target);
+        }
+        
+        // return target[key].bind(target);
+        // 返回定义在 mutableInstrumentations 对象下的方法
+        return mutableInstrumentations[key];
+      }
+
+      // 如果操作的目标对象是数组，并且 key 存在于 arrayInstrumentations 上
+      // 那么返回定义在 arrayInstrumentations 上的值
+      if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+        return Reflect.get(arrayInstrumentations, key, receiver);
+      }
+
+      if (!isReadonly && typeof key !== 'symbol') {
+        track(target, key);
+      }
+      
+      const res = Reflect.get(target, key, receiver);
+
+      if (isShallow) {
+        return res;
+      }
+
+      if (isPlainObject(res)) {
+        return isReadonly ? readonly(res) : reactive(res);
+      }
+
+      return res;
+    }
+  });
+}
+```
+
+首先，定义一个

@@ -1,6 +1,7 @@
 const {
   track, trigger,
-  ITERATE_KEY, TRIGGER_TYPE, arrayInstrumentations
+  ITERATE_KEY, TRIGGER_TYPE,
+  arrayInstrumentations, mutableInstrumentations
 } = require('../shared/effect');
 
 const { isPlainObject, isPlainMap, isPlainSet } = require('./util');
@@ -8,15 +9,21 @@ const { isPlainObject, isPlainMap, isPlainSet } = require('./util');
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
     get (target, key, receiver) {
-      if (isPlainMap(obj) || isPlainSet(obj)) {
-        if (key === 'size') {
-          return Reflect.get(target, key, target);
-        }
-        return target[key].bind(target);
-      }
-
       if (key === 'raw') {
         return target;
+      }
+
+      // Set,Map 特殊处理
+      if (isPlainMap(obj) || isPlainSet(obj)) {
+        if (key === 'size') {
+          // 调用 track 函数建立响应关系
+          track(target, ITERATE_KEY);
+          return Reflect.get(target, key, target);
+        }
+        
+        // return target[key].bind(target);
+        // 返回定义在 mutableInstrumentations 对象下的方法
+        return mutableInstrumentations[key];
       }
 
       // 如果操作的目标对象是数组，并且 key 存在于 arrayInstrumentations 上
