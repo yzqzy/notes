@@ -1,3 +1,5 @@
+const { isPlainObject } = require('./util');
+
 const ITERATE_KEY = Symbol();
 
 const TRIGGER_TYPE = {
@@ -38,35 +40,6 @@ let shouldTrack = true;
     return res;
   }
 });
-
-const mutableInstrumentations = {
-  add (key) {
-    // this 仍然指向的是代理对象，通过 raw 属性获取原始数据对象
-    const target = this.raw;
-    // 先判断值是否已经存在
-    const hadKey = target.has(key);
-    // 只有再值不存在情况下，才需要触发响应
-    if (!hadKey) {
-      // 通过原始对象对象执行 add 方法删除具体的值
-      // 这里不再徐亚 .bind 了，因为是直接通过 target 调用并执行的
-      const res = target.add(key);
-      // 调用 trigger 函数触发响应，并指定操作类型为 ADD
-      trigger(target, key, TRIGGER_TYPE.ADD);
-      // 返回操作结果
-      return res;
-    }
-    return target;
-  },
-  delete (key) {
-    const target = this.raw;
-    const hadKey = target.has(key);
-    const res = target.delete(key);
-    if (hadKey) {
-      trigger(target, key, TRIGGER_TYPE.DELETE);
-    }
-    return res;
-  }
-};
 
 let activeEffect;
 
@@ -224,5 +197,4 @@ module.exports = {
   TRIGGER_TYPE,
 
   arrayInstrumentations,
-  mutableInstrumentations
 }

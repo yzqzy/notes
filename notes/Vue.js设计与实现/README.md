@@ -5503,5 +5503,103 @@ p.delete(2); // 3 Set(3) { 1, 3, 4 }
 Map 数据类型拥有 get 和 set 这两个方法，当调用 get 方法读取数据时，需要调用 track 函数追踪依赖建立响应关系；当调用 set 方法设置数据时，需要调用 trigger 方法触发响应。
 
 ```js
+const p = reactive(new Map([['key', 1]]));
+
+effect(() => {
+  console.log(p.get('key'));
+});
+
+p.set('key', 2);
+```
+
+其实想要实现上面这段代码所展示的功能并不难，因为我们已经有了实现 add、delete 等方法的经验。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  get (key) {
+    // 获取原始对象
+    const target = this.raw;
+    // 判断读取的 key 是否存在
+    const hadKey = target.has(key);
+    // 追踪依赖，建立响应联系
+    track(target, key);
+    // 如果存在，则返回结果。如果得到的结果 res 仍然是可代理的数据，则要返回使用 reactive 包装后的响应式数据
+    if (hadKey) {
+      const res = target.get(key);
+      return isPlainObject(res) ? reactive(res) : res;
+    }
+  }
+};
+```
+
+在非浅响应的情况下，如果得到的数据仍然可以被代理，那么要调用 `reactive(res)` 将数据转换成响应式数据后返回。在浅响应模式下，就不需要这一步了。我们可以在 `crateReactive` get 函数中定义 `this.isShallow` 属性，在 `mutableInstrumentations` 中获取 `isShallow` 属性进行判断。
+
+接着，我们来讨论 set 方法的实现。简单来说，当 set 方法被调用后，需要调用 trigger 方法触发响应。只不过在触发响应的时候，需要区分操作的类型时 SET 还是 ADD。
+
+```js
+const mutableInstrumentations = {
+  add (key) {
+    // this 仍然指向的是代理对象，通过 raw 属性获取原始数据对象
+    const target = this.raw;
+    // 先判断值是否已经存在
+    const hadKey = target.has(key);
+    // 只有再值不存在情况下，才需要触发响应
+    if (!hadKey) {
+      // 通过原始对象对象执行 add 方法删除具体的值
+      // 这里不再徐亚 .bind 了，因为是直接通过 target 调用并执行的
+      const res = target.add(key);
+      // 调用 trigger 函数触发响应，并指定操作类型为 ADD
+      trigger(target, key, TRIGGER_TYPE.ADD);
+      // 返回操作结果
+      return res;
+    }
+    return target;
+  },
+  delete (key) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+    const res = target.delete(key);
+    if (hadKey) {
+      trigger(target, key, TRIGGER_TYPE.DELETE);
+    }
+    return res;
+  },
+  get (key) {
+    // 获取原始对象
+    const target = this.raw;
+    // 判断读取的 key 是否存在
+    const hadKey = target.has(key);
+    // 追踪依赖，建立响应联系
+    track(target, key);
+    // 如果存在，则返回结果。如果得到的结果 res 仍然是可代理的数据，则要返回使用 reactive 包装后的响应式数据
+    if (hadKey) {
+      const res = target.get(key);
+      return isPlainObject(res) ? reactive(res) : res;
+    }
+  },
+  set (key, value) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+    // 获取旧值
+    const oldVal = target.get(key);
+    // 设置新值
+    target.set(key, value);
+    // 如果不存在，则说明是 ADD 类型的操作
+    if (!hadKey) {
+      trigger(target, key, TRIGGER_TYPE.ADD);
+    } else if (oldVal !== value && (oldVal === oldVal || value === value)) {
+      // 如果存在，并且值变化，则是 SET 操作
+      trigger(target, key, TRIGGER_TYPE.SET);
+    }
+  }
+};
+```
+
+这段代码的关键点在于，我们需要判断设置的 key 是否存在，以便区分不同的操作类型。我们知道，对于 SET 类型和 ADD 类型的操作来说，它们最终触发的副作用函数是不同的。因为 ADD 类型的操作会对数据的 size 属性产生影响，所以依赖 size 属性的副作用函数都需要在 ADD 类型的操作发生时重新执行。
+
+上面给出的 set 函数实现可以正常工作，但它仍然存在问题，set 方法会污染原始数据。
+
+```js
 ```
 

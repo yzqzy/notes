@@ -1,10 +1,67 @@
 const {
   track, trigger,
   ITERATE_KEY, TRIGGER_TYPE,
-  arrayInstrumentations, mutableInstrumentations
-} = require('../shared/effect');
+  arrayInstrumentations
+} = require('./effect');
 
 const { isPlainObject, isPlainMap, isPlainSet } = require('./util');
+
+const mutableInstrumentations = {
+  add (key) {
+    // this 仍然指向的是代理对象，通过 raw 属性获取原始数据对象
+    const target = this.raw;
+    // 先判断值是否已经存在
+    const hadKey = target.has(key);
+    // 只有再值不存在情况下，才需要触发响应
+    if (!hadKey) {
+      // 通过原始对象对象执行 add 方法删除具体的值
+      // 这里不再徐亚 .bind 了，因为是直接通过 target 调用并执行的
+      const res = target.add(key);
+      // 调用 trigger 函数触发响应，并指定操作类型为 ADD
+      trigger(target, key, TRIGGER_TYPE.ADD);
+      // 返回操作结果
+      return res;
+    }
+    return target;
+  },
+  delete (key) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+    const res = target.delete(key);
+    if (hadKey) {
+      trigger(target, key, TRIGGER_TYPE.DELETE);
+    }
+    return res;
+  },
+  get (key) {
+    // 获取原始对象
+    const target = this.raw;
+    // 判断读取的 key 是否存在
+    const hadKey = target.has(key);
+    // 追踪依赖，建立响应联系
+    track(target, key);
+    // 如果存在，则返回结果。如果得到的结果 res 仍然是可代理的数据，则要返回使用 reactive 包装后的响应式数据
+    if (hadKey) {
+      const res = target.get(key);
+      return isPlainObject(res) ? reactive(res) : res;
+    }
+  },
+  set (key, value) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+    // 获取旧值
+    const oldVal = target.get(key);
+    // 设置新值
+    target.set(key, value);
+    // 如果不存在，则说明是 ADD 类型的操作
+    if (!hadKey) {
+      trigger(target, key, TRIGGER_TYPE.ADD);
+    } else if (oldVal !== value && (oldVal === oldVal || value === value)) {
+      // 如果存在，并且值变化，则是 SET 操作
+      trigger(target, key, TRIGGER_TYPE.SET);
+    }
+  }
+};
 
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
@@ -20,7 +77,6 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
           track(target, ITERATE_KEY);
           return Reflect.get(target, key, target);
         }
-        
         // return target[key].bind(target);
         // 返回定义在 mutableInstrumentations 对象下的方法
         return mutableInstrumentations[key];
