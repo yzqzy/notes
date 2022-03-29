@@ -88,10 +88,13 @@ const { reactive } = require('../shared/reactive');
 // console.log(p.size);
 
 
-const p = reactive(new Set([1, 2, 3]));
+// const p = reactive(new Set([1, 2, 3]));
+// effect(() => {
+//   console.log(p.size, p);
+// });
+// p.add(1); 
+// p.add(4); // 4 Set(4) { 1, 2, 3, 4 }
+// p.delete(5);
+// p.delete(2); // 3 Set(3) { 1, 3, 4 }
 
-effect(() => {
-  console.log(p.size);
-});
 
-p.add(1);

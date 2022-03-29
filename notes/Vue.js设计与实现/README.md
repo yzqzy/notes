@@ -5308,11 +5308,9 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
 ```js
 const mutableInstrumentations = {};
 
-;['add'].forEach(method => {
-  mutableInstrumentations[method] = function (...args) {
-    
-  }
-});
+const mutableInstrumentations = {
+  add () {}
+};
 
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {
@@ -5360,4 +5358,150 @@ function crateReactive (obj, isShallow = false, isReadonly = false) {
 }
 ```
 
-首先，定义一个
+首先，定义一个对象 `mutableInstrumentations` , 我们会将所有自定义实现的方法都定义到该对象下。例如 `mutableInstrumentations.add` 方法，然后，在 get 拦截函数内返回定义在 `mutableInstrumentations` 对象中的方法。这样，当通过 `p.add` 获取方法时，得到的就是我们自定义的 `mutableInstrumentations.add` 方法。
+
+```js
+const mutableInstrumentations = {
+  add (key) {
+    // this 仍然指向的是代理对象，通过 raw 属性获取原始数据对象
+    const target = this.raw;
+    // 通过原始对象对象执行 add 方法删除具体的值
+    // 这里不再徐亚 .bind 了，因为是直接通过 target 调用并执行的
+    const res = target.add(key);
+    // 调用 trigger 函数触发响应，并指定操作类型为 ADD
+    trigger(target, key, TRIGGER_TYPE.ADD);
+    // 返回操作结果
+    return res;
+  }
+};
+```
+
+自定义的 add 函数内 this 仍然指向代理对象，所以需要通过 `this.raw` 获取获取数据对象。有了原始数据对象后，就可以通过它调用 `target.add` 方法，这样就不再需要 `.bind` 绑定了。代添加操作完成后，调用 trigger 函数触发响应。需要注意的时，我们指定了操作类型为 ADD，这一点很重要。
+
+```js
+function trigger (target, key, type, newVal) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
+
+  if (!depsMap) return;
+
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
+
+  const effectsToRun = new Set();
+
+	// ...
+
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  if (type === TRIGGER_TYPE.ADD || type === TRIGGER_TYPE.DELETE) {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+		
+  // ...
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
+}
+```
+
+当操作类型是 `ADD` 或 `DELETE` ，会取出与 `ITERATE_KEY` 相关联的副作用函数并执行，这样就可以通过访问 size 属性所收集的副作用函数来执行了。
+
+当然，如果调用 add 方法添加的元素已经存在于 set 集合中，就不再需要触发响应，这样做对性能更加友好。
+
+```js
+const mutableInstrumentations = {
+  add (key) {
+    // this 仍然指向的是代理对象，通过 raw 属性获取原始数据对象
+    const target = this.raw;
+    // 先判断值是否已经存在
+    const hadKey = target.has(key);
+    // 只有再值不存在情况下，才需要触发响应
+    if (!hadKey) {
+      // 通过原始对象对象执行 add 方法删除具体的值
+      // 这里不再徐亚 .bind 了，因为是直接通过 target 调用并执行的
+      const res = target.add(key);
+      // 调用 trigger 函数触发响应，并指定操作类型为 ADD
+      trigger(target, key, TRIGGER_TYPE.ADD);
+      // 返回操作结果
+      return res;
+    }
+    return target;
+  }
+};
+```
+
+这段代码中，我们先调用 `target.has` 方法判断值是否已经存在，只有在值不存在的情况下才需要触发响应。
+
+在此基础上，我们可以按照类似的思路轻松地实现 delete 方法。
+
+```js
+
+const mutableInstrumentations = {
+  add (key) {
+    // this 仍然指向的是代理对象，通过 raw 属性获取原始数据对象
+    const target = this.raw;
+    // 先判断值是否已经存在
+    const hadKey = target.has(key);
+    // 只有再值不存在情况下，才需要触发响应
+    if (!hadKey) {
+      // 通过原始对象对象执行 add 方法删除具体的值
+      // 这里不再徐亚 .bind 了，因为是直接通过 target 调用并执行的
+      const res = target.add(key);
+      // 调用 trigger 函数触发响应，并指定操作类型为 ADD
+      trigger(target, key, TRIGGER_TYPE.ADD);
+      // 返回操作结果
+      return res;
+    }
+    return target;
+  },
+  delete (key) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+    const res = target.delete(key);
+    if (hadKey) {
+      trigger(target, key, TRIGGER_TYPE.DELETE);
+    }
+    return res;
+  }
+};
+```
+
+```js
+const p = reactive(new Set([1, 2, 3]));
+
+effect(() => {
+  console.log(p.size, p);
+});
+
+p.add(1); 
+p.add(4); // 4 Set(4) { 1, 2, 3, 4 }
+p.delete(5);
+p.delete(2); // 3 Set(3) { 1, 3, 4 }
+```
+
+如上面的代码所示，与 add 方法的区别在于，delete 方法只有在要删除的元素确实在集合中存在时，才需要触发响应，这一点恰好与 add 方法相反。
+
+#### 避免污染原始数据
+
+这一节中，我们借助 Map 类型数据的 set 和 get 来讲解什么是 “避免污染原始数据” 及其原因。
+
+Map 数据类型拥有 get 和 set 这两个方法，当调用 get 方法读取数据时，需要调用 track 函数追踪依赖建立响应关系；当调用 set 方法设置数据时，需要调用 trigger 方法触发响应。
+
+```js
+```
+
