@@ -5675,3 +5675,77 @@ const mutableInstrumentations = {
 
 #### 处理 forEach
 
+集合类型的 forEach 方法类似于数组的 forEach 方法。
+
+```js
+const m = new Map([
+  [{ key: 1 }, { value: 1 }]
+]);
+
+effect(() => {
+  m.forEach((value, key, m) => {
+    console.log(value); // { value: 1 }
+    console.log(key); // key: 1 }
+  })
+});
+```
+
+以 Map 为例，forEach 方法接收一个回调函数作为参数，该回调函数会在 Map 的每个键值对上被调用。回调函数接收三个参数，分别是值、键以及原始对象。
+
+遍历操作与键值对的数量有关，因此会修改 Map 对象键值对数量的操作都应该触发副作用函数重新执行，例如 delete 和 add 方法等。所以当 forEach 函数被停用时，我们应该让副作用函数与 `ITERATE_KEY` 建立响应联系。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  forEach (callback) {
+    // 取得原始数据对象
+    const target = this.raw;
+    // 与 ITERATE_KEY 建立响应关系
+    track(target, ITERATE_KEY);
+    // 通过原始数据对象调用 forEach 方法，并把 callback 传递过去
+    target.forEach(callback);
+  }
+};
+```
+
+```js
+const m = reactive(new Map([
+  [{ key: 1 }, { value: 1 }]
+]));
+
+effect(() => {
+  m.forEach((value, key, m) => {
+    console.log(value);
+    console.log(key);
+  })
+});
+
+m.set({ key: 2 }, { value: 2 });
+```
+
+上述代码可以按照预期工作，但是给出的 forEach 函数仍然存在缺陷，我们在自定义实现的 forEach 方法内，通过原始数据对象调用了原生的 forEach 方法。
+
+```js
+// 通过原始数据对象调用 forEach 方法，并把 callback 传递过去
+target.forEach(callback);
+```
+
+这意味着，传递给 callback 回调函数的参数都是非响应式数据。
+
+```js
+const key = { key: 1 };
+const value = new Set([1, 2, 3]);
+const p = reactive(new Map([
+  [key, value]
+]));
+
+effect(() => {
+  p.forEach((value, key) => {
+    console.log(value);
+  })
+});
+
+p.get(key).delete(1);
+```
+
+在上面这段代码中，响应式数据 p 有一个键值对，其中键是普通对象 `{ key: 1 }`，值是 Set 类型的原始数据 `new Set([1, 2, 3])` 。接着，我们在副作用函数中使用 forEach 方法遍历 p，并在回调函数中访问 `value `。

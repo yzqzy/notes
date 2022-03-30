@@ -64,6 +64,14 @@ const mutableInstrumentations = {
       // 如果存在，并且值变化，则是 SET 操作
       trigger(target, key, TRIGGER_TYPE.SET);
     }
+  },
+  forEach (callback) {
+    // 取得原始数据对象
+    const target = this.raw;
+    // 与 ITERATE_KEY 建立响应关系
+    track(target, ITERATE_KEY);
+    // 通过原始数据对象调用 forEach 方法，并把 callback 传递过去
+    target.forEach(callback);
   }
 };
 
