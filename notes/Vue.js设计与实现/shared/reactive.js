@@ -49,10 +49,14 @@ const mutableInstrumentations = {
   set (key, value) {
     const target = this.raw;
     const hadKey = target.has(key);
+
     // 获取旧值
     const oldVal = target.get(key);
+    // 获取原始数据据，由于 value 本身可能已经是原始数据，所以此时 value.raw 不存在，则直接使用 value
+    const rawValue = value.raw || value;
     // 设置新值
-    target.set(key, value);
+    target.set(key, rawValue);
+
     // 如果不存在，则说明是 ADD 类型的操作
     if (!hadKey) {
       trigger(target, key, TRIGGER_TYPE.ADD);

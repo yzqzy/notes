@@ -5601,5 +5601,77 @@ const mutableInstrumentations = {
 上面给出的 set 函数实现可以正常工作，但它仍然存在问题，set 方法会污染原始数据。
 
 ```js
+const m = new Map();
+
+const p1 = reactive(m);
+const p2 = reactive(new Map());
+
+p1.set('p2', p2);
+
+effect(() => {
+  console.log(m.get('p2').size, m.get('p2'));
+});
+
+m.get('p2').set('foo', 1);
 ```
+
+这段代码中我们创建了一个原始 Map 对象 m，`p1` 是对象 m 的代理对象，接着创建另外一个代理对象 `p2`，并将其作为值设置给 `p1`，即 `p1.set('p2', p2)`。接下来问题出现了，在副作用函数中，我们通过原始数据 m 来读取数据值，然后又通过原始数据 m 来设置数据值，此时发现副作用函数重新执行了。这其实并不符合我们的预期，因为原始数据不应该具有响应式数据据的能力，否则就意味着用户既可以操作原始数据，又能够操作响应式数据，这样一来代码就乱套了。
+
+导致问题出现的原因就是我们实现的 set 方法。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  set (key, value) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+    // 获取旧值
+    const oldVal = target.get(key);
+    // 设置新值
+    target.set(key, value);
+    // 如果不存在，则说明是 ADD 类型的操作
+    if (!hadKey) {
+      trigger(target, key, TRIGGER_TYPE.ADD);
+    } else if (oldVal !== value && (oldVal === oldVal || value === value)) {
+      // 如果存在，并且值变化，则是 SET 操作
+      trigger(target, key, TRIGGER_TYPE.SET);
+    }
+  }
+};
+```
+
+在 set 方法内，我们把 value 设置到了原始数据 target 上。如果 value 是响应式数据，就意味着设置到原始对象上的也是响应式数据，我们把响应式数据设置到原始数据上的行为称为**数据污染**。
+
+要解决数据污染也不难，只需要在调用 `target.set` 函数设置值之前对值进行检查即可：只要发现即将要设置的值是响应式数据，那么就通过 raw 属性获取原始数据，再把原始数据设置到 target 上。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  set (key, value) {
+    const target = this.raw;
+    const hadKey = target.has(key);
+
+    // 获取旧值
+    const oldVal = target.get(key);
+    // 获取原始数据据，由于 value 本身可能已经是原始数据，所以此时 value.raw 不存在，则直接使用 value
+    const rawValue = value.raw || value;
+    // 设置新值
+    target.set(key, rawValue);
+
+    // 如果不存在，则说明是 ADD 类型的操作
+    if (!hadKey) {
+      trigger(target, key, TRIGGER_TYPE.ADD);
+    } else if (oldVal !== value && (oldVal === oldVal || value === value)) {
+      // 如果存在，并且值变化，则是 SET 操作
+      trigger(target, key, TRIGGER_TYPE.SET);
+    }
+  }
+};
+```
+
+现在的实现已经不会造成数据污染了。不过，观察上面的代码，会发现新的问题。我们一直使用 raw 属性来访问原始数据是由缺陷的，因为它可能与用户自定义的 raw 属性冲突，错译在一个严谨的实现中，我们需要使用唯一的标识来作为原始数据的键，例如使用 Symbol 类型来代替。
+
+除了 set 方法需要避免污染原始数据之外，Set 类型的 add 方法、普通对象的写值操作，还有为数组添加元素的方法等，都需要做类似的处理。
+
+#### 处理 forEach
 
