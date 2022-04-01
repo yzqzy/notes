@@ -5792,4 +5792,388 @@ const mutableInstrumentations = {
 };
 ```
 
-解决上述问题之后，我们的工作还没有完成。无论是使用 `for...in` 循环遍历一个对象，还是使用 `forEach` 循环遍历一个集合，它们的响应联系都是建立在 `ITERATE_KEY` 与副作用函数之间的。
+解决上述问题之后，我们的工作还没有完成。无论是使用 `for...in` 循环遍历一个对象，还是使用 `forEach` 循环遍历一个集合，它们的响应联系都是建立在 `ITERATE_KEY` 与副作用函数之间的。然而，使用 `for...in` 来遍历对象与使用 `forEach` 遍历集合之间存在本质的不同。具体体现在，当使用 `for...in` 循环遍历对象时，它只关心对象的键，而不关心对象的值。
+
+```js
+effect(() => {
+  for (const key in obj) {
+    console.log(key);
+  }
+});
+```
+
+只有当新增、删除对象的 key 时，才需要重新执行副作用函数。所以我们在 trigger 函数内判断操作类型是否是 `ADD` 或 `DELETE` ，进而知道是否需要触发那些与 `ITERATE_KEY` 相关联的副作用函数重新执行。对于 `SET` 类型的操作来说，因为它不会改变一个对象的键的数量，所以当 `SET` 类型的操作发生时，不需要触发副作用函数重新执行。
+
+但这个规则不适用与 Map 类型的 `forEach` 遍历。
+
+```js
+const m = reactive(new Map([
+  ['key', 1]
+]));
+
+effect(() => {
+  m.forEach((value, key) => {
+    // forEach 循环不仅关心集合的键，还关心集合的值
+    console.log(value);
+  })
+});
+
+m.set('key', 2);
+```
+
+当使用 `forEach` 遍历 `Map` 类型的数据时，它既关心键，又关心值。这意味着，当调用 `p.set('key', 2)` 修改值的时候，也应该触发副作用函数重新执行，即使它的操作类型是 `SET` 。因此，我们应该修改 trigger 函数的代码来弥补这个缺陷。
+
+```js
+function track (target, key) {
+  // 禁止追踪时，直接返回
+  if (!activeEffect || !shouldTrack) return;
+
+  // 使用 target 在 bucket 中获取 depsMap，key -> effects
+  let depsMap = bucket.get(target);
+
+  // 如果不存在 depsMap，新建 map 与 target 关联
+  if (!depsMap) {
+    bucket.set(target, (depsMap = new Map()));
+  }
+
+  // 使用 key 在 depsMap 中获取 deps，deps 是一个 set 类型
+  let deps = depsMap.get(key);
+
+  // 如果 deps 不存在，新建 set 与 key 关联
+  if (!deps) {
+    depsMap.set(key, (deps = new Set()));
+  }
+
+  // 将激活的副作用函数添加到 deps 中
+  deps.add(activeEffect);
+
+  // 将依赖添加到 activeEffect.deps 数组中
+  activeEffect.deps.push(deps);
+}
+
+function trigger (target, key, type, newVal) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
+
+  if (!depsMap) return;
+
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
+
+  const effectsToRun = new Set();
+
+  // 将与 key 相关联的副作用函数添加到 effctesToRun
+  effects && effects.forEach(effectFn => {
+    // 触发执行的副作用函数与当前正在执行的副作用函数相同，则不触发执行
+    if (effectFn !== activeEffect) {
+      effectsToRun.add(effectFn);
+    }
+  })
+
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  if (
+    type === TRIGGER_TYPE.ADD ||
+    type === TRIGGER_TYPE.DELETE || 
+    isPlainMap(target)
+  ) {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+	
+  // ...
+  
+  //  effects && effects.forEach(fn => fn()); 避免与 cleanup 产生死循环
+  effectsToRun.forEach(effectFn => {
+    // 如果存在调度器，则调用该调度器，并将副作用函数作为参数传递
+    if (effectFn.options.scheduler) {
+        effectFn.options.scheduler(effectFn);
+    } else {
+      effectFn();
+    }
+  });
+}
+```
+
+我们增加了一个判断条件：如果操作的目标对象是 Map 类型的，则 SET 类型的操作也应该触发那些与 `ITERATE_KEY` 相关联的副作用函数重新执行。
+
+#### 迭代器方法
+
+接下来，我们讨论关于集合类型的迭代器方法。集合类型有三个迭代器方法：
+
+* entries
+* keys
+* value
+
+调用这些方法会得到相应的迭代器，并且可以使用 `for...of` 进行循环迭代。
+
+```js
+const m = new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]);
+
+for (const [key, value] of m.entries()) {
+  console.log(key, value);
+}
+
+// key1 value1
+// key2 value2
+```
+
+我们也可以调用迭代器函数取得迭代器对象后，手动调用迭代器对象的 next 方法获取对应的值：
+
+```js
+const itr = m[Symbol.iterator]();
+console.log(itr.next()); // { value: [ 'key1', 'value1' ], done: false }
+console.log(itr.next()); // { value: [ 'key2', 'value2' ], done: false }
+console.log(itr.next()); // { value: undefined, done: true }
+```
+
+`m[Symbol.iterator]()` 与 `m.entries` 是等价的：
+
+```js
+console.log(m[Symbol.iterator] === m.entries); // true
+```
+
+理解了这些内容后，我们就可以尝试实现对迭代器方法的代理。在此之前，不妨多做些尝试，看看会发生什么。
+
+```js
+const p = reactive(new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]));
+
+effect(() => {
+  // TypeError: p is not iterable
+  for (const [key, value] of p) {
+    console.log(key, value);
+  }
+});
+
+p.set('key3', 'value3');
+```
+
+在这段代码中，我们首先创建一个代理对象 p，接着尝试使用 `for...of` 循环遍历它，会得到一个错误：“p 是不可迭代的”。一个对象能否迭代，取决于该对象是否实现了迭代协议，如果一个对象正确地实现了 `Symbol.iterator` 方法，那么它就是可迭代的。很显然，代理对象 p 没有实现 `Symbol.iterator` 方法，因此我们得到了上面的错误。
+
+实际上，当我们使用 `for...of` 循环迭代一个代理对象时，内部会试图从代理对象 p 上读取 `p[Symbol.iterator]` 属性，这个操作会触发 get 拦截函数，所以我们仍然可以把 `Symbol.iterator` 方法的实现放到 `mutableInstrumentations` 中。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  [Symbol.iterator] () {
+    // 获取原始数据对象 target
+    const target = this.raw;
+    // 获取原始迭代器方法
+    const itr = target[Symbol.iterator]();
+    // 将其返回
+    return itr;
+  }
+};
+```
+
+实现很简单，不过是把原始的迭代器对象返回，这样就能够使用 `for...of` 循环迭代代理对象 p。但是事情不可能这么简单，之前我们在讲解 `forEach` 方法时提到过，传递给 callback 的参数时包装后的响应式数据。
+
+```js
+p.forEach((value, key) => {
+  // value 和 key 如果可以被代理，那么它们就是代理对象，即响应式数据
+});
+```
+
+同时，使用 `for...of` 循环迭代集合时，如果迭代产生的值也是可以被代理的，那么也应该将其包装成响应式数据。
+
+```js
+for (const [key, value] of p) {
+  // 期望 key 和 value 是响应式数据
+}
+```
+
+因此，我们需要修改代码：
+
+```js
+const mutableInstrumentations = {
+	// ...
+  [Symbol.iterator] () {
+    // 获取原始数据对象 target
+    const target = this.raw;
+    // 获取原始迭代器方法
+    const itr = target[Symbol.iterator]();
+
+    const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+    // 返回自定义迭代器
+    return {
+      next () {
+        // 调用原始迭代器的 next 方法获取 value 和 done
+        const { value, done } = itr.next();
+
+        return {
+          // 如果 value 不是 undefined，对其进行包裹
+          value: value ? [wrap(value[0]), wrap(value[1])] : value,
+          done
+        }
+      }
+    };
+  }
+};
+```
+
+为了实现对 key 和 value 的包装，我们需要自定义实现的迭代器，在其中调用原始迭代器获取值 value 以及代表是否结束的 done。如果值 value 不为 undefined，则对其进行包装，最后返回包装后的代理对象，这样当使用 `for...of` 循环迭代时，得到的值就会是响应式数据了。
+
+最后，为了追踪 `for...of` 对数据的迭代操作，我们还需要调用 track 函数，让副作用与 `ITERATE_KEY` 建立联系。
+
+```js
+const isPlainObject = (data) => typeof data === 'object' && data !== null;
+
+const mutableInstrumentations = {
+	// ...
+  [Symbol.iterator] () {
+    // 获取原始数据对象 target
+    const target = this.raw;
+    // 获取原始迭代器方法
+    const itr = target[Symbol.iterator]();
+
+    const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+    
+    // 调用 track 函数建立响应联系
+    track(target, ITERATE_KEY);
+
+    // 返回自定义迭代器
+    return {
+      next () {
+        // 调用原始迭代器的 next 方法获取 value 和 done
+        const { value, done } = itr.next();
+
+        return {
+          // 如果 value 不是 undefined，对其进行包裹
+          value: value ? [wrap(value[0]), wrap(value[1])] : value,
+          done
+        }
+      }
+    };
+  }
+};
+```
+
+由于迭代操作与集合中中元素的数量有关，所以只要集合的 size 发生变化，就应该触发迭代操作重新执行。因此，我们在调用 track 函数时让 `ITERATE_KEY`  与副作用函数建立联系。完成这一步后，集合的响应式数据功能就相对完整了。
+
+```js
+const p = reactive(new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]));
+
+effect(() => {
+  // TypeError: p is not iterable
+  for (const [key, value] of p) {
+    console.log(key, value);
+  }
+});
+
+p.set('key3', 'value3'); // 能够触发响应
+```
+
+由于 `p.entries` 与 `p[Symbol.iterator]` 等价，所以我们可以使用同样的代码来实现对 `p.entries` 函数的拦截。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  [Symbol.iterator]: iterationMethod,
+  entries: iterationMethod
+};
+
+// 抽离为独立的函数，便于复用
+function iterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+    // 获取原始迭代器方法
+  const itr = target[Symbol.iterator]();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系
+  track(target, ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // 如果 value 不是 undefined，对其进行包裹
+        value: value ? [wrap(value[0]), wrap(value[1])] : value,
+        done
+      }
+    }
+  };
+}
+```
+
+但当你尝试运行代码使用 `for...of` 进行迭代时，会得到一个错误。
+
+```js
+// TypeError: p.entries is not a function or its return value is not iterable
+for (const [key, value] of p.entries()) {
+  console.log(key, value);
+}
+```
+
+错误的大意是 `p.entries` 的返回值不是一个可迭代对象。很显然，`p.entries` 函数的返回值是一个对象，该对象带有 next 方法，但不具有 `Symbol.iterator` 方法，因此它确实不是一个可迭代对象。这也是经常出错的地方，可迭代协议与迭代器协议并不一致。可迭代协议指的是一个对象实现了 `Symbol.iterator` 方法，而迭代器协议指的是一个对象实现了 `next` 方法，单一个对象可以同时实现可迭代协议和迭代器协议。
+
+```js
+const obj = {
+  // 迭代器协议
+  next () {},
+  // 可迭代协议
+  [Symbol.iterator] () {
+    return this;
+  }
+}
+```
+
+所以我们可以这样修改代码。
+
+```js
+
+// 抽离为独立的函数，便于复用
+function iterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+    // 获取原始迭代器方法
+  const itr = target[Symbol.iterator]();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系
+  track(target, ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // 如果 value 不是 undefined，对其进行包裹
+        value: value ? [wrap(value[0]), wrap(value[1])] : value,
+        done
+      }
+    },
+    [Symbol.iterator] () {
+      return this;
+    }
+  };
+}
+```
+
+现在一切就可以正常工作了。
+
+#### values 和 keys 方法
+

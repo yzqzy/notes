@@ -77,8 +77,40 @@ const mutableInstrumentations = {
       // 手动调用 callback，用 wrap 函数包裹 vlaue 和 key 再传给 callback，这样就实现了深响应
       callback.call(thisArg, wrap(v), wrap(k), this);
     });
-  }
+  },
+  [Symbol.iterator]: iterationMethod,
+  entries: iterationMethod
 };
+
+// 抽离为独立的函数，便于复用
+function iterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+    // 获取原始迭代器方法
+  const itr = target[Symbol.iterator]();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系
+  track(target, ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // 如果 value 不是 undefined，对其进行包裹
+        value: value ? [wrap(value[0]), wrap(value[1])] : value,
+        done
+      }
+    },
+    [Symbol.iterator] () {
+      return this;
+    }
+  };
+}
 
 function crateReactive (obj, isShallow = false, isReadonly = false) {
   return new Proxy(obj, {

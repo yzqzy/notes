@@ -1,4 +1,4 @@
-const { isPlainObject } = require('./util');
+const { isPlainObject, isPlainMap } = require('./util');
 
 const ITERATE_KEY = Symbol();
 
@@ -137,7 +137,11 @@ function trigger (target, key, type, newVal) {
   })
 
   // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
-  if (type === TRIGGER_TYPE.ADD || type === TRIGGER_TYPE.DELETE) {
+  if (
+    type === TRIGGER_TYPE.ADD ||
+    type === TRIGGER_TYPE.DELETE || 
+    isPlainMap(target)
+  ) {
     // 获取与 ITERATE_KEY 相关联的副作用函数
     const iterateEffects = depsMap.get(ITERATE_KEY);
 
