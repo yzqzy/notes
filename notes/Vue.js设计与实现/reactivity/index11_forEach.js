@@ -21,7 +21,7 @@ const p = reactive(new Map([
 
 effect(() => {
   p.forEach((value, key) => {
-    console.log(value);
+    console.log(value.size);
   })
 });
 

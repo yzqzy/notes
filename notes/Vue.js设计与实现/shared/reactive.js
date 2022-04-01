@@ -65,13 +65,18 @@ const mutableInstrumentations = {
       trigger(target, key, TRIGGER_TYPE.SET);
     }
   },
-  forEach (callback) {
+  forEach (callback, thisArg) {
+    // wrap 函数用来把可代理的值转换为响应式数据
+    const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
     // 取得原始数据对象
     const target = this.raw;
     // 与 ITERATE_KEY 建立响应关系
     track(target, ITERATE_KEY);
     // 通过原始数据对象调用 forEach 方法，并把 callback 传递过去
-    target.forEach(callback);
+    target.forEach((v, k) => {
+      // 手动调用 callback，用 wrap 函数包裹 vlaue 和 key 再传给 callback，这样就实现了深响应
+      callback.call(thisArg, wrap(v), wrap(k), this);
+    });
   }
 };
 

@@ -5741,11 +5741,55 @@ const p = reactive(new Map([
 
 effect(() => {
   p.forEach((value, key) => {
-    console.log(value);
+    console.log(value.size);
   })
 });
 
 p.get(key).delete(1);
 ```
 
-在上面这段代码中，响应式数据 p 有一个键值对，其中键是普通对象 `{ key: 1 }`，值是 Set 类型的原始数据 `new Set([1, 2, 3])` 。接着，我们在副作用函数中使用 forEach 方法遍历 p，并在回调函数中访问 `value `。
+在上面这段代码中，响应式数据 p 有一个键值对，其中键是普通对象 `{ key: 1 }`，值是 Set 类型的原始数据 `new Set([1, 2, 3])` 。接着，我们在副作用函数中使用 forEach 方法遍历 p，并在回调函数中访问 `value.size `。最后，我们尝试删除 Set 类型数据中为 1 的元素，会发现不能触发副作用函数执行。导致问题的原因就是上面提到的，当通过 `value.size` 访问 `size` 属性时，这里的 value 是原始数据对象，即 `new Set([1, 2, 3])` ，而非响应式数据对象，因此无法建立响应联系。但这其实并不符合我们的直觉，因为 `reactive` 本身是深响应，`forEach` 方法的回调函数所接收到的参数也应该是响应式数据才对。为了解决这个问题，我们需要修改一下实现。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  forEach (callback) {
+    // wrap 函数用来把可代理的值转换为响应式数据
+    const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
+    // 取得原始数据对象
+    const target = this.raw;
+    // 与 ITERATE_KEY 建立响应关系
+    track(target, ITERATE_KEY);
+    // 通过原始数据对象调用 forEach 方法，并把 callback 传递过去
+    target.forEach((v, k) => {
+      // 手动调用 callback，用 wrap 函数包裹 vlaue 和 key 再传给 callback，这样就实现了深响应
+      callback(wrap(v), wrap(k), this);
+    });
+  }
+};
+```
+
+思路很简单，既然 callback 函数的参数不是响应式的，那就将它转换成响应式的。所以在上面的代码中，我们又对 callback 函数的参数做了一层包装，即把传递给 callback 函数的参数包装成响应式的。此时，如果再次尝试运行前文的例子，会发现它能够按预期工作。
+
+出于严谨性，我们还需要做一些补充。因为 forEach 函数除了接收 callback 作为参数，还可以接收第二个参数，该参数可以用来指定 callback 函数执行时的 this 值。
+
+```js
+const mutableInstrumentations = {
+	// ...
+  forEach (callback, thisArg) {
+    // wrap 函数用来把可代理的值转换为响应式数据
+    const wrap = (val) => typeof val === 'object' ? reactive(val) : val;
+    // 取得原始数据对象
+    const target = this.raw;
+    // 与 ITERATE_KEY 建立响应关系
+    track(target, ITERATE_KEY);
+    // 通过原始数据对象调用 forEach 方法，并把 callback 传递过去
+    target.forEach((v, k) => {
+      // 手动调用 callback，用 wrap 函数包裹 vlaue 和 key 再传给 callback，这样就实现了深响应
+      callback.call(thisArg, wrap(v), wrap(k), this);
+    });
+  }
+};
+```
+
+解决上述问题之后，我们的工作还没有完成。无论是使用 `for...in` 循环遍历一个对象，还是使用 `forEach` 循环遍历一个集合，它们的响应联系都是建立在 `ITERATE_KEY` 与副作用函数之间的。
