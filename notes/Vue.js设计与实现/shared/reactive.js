@@ -79,7 +79,8 @@ const mutableInstrumentations = {
     });
   },
   [Symbol.iterator]: iterationMethod,
-  entries: iterationMethod
+  entries: iterationMethod,
+  values: valuesIterationMethod
 };
 
 // 抽离为独立的函数，便于复用
@@ -103,6 +104,35 @@ function iterationMethod () {
       return {
         // 如果 value 不是 undefined，对其进行包裹
         value: value ? [wrap(value[0]), wrap(value[1])] : value,
+        done
+      }
+    },
+    [Symbol.iterator] () {
+      return this;
+    }
+  };
+}
+
+function valuesIterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+  // 通过 target.values 获取原始迭代器方法
+  const itr = target.values();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系
+  track(target, ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // value 是值，而非键值对，所以只需要包裹 value 即可
+        value: wrap(value),
         done
       }
     },

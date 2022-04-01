@@ -6177,3 +6177,60 @@ function iterationMethod () {
 
 #### values 和 keys 方法
 
+values 方法的实现与 entries 方法类似，不同的是，当使用 `for...of` 迭代 values 时，得到的仅仅是 Map 数据的值，而非键值对。
+
+```js
+const p = reactive(new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]));
+
+for (const value of p.values()) {
+  console.log(value);
+}
+```
+
+values 方法的实现如下：
+
+```js
+const mutableInstrumentations = {
+	// ...
+  [Symbol.iterator]: iterationMethod,
+  entries: iterationMethod,
+  values: valuesIterationMethod
+};
+
+function valuesIterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+  // 通过 target.values 获取原始迭代器方法
+  const itr = target.values();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系
+  track(target, ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // value 是值，而非键值对，所以只需要包裹 value 即可
+        value: wrap(value),
+        done
+      }
+    },
+    [Symbol.iterator] () {
+      return this;
+    }
+  };
+}
+```
+
+其中，`valuesIterationMethod` 和 `iterationMethod` 这两个方法有两点区别：
+
+* `iterationMethod` 通过 `target[Symbol.iterator]` 获取迭代器对象，而 `valuesIterationMethod` 通过 `target.values` 获取迭代器对象；
+* 
