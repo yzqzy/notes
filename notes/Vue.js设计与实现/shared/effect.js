@@ -1,6 +1,7 @@
 const { isPlainObject, isPlainMap } = require('./util');
 
 const ITERATE_KEY = Symbol();
+const MAP_KEY_ITERATE_KEY = Symbol();
 
 const TRIGGER_TYPE = {
   SET: 'SET',
@@ -137,10 +138,11 @@ function trigger (target, key, type, newVal) {
   })
 
   // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  // 如果操作类型是 Set，并且目标对象是 Map 类型的数据，也应该触发那些与 ITERATE_KEY 相关联的函数执行
   if (
     type === TRIGGER_TYPE.ADD ||
     type === TRIGGER_TYPE.DELETE || 
-    isPlainMap(target)
+    (type === TRIGGER_TYPE.SET || isPlainMap(target))
   ) {
     // 获取与 ITERATE_KEY 相关联的副作用函数
     const iterateEffects = depsMap.get(ITERATE_KEY);
@@ -151,6 +153,20 @@ function trigger (target, key, type, newVal) {
         effectsToRun.add(effectFn);
       }
     });
+  }
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 MAP_KEY_ITERATE_KEY 相关联的副作用函数执行
+  if (
+    (type === TRIGGER_TYPE.ADD || type === TRIGGER_TYPE.DELETE) && isPlainMap(target)
+  ) {
+     // 获取与 ITERATE_KEY 相关联的副作用函数
+     const iterateEffects = depsMap.get(MAP_KEY_ITERATE_KEY);
+
+     // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+     iterateEffects && iterateEffects.forEach(effectFn => {
+       if (effectFn !== activeEffect) {
+         effectsToRun.add(effectFn);
+       }
+     });
   }
 
   // 操作类型为 ADD 并且目标对象是数组时，应该取出并执行那些与 length 属性相关联的副作用函数 
@@ -198,6 +214,8 @@ module.exports = {
   track,
 
   ITERATE_KEY,
+  MAP_KEY_ITERATE_KEY,
+  
   TRIGGER_TYPE,
 
   arrayInstrumentations,

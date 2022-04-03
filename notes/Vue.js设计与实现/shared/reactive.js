@@ -1,6 +1,6 @@
 const {
   track, trigger,
-  ITERATE_KEY, TRIGGER_TYPE,
+  ITERATE_KEY, MAP_KEY_ITERATE_KEY, TRIGGER_TYPE,
   arrayInstrumentations
 } = require('./effect');
 
@@ -80,7 +80,8 @@ const mutableInstrumentations = {
   },
   [Symbol.iterator]: iterationMethod,
   entries: iterationMethod,
-  values: valuesIterationMethod
+  values: valuesIterationMethod,
+  keys: keysIterationMethod
 };
 
 // 抽离为独立的函数，便于复用
@@ -123,6 +124,35 @@ function valuesIterationMethod () {
 
   // 调用 track 函数建立响应联系
   track(target, ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // value 是值，而非键值对，所以只需要包裹 value 即可
+        value: wrap(value),
+        done
+      }
+    },
+    [Symbol.iterator] () {
+      return this;
+    }
+  };
+}
+
+function keysIterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+  // 通过 target.keys 获取原始迭代器方法
+  const itr = target.keys();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系，在副作用函数与 MAP_KEY_ITERATE_KEY 之间建立响应联系
+  track(target, MAP_KEY_ITERATE_KEY);
 
   // 返回自定义迭代器
   return {

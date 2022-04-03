@@ -5869,12 +5869,13 @@ function trigger (target, key, type, newVal) {
       effectsToRun.add(effectFn);
     }
   })
-
+  
   // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  // 如果操作类型是 Set，并且目标对象是 Map 类型的数据，也应该触发那些与 ITERATE_KEY 相关联的函数执行
   if (
     type === TRIGGER_TYPE.ADD ||
     type === TRIGGER_TYPE.DELETE || 
-    isPlainMap(target)
+    (type === TRIGGER_TYPE.SET || isPlainMap(target))
   ) {
     // 获取与 ITERATE_KEY 相关联的副作用函数
     const iterateEffects = depsMap.get(ITERATE_KEY);
@@ -6233,4 +6234,194 @@ function valuesIterationMethod () {
 其中，`valuesIterationMethod` 和 `iterationMethod` 这两个方法有两点区别：
 
 * `iterationMethod` 通过 `target[Symbol.iterator]` 获取迭代器对象，而 `valuesIterationMethod` 通过 `target.values` 获取迭代器对象；
-* 
+* `iterationMethod` 处理的是键值对，即 `[wrap(value[0]), wrap(value[1])]`， 而 `valuesIterationMethod` 只处理值，即 `wrap(value)`；
+
+由于它们的大部分逻辑相同，所以我们还可以将它们封装到一个可复用的函数中。
+
+keys 方法与 values 方法非常类似，不同点在于，前者处理的是键而非值。因此，我们需要修改 `valuesIterationMethod` 方法中的一行代码，即可实现对 keys 方法的代理。
+
+```js
+const itr = target.values();
+
+// => 
+
+const itr = target.keys();
+```
+
+```js
+const p = reactive(new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]));
+
+for (const value of p.keys()) {
+  console.log(value);
+}
+```
+
+这么做确实可以得到目的，但如果运行如下代码用例，就会发现存在缺陷。
+
+```js
+const p = reactive(new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]));
+
+effect(() => {
+  for (const value of p.keys()) {
+    console.log(value);
+  }
+});
+
+p.set('key2', 'value3');
+```
+
+在这段代码中，我们使用 `for...of` 循环来遍历 `p.keys`，然后调用 `p.set('key2', 'value3')` 修改键为 `key2` 的值。在这个过程中，Map 类型数据的所有键都没有发生变化，仍然是 `key1`  和 `key2`，所以在理想情况下，副作用函数不应该执行。但是如果你运行上例，会发现副作用函数仍然重新执行。
+
+这时因为，我们对 Map 类型的数据进行了特殊处理。即使操作类型为 `SET` ，也会触发那些与 `ITERATE_KEY` 相关联的副作用函数执行。
+
+```js
+function trigger (target, key, type, newVal) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
+
+  if (!depsMap) return;
+
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
+
+  const effectsToRun = new Set();
+
+	// ...
+
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  // 如果操作类型是 Set，并且目标对象是 Map 类型的数据，也应该触发那些与 ITERATE_KEY 相关联的函数执行
+  if (
+    type === TRIGGER_TYPE.ADD ||
+    type === TRIGGER_TYPE.DELETE || 
+    (type === TRIGGER_TYPE.SET || isPlainMap(target))
+  ) {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+	
+  // ...
+}
+```
+
+这对于 values 或 entries 等方法来说是必需的，但对于 keys 方法来说则没有必要，因为 keys 方法只关心 Map 类型数据的键的变化，不需要关心值的变化。
+
+解决方法很简单，代码如下：
+
+```js
+const MAP_KEY_ITERATE_KEY = Symbol();
+
+function keysIterationMethod () {
+  // 获取原始数据对象 target
+  const target = this.raw;
+  // 通过 target.keys 获取原始迭代器方法
+  const itr = target.keys();
+
+  const wrap = (val) => isPlainObject(val) ? reactive(val) : val;
+
+  // 调用 track 函数建立响应联系，在副作用函数与 MAP_KEY_ITERATE_KEY 之间建立响应联系
+  track(target, MAP_KEY_ITERATE_KEY);
+
+  // 返回自定义迭代器
+  return {
+    next () {
+      // 调用原始迭代器的 next 方法获取 value 和 done
+      const { value, done } = itr.next();
+
+      return {
+        // value 是值，而非键值对，所以只需要包裹 value 即可
+        value: wrap(value),
+        done
+      }
+    },
+    [Symbol.iterator] () {
+      return this;
+    }
+  };
+}
+```
+
+当调用 track 函数追踪依赖时，我们使用 `MAP_KEY_ITERATE_KEY` 代替 `ITERATE_KEY`。其中 `MAP_KEY_ITERATE_KEY` 与 `ITERATE_KEY` 类似，是一个新的 Symbol 类型，用来作为抽象的键。这样就实现了依赖收集的分析，即 values 和 entries 等方法依然依赖于 `ITERATE_KEY`，而 keys 方法依赖 `MAP_KEY_ITERATE_KEY` 。当 set 类型的操作只会触发与 `ITERATE_KEY` 相关联的副作用函数重新执行时，不会触发 `MAP_KEY_ITERATE_KEY` 相关联的副作用函数。但是当 ADD 和 DELETE 类型的操作发生时，除了触发与 `ITERATE_KEY` 相关联的副作用函数执行，还需要触发与 `MAP_KEY_ITERATE_KEY` 相关联的副作用函数重新执行，因此我们需要修改 `trigger` 函数的代码。
+
+```js
+function trigger (target, key, type, newVal) {
+  // 使用 target 从 bucket 中获取 depsMap，key -> effects
+  const depsMap = bucket.get(target);
+
+  if (!depsMap) return;
+
+  // 根据 key 从 depsMap 中获取 effects
+  const effects = depsMap.get(key);
+
+  const effectsToRun = new Set();
+
+	// ...
+
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 ITERATE_KEY 相关联的副作用函数执行
+  // 如果操作类型是 Set，并且目标对象是 Map 类型的数据，也应该触发那些与 ITERATE_KEY 相关联的函数执行
+  if (
+    type === TRIGGER_TYPE.ADD ||
+    type === TRIGGER_TYPE.DELETE || 
+    (type === TRIGGER_TYPE.SET || isPlainMap(target))
+  ) {
+    // 获取与 ITERATE_KEY 相关联的副作用函数
+    const iterateEffects = depsMap.get(ITERATE_KEY);
+
+    // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+    iterateEffects && iterateEffects.forEach(effectFn => {
+      if (effectFn !== activeEffect) {
+        effectsToRun.add(effectFn);
+      }
+    });
+  }
+  // 操作类型为 ADD 或 DELETE 时，需要触发与 MAP_KEY_ITERATE_KEY 相关联的副作用函数执行
+  if (
+    (type === TRIGGER_TYPE.ADD || type === TRIGGER_TYPE.DELETE) && isPlainMap(target)
+  ) {
+     // 获取与 ITERATE_KEY 相关联的副作用函数
+     const iterateEffects = depsMap.get(MAP_KEY_ITERATE_KEY);
+
+     // 将与 ITERATE_KEY 相关联的副作用函数也添加到 effectsToRun
+     iterateEffects && iterateEffects.forEach(effectFn => {
+       if (effectFn !== activeEffect) {
+         effectsToRun.add(effectFn);
+       }
+     });
+  }
+	
+  // ...
+}
+```
+
+这样就可以避免不必要的更新了。
+
+```js
+const p = reactive(new Map([
+  ['key1', 'value1'],
+  ['key2', 'value2']
+]));
+
+effect(() => {
+  for (const value of p.keys()) {
+    console.log(value);
+  }
+});
+
+p.set('key2', 'value3'); // 不会触发响应
+p.set('key3', 'value3'); // 能够触发响应
+```
+
+#### 总结
+
