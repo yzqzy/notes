@@ -6443,5 +6443,178 @@ p.set('key3', 'value3'); // 能够触发响应
 
 ### 原始值的响应式方案
 
+之前，我们讨论了非原始值的响应式方案，这次我们将讨论原始值的响应式方案。原始值指的是 `Boolean`，`Number`，`BigInt`，`String`，`Symbol` ，`undefined`，`null` 等类型的值。在 JavaScript 中，原始值是按值传递的，而非引用传递。这意味着，如果一个函数接收原始值作为参数，那么形参和实参之间没有引用关系，它们是两个完全独立的值，对形参的修改不会影响实参。另外，JavaScript 中的 Proxy 无法提供对原始值的代理，因此要想将原始值变成响应式数据，就必须对其做一层包裹，也就是我们要介绍的 ref。
 
+#### 引入 ref 的概念
+
+由于 Proxy 的代理目标必须是非原始值，所以我们没有任何手段拦截对原始值的操作，例如：
+
+```js
+let str = 'vue';
+// 无法拦截对值的修改
+str = 'vue3';
+```
+
+对于这个问题，我们能够想到的唯一办法是，使用一个非原始值去 “包裹” 原始值，例如使用一个对象包裹原始值。
+
+```js
+const { reactive } = require('../vue/reactive');
+
+const wrapper = {
+  value: 'vue'
+};
+
+// 可以使用 Proxy 代理 wrap，间接实现对原始值的拦截
+const name = reactive(wrapper);
+// 修改值可以触发响应
+name.value = 'vue3';
+```
+
+但这样做会导致两个问题：
+
+* 用户为了一个创建响应式的原始值，不得不顺带创建一个包裹对象；
+* 包裹对象由用户定义，这意味着不规范。用户可以随意命名，例如 `wrapper.value` ，`wrapper.val` 都是可以的。
+
+为了解决这两个问题，我们可以封装一个函数，将包裹对象的创建工作都封装到该函数中。
+
+```js
+const { reactive } = require('./reactive');
+
+function ref (val) {
+  // 在 ref 函数内部创建包裹对象
+  const wrapper = {
+    value: val
+  };
+  // 将包裹对象变成响应式数据
+  return reactive(wrapper);
+}
+```
+
+我们把创建 wrapper对象的工作封装到 ref 函数内部，然后使用 `reactive` 函数将包裹对象编程响应式数据并返回。这样我们就解决了上述两个问题。
+
+```js
+const { effect } = require('../vue/effect');
+const { ref } = require('../vue/ref');
+
+const refVal = ref(1);
+
+effect(() => {
+  // 在副作用该函数内通过 value 属性读取原始值
+  console.log(refVal.value);
+});
+
+refVal.value = 2;
+```
+
+上面这段代码可以正常工作，但并不完美。接下来我们面临的第一个问题是，如果区分 `refVal` 到底是原始值的包裹对象，还是一个非原始值的响应式数据，如以下代码所示：
+
+```js
+const refVal1 = ref(1);
+const refVal2 = reactive({ value: 2 });
+```
+
+这段代码中的 `refVal1` 和 `refVal2` 从我们的实现来看，并没有任何区别。但是我们有必要区分一个数据到底是不是 ref，因为涉及到后面的自动脱 ref 能力。
+
+想要区分一个数据是否是 ref 很简单。
+
+```js
+function ref (val) {
+  // 在 ref 函数内部创建包裹对象
+  const wrapper = {
+    value: val
+  };
+  // 使用 Object.defineProperty 在 wrapper 对象上定义一个不可枚举属性
+  Object.defineProperty(wrapper, '_v_isRef', {
+    value: true    
+  });
+  // 将包裹对象变成响应式数据
+  return reactive(wrapper);
+}
+```
+
+我们使用 `Object.defineProperty` 为包裹对象 `wrapper` 定义了一个不可枚举且不可写的属性 `_v_isRef`，它的值为 true，代表这个对象是一个 `ref`，而非普通对象。这样我们就可以通过检查 `_v_isRef` 属性来判断一个数据是否是 ref 了。
+
+#### 响应丢失问题
+
+ref 除了能够用于原始值的响应式方案之外，还能用来解决响应丢失问题。首先，我们来看什么是响应丢失问题。在编写 Vue.js 组件时，我们通过要把数据暴露在模板中使用，例如：
+
+```js
+export default {
+	setup () {
+    const obj = reactive({ foo: 1, bar: 2 });
+
+    setTimeout(() => {
+      obj.foo = 100;
+    }, 1000);
+
+    return {
+      ...obj
+    };
+	}
+}
+```
+
+我们可以在模板中访问 setup 中暴露出的数据：
+
+```vue
+<template>
+  <p>{{ foo }}/{{ var }} </p>
+</template>
+```
+
+但是这样做，会导致响应丢失。表现是当我们修改响应式数据的值时，不会触发重新渲染。这是由展开远算符（...）导致的。
+
+```js
+return {
+  ...obj
+};
+
+// =>
+
+return {
+  foo: 1,
+  bar: 2
+};
+```
+
+可以发现，这其实就是返回了一个普通对象，它不具有任何响应式能力。把一个普通对象暴露到模板中使用，是不会在渲染函数与响应式数据之间建立响应联系的。所以当我们尝试在一个定时器修改 `obj.foo` 的值时，不会触发重新渲染。我们可以使用另一种方式解决响应丢失问题。
+
+```js
+const obj = reactive({ foo: 1, bar: 2 });
+const newObj = { ...obj };
+
+effect(() => {
+  console.log(newObj.foo);
+});
+
+obj.foo = 100; // 不会触发响应
+```
+
+如果解决上述问题呢？换句话说，有没有办法能够帮助我们实现：在副作用函数内，即使通过普通对象 `newObj` 来访问属性值，也能建立响应联系？
+
+```js
+// obj 是响应式数据
+const obj = reactive({ foo: 1, bar: 2 });
+// newObject 对象下具有 与 obj 对象同名的属性，并且每个属性值都是一个对象
+// 该对象具有一个访问器属性 value，当读取 value 的值时，其实读取的时 obj 对象下响应的属性值
+const newObj = {
+  foo: {
+    get value() {
+      return obj.foo;
+    }
+  },
+  bar: {
+    get value() {
+      return obj.bar;
+    }
+  }
+}
+
+effect(() => {
+  console.log(newObj.foo.value);
+});
+
+obj.foo = 100;
+
+```
 
