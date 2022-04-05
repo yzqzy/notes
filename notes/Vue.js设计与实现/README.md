@@ -6690,7 +6690,7 @@ function toRef (obj, key) {
     }
   }
 
-  Object.defineProperty(wrapper, '_v_isRef', {
+  Object.defineProperty(wrapper, '__v_isRef', {
     value: true    
   });
 
@@ -6725,7 +6725,7 @@ function toRef (obj, key) {
     }
   }
 
-  Object.defineProperty(wrapper, '_v_isRef', {
+  Object.defineProperty(wrapper, '__v_isRef', {
     value: true    
   });
 
@@ -6745,4 +6745,143 @@ console.log(refFoo.value); // 100
 可以看到，当设置 value 属性的值时，最终设置的时响应式数据的同名属性的值，这样就能正确地触发响应了。
 
 #### 自动脱 ref
+
+`toRefs` 函数的确解决了响应丢失问题，但同时也带来了新的问题。由于 `toRefs` 会把响应式数据的第一层属性值的转换为 ref，因此必须通过 value 属性访问值。
+
+```js
+const obj = reactive({ foo: 1, bar: 2 });
+const newObj = { ...toRefs(obj) };
+
+console.log(newObj.foo.value); // 1
+console.log(newObj.bar.value); // 2
+```
+
+这其实增加了用户的心智负担，因为通常情况下用户是在模板中访问数据的。
+
+```vue
+<p>{{ foo }} / {{ bar }}</p>
+```
+
+用户肯定不希望这样编写代码。
+
+```vue
+<p>{{ foo.value }} / {{ bar.value }}</p>
+```
+
+因此，我们需要自动脱 ref 的能力。所以自动脱 ref，指的是属性的访问行为，即如果读取的属性是一个 ref，则直接将该 ref 对应的 value 属性值返回。
+
+```js
+newObj.foo; // 1
+```
+
+即使 `newObj.foo` 是一个 ref，也无需通过 `newObj.foo.value` 来访问它的值。要实现此功能，需要使用 `Proxy` 为 `newObj` 创建一个代理对象，通过代理来实现最终目标，这时需要用到 ref 标识，`__v_isRef` 属性。
+
+```js
+function proxyRefs (target) {
+  return new Proxy(target, {
+    get (target, key, receiver) {
+      const value = Reflect.get(target, key, receiver);
+      return value.__v_isRef ? value.value : value;
+    }
+  })
+}
+
+const obj = reactive({ foo: 1, bar: 2 });
+
+const newObj = { ...toRefs(obj) };
+console.log(newObj.foo.value); // 1
+console.log(newObj.bar.value); // 2
+
+const newObj2 = proxyRefs(newObj);
+console.log(newObj2.foo); // 1
+console.log(newObj2.bar); // 2
+```
+
+我们定义了 `proxyRefs` 函数，该函数接收一个对象作为参数，并返回该对象的代理对象。代理对象的作用是拦截 get 操作，当读取的属性是一个 `ref` 时，则直接返回该 ref 的 value 属性值，这样就实现了自动脱 ref。
+
+我们在编写 vue.js 组件时，组件中的 setup 函数所返回的数据会传递给 `proxyRefs` 函数进行处理。
+
+```js
+const myComponent = {
+	setup () {
+		const count = ref(0);
+		// 返回的这个对象会传递给 proxyRefs
+		return { count };
+	}
+}
+```
+
+这也是为什么我们可以在模板中直接访问一个 ref 的值，而无需通过 value 属性来访问。
+
+```html
+<p>
+  {{ count }}
+</p>
+```
+
+既然读取属性的值有自动脱 ref 的能力，相应地，设置属性的值也应该有自动为 ref 设置值的能力。
+
+```js
+newObj.foo = 100;
+```
+
+实现此功能很简单，只需要添加对应的 set 拦截函数即可。
+
+```js
+function proxyRefs (target) {
+  return new Proxy(target, {
+    get (target, key, receiver) {
+      const value = Reflect.get(target, key, receiver);
+      return value.__v_isRef ? value.value : value;
+    },
+    set (target, key, newValue, receiver) {
+      const value = target[key];
+      if (value.__v_isRef) {
+        value.value = newValue;
+        return true;
+      }
+      return Reflect.set(target, key, newValue, receiver);
+    }
+  })
+}
+```
+
+```js
+const obj = reactive({ foo: 1, bar: 2 });
+
+const newObj = proxyRefs({ ...toRefs(obj) });
+console.log(newObj.foo); // 1
+console.log(newObj.bar); // 2
+
+newObj.foo = 100;
+
+console.log(obj); // { foo: 100, bar: 2 }
+```
+
+我们为 `proxyRefs` 函数返回的代理对象添加了 set 拦截函数。如果设置的属性是一个 ref，则间接设置该 ref 的 value 属性的值即可。
+
+实际上，自动脱 ref 不仅存在于上述场景。在 vue.js 中，reactive 函数也有自动脱 ref 的能力。
+
+```js
+// 我们实现的 reactive 不具备自动脱 ref 的功能
+
+const count = ref(0);
+const obj = reactive({ count });
+
+console.log(obj.count); // 0
+```
+
+可以看到，`obj.count` 应该是一个 ref，但由于自动脱 ref 能力的存在，使得我们无需通过 value 属性即可读取 ref 的值。这么设计旨在减轻用户的心智负担，因为在大部分情况下，用户并不知道一个值是不是 ref。有了自动脱 ref 的能力后，用户在模板中使用响应式数据时，将不再关心哪些是 ref，哪些不是 ref。
+
+#### 总结
+
+ref 本质是一个 “包裹对象”。因为 JavaScript 无法提供对原始值的代理，所以我们需要使用一层对象作为包裹，间接实现原始值的响应式方案。由于 “包裹对象” 本质上与普通对象没有任何区别，因此为了区分 ref 与普通响应式对象，我们还为 “包裹对象” 定义了一个值为 true 的属性，即 `__v_isRef` ，用它作为 ref 的标识。
+
+ref 除了能够用于原始值的响应式方案之外，还能用来解决响应丢失问题。为了解决该问题，我们实现了 `toRef` 以及 `toRefs` 这两个函数。它们本质是对于响应式数据做了一层包装，或者叫做 “访问代理”。
+
+最后，我们讲解了自动脱 ref 的能力。为了减轻用户的心智负担，我们自动对暴露在模板中的响应式数据进行脱 ref 处理。这样，用户在模板中使用响应式数据时，就无须关心一个值是不是 ref 了。
+
+## 三、渲染器
+
+### 渲染器的设计
 

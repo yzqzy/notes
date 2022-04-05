@@ -13,7 +13,7 @@
 
 const { effect } = require('../vue/effect');
 const { reactive } = require('../vue/reactive');
-const { ref, toRef, toRefs } = require('../vue/ref');
+const { ref, toRef, toRefs, proxyRefs } = require('../vue/ref');
 
 // const refVal = ref(1);
 // effect(() => {
@@ -83,9 +83,23 @@ export default {
 // obj.foo = 100;
 
 
-const obj = reactive({ foo: 1, bar: 2 });
-const refFoo = toRef(obj, 'foo');
+// const obj = reactive({ foo: 1, bar: 2 });
+// const newObj = { ...toRefs(obj) };
+// console.log(newObj.foo.value); // 1
+// console.log(newObj.bar.value); // 2
+// const newObj2 = proxyRefs(newObj);
+// console.log(newObj2.foo); // 1
+// console.log(newObj2.bar); // 2
+// newObj2.foo = 123;
 
-refFoo.value = 100;
+// const obj = reactive({ foo: 1, bar: 2 });
+// const newObj = proxyRefs({ ...toRefs(obj) });
+// console.log(newObj.foo); // 1
+// console.log(newObj.bar); // 2
+// newObj.foo = 100;
+// console.log(obj); // { foo: 100, bar: 2 }
 
-console.log(refFoo.value); // 1
+const count = ref(0);
+const obj = reactive({ count });
+
+console.log(obj.count); // 
