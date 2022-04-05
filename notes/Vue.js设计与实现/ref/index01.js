@@ -13,7 +13,7 @@
 
 const { effect } = require('../vue/effect');
 const { reactive } = require('../vue/reactive');
-const { ref } = require('../vue/ref');
+const { ref, toRef, toRefs } = require('../vue/ref');
 
 // const refVal = ref(1);
 // effect(() => {
@@ -42,25 +42,50 @@ export default {
 	}
 } */}
 
-// obj 是响应式数据
+// // obj 是响应式数据
+// const obj = reactive({ foo: 1, bar: 2 });
+// // newObject 对象下具有 与 obj 对象同名的属性，并且每个属性值都是一个对象
+// // 该对象具有一个访问器属性 value，当读取 value 的值时，其实读取的时 obj 对象下响应的属性值
+// const newObj = {
+//   foo: {
+//     get value() {
+//       return obj.foo;
+//     }
+//   },
+//   bar: {
+//     get value() {
+//       return obj.bar;
+//     }
+//   }
+// }
+// effect(() => {
+//   console.log(newObj.foo.value);
+// });
+// obj.foo = 100;
+
+// const obj = reactive({ foo: 1, bar: 2 });
+// const newObj = {
+//   foo: toRef(obj, 'foo'),
+//   bar: toRef(obj, 'bar')
+// }
+// effect(() => {
+//   console.log(newObj.foo.value);
+// });
+// obj.foo = 100;
+
+// const obj = reactive({ foo: 1, bar: 2 });
+// const newObj = { ...toRefs(obj) };
+
+// effect(() => {
+//   console.log(newObj.foo.value);
+// });
+
+// obj.foo = 100;
+
+
 const obj = reactive({ foo: 1, bar: 2 });
-// newObject 对象下具有 与 obj 对象同名的属性，并且每个属性值都是一个对象
-// 该对象具有一个访问器属性 value，当读取 value 的值时，其实读取的时 obj 对象下响应的属性值
-const newObj = {
-  foo: {
-    get value() {
-      return obj.foo;
-    }
-  },
-  bar: {
-    get value() {
-      return obj.bar;
-    }
-  }
-}
+const refFoo = toRef(obj, 'foo');
 
-effect(() => {
-  console.log(newObj.foo.value);
-});
+refFoo.value = 100;
 
-obj.foo = 100;
+console.log(refFoo.value); // 1

@@ -6615,6 +6615,134 @@ effect(() => {
 });
 
 obj.foo = 100;
-
 ```
+
+在上面这段代码中，我们修改了 `newObj` 对象的实现方式。可以看到，在现在的 `newObj` 对象下，具有与 obj 对象同名的属性，而且每个属性得值都是一个对象，例如 foo 属性的值是否：
+
+```js
+{
+  get value () {
+    return obj.foo;
+  }
+}
+```
+
+该对象有一个访问器属性 value，当读取 value 的值时，最终读取的是响应式数据 obj 下的同名属性值。也就是说，当在副作用函数内读取 `newObj.foo` 时，等价于间接读取了 `obj.foo` 的值。这样响应式数据自然能够与副作用函数建立响应联系。于是，当我们修改 `obj.foo` 的值时，能够触发副作用函数重新执行。
+
+在 `newObj` 对象中，foo 和 bar 这两个属性值的结构非常像，我们可以把这种结构抽象出来并封装成函数。
+
+```js
+function toRef (obj, key) {
+  const wrapper = {
+    get value () {
+      return obj[key];
+    }
+  }
+  return wrapper;
+}
+```
+
+`toRef` 接收两个参数，第一个参数 obj 是一个响应式数据，第二个参数是 obj 对象的一个键。该函数会返回一个类似于 ref 结构的 wrapper 对象。有了 `toRef` 函数后，我们就可以重新实现 `newObj` 对象了。
+
+```js
+const obj = reactive({ foo: 1, bar: 2 });
+
+const newObj = {
+  foo: toRef(obj, 'foo'),
+  bar: toRef(obj, 'bar')
+}
+
+effect(() => {
+  console.log(newObj.foo.value);
+});
+
+obj.foo = 100;
+```
+
+可以看到，代码变得非常简洁。但如果响应式数据 obj 的键非常多，我们还是要花费很大力气做转换。为此我们可以封装 `toRefs` 函数，批量地完成转换。
+
+```js
+function toRefs (obj) {
+  const ans = {};
+  for (const key in obj) {
+    ans[key] = toRef(obj, key);
+  }
+  return ans;
+}
+
+const obj = reactive({ foo: 1, bar: 2 });
+const newObj = { ...toRefs(obj) };
+
+effect(() => {
+  console.log(newObj.foo.value);
+});
+
+obj.foo = 100;
+```
+
+现在，响应丢失问题就被我们彻底解决了。解决问题的思路是，将响应式数据转换成类似于 ref 结构的数据。为了概念上的统一，我们将通过 `toRef` 或 `toRefs` 转换后得到的结果视为真的 ref 数据，为此我们需要为 `toRef` 增加一段代码。
+
+```js
+function toRef (obj, key) {
+  const wrapper = {
+    get value () {
+      return obj[key];
+    }
+  }
+
+  Object.defineProperty(wrapper, '_v_isRef', {
+    value: true    
+  });
+
+  return wrapper;
+}
+```
+
+可以看到，我们使用 `Object.defineProperty` 函数为 `wrapper` 对象定义了 `_v_isRef` 属性。这样，`toRef` 函数的返回值就是真正意义上的 ref 了。ref 的作用不仅仅是实现原始值的响应式方案，还用来解决响应丢失问题。
+
+不过上文实现的 `toRef` 函数还存在缺陷，即通过 `toRef` 函数创建的 ref 是只读的。
+
+```js
+const obj = reactive({ foo: 1, bar: 2 });
+const refFoo = toRef(obj, 'foo');
+
+refFoo.value = 100;
+
+console.log(refFoo.value); // 1
+```
+
+这是因为 `toRef` 返回的 `wrapper` 对象的 value 属性只有 `getter`，没有 `setter` 。为了功能的完整性，我们应该为它加上 `setter` 函数。
+
+```js
+
+function toRef (obj, key) {
+  const wrapper = {
+    get value () {
+      return obj[key];
+    },
+    set value (val) {
+      obj[key] = val;
+    }
+  }
+
+  Object.defineProperty(wrapper, '_v_isRef', {
+    value: true    
+  });
+
+  return wrapper;
+}
+```
+
+```js
+const obj = reactive({ foo: 1, bar: 2 });
+const refFoo = toRef(obj, 'foo');
+
+refFoo.value = 100;
+
+console.log(refFoo.value); // 100
+```
+
+可以看到，当设置 value 属性的值时，最终设置的时响应式数据的同名属性的值，这样就能正确地触发响应了。
+
+#### 自动脱 ref
 

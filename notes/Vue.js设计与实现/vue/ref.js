@@ -13,6 +13,33 @@ function ref (val) {
   return reactive(wrapper);
 }
 
+function toRef (obj, key) {
+  const wrapper = {
+    get value () {
+      return obj[key];
+    },
+    set value (val) {
+      obj[key] = val;
+    }
+  }
+
+  Object.defineProperty(wrapper, '_v_isRef', {
+    value: true    
+  });
+
+  return wrapper;
+}
+
+function toRefs (obj) {
+  const ans = {};
+  for (const key in obj) {
+    ans[key] = toRef(obj, key);
+  }
+  return ans;
+}
+
 module.exports = {
-  ref
+  ref,
+  toRef,
+  toRefs
 };
