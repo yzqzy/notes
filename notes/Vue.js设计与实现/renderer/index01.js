@@ -23,7 +23,17 @@
 
 function createRenderer () {
   function render (vnode, container) {
-    // ...
+    if (vnode) {
+      // 新 node 存在，将其与旧 vnode 一起传递给 patch 函数，进行打补丁
+      patch(container._vnode, vnode, container);
+    } else {
+      if (container._vnode) {
+        // 旧 vnode 存在且新 vnode 不存在，说明是卸载（unmount）操作
+        // 只需要将 container 内的 DOM 清空即可
+        container.innerHTML = '';
+      }
+    }
+    // 把 vnode 存在到 container._vnode 下，这里就是后续渲染中的旧 vnode
   }
 
   function hydrate (vnode, container) {
@@ -39,6 +49,8 @@ function createRenderer () {
 const renderer = createRenderer();
 
 // 首次渲染
-renderer.render(oldVnode, document.querySelector('#app'));
+renderer.render(vnode1, document.querySelector('#app'));
 // 第二次渲染
-renderer.render(newVnode, document.querySelector('#app'));
+renderer.render(vnode2, document.querySelector('#app'));
+// 第三次渲染
+renderer.render(null, document.querySelector('#app'));

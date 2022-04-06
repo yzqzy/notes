@@ -7050,5 +7050,82 @@ renderer.render(newVnode, document.querySelector('#app'));
 如上面的代码所示，由于首次渲染时已经把 `oldVnode` 渲染到 `container` 内，所以当再次调用 `renderer.render` 函数并尝试渲染 `newVnode` 时，就不能简单地执行挂载动作了。在这种情况下，渲染器会使用 `newVnode` 与上一次渲染的 `oldVnode` 进行比较。试图找到并更新变更点。这个过程叫做 “打补丁”（更新），英文通常用 patch 来表达。实际上，挂载工作本身也可以看作一种特殊的打补丁，它的特殊之处在于旧的 `vnode` 是不存在的。所以我们不必过于纠结 “挂载” 和 “打补丁” 这两个概念。
 
 ```js
+function createRenderer () {
+  function render (vnode, container) {
+    if (vnode) {
+      // 新 node 存在，将其与旧 vnode 一起传递给 patch 函数，进行打补丁
+      patch(container._vnode, vnode, container);
+    } else {
+      if (container._vnode) {
+        // 旧 vnode 存在且新 vnode 不存在，说明是卸载（unmount）操作
+        // 只需要将 container 内的 DOM 清空即可
+        container.innerHTML = '';
+      }
+    }
+    // 把 vnode 存在到 container._vnode 下，这里就是后续渲染中的旧 vnode
+  }
+
+  function hydrate (vnode, container) {
+    // ...
+  }
+
+  return {
+    render,
+    hydrate
+  };
+}
+```
+
+上面是 render 函数的基本实现。我们可以配合下面的代码分析其执行流程，从而更改地理解 render 函数的实现思路。假设我们连续三次调用 `renderer.render` 函数来执行渲染。
+
+```js
+const renderer = createRenderer();
+
+// 首次渲染
+renderer.render(vnode1, document.querySelector('#app'));
+// 第二次渲染
+renderer.render(vnode2, document.querySelector('#app'));
+// 第三次渲染
+renderer.render(null, document.querySelector('#app'));
+```
+
+* 首次渲染时，渲染器会将 `vnode1` 渲染为真实 DOM。渲染完成后，`vnod1` 会存储到容器元素的 `container._vnode` 属性中，它会在后续渲染中作为旧 `vnode` 使用；
+* 第二次渲染时，旧 `vnode` 存在，此时渲染器会把 `vnode2` 作为新 `vnode`，并将新旧 `vnode` 一同传递给 patch 函数打补丁；
+* 第三次渲染时，新 `vnode` 的值为 null，即什么都渲染。但此时容器中渲染的是 `vnode2` 所描述的内容，所以渲染器需要清空容器。从上面的代码中可以看出，我们使用 `container.innerHTML = ''` 来清空容器。需要注意的是，这样清空容器是有问题的，我们暂时使用它达到目的。
+
+另外，在上面给出的代码中，我们注意 patch 函数的签名。
+
+```js
+patch(container._vnode, vnode, container);
+```
+
+patch 函数是整个渲染器的核心入口，它承载了最重要的渲染逻辑，我们会花费大量时间会详细讲解它，这里对它做一些初步的解释。patch 函数至少接收三个参数。
+
+```js
+function patch (n1, n2, container) { }
+```
+
+* n1：旧 vnode；
+* n2：新 vnode；
+* container：容器。
+
+首次渲染时，容器元素的 `container._vnode` 属性是不存在的，即 `undefined`。这意味着，在首次渲染时传递给 `patch` 函数的第一个参数 `n1` 也是 `undefiend`。这时，`patch` 函数会执行挂载动作，它会忽略 `n1`，并直接将 `n2` 所描述的内容挂载到容器中。从这一点可以看出，`patch` 函数不仅可以用来打补丁，也可以用来执行挂载。
+
+#### 自定义渲染器
+
+渲染器不仅能够把虚拟 DOM 渲染为浏览器平台上的真实 DOM，还可以渲染到任意目标平台上，这需要我们把渲染器设计为可配置的 “通用” 渲染器。本节我们将以浏览器作为渲染的目标平台，编写一个渲染器，在这个过程中，通过抽象，将浏览器特定的 API 抽离，这样就可以使得渲染器的核心不依赖于浏览器。在此基础上，我们再为那些被抽离的 API 提供可配置的接口，即可实现渲染器的跨平台能力。
+
+我们从渲染一个普通的 `<h1>` 标签开始。
+
+```js
+const vnode = {
+  type: 'h1',
+  children: 'hello'
+};
+```
+
+观察上面的 `vnode` 对象。我们使用 type 属性来描述一个 `vnode` 的类型，不同类型的 `type` 属性值可以描述多种类型的 `vnode`。当 `type` 属性是字符串类型值时，可以认为它描述的时普通标签，并使用该 type 属性的字符串作为标签的名称。对于这样一个 `vnode`，我们可以使用 `render` 函数渲染它。
+
+```js
 ```
 
