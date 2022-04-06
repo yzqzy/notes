@@ -6885,3 +6885,55 @@ ref 除了能够用于原始值的响应式方案之外，还能用来解决响�
 
 ### 渲染器的设计
 
+渲染器是 vue.js 中非常重要的一部分。在 vue.js 中，很多功能依赖渲染器实现，例如 `Transition` 组件、`Teloport` 组件、`Suspense` 组件，以及 `template ref` 和自定义指令等。
+
+渲染器是框架性能的核心，需要合理的架构设计来保证可维护性，不过它的实现思路并不复杂。
+
+#### 渲染器与响应系统的结合
+
+顾名思义，渲染器是用来执行渲染任务的。在浏览器平台上，用它来渲染其中的真实 DOM 元素。渲染器不仅能够渲染真实 DOM 匀速，它还是框架跨平台能力的关键。因此，在设计渲染器的时候一定要考虑好可自定义的能力。
+
+我们暂时将渲染器限定在 DOM 平台。既然渲染器用来渲染真实 DOM 元素，那么严格来说，下面的函数就是一个合格的渲染器。
+
+```js
+function render (domString, container) {
+  container.innerHTML = domString;
+}
+```
+
+我们可以这样使用它：
+
+```js
+render('<h1>hello</h1>', document.getElementById('app'));
+```
+
+如果页面中存在 id 为 `app` 的 DOM 元素，那么上面的代码就会将 `<h1>hello</h1>` 插入到该 DOM 元素中。
+
+当然，我们不仅可以渲染静态字符串，还可以渲染动态拼接的 HTML 内容。
+
+```js
+let count = 1;
+
+render(`<h1>${ count }</h1>`, document.getElementById('app'));
+```
+
+这样，最终渲染出来的内容将会是 `<h1>1</h1>` 。但是如果上面这段代码中的变量 count 是一个响应式数据，会怎么样？
+
+利用响应系统，我们可以让整个渲染函数过程自动化。
+
+```js
+const count = ref(1);
+
+effect(() => {
+  render(`<h1>${ count.value }</h1>`, document.getElementById('app'));
+});
+
+count.value++;
+```
+
+这段代码中，我们首先定义了一个响应式数据 count，它是一个 ref，然后在副作用函数内调用 renderer 函数执行渲染。副作用函数执行完毕后，会与响应式数据建立响应联系。当我们修改 `count.value` 的值时，副作用函数会重新执行，完成重新渲染。
+
+这就是相应系统和渲染器之间的关系。我们利用响应系统的能力，自动调用渲染器完成页面的渲染和更新。这个过程与渲染器的具体首先无关，在上面给出的渲染器的实现中，仅仅设置了元素的 `innerHTML` 内容。
+
+我们将使用 `@vue/reactivity` 包提供的响应式 API 进行讲解。`@vue/reactivity` 提供了 `IIFE` 模块格式，因此我们可以直接通过 `<script>` 标签引用到页面中使用。
+
