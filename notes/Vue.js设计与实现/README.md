@@ -6896,7 +6896,7 @@ ref 除了能够用于原始值的响应式方案之外，还能用来解决响�
 我们暂时将渲染器限定在 DOM 平台。既然渲染器用来渲染真实 DOM 元素，那么严格来说，下面的函数就是一个合格的渲染器。
 
 ```js
-function render (domString, container) {
+function renderer (domString, container) {
   container.innerHTML = domString;
 }
 ```
@@ -6904,7 +6904,7 @@ function render (domString, container) {
 我们可以这样使用它：
 
 ```js
-render('<h1>hello</h1>', document.getElementById('app'));
+renderer('<h1>hello</h1>', document.getElementById('app'));
 ```
 
 如果页面中存在 id 为 `app` 的 DOM 元素，那么上面的代码就会将 `<h1>hello</h1>` 插入到该 DOM 元素中。
@@ -6914,7 +6914,7 @@ render('<h1>hello</h1>', document.getElementById('app'));
 ```js
 let count = 1;
 
-render(`<h1>${ count }</h1>`, document.getElementById('app'));
+renderer(`<h1>${ count }</h1>`, document.getElementById('app'));
 ```
 
 这样，最终渲染出来的内容将会是 `<h1>1</h1>` 。但是如果上面这段代码中的变量 count 是一个响应式数据，会怎么样？
@@ -6925,7 +6925,7 @@ render(`<h1>${ count }</h1>`, document.getElementById('app'));
 const count = ref(1);
 
 effect(() => {
-  render(`<h1>${ count.value }</h1>`, document.getElementById('app'));
+  renderer(`<h1>${ count.value }</h1>`, document.getElementById('app'));
 });
 
 count.value++;
@@ -6936,4 +6936,119 @@ count.value++;
 这就是相应系统和渲染器之间的关系。我们利用响应系统的能力，自动调用渲染器完成页面的渲染和更新。这个过程与渲染器的具体首先无关，在上面给出的渲染器的实现中，仅仅设置了元素的 `innerHTML` 内容。
 
 我们将使用 `@vue/reactivity` 包提供的响应式 API 进行讲解。`@vue/reactivity` 提供了 `IIFE` 模块格式，因此我们可以直接通过 `<script>` 标签引用到页面中使用。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Renderer</title>
+</head>
+<body>
+
+  <div id="app"></div>
+  
+  <script src="https://unpkg.com/@vue/reactivity@3.2.31/dist/reactivity.global.js"></script>
+
+  <script src="./index01.js"></script>
+
+</body>
+</html>
+```
+
+它暴露的全局 API 叫做 `VueReactivity`。
+
+```js
+const { effect, ref } = VueReactivity;
+
+function renderer (domString, container) {
+  container.innerHTML = domString;
+}
+
+const count = ref(1);
+
+effect(() => {
+  renderer(`<h1>${ count.value }</h1>`, document.getElementById('app'));
+});
+
+count.value++;
+```
+
+可以看到，我们通过 `VueReactivity` 得到了 `effect` 和 `ref` 这两个 API。
+
+#### 渲染器的基本概念
+
+理解渲染器所涉及的基本概念，有利于理解后续内容。
+
+我们通常使用英文 `renderer` 来表达 “渲染器”。`renderer` 和 `render` 含义并不相同，前者代表渲染器，后者是动词，表示 `渲染`。渲染器的作用是把虚拟 DOM 渲染为特定平台上的真实元素。在浏览器平台上，渲染器会把虚拟 DOM 渲染为真实 DOM 元素。
+
+虚拟 DOM 通常用英文 `virtual DOM` 来表达，可以简写为 `vdom`。虚拟 DOM 和真实 DOM 的结构一样，都是由一个个节点组成的树形结构。所以，我们经常能听到 “虚拟节点” 这样的词，即 `vritual node`，可以简写为 `vnode`。虚拟 DOM 是树型结构，这棵树中的任何一个 `vnode` 节点都可以是一颗子树，因此 `vnode` 和 `vdom` 有时可以替换使用。本篇文章中将统一使用 `vnode`。
+
+浏览器把虚拟 DOM 节点渲染为真实 DOM 节点的过程叫做挂载，通常用英文 `mount` 来表达。例如 `vue.js` 组件中的 `mounted` 钩子就会在挂载完成时触发。这就意味着，在 `mounted` 钩子中可以访问真实 DOM 元素。理解这些名词有助于我们更好地理解框架的 API 设计。
+
+渲染器会把真实 DOM 挂载到哪里呢？其实渲染器并不知道应该把真实 DOM 挂载到哪里。因此，渲染器通常要接收一个挂载点作为参数，用来指定具体的挂载位置。这里的 `挂载点` 其实是一个 DOM 元素，渲染器会把该 DOM 元素作为容器元素，并把内容渲染到其中。我们通常使用英文 `container` 来表达容器。
+
+```js
+function createRenderer () {
+  function render (vnode, container) {
+    // ...
+  }
+  return render;
+}
+```
+
+其中 `createRenderer` 函数用来创建一个渲染器。调用 `createRenderer` 函数会得到一个 `render` 函数，该 `render` 函数会以 `container` 为挂载点，将 `vnode` 渲染为真实 DOM 并添加到该挂载点下。
+
+你可能会对这段代码产生疑惑，为什么需要 `createRenderer` 函数？直接定义 `render` 不就好了吗？
+渲染器与渲染是不同的。渲染器是更加宽泛的概念，它包含渲染。渲染器不仅可以用来渲染，还可以用来激活已有的 DOM 元素，这个过程通常发生在通过渲染的情况下。例如下面的代码。
+
+```js
+function createRenderer () {
+  function render (vnode, container) {
+    // ...
+  }
+
+  function hydrate (vnode, container) {
+    // ...
+  }
+
+  return {
+    render,
+    hydrate
+  };
+}
+```
+
+当 `createRenderer` 函数创建渲染器时，渲染器不仅包含 `render` 函数，还包含 `hydrate` 函数。`hydraye` 函数与服务端渲染相关。
+
+渲染器的内容非常广泛，用来把 `vnode` 渲染为真实 `DOM` 的 `render` 函数只是其中一部分。实际上，在 vue.js 3 中，甚至连创建应用的 `createApp` 函数也是渲染器的一部分。
+
+有了渲染器，我们就可以用它来执行渲染任务了。
+
+```js
+const renderer = createRenderer();
+
+// 首次渲染
+renderer.render(vnode, document.querySelector('#app'));
+```
+
+在上面这段代码中，我们首先调用 `createRenderer` 函数创建一个渲染器，接着调用渲染器的 `renderer.render` 函数执行渲染。当首次调用 `renderer.render` 函数时，只需要创建新的 `DOM` 元素即可，这个过程只涉及挂载。
+
+而当多次在同一个 `container` 上调用 `renderer.render` 函数进行渲染时，渲染器除了要执行挂载动作外，还要执行更新动作。
+
+```js
+const renderer = createRenderer();
+
+// 首次渲染
+renderer.render(oldVnode, document.querySelector('#app'));
+// 第二次渲染
+renderer.render(newVnode, document.querySelector('#app'));
+```
+
+如上面的代码所示，由于首次渲染时已经把 `oldVnode` 渲染到 `container` 内，所以当再次调用 `renderer.render` 函数并尝试渲染 `newVnode` 时，就不能简单地执行挂载动作了。在这种情况下，渲染器会使用 `newVnode` 与上一次渲染的 `oldVnode` 进行比较。试图找到并更新变更点。这个过程叫做 “打补丁”（更新），英文通常用 patch 来表达。实际上，挂载工作本身也可以看作一种特殊的打补丁，它的特殊之处在于旧的 `vnode` 是不存在的。所以我们不必过于纠结 “挂载” 和 “打补丁” 这两个概念。
+
+```js
+```
 
