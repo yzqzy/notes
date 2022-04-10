@@ -6,10 +6,10 @@
   + [ECMAScript](https://github.com/yw0525/notes/tree/master/ecmascript/base) 已完成
   + [ES6](https://github.com/yw0525/notes/tree/master/ecmascript/es6) 已完成
   + [Promise源码实现](https://github.com/yw0525/notes/tree/master/ecmascript/promise) 已完成
-  + [内置对象](https://github.com/yw0525/notes/tree/master/ecmascript/Built_in_objects) 更新中... 😁
+  + [内置对象](https://github.com/yw0525/notes/tree/master/ecmascript/Built_in_objects) 暂停中 😀
   + [函数式编程](https://github.com/yw0525/notes/tree/master/ecmascript/functional) 已完成
   + [JavaScript性能优化](https://github.com/yw0525/notes/tree/master/ecmascript/optimize) 已完成
-  + ~~[前端性能优化](https://github.com/yw0525/notes/tree/master/ecmascript/front_end_optimize) 已废弃~~ 😅
+  + [前端性能优化](https://github.com/yw0525/notes/tree/master/ecmascript/front_end_optimize) 更新中... 😁
 * [DOM](https://github.com/yw0525/notes/tree/master/dom) 已完成
 * [BOM](https://github.com/yw0525/notes/tree/master/bom) 已完成
 * [HTML5](https://github.com/yw0525/notes/tree/master/html5/base) 已完成

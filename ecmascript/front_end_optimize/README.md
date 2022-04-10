@@ -1,6 +1,8 @@
 # 前端性能优化
 
-## 什么是 Web 性能
+## 一、Web 性能指标
+
+### 什么是 Web 性能
 
 简单来说就是网站够不够快。
 
@@ -19,7 +21,7 @@ MDN 上的 Web 性能定义：Web 性能是网站或应用程序的客观度量�
 * 感知表现：页面可能不能做的更快，但是可以让用户感觉更快。耗时操作要给用户反馈，比如加载动画、进度条、骨架屏等提示信息
 * 性能测定：性能指标、性能测试、性能监控持续优化
 
-## 为什么关注 Web 性能
+### 为什么关注 Web 性能
 
 * 用户留存
 * 网站的转化率
@@ -29,7 +31,7 @@ MDN 上的 Web 性能定义：Web 性能是网站或应用程序的客观度量�
 * 提升工作绩效
 * ...
 
-## 如何进行 Web 性能优化
+### 如何进行 Web 性能优化
 
 首先需要了解性能指标，多块才算快？
 
@@ -39,13 +41,13 @@ MDN 上的 Web 性能定义：Web 性能是网站或应用程序的客观度量�
 
 技术改造、可行性分析等具体的优化实施，迭代优化；
 
-### 性能指标
+#### 性能指标
 
 * RAIL 性能模型
 * 基于用户体验的核心指标
 * 新一代性能指标：Web Vitals
 
-### 性能测量
+#### 性能测量
 
 * 浏览器 DevTools 调试工具
   * 网站监控分析
@@ -58,13 +60,13 @@ MDN 上的 Web 性能定义：Web 性能是网站或应用程序的客观度量�
   * 全面的优化报告
 * ...
 
-### 生命周期
+#### 生命周期
 
 网站页面的生命周期，通俗地讲就是从我们在浏览器的地址栏中输入一个 URL 后，到整个页面渲染出来的过程。整个过程包括域名解析，建立 TCP 连接，前后端通过 HTTP 进行会话，压缩与解压缩，以及前端的关键渲染路径，把这些阶段拆解开来看，不仅能容易地获得优化性能的启发，而且也能为今后的前端工程师之路构建出完整的知识框架。
 
 [从输入 URL 到页面展示发生了什么？](https://www.yuque.com/yyne87/bpfdka/dx063g)
 
-### 优化方案
+#### 优化方案
 
 * 发出请求到收到响应的优化，比如 DNS 查询、HTTP 长连接、HTTP 2、HTTP 压缩、HTTP 缓存等。
 * 关键渲染路径优化，比如是否存在必要的重绘和回流。
@@ -73,7 +75,7 @@ MDN 上的 Web 性能定义：Web 性能是网站或应用程序的客观度量�
 * 构建优化，比如压缩合并、基于 webpack 构建优化方案等.
 * ...
 
-## Web 性能指标
+### Web 性能指标
 
 我们已经知道性能的重要性，但当我们讨论性能的时候，让一个网页变得很快，具体是指哪些?
 
@@ -93,7 +95,7 @@ MDN 上的 Web 性能定义：Web 性能是网站或应用程序的客观度量�
 
 这些指标之间并不是毫无关联，而是在以用户为中心的目标中不断演进出来的，有的已经不再建议使用、有的被各种测试工具实现、有的则可以作为通用标准有各大浏览器提供的可用于在生产环境测量的 API。
 
-## RAIL 性能模型
+### RAIL 性能模型
 
 RAIL 是 Response，Animation，Idle 和 Load 的首字母缩写，是一种由 Google Chrome 团队于 2015 年提出的性能模型，用于浏览器内的用户体验和性能。
 
@@ -106,7 +108,7 @@ RAIL 模型的理念是以用户为中心， 最终目标不是让您的网站�
 
 > 根据网络条件和硬件的不同，用户对性能的理解也有所不同。例如，通过快速地 Wi-Fi 连接在功能强大的台式机上加载站点通常在 1 秒内完成，用户对此已经习以为常。在 3G 连接速度较慢的移动设备上加载网站需要花费更多的时间，因此移动用户通常更有耐心，在移动设备上加载 5S 是一个更现实的目标。
 
-### 响应
+#### 响应
 
 指标：应该尽可能快速的响应用户，应该在 100ms 以内响应用户输入。
 
@@ -116,7 +118,7 @@ RAIL 模型的理念是以用户为中心， 最终目标不是让您的网站�
 
 比如在单击按钮向后台发起某项业务处理请求时，首先反馈给用户开始处理的提示，然后在处理完成的回调后给予反馈提示。
 
-### 动画
+#### 动画
 
 指标：展示动画的时候，每一帧应该以 10 ms 进行渲染，这样可以保证动画效果的一致性，避免卡顿。
 
@@ -128,7 +130,7 @@ RAIL 模型的理念是以用户为中心， 最终目标不是让您的网站�
 
 https://googlechrome.github.io/devtools-samples/jank/。
 
-### 空闲
+#### 空闲
 
 指标：当使用 JavaScript 主线程的时候，应该把任务划分到执行时间小于 50 ms 的片段中去，这样可以释放线程以进行用户交互。
 
@@ -137,7 +139,7 @@ https://googlechrome.github.io/devtools-samples/jank/。
 为了更加合理地利用浏览器的空闲时间，最好将处理任务按 50 ms 为单位分组。
 这么做就是保证用户在发生操作后的 100ms 内给出响应。
 
-### 加载
+#### 加载
 
 指标：首次加载应该在小于 5s 的时间内加载完成，并可以进行用户交互。对于后续加载，则是建议在 2 秒内完成。
 
@@ -145,7 +147,7 @@ https://googlechrome.github.io/devtools-samples/jank/。
 
 对于其他非关键资源的加载，延迟到浏览器空闲时段在进行，是比较常见的渐进式优化策略。比如图片懒加载、代码拆分等优化手段。
 
-## 基于用户体验的性能指标
+### 基于用户体验的性能指标
 
 基于用户体验的性能指标是 Google 在 web.dev 提出的。其中包括以下几个比较重要的性能指标：
 
@@ -156,7 +158,7 @@ https://googlechrome.github.io/devtools-samples/jank/。
 * TBT
 * CLS
 
-### First Contentful Pant（FCP）
+#### First Contentful Pant（FCP）
 
 FCP（First Contentful Paint）首次内容绘制，浏览器首次绘制来自 DOM 的内容的时间，内容必须是文本、图片（包括背景图）、非白色的 canvas 和 SVG，也包括带有正在加载中的 Web 字体的文本。
 
@@ -176,7 +178,7 @@ FCP（First Contentful Paint）首次内容绘制，浏览器首次绘制来自 
 
 https://web.dev/fcp/#how-to-improve-fcp
 
-### Largest Contentful Paint（LCP）
+#### Largest Contentful Paint（LCP）
 
 LCP（Largest Contentful Paint）最大内容绘制，可视区域最大的内容元素呈现在屏幕上的时间，用以估算页面的主要内容对用户可见时间。
 
@@ -206,7 +208,7 @@ LCP 考虑的元素：
 
 https://web.dev/optimize-lcp/
 
-### First Input Delay（FID）
+#### First Input Delay（FID）
 
 FID（First Input Delay）首次输入延迟，从用户第一次与页面交互（例如点击链接、点击按钮等）到浏览器实际能够响应该交互的时间。
 
@@ -231,7 +233,7 @@ https://web.dev/fid/#how-to-improve-fid
 
 https://web.dev/optimize-fid
 
-### Time to Interactive（TTI）
+#### Time to Interactive（TTI）
 
 表示网页第一次 **完全达到可交互状态** 的时间点，浏览器已经可以持续地响应用户的输入。完全达到可交互状态的时间点是在最后一个长任务（Long Task）完成的时间，并且在随后的 5 秒内网络和主线程是空闲的。从定义上来看，也可以被叫做可持续交互时间或可流畅交互时间。
 
@@ -249,7 +251,7 @@ https://web.dev/optimize-fid
 
 https://web.dev/tti/#how-to-improve-tti
 
-### Total Block Time（TBT）
+#### Total Block Time（TBT）
 
 Total Block Time（TBT）总阻塞时间，度量 FCP 和 TTI 之间的总时间，在该时间范围内，主线程被阻塞足够长的时间导致输入无响应。
 
@@ -269,7 +271,7 @@ Total Block Time（TBT）总阻塞时间，度量 FCP 和 TTI 之间的总时间
 
 https://web.dev/tbt/#how-to-improve-tbt
 
-### Cumulative Layout Shift（CLS）
+#### Cumulative Layout Shift（CLS）
 
 Curmulative Layout Shift（CLS）累计布局偏倚，CLS 会测量在页面整个生命周期中发生的每个意外的布局移位的所有单独布局移位分数的总和，它是一种保证页面的视觉稳定性从而提升用户体验的指标方案。
 
@@ -288,7 +290,7 @@ https://web.dev/cls/#how-to-improve-cls
 
 https://web.dev/optimize-cls
 
-## Web Vitals
+### Web Vitals
 
 Google 开发了很多实用指标和工具，帮助衡量用户体验和质量，从而发掘优化点。
 Web Vitals 计划降低了学习成本，为网站体验提供了一组统一的质量衡量指标 - Core Web Vitals，其中包括加载体验、交互性和页面内容的视觉稳定性。
@@ -297,7 +299,7 @@ Web Vitals 计划降低了学习成本，为网站体验提供了一组统一的
 
 Google 在 2020 年 5 月 5 日提出新的用户体验量化方式 Web Vitals 来衡量网站的用户体验，并将这些衡量结果用作排名算法的一部分。
 
-### Core Web Vitals 与 Web Vitals
+#### Core Web Vitals 与 Web Vitals
 
 Core Web Vitals 是应用于所有 Web 页面的 Web Vitals 的子集，是其最重要的核心。
 
@@ -305,7 +307,7 @@ Core Web Vitals 是应用于所有 Web 页面的 Web Vitals 的子集，是其�
 * 交互性（FID）- 首次输入延迟时间
 * 视觉稳定性（CLS）- 累积布局配置偏移
 
-### 测试 Web Vitals
+#### 测试 Web Vitals
 
 性能测试工具，比如 Lighthouse
 
@@ -313,13 +315,13 @@ Core Web Vitals 是应用于所有 Web 页面的 Web Vitals 的子集，是其�
 
 实用浏览器插件 Web Vitals
 
-### 参考链接
+#### 参考链接
 
 https://web.dev/vitals
 
+## 二、Web 性能测试
 
-
-## 性能测试概述
+### 性能测试概述
 
 性能测试作为性能优化过程中的一环，目的通常是给后续优化工作提供指导方向、参考基线及前后对比的依据。性能检测并不是一次性执行结束后就完成的工作，它会在检测、记录和改进的迭代过程中不断重复，来协助网站的性能优化不断接近期望的效果。
 
@@ -335,7 +337,7 @@ https://web.dev/vitals
 
 我们若是想通过检测来进行有效的性能优化改进，就需要从尽可能多的角度对网站进行考量，同时保证检测环境的客观多样，能够让分析得出的结果更加贴近真实的性能瓶颈，这会花费大量的时间与精力，所以在进行性能优化之前我们还需要考虑所能投入的优化成本。
 
-## 常见的检测工具
+### 常见的检测工具
 
 * LightHouse
 
@@ -354,9 +356,182 @@ https://web.dev/vitals
 
 * 持续的性能优化监控方案
 
-## 顶塔 Lighthouse 测试性能
+### 顶塔 Lighthouse 测试性能
 
+## 三、请求和响应优化
 
+目的：更快的内容到达时间。
 
-  
+### 核心思路
 
+* 更好的连接传输效率；
+* 更少的请求数量；
+* 更小的资源大小；
+* 合适的缓存策略；
+
+### 最佳实践
+
+* 减少 DNS 查找：每次主机名的解析都需要一次网络往返，从而增加请求的延迟时间，同时还会阻塞后续请求
+* 重用 TCP 连接：尽可能的使用持久连接，以消除 TCP 握手和慢启动导致的延迟
+* 减少 HTTP 重定向：HTTP 重定向需要额外的 DNS 查询、TCP 握手等非常耗时，最佳的重定向次数为 0
+* 压缩传输资源：Gzip、图片压缩
+* 使用缓存：HTTP 缓存、CDN 缓存、Service Worker 缓存
+* 使用 CDN（内容分发网络）：把数据放在离用户地理位置更近的地方，可以明显地减少每次 TCP 连接的网络延迟，增大吞吐量
+* 删除没有必要的请求的资源
+* 客户端缓存资源：缓存必要的应用资源，避免每次都重复请求相同的内容，例如多图片下载可以考虑使用缓存
+* 内容在传输前先压缩：传输数据之前应该先压缩应用资源，把要传输的字节减少到最小，在压缩的时候确保对每种不同的资源采用最好的压缩手段
+* 消除没有必要的请求开销：减少请求的 HTTP 首部数据（比如 HTTP Cookie）
+* 并行处理请求和响应：请求和响应的排队都会导致延迟，可以尝试并行的处理请求和响应（利用多个 HTTP 1.1 连接实现并行下载，在可能的情况下使用 HTTP 管道计数）
+* 针对协议版本采取优化措施：升级到 HTTP 2.0
+* 根据需要采用服务端渲染方式：可以解决 SPA 应用首屏渲染慢的问题
+* 采用预渲染的方式快速加载静态页面：页面渲染的极致性能，比如适合静态页面
+
+### DNS 解析优化
+
+当浏览器从（第三方）服务器请求资源时，必须先将该跨域域名解析为 IP 地址，然后浏览器才能发出请求，这个过程称为 DNS 解析。
+
+DNS 作为互联网的基础协议，其解析速度似乎很容易被网站优化人员忽视。现在大多数新浏览器已经针对 DNS 解析进行优化，比如 DNS 缓存。典型的一次 DNS 解析需要耗费 20-120 毫秒，所花费的时间几乎可以忽略不计，但是当网站使用的资源依赖于多个不同的域时，时间就会成倍的增加，从而增加网站加载时间。比如在某些图片较多的页面中，在发起图片加载请求之前预先把域名解析好将会有 5% 的图片加载速度提升。
+
+一般来说，前端优化中与 DNS 有关的有两点：
+
+* 减少 DNS 的请求次数
+* DNS 预获取：DNS Prefetch
+
+#### 减少 DNS 查找
+
+域名系统（DNS）将主机名映射到 IP 地址。在浏览器中输入 `www.yueluo.club` ，浏览器联系的 DNS 解析器将返回该服务器的 IP 地址。DNS 通常需要 20-120 毫秒来查找给定主机名的 IP 地址。在 DNS 查找完成之前，浏览器无法从该主机名下载任何内容。
+
+缓存 DNS 查找以提高性能。这种缓存可以由用户的 `ISP` 或局域网维护的特殊缓存服务器上进行，但是在个别用户的计算机上也会发生缓存。DNS 信息保留操作系统的 DNS 缓存中（Microsoft Windows 上的 “DNS 客户端服务”）。大多数浏览器都有自己的缓存，与操作系统的缓存分开。只要浏览器将 DNS 记录保留在自己的缓存中，它就不会对操作系统发出记录请求进行打扰。
+
+默认情况下，Internet Explorer 会缓存 30 分钟的 DNS 查找，这是由 `DnsCacheTimeout` 注册表指定的。Firefox 在 `network.dnsCacheExpiration` 配置的控制下缓存 DNS 查找 1 分钟。Chrome 也是 1 分钟。
+
+当客户端的 DNS 缓存为空（对于浏览器和操作系统）时，DNS 查找的次数等于网页中唯一主机名的数目。这包括在页面的 URL，图像，脚本文件，样式表，Flash 对象等中使用的主机名。减少唯一主机名的数量将减少 DNS 查找的数量。
+
+> 阿里云域名解析配置，可以配置 TTL，TTL 指域名对应的 DNS 解析记录缓存过期时间。
+> 默认值是 10 分钟，可以根据自己需要设置 10 分钟 - 1 小时。
+
+减少域名的数量有可能减少页面中并行下载的数量。避免 DNS 查找会减少响应时间，但是减少响应并行下载可能会增加响应时间。
+**建议将资源划分为至少两个但不超过四个域名。这将减少 DNS 查找和允许高度并行下载之间取得良好的折衷。**
+
+> chrome 浏览器中每个域名的并发数是 6 个。
+
+#### dns-prefetch
+
+DNS-prefetch（DNS 预获取）是尝试在请求资源之前解析域名。这可能是后面要加载的文件，也可能是用户尝试打开的链接目标。域名解析和内容载入是串行的网络操作，所以这个方式能够减少用户等待时间，提升用户体验。
+
+dns-prefetch 可以帮助开发人员掩盖 DNS 解析延迟。HTML `link` 元素通过 `dns-prefetch`  的 `rel` 属性值提供此功能。在 `href` 属性值指定要跨域的域名。
+
+```html
+<link rel=”dns-prefetch“ href="https://data.yueluo.club">
+```
+
+下面是我的个人博客对 `dns-prefetch` 的使用。
+
+```html
+<link rel="dns-prefetch" href="https://data.yueluo.club">
+<link rel="dns-prefetch" href="https://at.alicdn.com">
+```
+
+还可以通过 HTTP Link 字段将 `dns-prefetch` （以及其他资源提示）指定为 HTTP 标头：
+
+```http
+Link: <https://at.alicdn.com/>; rel=dns-prefetch
+```
+
+每当站点引用跨域域上的资源时，都应在 `<head>` 元素中放置 `dns-prefetch` 提示，但是要记住一些注意事项：
+
+* `dns-prefetch` 仅对跨域域上的 DNS 查询有效，因此避免使用它来指向您的站点或域。因为浏览器看到提示时，您站点域背后的 IP 已经被解析；
+* `dns-prefetch` 慎用，多页面重复 DNS 预解析会增加 DNS 查询次数；
+* 默认情况下浏览器会对页面中和当前域名不再同一个域的域名进行预获取，并且缓存结果，这就是隐式的 DNS Prefetch（高版本浏览器支持隐式预解析）。如果想对页面中没有出现的域进行预获取，那么就要使用 `dns-prefetch` 了；
+* 虽然使用 DNS Prefetch 能够加快页面解析速度，但也不能滥用，有开发者指出禁用 DNS 预读能节省每月 100 亿的 DNS 查询（大型网站）。
+
+```html
+<meta http-equiv="x-dns-prefetch-control" content="off">
+```
+
+#### 更多 DNS 解析优化
+
+* 延长 DNS 缓存时间；
+* 尽可能使用 A 或 `AAAA` 记录代替 `CNAME`；
+* 使用 CDN 加速域名；
+* 自己搭建 DNS 服务。
+
+#### 清除 DNS 缓存
+
+**清除浏览器 DNS 缓存**
+
+* 请求 DNS 缓存：`chrome://net-internals/#dns`，clear host cache
+* 有时候也需要同时请求套接字缓存池：`chrome://net-internals/#sockets` ，flush socket pools
+
+**清除系统 DNS 缓存**
+
+```bash
+# windows 中查看 DNS 缓存记录
+ipconfig /displaydns
+
+# windows 中清除 DNS 缓存记录
+ipconfig /flushdns
+
+# MacOS 中请求 DNS 缓存记录
+sudo killall -HUP mDNSResponder
+```
+
+#### 参考链接
+
+* [https://developer.mozilla.org/zh-CN/docs/Web/Performance/dns-prefetch](https://developer.mozilla.org/zh-CN/docs/Web/Performance/dns-prefetch)
+* [https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/X-DNS-Prefetch-Control](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/X-DNS-Prefetch-Control)
+* [https://ashu.online/blogs/optimize-dns-resolution-for-fast-website](https://ashu.online/blogs/optimize-dns-resolution-for-fast-website)
+
+### HTTP 长连接
+
+透视 HTTP 协议（https://www.yuque.com/yyne87/mw1l9v）。
+
+#### 短链接
+
+HTTP 协议的初始版本，每进行一次 HTTP 通信就要断开一次 TCP 连接。
+
+以早期的通信情况来说，因为都是容量很小的文本传输，所以即使这样也没有多大问题。随着 HTTP 的大量普及，文档中包含大量富文本（图片、视频等资源）的情况多起来。
+
+比如，使用浏览器浏览一个包含多张图片的 HTML 页面时，在发送请求访问 HTML 页面资源的同时，也会请求该 HTML 页面包含的其他资源。因此，每次的请求都会造成无谓的 TCP 连接建立和断开，增加通信录的开销。
+
+为了解决这个问题，有些浏览器在请求时，用了一个非标准的 Connection 字段。
+
+```http
+Connection: keep-alive
+```
+
+这个字段要求服务器不要关闭 TCP 连接，以便其他请求复用。服务器同样回应这个字段。
+
+```http
+Connection: keep-alive
+```
+
+一个复用的 TCP 连接就建立了，直到客户端或服务器主动关闭连接。但是，这不是标准字段，不同实现的行为可能不一致，因此不是根本的解决方法。
+
+#### 长连接
+
+1997 年 1 月，HTTP/1.1 版本发布，只比 1.0 版本晚了半年。它进一步完善了 HTTP 协议，直到现在还是流行的版本。
+
+HTTP 1.1 版本的最大变化，就是引入了持久连接（HTTP Persistent Connections），即 TCP 连接默认不关闭，可以被多个请求复用，不用声明 `Connection: keep-alive`。
+
+持久连接的好处在于减少了 TCP 连接的重复建立和断开所造成的额外开销，减轻了服务器的负载。另外，减少开销的那部分时间，使 HTTP 请求和响应能够更早的结束，这样 Web 页面的显示速度也就相应提高了。
+
+客户端和服务器发现对方一段时间没有活动，就可以主动关闭连接。不过，规范的做法是，客户端在最后一个请求时，发送 `Connection: close` ，明确要求服务器关闭 TCP 连接
+
+```http
+Connection: close
+```
+
+目前，对于同一个域名，大多数浏览器允许建立 6 个持久连接。
+
+#### 管道机制
+
+HTTP 1.1 版本还引入了管道机制（pipelining），即在同一个 TCP 连接里面，客户端可以同时发送多个请求，进一步改进了 HTTP 协议的传输效率。
+
+管线化技术出现后，不用等待响应即可直接发送下一个请求。这样就能够做到同时并发多个请求，而不需要一个接一个的等待响应，与挨个连接相比，持久连接可以让请求更快结束。管线化技术比持久连接还要快。请求数越多，时间差就越明显。
+
+举例来说，客户端要请求两个资源。以前的做法是，在同一个 TCP 连接里面，先发送 A 请求，然后等待服务器做出回应，收到后再发出 B 请求。管道机制则是允许浏览器同时发出 A 请求和 B 请求，但是服务器还是按照顺序，先回应 A 请求，完成后再回应 B 请求。
+
+#### Content-Length 字段
+
+一个 TCP 连接可以传送多个回应，
