@@ -34,6 +34,7 @@ function createRenderer () {
       }
     }
     // 把 vnode 存在到 container._vnode 下，这里就是后续渲染中的旧 vnode
+    container._vnode = vnode;
   }
 
   function hydrate (vnode, container) {

@@ -7063,6 +7063,7 @@ function createRenderer () {
       }
     }
     // 把 vnode 存在到 container._vnode 下，这里就是后续渲染中的旧 vnode
+    container._vnode = vnode;
   }
 
   function hydrate (vnode, container) {
@@ -7127,5 +7128,163 @@ const vnode = {
 观察上面的 `vnode` 对象。我们使用 type 属性来描述一个 `vnode` 的类型，不同类型的 `type` 属性值可以描述多种类型的 `vnode`。当 `type` 属性是字符串类型值时，可以认为它描述的时普通标签，并使用该 type 属性的字符串作为标签的名称。对于这样一个 `vnode`，我们可以使用 `render` 函数渲染它。
 
 ```js
+const vnode = {
+  type: 'h1',
+  children: 'hello'
+};
+
+// 创建渲染器
+const renderer = createRenderer();
+// 调用 render 函数渲染该 vnode
+renderer.render(vnode, document.querySelector('#app'));
 ```
+
+```js
+function createRenderer () {
+  function patch (n1, n2, container) {
+    if (!n1) {
+      // 如果 n1 不存在，意味着挂载，则调用 mountElement 函数完成挂载
+      mountElement(n2, container);
+    } else {
+      // n1 存在，意外着打补丁 TODO
+    }
+  }
+
+  function render (vnode, container) {
+    if (vnode) {
+      // 新 node 存在，将其与旧 vnode 一起传递给 patch 函数，进行打补丁
+      patch(container._vnode, vnode, container);
+    } else {
+      if (container._vnode) {
+        // 旧 vnode 存在且新 vnode 不存在，说明是卸载（unmount）操作
+        // 只需要将 container 内的 DOM 清空即可
+        container.innerHTML = '';
+      }
+    }
+    // 把 vnode 存在到 container._vnode 下，这里就是后续渲染中的旧 vnode
+    container._vnode = vnode;
+  }
+
+
+  function hydrate (vnode, container) { }
+
+  return {
+    render,
+    hydrate
+  };
+}
+```
+
+我们在 `createRenderer` 函数内部定义了 `patch` 函数。第一个参数 `n1` 代表旧 `vnode`，第二个参数 `n2` 代表新 `vnode`。当 `n1` 不存在时，意味着没有旧 `vnode`，此时只需要执行挂载即可。我们使用 `mountElement` 完成挂载。
+
+```js
+function mountElement (vnode, container) {
+  // 创建 DOM 元素
+  const el = document.createElement(vnode.type);
+  // 处理子节点，如果子节点是字符串，代表元素具有文本节点
+  if (typeof vnode.children === 'string') {
+    // 此时只需要设置元素的 textContent 属性即可
+    el.textContent = vnode.children;
+  }
+  // 将元素添加到容器中
+  container.appendChild(el);
+}
+```
+
+首先调用 `document.createElement` 函数，以 `vnode.type` 的值作为标签名称创建新的 `DOM` 元素。接着处理 `vnode.children`，如果它的值是字符串类型，则代表该元素具有文本子节点，这时只需要设置元素的 `textContent` 即可。最后调用 `appendChild` 函数将新创建的 DOM 元素添加到容器元素内。这样，我们就完成了 `vnode` 的挂载。
+
+挂载一个普通元素的工作已经完成。接下来，我们分析这段代码存在的问题。我们的目的是设计一个不依赖于浏览器平台的通用渲染器，但很明显，`mountElement` 函数内调用了大量依赖于浏览器的 API，例如 `document.createElement、el.textContent` 以及 `appendChild` 等。想要设计通用渲染器，第一步要做的就是将这些浏览器特有的 API 抽离。我们可以将这些操作 DOM 的 API 作为配置项，该配置项可以作为 `createRenderer` 函数的参数。
+
+```js
+// 创建渲染器
+const renderer = createRenderer({
+  // 创建元素
+  creatElement (tag) {
+    return document.creatElement(tag);
+  },
+  // 设置元素的文本节点
+  setElementText (el, text) {
+    el.textContent = text;
+  },
+  // 给指定的 parent 下添加指定元素
+  insert (el, parent, anchor = null) {
+    parent.insertBefore(el, anchor);
+  }
+});
+```
+
+我们把用于操作 DOM 的 API 封装为一个对象，并把它传递给 `createRenderer` 函数。这样，在 `mountElement` 等函数内就可以通过配置项来获取操作 DOM 的 API 了。
+
+```js
+function createRenderer (options) {
+  const { createElement, insert, setElementText } = options;
+
+  function mountElement (vnode, container) {
+    // 调用 createElement 创建 DOM 元素
+    const el = createElement(vnode.type);
+    // 处理子节点，如果子节点是字符串，代表元素具有文本节点
+    if (typeof vnode.children === 'string') {
+      // 调用 setElementText 设置元素的文本节点
+      setElementText(el, vnode.children)
+    }
+    // 调用 insert 函数将元素插入到容器内
+    insert(el, container);
+  }
+	
+  // ...
+
+  return {
+    render,
+    hydrate
+  };
+}
+```
+
+重构后的 `mountElement` 函数在功能上没有任何变化。不同的时，它不再直接依赖于浏览器的特有 API。这意味着，只要传入不同的配置项，就能够完成非浏览器环境下的渲染工作。我们可以实现一个用来打印渲染器操作流程的自定义渲染器。
+
+```js
+const vnode = {
+  type: 'h1',
+  children: 'hello'
+};
+const container = { type: 'root' };
+
+// 创建渲染器
+const renderer = createRenderer({
+  createElement (tag) {
+    console.log(`创建元素 ${ tag }`);
+    return { tag };
+  },
+  setElementText (el, text) {
+    console.log(`设置 ${ JSON.stringify(el) } 的文本内容：${ text }`);
+    el.text = text;
+  },
+  insert (el, parent, anchor = null) {
+    console.log(`将 ${ JSON.stringify(el) } 添加到 ${ JSON.stringify(parent) } 下`);
+    parent.children = el;
+  }
+});
+
+renderer.render(vnode, container);
+
+// 创建元素 h1
+// 设置 {"tag":"h1"} 的文本内容：hello
+// 将 {"tag":"h1","text":"hello"} 添加到 {"type":"root"} 下
+```
+
+在调用 `createRenderer` 函数创建 `renderer` 时，传入了不同的配置项。在 `createElement` 内，我们不再调用浏览器的 API，而是仅仅返回一个对象 `{ tag }` ，并将其作为创建出来的 "DOM 元素"。同样，在 `setElementText` 以及 `insert` 函数内，我们也没有调用浏览器相关 `API` ，而是自定义了一些逻辑，并打印信息到控制台。
+
+上面的自定义渲染器不依赖于浏览器特有的 `API` ，所以这段代码不仅可以在浏览器中运行，还可以在 `	Node.js` 中运行。
+
+自定义渲染器并不是 ”黑魔法“ ，它只是通过抽象的手段，让核心代码不再依赖于平台特有的 API ，再通过支持个性化配置的能力来实现跨平台。
+
+#### 总结
+
+我们首先介绍了渲染器与响应系统的关系。利用响应系统的能力，我们可以做到，当响应式数据变化时自动完成页面更新（重新渲染）。同时，这与渲染器的具体内容无关。我们实现了一个极简的渲染器，它只能利用 `innerHTML` 属性将给定的 `HTML` 字符串内容设置到容器中。
+
+我们讨论了与渲染器相关的基本名词和概念。渲染器的作用是把虚拟 DOM 渲染为特定平台上的真实元素，我们用英文 `renderer` 来表达渲染器。虚拟 DOM 通常用英文 `virtual DOM` 来表达，可以简写成 `vdom` 或 `vnode`。浏览器会执行挂载和打补丁操作，对于新的元素，渲染器会将它挂载到容器内；对于新旧 `vnode` 都存在的情况，渲染器则会执行打补丁操作，即对比新旧 `vnode` ，只更新变化的内容。
+
+最后，我们讨论了自定义渲染器的实现。在浏览器平台上，渲染器可以利用 DOM API 完成 DOM 元素的创建、修改和删除。为了让渲染器不直接依赖浏览器平台特有的 API，我们将这些用来创建、修改和删除元素的操作抽象成可配置的对象。用户可以在调用 `createRenderer` 函数创建渲染器的时候指定自定义的配置对象，从而实现自定义的行为。我们实现了一个用来打印渲染操作流程的自定义渲染器，它不仅可以在浏览器中运行，还可以在 `Node.js` 中运行。
+
+### 挂载与更新
 
