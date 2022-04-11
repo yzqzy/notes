@@ -630,3 +630,118 @@ HTTP/2 复用 TCP 连接，在一个连接里，客户端和浏览器都可以�
 
 因为 HTTP/2 的数据包是不按顺序发送的，同一个连接里面连续的数据包，可能属于不同的回应。因此，必须要比数据包进行标记，指出它属于哪个回应。
 
+HTTP/2 将每个请求或回应的所有数据包，称为一个数据流（stream）。每个数据流都有一个独一无二的编号。数据包发送的时候，都必须标记数据流 ID，用来区分它属于哪个数据流。另外还规定，客户端发出的数据流，ID 一律为奇数，服务器发出的，ID 为偶数。
+
+数据流发送到一半的时候，客户端和服务器都可以发送信号（RST_STREAM 帧），取消这个数据流。1.1 版本取消数据流的唯一方法，就是关闭 TCP 连接。也就是说，HTTP/2 可以取消某一次请求，同时保证 TCP 连接还打开着，可以被其他请求使用。
+
+客户端还可以指定数据流的优先级。优先级越高，服务器就会越早响应。
+
+#### 头信息压缩
+
+HTTP 协议不带有状态，每次请求都必须附上所有信息。所以，请求的很多字段都是重复的，比如 Cookie 和 User Agent，一模一样的内容，每次请求都必须附带，这回浪费很多带宽，影响速度。
+
+HTTP/2 对这一点做了优化，引入了头信息压缩机制（header compression）。一方面，头信息使用 gzip 或 compress 压缩后再发送；另一方面，客户端和服务器同时维护一张头信息表，所有字段都会存入这个表，生成一个索引号，以后就不发送同样字段了，只发送索引号，这样就可以提高速度。
+
+####  服务器推送
+
+HTTP/2 允许服务器未经请求，主动向客户端发送资源，即服务器推送（server push）。
+
+常见场景是客户端请求一个网页，这个网页里面包含很多静态资源。正常情况下，客户端必须收到网页，解析 HTML 源码，发现存在静态资源，在发出静态资源请求。当服务器预期到客户端请求网页后，很可能会再请求静态资源，所以就主动把这些静态资源随着网页一起发送给客户端。
+
+> 服务器需要根据客户端需要推送，是否启用这个功能，要根据性能、功能、维护性方面做一些权衡。
+
+### 避免重定向
+
+
+
+### 压缩传输的数据资源
+
+数据压缩是提高 Web 站点性能的一种重要手段。对于有些文件来说，高达 70% 的压缩比率可以大大降低对带宽的需求。随着时间推移，压缩算法的效率也越来越高，同时也有新的压缩算法被发明出来，应用在客户端和服务器。
+
+#### HTTP 响应压缩
+
+##### 压缩 JS、CSS
+
+这里说的压缩指的是去除换行空格之类的压缩，文件内容不变。
+
+##### 使用 Gzip 压缩文本
+
+浏览器和服务器之间会使用 [主动协商机制](https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation) 。浏览器发送 [Accept-Encoding](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Accept-Encoding) 首部，其中包含有它所支持的压缩算法，以及各自的优先级，服务器则从中选择一种，使用该算法对响应的消息主体进行压缩，并且发送 [Content-Encoding](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Content-Encoding) 首部来告知浏览器它选择使用哪种算法。由于该内容协商过程是基于编码类型来选择资源的展现形式的，在响应中，[Vary](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Vary) 首部至少要包含 [Accept-Encoding](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Accept-Encoding) 。这样的话，缓存服务器就可以对资源的不同展现形式进行缓存。
+
+下面是一个请求响应的 HTTP 报文示例：
+
+```http
+GET /encrpted-area HTTP/1.1
+Host: www.example.com
+Accept-Encoding: gzip, deflate, br
+```
+
+```http
+HTTP/1.1 200 OK
+date: Mon, 11 Apr 2022 13:15:52 GMT
+Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)
+Last-modified: Tue, 01 Mar 2022 13:14:29 GMT
+Accept-Ranges: bytes
+Content-Length: 438
+Connection: close
+Connect-Type: text/html; charset=UTF-8
+Content-Encoding: gzip
+```
+
+express，gzip 压缩
+
+```js
+const compression = require('compression');
+
+app.use(compression());
+app.use(express.static('build'));
+```
+
+对于客户端来说，有没有 Accept-Encoding 都可以，建议主动携带该字段。服务端返回 Content-Encoding 字段。
+
+可以选中 chrome 浏览器的 `Response Headers - Content-Encoding`  查看当前的压缩方式。
+
+**图片和视频不建议使用 gzip 压缩，gzip 是在传输过程中动态压缩，动态压缩是比较耗时的操作**
+
+#### HTTP 请求数据压缩
+
+##### 头部数据压缩
+
+HTTP 协议不带有状态，每次请求都必须附上所有信息。所以，请求的很多字段都是重复的，比如 Cookie 和 User Agent，一模一样的内容，每次请求都必须附带，这回浪费很多带宽，影响速度。
+
+HTTP/2 对这一点做了优化，引入了头信息压缩机制（header compression）。一方面，头信息使用 gzip 或 compress 压缩后再发送；另一方面，客户端和服务器同时维护一张头信息表，所有字段都会存入这个表，生成一个索引号，以后就不发送同样字段了，只发送索引号，这样就可以提高速度。
+
+##### 请求体压缩
+
+前面我们介绍了 HTTP 协议中的 `Accept-Encoding/Content-Encoding` 机制。这套机制可以很好地用于文本响应正文的压缩，可以大幅减少网络传输，从而被广泛使用。HTTP 请求的发起方（浏览器），事先并不知道服务端是否支持解压，所以现阶段的浏览器没有压缩请求正文。
+
+有一些通讯协议基于 HTTP 做了扩展，它们的客户端和服务端是专用的，可以放心大胆地压缩请求正文。例如 `WebDAV` 客户端就是这样。
+
+实际的 Web 项目中，会存在请求正文非常大的场景，例如发表长篇博客，上报用于调试的网络数据等。这些数据如果能在本地压缩后再提交，就可以节省网络流浪、减少传输时间。下面将介绍如何对 HTTP 请求正文进行压缩，包含如何在服务端解压、如何在客户端压缩。
+
+先来介绍本文涉及到的三种数据压缩格式：
+
+* DEFLATE，是一种使用 Lempel-Ziv 压缩算法（LZ77）和哈夫曼编码的压缩格式；
+* ZLIB，是一种使用 DEFLATE 的压缩格式，对应 HTTP 中的 Content-Encoding: deflate;
+* GZIP，是一种使用 DEFLATE 的压缩格式，对应 HTTP 中的 Content-Encoding: gzip。
+
+Content-Encoding 中的 deflate，实际上是 ZLIB。为了清晰，本文将 DEFLATE 称之为 RAW DEFLATE，ZLIB 和 GZIP 都是 RAW DEFLATE 的不同 Wrapper。
+
+**压缩请求正文数据**
+
+```js
+```
+
+**Node 解压请求正文中的数据**
+
+```js
+```
+
+
+
+	### 缓存的重要性
+
+
+
+
+
