@@ -652,6 +652,63 @@ HTTP/2 允许服务器未经请求，主动向客户端发送资源，即服务�
 
 ### 避免重定向
 
+> https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Redirections
+
+URL  重定向，也成为 URL 转发，是一种当实际资源，如单个表单、表单或者整个 Web 应用被迁移到新的 URL 下的时候，保持（原有）链接可用的技术。HTTP 协议提供了一种特殊形式的响应 - HTTP 重定向（HTTP redirects）来执行此类操作。
+
+重定向可以实现许多目标：
+
+* 站点维护或停机期间的临时重定向；
+* 永久重定向将在更改站点的 URL，上传文件时的进度页等之后保留现有的链接/书签；
+* 上传文件时的表示进度的页面。
+
+####  原理
+
+在 HTTP 协议中，重定向操作由服务器通过发送特殊的响应（redirects）而触发。HTTP 协议的重定向的状态码为 3xx。
+
+浏览器在接收到重定向响应的时候，会采用该响应提供的新的 URL，并立即进行加载；大多数情况下，除了一小部分性能损失外，重定向操作对于用户是不可见的。
+
+
+<img src="./images/HTTPRedirect.png" />
+
+不同类型的重定向映射可以划分为三类：
+
+* 永久重定向
+* 临时重定向
+* 特殊重定向
+
+#### 永久重定向
+
+这种重定向操作是永久性的。它表示原 URL 不应被应用，应该优先选用新的 URL。搜索引擎会在遇到该状态码时触发更新操作，在其索引库中修改与该资源相关的 URL。
+
+| 编码 | 含义               | 处理方法                                                     | 应用场景                                                   |
+| ---- | ------------------ | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| 301  | Moved Permanently  | [`GET`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/GET) 方法不会发生变更，其他方法有可能会变更为 [`GET`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/GET) 方法。[[1\]](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Redirections#attr1) | 网站重构                                                   |
+| 308  | Permanent Redirect | 方法和消息主体都不发生变化。                                 | 网站重构，用于非 GET 方法（with non-GET links/operations） |
+
+#### 临时重定向
+
+有时候请求的资源无法从其标准地址访问，但是却可以从另外的地址访问。这种情况下可以使用使用重定向。
+
+搜索引擎不会记录新的、临时的链接。在创建、更新或者删除资源的时候，临时重定向也可以用于显示临时性的进度页面。
+
+| 编码 | 含义               | 处理方法                                                     | 典型应用场景                                                 |
+| ---- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 302  | Found              | [`GET`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/GET) 方法不会发生变更，其他方法有可能会变更为 [`GET`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/GET) 方法。[[2\]](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Redirections#attr2) | 由于不可预见的原因该页面暂不可用。在这种情况下，搜索引擎不会更新它们的链接。 |
+| 303  | See Other          | [`GET`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/GET) 方法不会发生变更，其他方法会**变更**为 GET 方法（消息主体会丢失）。 | 用于[`PUT`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/PUT) 或 [`POST`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Methods/POST) 请求完成之后进行页面跳转来防止由于页面刷新导致的操作的重复触发。 |
+| 307  | Temporary Redirect | 方法和消息主体都不发生变化。                                 | 由于不可预见的原因该页面暂不可用。在这种情况下，搜索引擎不会更新它们的链接。当站点支持非 GET 方法的链接或操作的时候，该状态码优于 302 状态码。 |
+
+[2] 该规范无意使方法发生改变，但在实际应用中用户代理会这么做。 307 状态码被创建用来消除在使用非 GET 方法时的歧义行为。
+
+#### 特殊重定向
+
+除了上述两种常见的重定向之外，还有两种特殊的重定向。[`304`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/304) （Not Modified，资源未被修改）会使页面跳转到本地陈旧的缓存版本当中（该缓存已过期(?)），而 [`300`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Status/300) （Multiple Choice，多项选择） 则是一种手工重定向：以 Web 页面形式呈现在浏览器中的消息主体包含了一个可能的重定向链接的列表，用户可以从中进行选择。
+
+| 编码 | 含义            | 应用场景                                                     |
+| ---- | --------------- | ------------------------------------------------------------ |
+| 300  | Multiple Choice | 不常用：所有的选项在消息主体的 HTML 页面中列出。鼓励在 [`Link`](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Link) 头部加入机器可读的 `rel=alternate` |
+| 304  | Not Modified    | 发送用于重新验证的条件请求。表示缓存的响应仍然是新鲜的并且可以使用。 |
+
 
 
 ### 压缩传输的数据资源
@@ -730,18 +787,180 @@ Content-Encoding 中的 deflate，实际上是 ZLIB。为了清晰，本文将 D
 **压缩请求正文数据**
 
 ```js
+var rawBody = 'content=test';
+var rawLen = rawBody.length;
+
+var bufBody = new Uint8Array(rawLen);
+for(var i = 0; i < rawLen; i++) {
+    bufBody[i] = rawBody.charCodeAt(i);
+}
+
+var format = 'gzip'; // gzip | deflate | deflate-raw
+var buf;
+
+switch(format) {
+    case 'gzip':
+        buf = window.pako.gzip(bufBody);
+        break;
+    case 'deflate':
+        buf = window.pako.deflate(bufBody);
+        break;
+    case 'deflate-raw':
+        buf = window.pako.deflateRaw(bufBody);
+        break;
+}
+
+var xhr = new XMLHttpRequest();
+xhr.open('POST', '/node/');
+
+xhr.setRequestHeader('Content-Encoding', format);
+xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+
+xhr.send(buf);
 ```
 
 **Node 解压请求正文中的数据**
 
 ```js
+var http = require('http');
+var zlib = require('zlib');
+
+http.createServer(function (req, res) {
+    var zlibStream;
+    var encoding = req.headers['content-encoding'];
+
+    switch(encoding) {
+        case 'gzip':
+            zlibStream = zlib.createGunzip();
+            break;
+        case 'deflate':
+            zlibStream = zlib.createInflate();
+            break;
+        case 'deflate-raw':
+            zlibStream = zlib.createInflateRaw();
+            break;
+    }
+
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    req.pipe(zlibStream).pipe(res);
+}).listen(8361, '127.0.0.1');
 ```
 
+实际使用还需要匹配具体的服务器，比如 Nginx，Apache 等。
 
+#### 参考链接
+
+* [https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Compression](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Compression)
 
 	### 缓存的重要性
 
+在任何一个前端项目中，访问服务器获取数据都是很常见的事情，但是如果相同的数据被重复请求了不止一次，那么多余的请求次数必然会浪费网络带宽，以及延迟浏览器渲染所要处理的内容，从而影响用户的使用体验。如果用户使用的是按量计费的方式访问网络，那么多余的请求还会隐性地增加用户的网络流量资费。因此考虑使用缓存技术对已获取的资源进行重用，是一种提升网站性能与用户体验的有效策略。
 
+缓存的原理是在首次请求后保存一份请求资源的响应副本，当用户再次发起相同请求后，如果判断缓存命中则拦截请求，将之前存储的响应副本返回给用户，从而避免重新向服务器发起资源请求。
 
+缓存的种类有很多，比如代理缓存、浏览器缓存、网关缓存、负载均衡及内容分发网络等。它们大致可以分为两类：共享缓存和私有缓存。共享缓存指的是缓存内容可被多个用户使用，比如公司内部架设的 Web 代理。私有缓存指的是只能单独被用户使用的缓存，比如浏览器缓存。
 
+HTTP 缓存应该算是前端开发中最常接触的缓存机制之一，它又可以细分为强制缓存与协商缓存，二者最大的区别在于判断缓存命中时，浏览器是否需要向服务端进行询问以协商缓存的相关信息，进而判断是否需要就响应内容进行重新请求。
+
+### HTTP 缓存
+
+#### 强制缓存
+
+对于强制缓存而言，如果浏览器判断所请求的目标资源有效命中，就可以直接从强制缓存中返回请求响应，无须与服务器进行任何通信。
+
+介绍缓存命中判断之前，先来看下一段响应头的部分信息：
+
+```http
+access-control-allow-origin: *
+age: 734978
+content-length: 40830
+content-type: image/jpeg
+cache-control: max-age=31536000
+expires: Web, 14 Fed 2021 12:23:42 GMT
+```
+
+其中与强制缓存相关的两个字段时 `expires` 和 `cache-control`，`expires` 是在 HTTP 1.0 协议中声明的用来控制缓存失效日期时间戳的字段，它由服务端指定后通过响应头告知浏览器，浏览器在接收到带有该字段的响应体后进行缓存。
+
+如之后浏览器再次发起相同的资源请求，便会对比 `expires` 与本地当前的时间戳，如果当前请求的本地时间戳小于 `expires` 的值，则说明浏览器缓存的响应还未过期，可以直接使用而无须向服务端再次发起请求。只有当本地时间大于 `expires` 值发生缓存过期时，才允许重新向服务器发起请求。
+
+> 缓存一般针对的都是静态资源。
+
+我们通过一个读取图片的案例来看下强制缓存。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Http Cache</title>
+</head>
+<body>
+  
+  <h1>HTTP 缓存</h1>
+
+  <h2>强制缓存</h2>
+
+  <img src="./images/01.jpg" alt="01.jpg" width="100" />
+
+</body>
+</html>
+```
+
+```js
+const http = require('http');
+const fs = require('fs');
+const url = require('url');
+
+http.createServer((req, res) => {
+  const { pathname } = url.parse(req.url);
+
+  if (pathname === '/') {
+    const data = fs.readFileSync('./index.html');
+    res.end(data);
+    return;
+  }
+
+  if (pathname === '/images/01.jpg') {
+    const data = fs.readFileSync('./images/01.jpg');
+    res.end(data);
+  }
+  
+  res.statusCode = 404; 
+  res.end();
+}).listen(3000, () => {
+  console.log('listening 3000');
+});
+```
+
+上面的案例没有使用缓存，页面刷新时会重复请求图片。接下来我们给图片添加缓存。
+
+```js
+if (pathname === '/images/01.jpg') {
+  const data = fs.readFileSync('./images/01.jpg');
+  res.writeHead(200, {
+    Expires: new Date(Date.now() + 1000 * 60).toUTCString()
+  })
+  res.end(data);
+}
+```
+
+我们给 `01.jpg` 添加了 1分钟的缓存，现在我们访问图片，会看到图片已经被缓存。
+
+```http
+请求网址: http://localhost:3000/images/01.jpg
+请求方法: GET
+状态代码: 200 OK （来自内存缓存）
+远程地址: [::1]:3000
+引荐来源网址政策: strict-origin-when-cross-origin
+
+Connection: keep-alive
+Date: Tue, 12 Apr 2022 00:02:36 GMT
+Expires: Tue, 12 Apr 2022 00:03:36 GMT
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+```
+
+> 对于比较频繁的请求缓存会放到内存中（内存缓存），反之会放到磁盘中。
 
