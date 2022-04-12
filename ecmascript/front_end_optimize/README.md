@@ -866,6 +866,8 @@ HTTP 缓存应该算是前端开发中最常接触的缓存机制之一，它又
 
 #### 强制缓存
 
+##### 基础使用
+
 对于强制缓存而言，如果浏览器判断所请求的目标资源有效命中，就可以直接从强制缓存中返回请求响应，无须与服务器进行任何通信。
 
 介绍缓存命中判断之前，先来看下一段响应头的部分信息：
@@ -963,4 +965,257 @@ Transfer-Encoding: chunked
 ```
 
 > 对于比较频繁的请求缓存会放到内存中（内存缓存），反之会放到磁盘中。
+
+从上述强制缓存判断是否过期的机制不难看出，这个方式存在一个很大的漏洞，即对本地时间戳过分依赖，如果客户端本地的时间与服务器端的时间不同步，或者客户端主动修改时间，那么对于缓存过期的判断可能就和预期不符。
+
+为了解决 `Expires` 判断的局限性，从 HTTP 1.1 协议开始新增 `cache-control` 字段对 `expires` 的功能进行扩展和完善。`cache-control` 字段可以设置 `maxage` 属性来控制响应资源的有效期，它是一个以秒为单位的时间长度，表示该资源在请求到 n 秒内有效，如果便可避免服务器端和客户端时间戳不同步导致缓存失效的问题。除此之外，`cache-control` 还可以配置一些其他属性来精确地控制缓存。
+
+> cache-control 设置的是滑动时间，以当前时间为基准，向后滑动 n 秒。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Http Cache</title>
+</head>
+<body>
+  
+  <h1>HTTP 缓存</h1>
+
+  <h2>强制缓存</h2>
+
+  <img src="./images/01.jpg" alt="01.jpg" width="100" />
+  <img src="./images/02.jpg" alt="02.jpg" width="100" />
+
+</body>
+</html>
+```
+
+```js
+if (pathname === '/images/02.jpg') {
+  const data = fs.readFileSync('./images/02.jpg');
+  res.writeHead(200, {
+    'Cache-Control': 'max-age=60'
+  })
+  res.end(data);
+  return;
+}
+```
+
+```http
+Cache-Control: max-age=60
+Connection: keep-alive
+Date: Tue, 12 Apr 2022 12:37:37 GMT
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+```
+
+##### no-cache、no-store
+
+设置 `no-cache` 并非像字面上的意思是不使用缓存，它的意思是强制进行协商缓存，即对于每次发起的请求都不会再去判断强制缓存是否过期，而是直接与服务器协商来验证缓存的有效性，若缓存未过期，则使用本地缓存。
+设置 `no-store` 则表示禁止使用任何缓存策略，客户端的每次请求都需要服务器给予全新的响应。
+`no-cache`  和 `no-store` 是两个互斥的属性值，不能同时设置。
+
+设置如下响应头可以关闭缓存。
+
+```http
+Cache-Control: no-store
+```
+
+指定 `no-cache` 或 `max-age=0` 表示客户端可以缓存资源，但是每次使用缓存资源前都必须重新验证其有效性。这意味着每次都会发起 HTTP 请求，但当缓存内容仍有效时可以跳过 HTTP 响应体的下载。
+
+```http
+Cache-Control: max-age=0
+
+Cache-COntrol: no-store
+```
+
+##### private 、public
+
+`private` 和 `public` 也是 `cache-control` 的一组互斥属性值，它们用以明确响应资源是否可被代理服务器进行缓存。
+
+* 若资源响应头中的 `cache-control` 字段设置了 `public` 属性值，则表示响应资源既可以被浏览器缓存，又可以被代理服务器缓存；
+* `private` 则限制响应资源只能被浏览器缓存，若未显示指定，默认值未 `private`。
+
+对于应用程序不会改变的文件，你可以在发送响应头前添加积极缓存（代理，公共缓存）。这包括例如由应用程序提供的静态文件，例如图像，CSS 文件和 JavaScript 文件。
+
+```js
+Cache-Control: public, max-age=31536000
+```
+
+##### max-age 、s-maxage
+
+`max-age` 属性值会比 `s-maxage` 更常用，它表示服务器端告知客户端浏览器响应资源的过期时长。在一般项目的使用场景中基本够用，对于大型架构的项目通常会涉及使用各种代理服务器的情况，这就需要考虑缓存在代理服务器上的有效性问题。这便是 `s-maxage` 存在的意义，它表示缓存在代理服务器中的过期时长，且仅当设置 `public` 属性值时才有效。
+
+由此可见 `cache-control` 能作为 `expires` 的完全替代方案，并且拥有其所不具备的一些缓存控制特性。在项目中使用它就足够了，目前 `expires` 还存在的唯一理由是考虑可用性方面的向下兼容。
+
+#### 协商缓存
+
+##### last-modified
+
+协商缓存就是使用本地缓存之前，需要向服务器发起一次 GET 请求，与服务器协商当前浏览器本地缓存是否已经过期。
+
+通常采用请求资源的最后一次的修改时间戳来判断，为了便于理解，下面来看一个例子。
+
+```html
+<h2>协商缓存</h2>
+
+<img src="./images/03.jpg" alt="03.jpg" width="100" />
+<img src="./images/04.jpg" alt="04.jpg" width="100" />
+```
+
+```js
+if (pathname === '/images/03.jpg') {
+  const data = fs.readFileSync('./images/03.jpg');
+  const { mtime } = fs.statSync('./images/03.jpg'); // 文件修改时间
+  res.setHeader('last-modified', mtime.toUTCString())
+  res.end(data);
+  return;
+}
+```
+
+如果只设置 `last-modified` 字段，图片只会请求一次，后续就不会再请求了。我们还需要设置 `Cache-Control` 字段。
+
+```js
+// 协商缓存
+if (pathname === '/images/03.jpg') {
+  const data = fs.readFileSync('./images/03.jpg');
+  const { mtime } = fs.statSync('./images/03.jpg'); // 文件修改时间
+  res.setHeader('last-modified', mtime.toUTCString());
+  res.setHeader('Cache-Control', 'no-cache');
+  res.end(data);
+  return;
+}
+```
+
+首次响应头
+
+```http
+Connection: keep-alive
+Content-Length: 74030
+Date: Tue, 12 Apr 2022 14:19:52 GMT
+Keep-Alive: timeout=5
+last-modified: Thu, 06 May 2021 15:49:24 GMT
+```
+
+第二次请求，会携带 `If-Modified-Since` 字段。
+
+```http
+If-Modified-Since: Thu, 06 May 2021 15:49:24 GMT
+```
+
+我们需要对此参数进行处理。如果 `ifModifiedSince` 等于文件修改时间，不需要读取资源，直接返回 304 状态码。
+
+```js
+if (pathname === '/images/03.jpg') {
+  const { mtime } = fs.statSync('./images/03.jpg'); // 文件修改时间
+  const ifModifiedSince = req.headers['if-modified-since'];
+
+  // 如果存在 ifModifiedSince 存在，并且 ifModifiedSince 等于 mtime，说明缓存生效
+  if (ifModifiedSince && ifModifiedSince === mtime.toUTCString()) {
+    res.statusCode = 304;
+    res.end();
+    return;
+  }
+
+  const data = fs.readFileSync('./images/03.jpg');
+
+  res.setHeader('last-modified', mtime.toUTCString());
+  res.setHeader('Cache-Control', 'no-cache');
+  res.end(data);
+  return;
+}
+```
+
+```http
+请求网址: http://localhost:3000/images/03.jpg
+请求方法: GET
+状态代码: 304 Not Modified
+远程地址: [::1]:3000
+```
+
+通过 `last-modified` 所实现的协商缓存能够满足大部分的使用场景，但也存在两个比较明显的缺陷。
+
+* 首先它只是根据资源最后的修改时间戳进行判断。当请求的文件资源被编辑，但内容并没有发生变化时，时间戳也会更新，从而导致协商缓存时关于有效性的判断校验为失效，需要重新进行完整的资源请求。这会造成网络带宽资源的浪费，会增加用户获取到目标资源的时间；
+* 其次标识文件资源修改的时间戳单位是秒，如果文件修改的速度非常快，假设在几百毫秒内完成，那么上述时间戳的方式来验证缓存的有效性，无法识别处文件资源已经更新。
+
+造成上述两种缺陷的原因相同，就是服务器无法仅依据资源修改的时间来识别真正的更新，进行导致重新对客户端进行响应。
+
+##### E-tag
+
+为了弥补通过时间戳判断的不足，从 HTTP 1.1 规范开始新增了一个 `ETag` 的头信息，即实体标签（Entity Tag）。
+
+其内容主要是服务器为不同资源进行哈希运算生成的一个字符串，该字符串类似于文件指纹，只要文件内容编码存在差异，对应的 `ETag` 标签值就会不同，因此可以使用 `ETag` 对文件资源进行更精准的变化感知。
+
+```js
+npm init -y
+
+yarn add etag
+```
+
+```js
+const etag = require('etag');
+
+if (pathname === '/images/04.jpg') {
+  const data = fs.readFileSync('./images/04.jpg');
+  res.setHeader('e-tag', etag(data)); // 根据文件内容生成指纹信息
+  res.setHeader('Cache-Control', 'no-cache');
+  res.end(data);
+  return;
+}
+```
+
+响应头。
+
+```http
+Cache-Control: no-cache
+Connection: keep-alive
+Content-Length: 74356
+Date: Tue, 12 Apr 2022 15:41:15 GMT
+etag: "12274-tEuUYy8halvEHeM+olO/cV8mQ8A"
+Keep-Alive: timeout=5
+```
+
+第二次请求，请求头会携带 `If-None-Match` 字段。
+
+```http
+If-None-Match: "12274-tEuUYy8halvEHeM+olO/cV8mQ8A"
+```
+
+```js
+if (pathname === '/images/04.jpg') {
+  const data = fs.readFileSync('./images/04.jpg');
+  const etagContent = etag(data);
+
+  const ifNoneMatch = req.headers['if-none-match'];
+
+  if (ifNoneMatch && ifNoneMatch === etagContent) {
+    res.statusCode = 304;
+    res.end();
+    return;
+  }
+
+  res.setHeader('etag', etagContent); // 根据文件内容生成指纹信息
+  res.setHeader('Cache-Control', 'no-cache');
+  res.end(data);
+  return;
+}
+```
+
+```js
+请求网址: http://localhost:3000/images/04.jpg
+请求方法: GET
+状态代码: 304 Not Modified
+远程地址: [::1]:3000
+```
+
+`ETag` 并非 `last-modified` 的替代方案而是一种补充方案，因为它依旧存在一些弊端。
+
+* 一方面服务器对于生成文件资源的 `ETag` 需要付出额外的计算开销，如果资源的尺寸较大，数量较多且修改比较频繁，那么生成 `ETag` 的过程就会影响服务器的性能；
+* 另一方面 `ETag` 字段值的生成分为强验证和弱验证，强验证根据资源内容进行生成，能够保证每个字节都相同；弱验证则根据资源的部分属性值来生成，生成速度快但无法确保每个字节都相同，并且在服务器集群场景下，也会因为不够准确而降低协商缓存有效性验证的成功率，所以恰当的方式是根据具体的资源使用场景选择恰当的缓存校验方式。
+
+#### 缓存决策
 
