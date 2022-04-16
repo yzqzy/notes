@@ -1383,7 +1383,259 @@ https://img2.alicdn.com/examp1.jpg
 
 这种方式我们通常称之为现代化的服务端渲染，也叫同构渲染。
 
-### Service Work 缓存
+### Service Worker 缓存
+
+#### 概览
+
+Service Worker 是伴随着 Google 推出的 PWA （即 Progressive Web App 渐进式 Web 应用）一同出现的技术，它能够实现例如消息推送、离线应用即移动端添加到主屏等堪比原生应用的功能，同时还具备小程序 “无需安装、用完即走” 的体验特点。
+
+虽然 Service Worker 已被列入 W3C 标准，但在各端的兼容性并不理想，目前来讲应用比较多的还是基于 Chrome 的 PC 端浏览器上。
+
+Service Worker 是浏览器后台独立于主线程之外的工作线程，正因如此它的处理能力能够脱离浏览器窗体而不影响页面的渲染性能。
+
+##### 技术由来
+
+JavaScript 的执行是单线程的，如果一个任务的执行占用并消耗了许多计算资源，势必会阻塞其他任务执行，这也是单线程的弊端。为此浏览器引入了 Web Worker，它是一个独立于浏览器主线程之外的工作线程，可以将复杂的运算交给他处理，无需担心这是否会对页面渲染产生负面影响。Service Worker 正是在此基础上增加了对离线缓存的管理能力，它的表现弥补了之前在 HTML5 上采用 AppCache 实现离线缓存的诸多缺陷。
+
+Service Worker 定义了由事件驱动的生命周期，这使得页面上任何网络请求事件都可以被其拦截并加以处理，同时还能访问缓存和 `IndexedDB` ，这就可以让开发者制定自由度更高的缓存管理策略，从而提高离线弱网环境下的 Web 运行体验。
+
+##### 基本特征
+
+* 独立于浏览器主线程，无法直接操作 DOM；
+* 开发过程中可以通过 `localhost` 使用，部署到线上需要 HTTPS 支持；
+* 可以监听并拦截全站的网络请求，从而进行自定义请求响应控制；
+* 在不使用的时候会被中止，在需要的时候进行重启。所以我们不能依赖在其 `onmessage` 与 `onfetch` 的事件监听处理程序中的全局状态，如果有此需要可以通过访问 `indexedDB` API 将全局状态进行存储；
+* 使用 Promise 处理异步；
+* 消息推送支持；
+* 后台同步。
+
+#### 生命周期
+
+
+
+<img src="./images/lifecycle.jpg" style="zoom: 80%" />
+
+通常每一个 Service Worker 都会依赖于各自独立的执行脚本，在页面需要使用时通过请求相应的执行脚本进行 Service Worker 注册；当注册流程启动后，便可在执行脚本中监听 `install` 事件来判断安装是否成功，若安装成功则进行有关离线缓存的处理操作。
+
+但此时的安装成功并不意味着 Service Worker 已经能够取得页面的控制权，只有进行激活后，Service Worker 才能监听页面发出的 fetch 和 push 等事件；如果 Service Worker 的执行脚本发生修改需要进行更新，更新的流程也会涉及完整的生命周期。
+
+Service Worker 生命周期涉及五个关键状态，下面我们来依次讨论每个状态中所包含的关键处理操作。
+
+<img src="./images/sw-lifecycle.png" style="zoom: 80%" />
+
+<img src="./images/sw-events.png" />
+
+##### 注册
+
+从 Service Worker 的兼容性来看，仍然存在一些浏览器尚未支持的场景，注册之前，需要判断全局环境中是否支持 Service Worker 所需的 API，在进行相应的注册操作。
+
+```js
+// 仅当浏览器支持 Service Worker 的场景下进行相应的注册
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+}
+```
+
+虽然上述代码可以完成对 Service Worker 的注册，但是该代理位于 JavaScript 脚本的主流程中，它的执行需要请求 `service-worker` 文件，这就意味着用户访问网站时的首屏渲染可能会被阻塞，降低用户体验。
+
+我们可以在页面加载完成后再启动 Service Worker 的注册操作，可以通过监听 `load` 事件来获取页面完成加载的时间点。
+
+```js
+// 仅当浏览器支持 Service Worker 的场景下进行相应的注册
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+  	navigator.serviceWorker.register('/service-worker.js')
+  })
+}
+```
+
+进行性能优化的过程中，经常会遇到这样的情况：引入一项技术带来某方面性能提升的同时，可能造成另一方面性能体验的降低。比如这里的 Service Worker 可以丰富离线体验，提高开发者对于缓存处理的自定义度，但如果不细致考虑资源加载的时机，就很容易造成上述首屏渲染变慢的糟糕体验。
+
+因此在引入任何优化方案时，都需要对优化前后的性能表现进行充分的测试，以避免出现优化方案使得性能指标 A 提升，却导致性能指标 B 下降。
+
+##### 安装
+
+在注册步骤调用 `navigator.serviceWorker.register` 函数的处理过程中，会自动下载参数指定的 Service Worker 执行脚本，然后解析执行。这时就处于 Service Worker 生命周期中的安装状态，如果这个过程中由于某些原因引入了错误，则异步处理的 `Promise` 会拒绝继续执行，生命周期走到 `redundant` 状态，并且可以在 Chrome 开发工具的 Application 选项卡中，查看相应地报错信息。
+
+
+
+<img src="./images/sw-error.png" style="zoom: 60%" />
+
+
+
+如果一切顺利，Service Worker 请求的脚本下载、解析并执行成功，就会触发 `install` 事件进行 Service Worker 的后续处理。这个事件对于每个 Service Worker 来说只会在安装时触发一次，即便执行脚本仅发生了几字节的更新，浏览器也会认为这是一个全新的 Service Worker，并在其重新安装后触发独立的 `install` 事件。
+
+需要注意的是，该事件中 Service Worker 还未获得页面的控制权，此时还不能监听页面上所发出的请求事件，不过此时可以执行一些与页面没有直接操作关系的其他任务，比如缓存一些页面稍后会用到的资源内容。
+
+> install 事件获取不到页面控制权，主要原因是为了确保整个过程中页面仅由同一个 Service Worker 控制，且每次仅运行唯一的一个版本。
+
+```js
+const cacheName = 'v1'
+
+// 监听 SW 安装的 install 事件并进行缓存操作
+this.addEventListener('install', event => {
+  // 设置安装步骤的处理内容
+  
+  // waitUntil 确保 Service Worker 不会在 waitUntil() 里面的代码执行完毕之前安装完成。
+  event.waitUntil(
+    caches.open(cacheName).then(cache => {
+      // 参数是一个由一组相对于 origin 的 URL 组成的数组，这些 URL 就是你想缓存的资源的列表。
+      return cache.addAll([
+        '/dist/index.js',
+        '/dist/css/index.css'
+      ])
+    })
+  )
+})
+```
+
+上述代码中通过 `event.waitUntil()` 方法设置了 Service Worker 安装步骤的处理内容，将两个文件添加缓存，如果指定的文件都下载并添加缓存成功，则表明 Service Worker 安装完成。否则只要有一个文件未完成下载或添加缓存失败，则整个安装步骤失败。因此在指定缓存所依赖的文件列表时，应确保其中所包含的文件都能获取成功，或在获取失败后提供相应的错误处理，来避免因个别文件的缓存失败导致 Service Worker 的安装失败。
+
+##### 激活
+
+若想通过 Service Worker 获得页面的控制权，跳过安装完成后等待期，最简单的方式就是直接刷新浏览器，此时新的 Service Worker 就会被激活。当然也可以通过调用 `self.skipWaiting()`  方法来取代当前旧的 Service Worker，并让新的 Service Worker 进入 `activated` 激活态以获得对页面的控制权。
+
+```js
+self.addEventListener('install', event => {
+  // 让 SW 进入激活态
+  self.skipWaiting()
+})
+```
+
+##### 响应缓存
+
+当 Service Worker 安装成功并进入激活态后，就可以接收页面发出的 `fetch` 事件来进行缓存响应的相关操作。
+
+```js
+// 每次任何被 service worker 控制的资源被请求到时，都会触发 fetch 事件
+this.addEventListener('fetch', event => {
+  event.respondWith((async () => {
+    try {
+      // 获取缓存内容
+      let response = await caches.match(event.request)
+
+      // 缓存无效，发起网络请求获取资源
+      if (!response) {
+        response = await fetch(event.request.clone())
+
+        // 将新获取的资源纳入缓存中
+        const cache = await caches.open(cacheName)
+        cache.put(event.request, response.clone())
+      }
+      return response
+    } catch (err) {
+      return caches.match('/sw-test2/gallery/myLittleVader.jpg')
+    }
+  })())
+})
+```
+
+* 当捕获到一个页面请求后，首先使用 `caches.math()` 方法在本地缓存中进行检索匹配；
+* 如果检索到目标，则返回缓存中存储的资源内容，否则将调用 `fetch()` 方法发起新的网络请求；
+* 当接收到请求响应后，依次判断响应是否生效，如果响应符合预期则将其放入对应请求的缓存中，以方便二次拦截到相同请求能够快速响应。
+
+##### 更新
+
+修改正在执行 Service Worker 的代码时，需要对浏览器当前的 Service Worker 进行更新，更新的步骤与初始化一个新的 Service Worker 一致。
+
+更新时，应当缓存管理放在 `activate` 事件的回调中进行处理，原因是当新的 Service Worker 完成安装并处于等待状态时，此时页面的控制权仍然属于旧的 Service Worker，如果不等到激活完成就对缓存内容进行清除或修改，可能会导致旧的 Service Worker 无法从缓存中提取到资源，影响用户体验。
+
+#### 开发注意事项
+
+Service Worker 生命周期的相关内容，它能够有效地拦截页面请求并判断缓存是否命中，这对用户体验来说是非常不错的，但同时会引起开发过程中的不变，因为开发调试的需要，即使 Service Worker 的执行代码在前后两次完全相同，也希望能够进行重新提取，以及手动跳过安装后的等待期。chrome 开发者工具提供了现成的工具。
+
+
+
+<img src="./images/sw-tools.png" style="zoom: 60%" />
+
+
+
+选择图中 1 号框中的复现框，可使用每次刷新浏览器进行 Service Worker 的更新，无论现有的 Service Worker 执行代码是否发生更新，单击图中 2 号框的按钮，则可让一个处在等待状态的 Service Worker 立即进入激活状态。
+
+除此之外，Service Worker 的涉及开发包含了可扩展网站架构思想，它应当给开发者提供对浏览器核心的访问方法，不仅仅是一些简单的高级 API 调用。
+
+```js
+navigator.serviceWorker.register('/sw.js').then(reg => {
+  // 如果 reg.installing 不为 undefined，则说明当前 SW 处理正在安装的状态
+  reg.installing
+
+  // 如果 reg.wating 不为 undefined，则说明当前 SW 处于安装后的等待状态
+  reg.waiting
+
+  // 如果 reg.active 不为 undefined，则说明当前 SW 处于激活状态
+  reg.active
+
+  reg.addEventListener('updatefound', () => {
+    const newWorker = reg.installing
+
+    // 该值为当前 SW 的状态字符串，可取的值包括：installing、installed、activating、activated、redundant，即 SW 的生命周期
+    newWorker.state
+
+    newWorker.addEventListener('statechange', () => {
+      // 生命周期状态改变所触发的事件
+    })
+  })
+})
+
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  // SW 对页面的控制权发生变更时触发的事件，比如一个新的 SW 从等待状态进入激活状态，获得了对当前页面的控制权
+})
+```
+
+#### 高性能加载
+
+为网站应用添加 Service Worker 的能力，就相当于在浏览器后台为该应用增加了一条对资源的处理线程，它独立于主线程，虽然不能直接操作页面 DOM ，但可以进行许多离线计算与缓存管理的工作，这将会带来显著的性能提升。
+
+当浏览器发起对一组静态 HTML 文档资源的请求时，高性能的加载做法应当是：通过 Service Worker 拦截对资源的请求，使用缓存中已有的 HTML 资源进行响应，同时保证缓存中资源及时更新。
+
+
+
+<img src="./images/sw-refresh.jpg" style="zoom: 80%" />
+
+
+
+```js
+self.addEventListener('fetch', event => {
+	if (event.request.mode === 'navigate') {
+  	event.respondWith(async () => {
+    	// 拦截页面请求
+      const normalizedUrl = new URL(event.request.url)
+      normalizedUrl.search = ''
+      
+      // 定义对资源重新请求的方法
+      const fetchResponse = fetch(normalizedUrl)
+      const fetchResponseClone = fetchResponse.then(r => r.clone())
+      
+      // 等到请求的响应到达后，更新缓存中的资源
+      event.waitUntil((async () => {
+      	const cache = await cached.open('cacheName')
+        await cache.put(normalizedUrl, await fetchResponseClone)
+      })())
+      
+      // 如果请求命中缓存，则使用相应缓存，否则重新发起资源请求
+      return (await cached.match(normalizedUrl)) || fetchResponse
+    }())
+  }
+})
+```
+
+这里需要注意的是，尽量避免和降低 Service Worker 对请求的无操作拦截，即 Service Worker 对所拦截的请求不进行任何处理，就直接向网络发起请求，然后在得到响应后在返回给页面。
+
+```js
+self.addEventListener('fetch', event => {
+	event.respondWith(fetch(event.request))
+})
+```
+
+这时很糟糕的处理方式，因为不考虑网络实际延迟的情况下，经过 Service Worker 的拦截转发，会在请求与响应阶段造成不必要的开销。
+
+#### 参考链接
+
+* https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers
+* https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
+* https://github.com/mdn/sw-test
+
+### Push 缓存
 
 
 
