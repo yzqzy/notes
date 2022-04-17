@@ -23,8 +23,13 @@
   },
   "homepage": "https://github.com/yw0525/notes#readme",
   "devDependencies": {
+    "autoprefixer": "^10.4.4",
     "commitizen": "^4.2.4",
-    "cz-conventional-changelog": "^3.3.0"
+    "cz-conventional-changelog": "^3.3.0",
+    "postcss": "^8.4.12",
+    "sass": "^1.50.0",
+    "vite-plugin-windicss": "^1.8.4",
+    "windicss": "^3.5.1"
   },
   "config": {
     "commitizen": {
