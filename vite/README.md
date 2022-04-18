@@ -1,10 +1,8 @@
 # Vite
 
-## Vite 从零搭建前端项目
+## 项目搭建
 
-### 项目搭建
-
-#### 使用 pnpm
+### 使用 pnpm
 
 ```js
 npm i -g pnpm
@@ -14,7 +12,7 @@ npm i -g pnpm
 pnpm config set registry https://registry.npmmirror.com/
 ```
 
-#### 项目初始化
+### 项目初始化
 
 ```js
 pnpm create vite
@@ -31,7 +29,7 @@ pnpm install
 pnpm run dev
 ```
 
-#### 目录结构
+### 目录结构
 
 项目目录结构如下:
 
@@ -136,7 +134,7 @@ import App from "/src/App.tsx";
 
 现在，你应该知道了 Vite 所倡导的`no-bundle`理念的真正含义:  **利用浏览器原生 ES 模块的支持，实现开发阶段的 Dev Server，进行模块的按需加载**，而不是**先整体打包再进行加载**。相比 Webpack 这种必须打包再加载的传统构建模式，Vite 在开发阶段省略了繁琐且耗时的打包过程，这也是它为什么快的一个重要原因。
 
-#### 配置文件
+### 配置文件
 
 在使用 Vite 的过程，我们需要对 Vite 做一些配置，以满足日常开发的需要。你可以通过两种方式来对 Vite 进行配置，一是通过命令行参数，如`vite --port=8888`，二是通过配置文件，一般情况下，大多数的配置都通过配置文件的方式来声明。
 
@@ -176,7 +174,7 @@ export default defineConfig({
 
 当手动指定`root`参数之后，Vite 会自动从这个路径下寻找`index.html`文件，也就是说当我直接访问 `localhost:3000`的时候，Vite 从`src`目录下读取入口文件，这样就成功实现了刚才的需求。
 
-#### 生产环境构建
+### 生产环境构建
 
 有人说`Vite`因为其不打包的特性而不能上生产环境，其实这种观点是相当有误的。
 
@@ -239,7 +237,7 @@ PS D:\workspace\notes\vite\vite-project> pnpm run preview
 
 在浏览器中打开`http://localhost:5000`地址，你将看到和开发阶段一样的页面内容，证明我们成功完成第一个 Vite 项目的生产环境构建。
 
-#### 总结
+### 总结
 
 本节中我们一起搭建了基本的前端开发环境，安装常用的编辑器、浏览器、Node.js 环境及包管理器 pnpm，接着我和你使用 Vite 的初始化命令创建一个 React 项目并成功启动，让你真切地体验到 Vite 的快速和轻量。
 
@@ -247,9 +245,9 @@ PS D:\workspace\notes\vite\vite-project> pnpm run preview
 
 不仅如此，我还带你一起初步接触了 Vite 的配置文件，并尝试进行生产环境的打包，为下一节的学习作下了铺垫。
 
-### CSS 工程化方案
+## CSS 工程化方案
 
-#### 样式方案的意义
+### 样式方案的意义
 
 对初学者来说，谈到开发前端的样式，首先想到的便是直接写原生 CSS。
 但时间一长，难免会发现原生 CSS 开发的各种问题。那么，如果我们不用任何 CSS 工程方案，又会出现哪些问题呢？
@@ -297,7 +295,7 @@ PS D:\workspace\notes\vite\vite-project> pnpm run preview
 
 不过，各种方案没有孰优孰劣，各自解决的方案有重叠的部分，但也有一定的差异，大家可以根据自己项目的痛点来引入。
 
-#### CSS 预处理器
+### CSS 预处理器
 
 Vite 本身对 CSS 各种预处理器语言(`Sass/Scss`、`Less`和`Stylus`)做了内置支持。也就是说，即使你不经过任何的配置也可以直接使用各种 CSS 预处理器。我们以 `Sass/Scss` 为例，来具体感受一下 Vite 的 `零配置` 给我们带来的便利。
 
@@ -406,7 +404,7 @@ export default defineConfig({
 - [Less](https://link.juejin.cn/?target=https%3A%2F%2Flesscss.org%2Fusage%2F%23less-options)
 - [Stylus](https://link.juejin.cn/?target=https%3A%2F%2Fstylus-lang.com%2Fdocs%2Fjs.html)
 
-#### CSS Modules
+### CSS Modules
 
 CSS Modules 在 Vite 也是一个开箱即用的能力，Vite 会对后缀带有`.module`的样式文件自动应用 CSS Modules。接下来我们通过一个简单的例子来使用这个功能。
 
@@ -471,7 +469,7 @@ export default defineConfig({
 
 这是一个 CSS Modules 中很常见的配置，对开发时的调试非常有用。其它的一些配置项不太常用，大家可以去这个 [地址](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fmadyankin%2Fpostcss-modules) 进行查阅。
 
-#### PostCSS
+### PostCSS
 
 一般你可以通过  `postcss.config.js` 来配置 postcss ，不过在 Vite 配置文件中已经提供了 PostCSS 的配置入口，我们可以直接在 Vite 配置文件中进行操作。
 
@@ -539,7 +537,7 @@ export default defineConfig({
 
 关于 PostCSS 插件，这里还给大家推荐一个站点：[www.postcss.parts/](https://link.juejin.cn/?target=https%3A%2F%2Fwww.postcss.parts%2F) ，你可以去里面探索更多的内容。
 
-#### CSS In JS
+### CSS In JS
 
 社区中有两款主流的 `CSS In JS`  方案:  `styled-components` 和 `emotion`。
 
@@ -575,11 +573,11 @@ export default defineConfig({
 })
 ```
 
-#### CSS 原子化框架
+### CSS 原子化框架
 
 在目前的社区当中，CSS 原子化框架主要包括 `Tailwind CSS` 和  `Windi CSS`。Windi CSS 作为前者的替换方案，实现了按需生成 CSS 类名的功能，开发环境下的 CSS 产物体积大大减少，速度上比`Tailwind CSS v2`快 20~100 倍！当然，Tailwind CSS 在 v3 版本也引入 [JIT(即时编译)](https://link.juejin.cn/?target=https%3A%2F%2Fv2.tailwindcss.com%2Fdocs%2Fjust-in-time-mode) 的功能，解决了开发环境下 CSS 产物体积庞大的问题。接下来我们将这两个方案分别接入到 Vite 中，在实际的项目中你只需要使用其中一种就可以了。
 
-##### Windi CSS
+#### Windi CSS
 
 首先安装 `windicss` 及对应的 Vite 插件:
 
@@ -705,7 +703,7 @@ export default defineConfig({
 <div className="flex justify-center items-center"></div>
 ```
 
-##### Tailwind CSS
+#### Tailwind CSS
 
 接下来我们来接入 Tailwind CSS 方案，为了避免和之前的 Windi CSS 混淆，建议你新起一个 Vite 项目。
 
@@ -774,10 +772,10 @@ export default App;
 
 当你启动项目之后就可以看到 Tailwind CSS 的样式已经正常生效。
 
-#### 总结
+### 总结
 
 通过本篇文章我们可以掌握前端工程中各种样式方案在 Vite 的接入方法。
 这些样式方案包括，包括 `CSS 预处理器`、`CSS Modules`、`PostCSS`、`CSS In JS` 和 `CSS 原子化框架(Windi CSS)`。
 
-### Lint 工具链
+## Lint 工具链
 
