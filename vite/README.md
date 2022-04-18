@@ -587,3 +587,123 @@ export default defineConfig({
 pnpm i windicss vite-plugin-windicss -D
 ```
 
+随后我们在配置文件中来使用它:
+
+```js
+// ...
+import windi from 'vite-plugin-windicss';
+
+// ...
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  root: path.join(__dirname, 'src'),
+	// ...
+  plugins: [
+    react(),
+    windi()
+  ],
+})
+
+```
+
+接着要注意在 `src/main.tsx` 中引入一个必需的 import 语句:
+
+```jsx
+// 用来注入 Windi CSS 所需要的样式
+import 'virtual:windi.css';
+
+// ...
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+```
+
+这样我们就完成了 Windi CSS 在 Vite 中的接入，接下来我们在 Header 组件中来测试，组件代码修改如下:
+
+> 样式生效的前提是 index.html 必须再 根目录，不能在 src 目录下。
+
+```jsx
+import styles from './index.module.scss';
+import { devDependencies } from '../../../package.json';
+
+export function Header() {
+  return (
+    <div className="p-20px text-center">
+      <p className={ styles.header }>This is Header</p>
+      <h1 className="font-bold text-2xl mb-2">
+        vite version：{ devDependencies.vite }
+      </h1>
+    </div>
+  )
+};
+```
+
+除了本身的原子化 CSS 能力，Windi CSS 还有一些非常好用的高级功能，例如 **attributify** 和 **shortcuts**。
+
+要开启这两个功能，我们需要在项目根目录新建 `windi.config.ts`，配置如下:
+
+```js
+import { defineConfig } from "vite-plugin-windicss";
+
+export default defineConfig({
+  // 开启 attributify
+  attributify: true,
+});
+```
+
+首先我们来看看 `attributify`，翻译过来就是 `属性化`，也就是说我们可以用 props 的方式去定义样式属性，如下所示:
+
+```jsx
+<button 
+  bg="blue-400 hover:blue-500 dark:blue-500 dark:hover:blue-600"
+  text="sm white"
+  font="mono light"
+  p="y-2 x-4"
+  border="2 rounded blue-200"
+>
+  Button
+</button>
+```
+
+这样的开发方式不仅省去了繁琐的 className 内容，还加强了语义化，让代码更易维护，大大提升了开发体验。
+
+不过使用 `attributify` 的时候需要注意类型问题，你需要添加`types/shim.d.ts`来增加类型声明，以防类型报错:
+
+```js
+// src/types/shim.d.ts
+
+import { AttributifyAttributes } from 'windicss/types/jsx';
+
+declare module 'react' {
+  type HTMLAttributes<T> = AttributifyAttributes;
+}
+```
+
+`shortcuts` 用来封装一系列的原子化能力，尤其是一些常见的类名集合，我们在 `windi.config.ts `来配置它:
+
+```js
+import { defineConfig } from "vite-plugin-windicss";
+
+export default defineConfig({
+  // 开启 attributify
+  attributify: true,
+  shortcuts: {
+    "flex-c": "flex justify-center items-center",
+  }
+});
+```
+
+比如这里封装了 `flex-c` 的类名，接下来我们可以在业务代码直接使用这个类名:
+
+```jsx
+<div className="flex-c"></div>
+<!-- 等同于下面这段 -->
+<div className="flex justify-center items-center"></div>
+```
+
+##### Tailwind CSS
+
