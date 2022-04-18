@@ -707,3 +707,77 @@ export default defineConfig({
 
 ##### Tailwind CSS
 
+接下来我们来接入 Tailwind CSS 方案，为了避免和之前的 Windi CSS 混淆，建议你新起一个 Vite 项目。
+
+首先安装 `tailwindcss` 及其必要的依赖 :
+
+```js
+pnpm install -D tailwindcss postcss autoprefixer
+```
+
+然后新建两个配置文件  `tailwind.config.js`  和  `postcss.config.js`:
+
+```js
+// tailwind.config.js
+module.exports = {
+  content: [
+    "./index.html",
+    "./src/**/*.{vue,js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+// postcss.config.js
+// 从中你可以看到，Tailwind CSS 的编译能力是通过 PostCSS 插件实现的
+// 而 Vite 本身内置了 PostCSS，因此可以通过 PostCSS 配置接入 Tailwind CSS 
+// 注意: Vite 配置文件中如果有 PostCSS 配置的情况下会覆盖掉 postcss.config.js 的内容!
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+接着在项目的入口 CSS 中引入必要的样板代码:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+现在，你就可以在项目中安心地使用 Tailwind 样式了，如下所示:
+
+```jsx
+// App.tsx
+
+import logo from "./logo.svg";
+import "./App.css";
+
+function App() {
+  return (
+    <div>
+      <header className="App-header">
+        <img src={logo} className="w-20" alt="logo" />
+        <p className="bg-red-400">Hello Vite + React!</p>
+      </header>
+    </div>
+  );
+}
+
+export default App;
+```
+
+当你启动项目之后就可以看到 Tailwind CSS 的样式已经正常生效。
+
+#### 总结
+
+通过本篇文章我们可以掌握前端工程中各种样式方案在 Vite 的接入方法。
+这些样式方案包括，包括 `CSS 预处理器`、`CSS Modules`、`PostCSS`、`CSS In JS` 和 `CSS 原子化框架(Windi CSS)`。
+
+### Lint 工具链
+
