@@ -1267,3 +1267,62 @@ npx --no -- lint-staged
 
 #### 提交时的 commit 信息规范
 
+除了代码规范检查之后，Git 提交信息的规范也是不容忽视的一个环节，规范的 commit 信息能够方便团队协作和问题定位。
+首先我们来安装一下需要的工具库，执行如下的命令:
+
+```js
+pnpm i commitlint @commitlint/cli @commitlint/config-conventional -D
+```
+
+接下来新建`.commitlintrc.js`：
+
+```js
+// .commitlintrc.js
+module.exports = {
+  extends: ["@commitlint/config-conventional"]
+};
+```
+
+一般我们直接使用`@commitlint/config-conventional`规范集就可以了，它所规定的 commit 信息一般由两个部分:  `type` 和 `subject` 组成，结构如下:
+
+```js
+// type 指提交的类型
+// subject 指提交的摘要信息
+<type>: <subject>
+```
+
+常用的 `type` 值包括如下:
+
+* `feat`: 添加新功能。
+* `fix`: 修复 Bug。
+
+- `chore`: 一些不影响功能的更改。
+- `docs`: 专指文档的修改。
+- `perf`: 性能方面的优化。
+- `refactor`: 代码重构。
+- `test`: 添加一些测试代码等等。
+
+接下来我们将`commitlint`的功能集成到 Husky 的钩子当中，在终端执行如下命令即可:
+
+```js
+npx husky add .husky/commit-msg "npx --no-install commitlint -e $HUSKY_GIT_PARAMS"
+```
+
+你可以发现在`.husky`目录下多出了`commit-msg`脚本文件，表示`commitlint`命令已经成功接入到 husky 的钩子当中。现在我们可以尝试对代码进行提交，假如输入一个错误的 commit 信息，commitlint 会自动抛出错误并退出。
+
+至此，我们便完成了 Git 提交信息的卡点扫描和规范检查。
+
+### 总结
+
+现在你应该了解了前端的**自动化代码规范工具的使用**以及**在 Vite 中的接入方法**。
+
+本篇文章主要介绍了 3 个方面的自动化代码规范工具:
+
+1. JavaScript/TypeScript 规范。主流的 Lint 工具包括 `Eslint`、`Prettier`；
+2. 样式开发规范。主流的 Lint 工具包括`Stylelint`、`Prettier`；
+3. Git 提交规范。主流的 Lint 工具包括`Commitlint`。
+
+我们可以通过编辑器的插件或者 Vite 插件在开发阶段暴露出规范问题，但也无法保证这类问题在开发时完全被解决掉，因此我们尝试在代码提交阶段来解决这个问题，通过 `Husky`+`lint-staged `成功地拦截  `git commit` 过程，只有在各项 Lint 检查通过后才能正常提交代码，这样就有效提高了线上代码和 Git 提交信息的质量。
+
+## 静态资源处理
+
