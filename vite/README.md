@@ -1398,3 +1398,277 @@ import path from 'path';
 
 接下来我们在 App 组件中引入 `vite.png`这张图片:
 
+```jsx
+import {　useEffect　} from 'react';
+import './App.css'
+
+// 1. 方式一：导入图片
+import logo from '@assets/imgs/vite.png';
+
+function App() {
+  // 2. 方式二：动态加载图片
+  useEffect(() => {
+    const img = document.getElementById('logo') as HTMLImageElement;
+    img.src = logo;
+  }, []);
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <img id='logo' alt="logo" />
+      </header>
+    </div>
+  )
+}
+
+export default App
+```
+
+可以发现图片能够正常显示，图片路径也被解析为了正确的格式(`/`表示项目根路径)。
+
+
+
+<img src="./images/img.png" style="zoom: 80%"/>
+
+
+
+
+
+```html
+<img src="/src/assets/imgs/vite.png" alt="logo" class="App-logo">
+
+<img id="logo" alt="logo" src="/src/assets/imgs/vite.png">
+```
+
+现在让我们 App 添加 `background` 属性:
+
+```css
+.App {
+  text-align: center;
+  background: url('@assets/imgs/background.png') no-repeat;
+}
+```
+
+再次回到浏览器，可以看到生效后的背景如下:
+
+
+
+<img src="./images/img02.png" style="zoom: 80%" />
+
+
+
+#### Svg 组件方式加载
+
+刚才我们成功地在 Vite 中实现了图片的加载，上述这些加载的方式对于 svg 格式来说依然是适用的。不过，我们通常也希望能将 svg 当做一个组件来引入，这样我们可以很方便地修改 svg 的各种属性，而且比 img 标签的引入方式更加优雅。
+
+SVG 组件加载在不同的前端框架中的实现不太相同，社区中也已经了有了对应的插件支持:
+
+- Vue2 项目中可以使用 [vite-plugin-vue2-svg](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fpakholeung37%2Fvite-plugin-vue2-svg)插件。
+- Vue3 项目中可以引入 [vite-svg-loader](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fjpkleemans%2Fvite-svg-loader)。
+- React 项目使用 [vite-plugin-svgr](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fpd4d10%2Fvite-plugin-svgr)插件。
+
+现在让我们在 React 脚手架项目中安装对应的依赖:
+
+```js
+pnpm i vite-plugin-svgr -D
+```
+
+然后需要在 vite 配置文件添加这个插件:
+
+```js
+// vite.config.ts
+import svgr from 'vite-plugin-svgr';
+
+{
+  plugins: [
+    // 其它插件省略
+    svgr()
+  ]
+}
+```
+
+随后注意要在 `tsconfig.json` 添加如下配置，否则会有类型错误:
+
+```js
+{
+  "compilerOptions": {
+    // 省略其它配置
+    "types": ["vite-plugin-svgr/client"]
+  }
+}
+```
+
+接下来让我们在项目中使用 svg 组件:
+
+```js
+import { ReactComponent as ReactLogo } from '@assets/icons/logo.svg';
+
+export function Header() {
+  return (
+    // 其他组件内容省略
+    <ReactLogo width={400} height={400} />
+  )
+}
+```
+
+回到浏览器中，你可以看到 svg 已经成功渲染:
+
+
+
+<img src="./images/svg.png" style="zoom: 80%" />
+
+
+
+### JSON 加载
+
+Vite 中已经内置了对于 JSON 文件的解析，底层使用 `@rollup/pluginutils` 的 `dataToEsm` 方法将 JSON 对象转换为一个包含各种具名导出的 ES 模块。
+
+```js
+import { version } from '../../../package.json';
+```
+
+不过你也可以在配置文件禁用按名导入的方式:
+
+```js
+// vite.config.ts
+
+{
+  json: {
+    stringify: true
+  }
+}
+```
+
+这样会将 JSON 的内容解析为 `export default JSON.parse("xxx")`，这样会失去 `按名导出` 的能力，不过在 JSON 数据量比较大的时候，可以优化解析性能。
+
+### WebWorker 脚本
+
+Vite 中使用 Web Worker 也非常简单，我们可以在新建 `workers/example.js` 文件:
+
+```js
+const start = () => {
+  let count = 0;
+  setInterval(() => {
+    // 给主线程传值
+    postMessage(++count);
+  }, 2000);
+};
+
+start();
+```
+
+然后在 App 组件中引入，引入的时候注意加上`?worker`后缀，相当于告诉 Vite 这是一个 Web Worker 脚本文件:
+
+```js
+import Worker from './works/example.js?worker';
+
+// 1. 初始化 Worker 实例
+const worker = new Worker();
+// 2. 主线程监听 worker 的信息
+worker.addEventListener('message', (e) => {
+  console.log(e);
+});
+```
+
+打开浏览器的控制面板，你可以看到 Worker 传给主线程的信息已经成功打印:
+
+
+
+<img src="./images/worker.png" style="zoom: 70%;" />
+
+
+
+说明 Web Worker 脚本已经成功执行，也能与主线程正常通信。
+
+### Web Assembly 文件
+
+Vite 对于 `.wasm` 文件也提供了开箱即用的支持，我们拿一个斐波拉契的 `.wasm` 文件来进行一下实际操作，对应的 JavaScript 原文件如下:
+
+```js
+export function fib(n) {
+  var a = 0,
+    	b = 1;
+  if (n > 0) {
+    while (--n) {
+      let t = a + b;
+      a = b;
+      b = t;
+    }
+    return b;
+  }
+  return a;
+}
+```
+
+我们在组件中导入 `fib.wasm` 文件:
+
+```js
+import init from './fib.wasm';
+
+type FibFunc = (num: number) => number;
+
+init({}).then((exports) => {
+  const fibFunc = exports.fib as FibFunc;
+  console.log('Fib result:', fibFunc(10));
+});
+```
+
+Vite 会对`.wasm`文件的内容进行封装，默认导出为 init 函数，这个函数返回一个 Promise，因此我们可以在其 then 方法中拿到其导出的成员——`fib`方法。
+
+回到浏览器，我们可以查看到计算结果，说明 .wasm 文件已经被成功执行:
+
+```js
+[vite] connecting...
+App.tsx:26 Fib result: 55
+client.ts:53 [vite] connected.
+```
+
+### 其他静态资源
+
+除了上述的一些资源格式，Vite 也对下面几类格式提供了内置的支持:
+
+- 媒体类文件，包括`mp4`、`webm`、`ogg`、`mp3`、`wav`、`flac`和`aac`。
+- 字体类文件。包括`woff`、`woff2`、`eot`、`ttf` 和 `otf`。
+- 文本类。包括`webmanifest`、`pdf`和`txt`。
+
+也就是说，你可以在 Vite 将这些类型的文件当做一个 ES 模块来导入使用。
+如果你的项目中还存在其它格式的静态资源，你可以通过 `assetsInclude` 配置让 Vite 来支持加载:
+
+```js
+// vite.config.ts
+
+{
+  assetsInclude: ['.gltf']
+}
+```
+
+### 特殊资源后缀
+
+Vite 中引入静态资源时，也支持在路径最后加上一些特殊的 query 后缀，包括:
+
+- `?url`: 表示获取资源的路径，这在只想获取文件路径而不是内容的场景将会很有用。
+- `?raw`: 表示获取资源的字符串内容，如果你只想拿到资源的原始内容，可以使用这个后缀。
+- `?inline`: 表示资源强制内联，而不是打包成单独的文件。
+
+### 生产环境处理
+
+在前面的内容中，我们围绕着如何加载静态资源这个问题，在 Vite 中进行具体的编码实践，相信对于 Vite 中各种静态资源的使用你已经比较熟悉了。但另一方面，在生产环境下，我们又面临着一些新的问题。
+
+- 部署域名怎么配置？
+- 资源打包成单文件还是作为 Base64 格式内联?
+- 图片太大了怎么压缩？
+- svg 请求数量太多了怎么优化？
+
+#### 自定义部署域名
+
+一般在我们访问线上的站点时，站点里面一些静态资源的地址都包含了相应域名的前缀，如:
+
+```js
+<img src="https://sanyuan.cos.ap-beijing.myqcloud.com/logo.png" />
+```
+
+以上面这个地址例子，`https://sanyuan.cos.ap-beijing.myqcloud.com`是 CDN 地址前缀，`/logo.png` 则是我们开发阶段使用的路径。那么，我们是不是需要在上线前把图片先上传到 CDN，然后将代码中的地址手动替换成线上地址呢？这样就太麻烦了！
+
+在 Vite 中我们可以有更加自动化的方式来实现地址的替换，只需要在配置文件中指定`base`参数即可:
+
