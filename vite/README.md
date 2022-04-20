@@ -1326,3 +1326,75 @@ npx husky add .husky/commit-msg "npx --no-install commitlint -e $HUSKY_GIT_PARAM
 
 ## 静态资源处理
 
+静态资源处理是前端工程经常遇到的问题，在真实的工程中不仅仅包含了动态执行的代码，也不可避免地要引入各种静态资源，如`图片`、`JSON`、`Worker 文件`、`Web Assembly 文件`等等。
+
+而静态资源本身并不是标准意义上的模块，因此对它们的处理和普通的代码是需要区别对待的。一方面我们需要解决**资源加载**的问题，对 Vite 来说就是如何将静态资源解析并加载为一个 ES 模块的问题；另一方面在**生产环境**下我们还需要考虑静态资源的部署问题、体积问题、网络性能问题，并采取相应的方案来进行优化。
+
+### 图片加载
+
+图片是项目中最常用的静态资源之一，本身包括了非常多的格式，诸如 png、jpeg、webp、avif、gif，当然，也包括经常用作图标的 svg 格式。这一部分我们主要讨论的是如何加载图片，也就是说怎么让图片在页面中**正常显示**。
+
+#### 使用场景
+
+在日常的项目开发过程中，我们一般会遇到三种加载图片的场景:
+
+1. 在 HTML 或者 JSX 中，通过 img 标签来加载图片，如:
+
+```html
+<img src="../../assets/a.png"></img>
+```
+
+1. 在 CSS 中通过 background 属性加载图片，如:
+
+```css
+background: url('../../assets/b.png') norepeat;
+```
+
+1. 在 JavaScript 中，通过脚本的方式动态指定图片的`src`属性，如:
+
+```ts
+document.getElementById('hero-img').src = '../../assets/c.png'
+```
+
+当然，大家一般还会有别名路径的需求，比如地址前缀直接换成`@assets`，这样就不用开发人员手动寻址，降低开发时的心智负担。
+
+#### Vite 中使用
+
+你可以在 Vite 的配置文件中配置一下别名，方便后续的图片引入:
+
+```js
+/ vite.config.ts
+import path from 'path';
+
+{
+  resolve: {
+    // 别名配置
+    alias: {
+      '@assets': path.join(__dirname, 'src/assets')
+    }
+  }
+}
+```
+
+这样 Vite 在遇到`@assets`路径的时候，会自动帮我们定位至根目录下的`src/assets`目录。
+值得注意的是，alias 别名配置不仅在 JavaScript 的 import 语句中生效，在 CSS 代码的 `@import` 和 `url`导入语句中也同样生效。
+
+现在 `src/assets` 目录的内容如下:
+
+```js
+.
+├── icons
+│   ├── favicon.svg
+│   ├── logo-1.svg
+│   ├── logo-2.svg
+│   ├── logo-3.svg
+│   ├── logo-4.svg
+│   ├── logo-5.svg
+│   └── logo-6.svg
+└── imgs
+    ├── background.png
+    └── vite.png
+```
+
+接下来我们在 App 组件中引入 `vite.png`这张图片:
+
