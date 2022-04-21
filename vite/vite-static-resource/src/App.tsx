@@ -1,10 +1,6 @@
 import {　useEffect　} from 'react';
 import './App.css'
 
-// const icons = import.meta.glob('./assets/icon/logo-*.svg');
-const icons = import.meta.globEager('./assets/icon/logo-*.svg');
-const urls = Object.values(icons).map(mod => mod.default);
-
 // 使用 SVG
 import { ReactComponent as ReactLogo } from '@assets/icon/logo-1.svg';
 
@@ -22,6 +18,7 @@ worker.addEventListener('message', (e) => {
 
 
 import init from './fib.wasm';
+import SvgIcon from './components/SvgIcon/index';
 
 type FibFunc = (num: number) => number;
 
@@ -29,6 +26,18 @@ init({}).then((exports) => {
   const fibFunc = exports.fib as FibFunc;
   console.log('Fib result:', fibFunc(10));
 });
+
+// // const icons = import.meta.glob('./assets/icon/logo-*.svg');
+// const icons = import.meta.globEager('./assets/icon/logo-*.svg');
+// const urls = Object.values(icons).map(mod => mod.default);
+
+const icons = import.meta.globEager('./assets/icon/logo-*.svg');
+const urls = Object.values(icons).map(mod => {
+  const fileName = mod.default.split('/').pop();
+  const [svgName] = fileName.split('.');
+  return svgName;
+});
+
 
 function App() {
   // 2. 方式二：动态加载图片
@@ -45,9 +54,14 @@ function App() {
       </header> */}
       {/* <img src={new URL('./logo.png', import.meta.env.VITE_IMG_BASE_URL).href} /> */}
       <ReactLogo width={400} height={400} />
-      {
+      {/* {
         urls.map((item) => (
           <img src={item} key={item} width="50" alt="" />
+        ))
+      } */}
+      {
+        urls.map((item) => (
+          <SvgIcon name={item} key={item} width="50" height="50" />
         ))
       }
     </div>

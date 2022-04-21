@@ -1943,7 +1943,7 @@ import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
   plugins: [
     // 省略其它插件
     createSvgIconsPlugin({
-      iconDirs: [path.join(__dirname, 'src/assets/icons')]
+      iconDirs: [path.join(__dirname, 'src/assets/icon')]
     })
   ]
 }
@@ -1979,6 +1979,19 @@ export default function SvgIcon({
 现在我们回到 App 组件中，稍作修改:
 
 ```js
+// App.tsx
+const icons = import.meta.globEager('./assets/icon/logo-*.svg');
+const iconUrls = Object.values(icons).map((mod) => {
+  // 如 ./assets/icons/logo-1.svg -> logo-1
+  const fileName = mod.default.split('/').pop();
+  const [svgName] = fileName.split('.');
+  return svgName;
+});
+
+// 渲染 svg 组件
+{iconUrls.map((item) => (
+  <SvgIcon name={item} key={item} width="50" height="50" />
+))}
 ```
 
 最后在 `src/main.tsx` 文件中添加一行代码:
@@ -1990,4 +2003,28 @@ import 'virtual:svg-icons-register';
 > virtual 开头的这一段 ID 代表一个虚拟模块，插件内部会通过这个虚拟模块加载成一段脚本，把 svg 插入到 dom 树。
 
 现在回到浏览器的页面中，发现雪碧图已经生成:
+
+<img src="./images/svg03.png" style="zoom: 70%" />
+
+雪碧图包含了所有图标的具体内容，而对于页面每个具体的图标，则通过 `use` 属性来引用雪碧图的对应内容:
+
+```html
+<svg width="50" height="50" aria-hidden="true">
+  <use href="#icon-logo-2" fill="#333">
+</use></svg>
+```
+
+如此一来，我们就能将所有的 svg 内容都内联到 HTML 中，省去了大量 svg 的网络请求。
+
+### 总结
+
+你需要重点掌握在**Vite 如何加载静态资源**和**如何在生产环境中对静态资源进行优化**。
+
+首先是如何加载各种静态资源，如图片、svg(组件形式)、JSON、Web Worker 脚本、Web Asssembly 文件等等格式，并通过一些示例带大家进行实际的操作。
+
+其次，我们会把关注点放到**生产环境**，对 `自定义部署域名`、`是否应该内联`、`图片压缩`、`svg 雪碧图` 等问题进行了详细的探讨和实践，对于如何解决这些问题，相信你也有了自己的答案。
+
+当然，在编码实操的过程当中，我也给你穿插了一些 Vite 其他的知识点，比如如何 `定义环境变量文件`、`如何使用 Glob 导入` 的语法糖。相信你在学习过程中能更加体会到 Vite 给项目开发带来的便利，同时也对 Vite 的掌握更深入了一步。
+
+## 秒级依赖预构建
 

@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import svgr from 'vite-plugin-svgr';
 import viteImagemin from 'vite-plugin-imagemin';
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -39,6 +40,9 @@ export default defineConfig({
           }
         ]
       }
+    }),
+    createSvgIconsPlugin({
+      iconDirs: [path.join(__dirname, 'src/assets/icon')]
     })
   ],
 })
