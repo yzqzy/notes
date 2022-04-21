@@ -1672,3 +1672,322 @@ Vite 中引入静态资源时，也支持在路径最后加上一些特殊的 qu
 
 在 Vite 中我们可以有更加自动化的方式来实现地址的替换，只需要在配置文件中指定`base`参数即可:
 
+```js
+// vite.config.ts
+// 是否为生产环境，在生产环境一般会注入 NODE_ENV 这个环境变量，见下面的环境变量文件配置
+const isProduction = process.env.NODE_ENV === 'production';
+// 填入项目的 CDN 域名地址
+const CDN_URL = 'xxxxxx';
+
+// 具体配置
+{
+  base: isProduction ? CDN_URL: '/'
+}
+
+// .env.development
+NODE_ENV=development
+
+// .env.production
+NODE_ENV=production
+```
+
+注意在项目根目录新增的两个环境变量文件`.env.development`和`.env.production`，顾名思义，即分别在开发环境和生产环境注入一些环境变量，这里为了区分不同环境我们加上了`NODE_ENV`，你也可以根据需要添加别的环境变量。
+
+> 打包的时候 Vite 会自动将这些环境变量替换为相应的字符串。
+
+接着执行 `pnpm run build`，可以发现产物中的静态资源地址已经自动加上了 CDN 地址前缀:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" crossorigin src="https://img.yueluo.club/assets/index.f2f294a4.js"></script>
+    <link rel="stylesheet" href="https://img.yueluo.club/assets/index.65178a92.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+
+```
+
+当然，有时候可能项目中的某些图片需要存放到另外的存储服务，一种直接的方案是将完整地址写死到 src 属性中，如:
+
+```js
+<img src="https://my-image-cdn.com/logo.png">
+```
+
+这样做显然是不太优雅的，我们可以通过定义环境变量的方式来解决这个问题，在项目根目录新增`.env`文件:
+
+```js
+// 开发环境优先级: .env.development > .env
+// 生产环境优先级: .env.production > .env
+// .env 文件
+VITE_IMG_BASE_URL=https://my-image-cdn.com
+```
+
+然后进入 `src/vite-env.d.ts`增加类型声明:
+
+```js
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_APP_TITLE: string;
+  // 自定义的环境变量
+  readonly VITE_IMG_BASE_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+值得注意的是，如果某个环境变量要在 Vite 中通过 `import.meta.env` 访问，那么它必须以`VITE_`开头，如`VITE_IMG_BASE_URL`。接下来我们在组件中来使用这个环境变量:
+
+```html
+<img src={new URL('./logo.png', import.meta.env.VITE_IMG_BASE_URL).href} />
+```
+
+接下来在 `开发环境` 启动项目或者 `生产环境` 打包后可以看到环境变量已经被替换，地址能够正常显示:
+
+```html
+<img src="https://my-image-cdn.com/logo.png">
+```
+
+至此，我们就彻底解决了图片资源生产环境域名替换的问题。
+
+#### 单文件 or 内联
+
+在 Vite 中，所有的静态资源都有两种构建方式，一种是打包成一个单文件，另一种是通过 base64 编码的格式内嵌到代码中。
+
+这两种方案到底应该如何来选择呢？
+
+对于比较小的资源，适合内联到代码中，一方面对`代码体积`的影响很小，另一方面可以减少不必要的网络请求，`优化网络性能`。而对于比较大的资源，就推荐单独打包成一个文件，而不是内联了，否则可能导致上 MB 的 base64 字符串内嵌到代码中，导致代码体积瞬间庞大，页面加载性能直线下降。
+
+Vite 中内置的优化方案是下面这样的:
+
+- 如果静态资源体积 >= 4KB，则提取成单独的文件
+- 如果静态资源体积 < 4KB，则作为 base64 格式的字符串内联
+
+上述的`4 KB`即为提取成单文件的临界值，当然，这个临界值你可以通过 `build.assetsInlineLimit` 自行配置，如下代码所示:
+
+```js
+// vite.config.ts
+{
+  build: {
+    // 8 KB
+    assetsInlineLimit: 8 * 1024
+  }
+}
+```
+
+> svg 格式的文件不受这个临时值的影响，始终会打包成单独的文件，因为它和普通格式的图片不一样，需要动态设置一些属性
+
+#### 图片压缩
+
+图片资源的体积往往是项目产物体积的大头，如果能尽可能精简图片的体积，那么对项目整体打包产物体积的优化将会是非常明显的。在 JavaScript 领域有一个非常知名的图片压缩库 [imagemin](https://link.juejin.cn/?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fimagemin)，作为一个底层的压缩工具，前端的项目中经常基于它来进行图片压缩，比如 Webpack 中大名鼎鼎的`image-webpack-loader`。社区当中也已经有了开箱即用的 Vite 插件—— `vite-plugin-imagemin`，首先让我们来安装它:
+
+```js
+pnpm i vite-plugin-imagemin --ignore-scripts -D 
+
+// 正常不需要使用 --ignore-scripts 参数，该参数会忽略部分依赖安装
+```
+
+随后在 Vite 配置文件中引入:
+
+```js
+//vite.config.ts
+import viteImagemin from 'vite-plugin-imagemin';
+
+{
+  plugins: [
+    // 忽略前面的插件
+    viteImagemin({
+      // 无损压缩配置，无损压缩下图片质量不会变差
+      optipng: {
+        optimizationLevel: 7
+      },
+      // 有损压缩配置，有损压缩下图片质量可能会变差
+      pngquant: {
+        quality: [0.8, 0.9],
+      },
+      // svg 优化
+      svgo: {
+        plugins: [
+          {
+            name: 'removeViewBox'
+          },
+          {
+            name: 'removeEmptyAttrs',
+            active: false
+          }
+        ]
+      }
+    })
+  ]
+}
+```
+
+接下来我们可以尝试执行`pnpm run build`进行打包，Vite 插件会自动帮助我们调用 `imagemin` 进行项目图片的压缩。
+
+
+<img src="./images/imagemin.png" style="zoom: 80%" />
+
+
+
+#### 雪碧图优化
+
+在实际的项目中我们还会经常用到各种各样的 svg 图标，虽然 svg 文件一般体积不大，但 Vite 中对于 svg 文件会始终打包成单文件，大量的图标引入之后会导致网络请求增加，大量的 HTTP 请求会导致网络解析耗时变长，页面加载性能直接受到影响。这个问题怎么解决呢？
+
+> HTTP2 的多路复用设计可以解决大量 HTTP 的请求导致的网络加载性能问题，因此雪碧图技术在 HTTP2 并没有明显的优化效果，这个技术更适合在传统的 HTTP 1.1 场景下使用(比如本地的 Dev Server)。
+
+比如在 Header 中分别引入 5 个 svg 文件:
+
+```js
+import Logo2 from '@assets/icons/logo-2.svg';
+import Logo3 from '@assets/icons/logo-3.svg';
+import Logo4 from '@assets/icons/logo-4.svg';
+import Logo5 from '@assets/icons/logo-5.svg';
+import Logo6 from '@assets/icons/logo-6.svg';
+```
+
+这里顺便说一句，Vite 中提供了 `import.meta.glob` 的语法糖来解决这种**批量导入**的问题，如上述的 import 语句可以写成下面这样:
+
+```js
+const icons = import.meta.glob('./assets/icon/logo-*.svg');
+```
+
+结果如下:
+
+```js
+{
+  ./assets/icon/logo-1.svg: () => import("/src/assets/icon/logo-1.svg?import")
+	./assets/icon/logo-2.svg: () => import("/src/assets/icon/logo-2.svg?import")
+	./assets/icon/logo-3.svg: () => import("/src/assets/icon/logo-3.svg?import")
+	./assets/icon/logo-4.svg: () => import("/src/assets/icon/logo-4.svg?import")
+	./assets/icon/logo-5.svg: () => import("/src/assets/icon/logo-5.svg?import")
+	./assets/icon/logo-6.svg: () => import("/src/assets/icon/logo-6.svg?import")
+}
+```
+
+可以看到对象的 value 都是动态 import，适合按需加载的场景。
+在这里我们只需要同步加载即可，可以使用 `import.meta.globEager`来完成:
+
+```js
+const icons = import.meta.globEager('./assets/icon/logo-*.svg');
+```
+
+`icons ` 的结果打印如下:
+
+```js
+{
+  ./assets/icon/logo-1.svg: Module {Symbol(Symbol.toStringTag): 'Module'}
+  ./assets/icon/logo-2.svg: Module {Symbol(Symbol.toStringTag): 'Module'}
+  ./assets/icon/logo-3.svg: Module {Symbol(Symbol.toStringTag): 'Module'}
+  ./assets/icon/logo-4.svg: Module {Symbol(Symbol.toStringTag): 'Module'}
+  ./assets/icon/logo-5.svg: Module {Symbol(Symbol.toStringTag): 'Module'}
+  ./assets/icon/logo-6.svg: Module {Symbol(Symbol.toStringTag): 'Module'}
+}
+```
+
+接下来我们稍作解析，然后将 svg 应用到组件当中:
+
+```jsx
+import {　useEffect　} from 'react';
+import './App.css'
+
+// const icons = import.meta.glob('./assets/icon/logo-*.svg');
+const icons = import.meta.globEager('./assets/icon/logo-*.svg');
+const urls = Object.values(icons).map(mod => mod.default);
+
+function App() {
+  return (
+    <div className="App">
+      {
+        urls.map((item) => (
+          <img src={item} key={item} width="50" alt="" />
+        ))
+      }
+    </div>
+  )
+}
+
+export default App
+```
+
+回到页面中，我们发现浏览器分别发出了 6 个 svg 的请求:
+
+<img src="./images/svg02.png" style="zoom: 60%" />
+
+
+
+假设页面有 100 个 svg 图标，将会多出 100 个 HTTP 请求，依此类推。我们能不能把这些 svg 合并到一起，从而大幅减少网络请求呢？
+
+答案是可以的。这种合并图标的方案也叫`雪碧图`，我们可以通过`vite-plugin-svg-icons`来实现这个方案，首先安装一下这个插件:
+
+```js
+pnpm i vite-plugin-svg-icons -D
+```
+
+接着在 Vite 配置文件中增加如下内容:
+
+```js
+// vite.config.ts
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
+
+{
+  plugins: [
+    // 省略其它插件
+    createSvgIconsPlugin({
+      iconDirs: [path.join(__dirname, 'src/assets/icons')]
+    })
+  ]
+}
+```
+
+在 `src/components`目录下新建`SvgIcon`组件:
+
+```jsx
+// SvgIcon/index.tsx
+export interface SvgIconProps {
+  name?: string;
+  prefix: string;
+  color: string;
+  [key: string]: string;
+}
+
+export default function SvgIcon({
+  name,
+  prefix = 'icon',
+  color = '#333',
+  ...props
+}: SvgIconProps) {
+  const symbolId = `#${prefix}-${name}`;
+
+  return (
+    <svg {...props} aria-hidden="true">
+      <use href={symbolId} fill={color} />
+    </svg>
+  );
+}
+```
+
+现在我们回到 App 组件中，稍作修改:
+
+```js
+```
+
+最后在 `src/main.tsx` 文件中添加一行代码:
+
+```js
+import 'virtual:svg-icons-register';
+```
+
+> virtual 开头的这一段 ID 代表一个虚拟模块，插件内部会通过这个虚拟模块加载成一段脚本，把 svg 插入到 dom 树。
+
+现在回到浏览器的页面中，发现雪碧图已经生成:
+

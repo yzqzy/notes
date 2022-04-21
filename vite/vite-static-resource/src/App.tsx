@@ -1,6 +1,10 @@
 import {　useEffect　} from 'react';
 import './App.css'
 
+// const icons = import.meta.glob('./assets/icon/logo-*.svg');
+const icons = import.meta.globEager('./assets/icon/logo-*.svg');
+const urls = Object.values(icons).map(mod => mod.default);
+
 // 使用 SVG
 import { ReactComponent as ReactLogo } from '@assets/icon/logo-1.svg';
 
@@ -39,7 +43,13 @@ function App() {
         <img src={logo} className="App-logo" alt="logo" />
         <img id='logo' alt="logo" />
       </header> */}
+      {/* <img src={new URL('./logo.png', import.meta.env.VITE_IMG_BASE_URL).href} /> */}
       <ReactLogo width={400} height={400} />
+      {
+        urls.map((item) => (
+          <img src={item} key={item} width="50" alt="" />
+        ))
+      }
     </div>
   )
 }
