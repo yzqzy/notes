@@ -42,7 +42,7 @@ export default defineConfig({
       }
     }),
     createSvgIconsPlugin({
-      iconDirs: [path.join(__dirname, 'src/assets/icon')]
+      iconDirs: [path.resolve(process.cwd(), 'src/assets/icon')]
     })
   ],
 })

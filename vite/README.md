@@ -1979,6 +1979,8 @@ export default function SvgIcon({
 现在我们回到 App 组件中，稍作修改:
 
 ```js
+// TODO：暂不动态导入，不起作用
+
 // App.tsx
 const icons = import.meta.globEager('./assets/icon/logo-*.svg');
 const iconUrls = Object.values(icons).map((mod) => {
@@ -1994,6 +1996,17 @@ const iconUrls = Object.values(icons).map((mod) => {
 ))}
 ```
 
+```jsx
+// TODO：使用静态导入可以有效合成 Svg 雪碧图
+
+<SvgIcon name='logo-1' width="50" height="50"  />
+<SvgIcon name='logo-2' width="50" height="50"  />
+<SvgIcon name='logo-3' width="50" height="50"  />
+<SvgIcon name='logo-4' width="50" height="50"  />
+<SvgIcon name='logo-5' width="50" height="50"  />
+<SvgIcon name='logo-6' width="50" height="50"  />
+```
+
 最后在 `src/main.tsx` 文件中添加一行代码:
 
 ```js
@@ -2002,7 +2015,7 @@ import 'virtual:svg-icons-register';
 
 > virtual 开头的这一段 ID 代表一个虚拟模块，插件内部会通过这个虚拟模块加载成一段脚本，把 svg 插入到 dom 树。
 
-现在回到浏览器的页面中，发现雪碧图已经生成:
+现在回到浏览器的页面中，发现雪碧图已经生成，观察网络请求，也不会出现请求多个 svg 的情况。
 
 <img src="./images/svg03.png" style="zoom: 70%" />
 

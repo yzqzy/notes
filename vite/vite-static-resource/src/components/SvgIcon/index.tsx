@@ -1,5 +1,5 @@
 export interface SvgIconProps {
-  name?: string | undefined;
+  name: string;
   prefix: string;
   color: string;
   [key: string]: string;
