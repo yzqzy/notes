@@ -25,8 +25,8 @@
   + [网络进阶](https://github.com/yw0525/notes/tree/master/network/plus) 暂停中 😀
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
 * [碎片知识](https://github.com/yw0525/notes/tree/master/fragment) 已完成
-* [Yeoman/Grunt/Gulp/FIS](https://github.com/yw0525/notes/tree/master/engineering) 已完成
 * [ESLint](https://github.com/yw0525/notes/tree/master/eslint) 已完成
+* [Yeoman/Grunt/Gulp/FIS](https://github.com/yw0525/notes/tree/master/engineering) 已完成
 * webpack
   + [webpack基础](https://github.com/yw0525/notes/tree/master/webpack/webpack) 已完成
   + [webpack提升](https://github.com/yw0525/notes/tree/master/webpack/webpack_tencent) 已完成
@@ -34,6 +34,7 @@
   + [自定义loader、plugins](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
   + [webpack源码实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
   + [webpack源码进阶实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write_plus) 已完成
++ [vite](https://github.com/yw0525/notes/tree/master/vite) 更新中... 😁
 * vue
   + ~~[vue基础](https://github.com/yw0525/notes/tree/master/vue/vue_base) 已废弃~~ 😅
   + [vue3自定义渲染器](https://github.com/yw0525/notes/tree/master/vue/vue3_renderer) 已完成
@@ -89,6 +90,7 @@
   + [算法训练营](https://github.com/yw0525/notes/tree/master/alg/training) 已完成
 * 读书笔记
   + [Vue.js设计与实现](https://github.com/yw0525/notes/tree/master/notes/Vue.js设计与实现) 更新中... 😁
+  + [深入浅出Vite](https://github.com/yw0525/notes/tree/master/vite) 更新中... 😁
   + [算法相关](https://www.yuque.com/yyne87/lcqfte) 已完成
   + [网络相关](https://www.yuque.com/yyne87/mw1l9v) 已完成
   + [浏览器相关](https://www.yuque.com/yyne87/wwaov6) 已完成
