@@ -3716,3 +3716,142 @@ watcher.on("event", (e) => {
 
 首先，我们通过一个简单的示例学习了 Rollup 一般的使用方法，用 Rollup 打包出了第一份产物，然后我们针对 Rollup 中常用的配置项进行介绍，包括 `input`、`output`、`external`、`plugins `等核心配置，并以一个实际的打包场景为例带你在 Rollup 中接入插件功能。接着，我给你介绍了 Rollup 更高级的使用姿势——通过 JavaScript API 使用，分别介绍了两个经典的 API:  `rollup.rollup` 和`rollup.watch`，并带你在实战中使用这些 API，完成了更为复杂的打包操作。
 
+## Rollup 插件机制
+
+我们知道，仅仅使用 Rollup 内置的打包能力很难满足项目日益复杂的构建需求。对于一个真实的项目构建场景来说，我们还需要考虑到`模块打包`之外的问题，比如**路径别名(alias)** 、**全局变量注入**和**代码压缩**等等。
+
+可要是把这些场景的处理逻辑与核心的打包逻辑都写到一起，一来打包器本身的代码会变得十分臃肿，二来也会对原有的核心代码产生一定的侵入性，混入很多与核心流程无关的代码，不易于后期的维护。因此 ，Rollup 设计出了一套完整的**插件机制**，将自身的核心逻辑与插件逻辑分离，让你能按需引入插件功能，提高了 Rollup 自身的可扩展性。
+
+Rollup 的打包过程中，会定义一套完整的构建生命周期，从开始打包到产物输出，中途会经历一些**标志性的阶段**，并且在不同阶段会自动执行对应的插件钩子函数(Hook)。对 Rollup 插件来讲，最重要的部分是钩子函数，一方面它定义了插件的执行逻辑，也就是"做什么"；另一方面也声明了插件的作用阶段，即"什么时候做"，这与 Rollup 本身的构建生命周期息息相关。
+
+因此，要真正理解插件的作用范围和阶段，首先需要了解 Rollup 整体的构建过程中到底做了些什么。
+
+### Rollup 整体构建阶段
+
+在执行 `rollup` 命令之后，在 cli 内部的主要逻辑简化如下:
+
+```js
+// Build 阶段
+const bundle = await rollup.rollup(inputOptions);
+
+// Output 阶段
+await Promise.all(outputOptions.map(bundle.write));
+
+// 构建结束
+await bundle.close();
+```
+
+Rollup 内部主要经历了 `Build` 和 `Output` 两大阶段：
+
+<img src="./images/rollup_source.png" />
+
+首先，Build 阶段主要负责创建模块依赖图，初始化各个模块的 AST 以及模块之间的依赖关系。下面我们用一个简单的例子来感受一下:
+
+```js
+// src/index.js
+import { a } from './module-a';
+console.log(a);
+
+// src/module-a.js
+export const a = 1;
+```
+
+然后执行如下的构建脚本:
+
+```js
+const rollup = require('rollup');
+const util = require('util');
+
+async function build() {
+  const bundle = await rollup.rollup({
+    input: ['./src/index.js'],
+  });
+  console.log(util.inspect(bundle));
+}
+
+build();
+```
+
+可以看到这样的 `bundle` 对象信息:
+
+```js
+{
+  cache: {
+    modules: [
+      {
+        ast: 'AST 节点信息，具体内容省略',
+        code: 'export const a = 1;',
+        dependencies: [],
+        id: '/Users/code/rollup-demo/src/data.js',
+        // 其它属性省略
+      },
+      {
+        ast: 'AST 节点信息，具体内容省略',
+        code: "import { a } from './data';\n\nconsole.log(a);",
+        dependencies: [
+          '/Users/code/rollup-demo/src/data.js'
+        ],
+        id: '/Users/code/rollup-demo/src/index.js',
+        // 其它属性省略
+      }
+    ],
+    plugins: {}
+  },
+  closed: false,
+  // 挂载后续阶段会执行的方法
+  close: [AsyncFunction: close],
+  generate: [AsyncFunction: generate],
+  write: [AsyncFunction: write]
+}
+```
+
+从上面的信息中可以看出，目前经过 Build 阶段的 `bundle` 对象其实并没有进行模块的打包，这个对象的作用在于存储各个模块的内容及依赖关系，同时暴露`generate`和`write`方法，以进入到后续的 `Output` 阶段（`write`和`generate`方法唯一的区别在于前者打包完产物会写入磁盘，而后者不会）。
+
+所以，真正进行打包的过程会在 `Output` 阶段进行，即在`bundle`对象的 `generate`或者`write`方法中进行。还是以上面的 demo 为例，我们稍稍改动一下构建逻辑:
+
+```js
+const rollup = require('rollup');
+
+async function build() {
+  const bundle = await rollup.rollup({
+    input: ['./src/index.js'],
+  });
+  const result = await bundle.generate({
+    format: 'es',
+  });
+  console.log('result:', result);
+}
+
+build();
+```
+
+执行后可以得到如下的输出:
+
+```js
+{
+  output: [
+    {
+      exports: [],
+      facadeModuleId: '/Users/code/rollup-demo/src/index.js',
+      isEntry: true,
+      isImplicitEntry: false,
+      type: 'chunk',
+      code: 'const a = 1;\n\nconsole.log(a);\n',
+      dynamicImports: [],
+      fileName: 'index.js',
+      // 其余属性省略
+    }
+  ]
+}
+```
+
+这里可以看到所有的输出信息，生成的 `output` 数组即为打包完成的结果。当然，如果使用 `bundle.write` 会根据配置将最后的产物写入到指定的磁盘目录中。
+
+因此，**对于一次完整的构建过程而言，** **Rollup** **会先进入到 Build 阶段，解析各模块的内容及依赖关系，然后进入 **`Output` **阶段，完成打包及输出的过程**。对于不同的阶段，Rollup 插件会有不同的插件工作流程，接下来我们就来拆解一下 Rollup 插件在 `Build` 和 `Output` 两个阶段的详细工作流程。
+
+### 拆解插件工作流
+
+#### 插件 Hook 类型
+
+在具体讲述 Rollup 插件工作流之前，先给大家介绍一下不同插件 Hook 的类型，这些类型代表了不同插件的执行特点，是我们理解 Rollup 插件工作流的基础，因此有必要跟大家好好拆解一下。
+
