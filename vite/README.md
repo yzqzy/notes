@@ -3932,7 +3932,7 @@ build();
 
 到这里，我们终于梳理完了 Rollup 当中完整的插件工作流程，从一开始在**构建生命周期**中对两大构建阶段的感性认识，到现在**插件工作流**的具体分析，不禁感叹 Rollup 看似简单，实则内部细节繁杂。希望你能对照流程图好好复习几遍，彻底消化这部分的知识点，不仅仅能加深你对 Rollup 插件机制的理解，并且对 Rollup 本身打包原理的掌握也会更上一层楼。
 
-### 常用 Hook 实战
+### 常用 hook 实战
 
 读到这里你可能会说了：上面讲了那么多 Rollup 插件机制的内容，但真正要去写一个插件，感觉还是很困难啊。
 
@@ -3941,6 +3941,10 @@ build();
 其次，**学会模仿**也特别重要。尤其是刚开始什么经验都没有的时候，观察和模仿别人优秀的实现不失为一种高效的学习方法，慢慢地自己也会轻车熟路，成为一个经验丰富的老司机。
 
 实际上开发 Rollup 插件就是在编写一个个 Hook 函数，你可以理解为一个 Rollup 插件基本就是各种 Hook 函数的组合。因此，接下来我会详细介绍一些常用的 Hook，并以一些官方的插件实现为例，从 Hook 的特性、应用场景、入参和返回值的意义及实现代码示例这几个角度带你掌握各种 Hook 实际的使用，如此一来，开发一个完整的插件对你来说想必也不在话下了。
+
+#### 路径解析：resolveId
+
+resolveId 钩子一般用来解析模块路径，为 `Async + First` 类型即`异步优先`的钩子。
 
 这里我们拿官方的 [alias 插件](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Frollup%2Fplugins%2Fblob%2Fmaster%2Fpackages%2Falias%2Fsrc%2Findex.ts) 来说明，这个插件用法演示如下:
 
@@ -3965,9 +3969,7 @@ module.exports = {
 };
 ```
 
-#### 路径解析：resolveId
-
-resolveId 钩子一般用来解析模块路径，为 `Async + First` 类型即`异步优先`的钩子。alias 插件的代码简化后如下:
+插件的代码简化后如下:
 
 ```js
 export default alias(options) {
@@ -4012,4 +4014,172 @@ export default alias(options) {
 - 返回值为 null 时，会默认交给下一个插件的 resolveId 钩子处理。
 - 返回值为 string 时，则停止后续插件的处理。这里为了让替换后的路径能被其他插件处理，特意调用了 this.resolve 来交给其它插件处理，否则将不会进入到其它插件的处理。
 - 返回值为一个对象，也会停止后续插件的处理，不过这个对象就可以包含[更多的信息](https://link.juejin.cn/?target=https%3A%2F%2Frollupjs.org%2Fguide%2Fen%2F%23resolveid)了，包括解析后的路径、是否被 enternal、是否需要 tree-shaking 等等，不过大部分情况下返回一个 string 就够用了。
+
+#### load
+
+load 为`Async + First`类型，即**异步优先**的钩子，和`resolveId`类似。它的作用是通过 resolveId 解析后的路径来加载模块内容。这里，我们以官方的 [image 插件](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Frollup%2Fplugins%2Fblob%2Fmaster%2Fpackages%2Fimage%2Fsrc%2Findex.js) 为例来介绍一下 load 钩子的使用。源码简化后如下所示:
+
+```js
+const mimeTypes = {
+  '.jpg': 'image/jpeg',
+  // 后面图片类型省略
+};
+
+export default function image(opts = {}) {
+  const options = Object.assign({}, defaults, opts);
+  return {
+    name: 'image',
+    load(id) {
+      const mime = mimeTypes[extname(id)];
+      if (!mime) {
+        // 如果不是图片类型，返回 null，交给下一个插件处理
+        return null;
+      }
+      // 加载图片具体内容
+      const isSvg = mime === mimeTypes['.svg'];
+      const format = isSvg ? 'utf-8' : 'base64';
+      const source = readFileSync(id, format).replace(/[\r\n]+/gm, '');
+      const dataUri = getDataUri({ format, isSvg, mime, source });
+      const code = options.dom ? domTemplate({ dataUri }) : constTemplate({ dataUri });
+
+      return code.trim();
+    }
+  };
+}
+```
+
+从中可以看到，load 钩子的入参是模块 id，返回值一般是 null、string 或者一个对象：
+
+- 如果返回值为 null，则交给下一个插件处理；
+- 如果返回值为 string 或者对象，则终止后续插件的处理，如果是对象可以包含 SourceMap、AST 等[更详细的信息](https://link.juejin.cn/?target=https%3A%2F%2Frollupjs.org%2Fguide%2Fen%2F%23load)。
+
+#### 代码转换：transform
+
+`transform` 钩子也是非常常见的一个钩子函数，为 `Async + Sequential` 类型，也就是`异步串行`钩子，作用是对加载后的模块内容进行自定义的转换。我们以官方的 `replace` 插件为例，这个插件的使用方式如下:
+
+```js
+// rollup.config.js
+import replace from '@rollup/plugin-replace';
+
+module.exports = {
+  input: 'src/index.js',
+  output: {
+    dir: 'output',
+    format: 'cjs'
+  },
+  plugins: [
+    // 将会把代码中所有的 __TEST__ 替换为 1
+    replace({
+      __TEST__: 1
+    })
+  ]
+};
+```
+
+内部实现也并不复杂，主要通过字符串替换来实现，核心逻辑简化如下:
+
+```js
+import MagicString from 'magic-string';
+
+export default function replace(options = {}) {
+  return {
+    name: 'replace',
+    transform(code, id) {
+      // 省略一些边界情况的处理
+      // 执行代码替换的逻辑，并生成最后的代码和 SourceMap
+      return executeReplacement(code, id);
+    }
+  }
+}
+
+function executeReplacement(code, id) {
+  const magicString = new MagicString(code);
+  // 通过 magicString.overwrite 方法实现字符串替换
+  if (!codeHasReplacements(code, id, magicString)) {
+    return null;
+  }
+
+  const result = { code: magicString.toString() };
+
+  if (isSourceMapEnabled()) {
+    result.map = magicString.generateMap({ hires: true });
+  }
+
+  // 返回一个带有 code 和 map 属性的对象
+  return result;
+}
+```
+
+[transform 钩子](https://link.juejin.cn/?target=https%3A%2F%2Frollupjs.org%2Fguide%2Fen%2F%23transform)的入参分别为`模块代码`、`模块 ID`，返回一个包含 `code`(代码内容) 和 `map`(SourceMap 内容) 属性的对象，当然也可以返回 null 来跳过当前插件的 transform 处理。需要注意的是，**当前插件返回的代码会作为下一个插件 transform 钩子的第一个入参**，实现类似于瀑布流的处理。
+
+#### Chunk 级代码修改: renderChunk
+
+这里我们继续以 `replace `插件举例，在这个插件中，也同样实现了 renderChunk 钩子函数:
+
+```js
+export default function replace(options = {}) {
+  return {
+    name: 'replace',
+    transform(code, id) {
+      // transform 代码省略
+    },
+    renderChunk(code, chunk) {
+      const id = chunk.fileName;
+      // 省略一些边界情况的处理
+      // 拿到 chunk 的代码及文件名，执行替换逻辑
+      return executeReplacement(code, id);
+    },
+  }
+}
+```
+
+可以看到这里 replace 插件为了替换结果更加准确，在 renderChunk 钩子中又进行了一次替换，因为后续的插件仍然可能在 transform 中进行模块内容转换，进而可能出现符合替换规则的字符串。
+
+这里我们把关注点放到 renderChunk 函数本身，可以看到有两个入参，分别为 `chunk 代码内容`、[chunk 元信息](https://link.juejin.cn/?target=https%3A%2F%2Frollupjs.org%2Fguide%2Fen%2F%23generatebundle)，返回值跟  `transform` 钩子类似，既可以返回包含 code 和 map 属性的对象，也可以通过返回 null 来跳过当前钩子的处理。
+
+#### 产物生成最后一步: generateBundle
+
+generateBundle 也是`异步串行`的钩子，你可以在这个钩子里面自定义删除一些无用的 chunk 或者静态资源，或者自己添加一些文件。这里我们以 Rollup 官方的`html`插件来具体说明，这个插件的作用是通过拿到 Rollup 打包后的资源来生成包含这些资源的 HTML 文件，源码简化后如下所示:
+
+```js
+export default function html(opts: RollupHtmlOptions = {}): Plugin {
+  // 初始化配置
+  return {
+    name: 'html',
+    async generateBundle(output: NormalizedOutputOptions, bundle: OutputBundle) {
+      // 省略一些边界情况的处理
+      // 1. 获取打包后的文件
+      const files = getFiles(bundle);
+      // 2. 组装 HTML，插入相应 meta、link 和 script 标签
+      const source = await template({ attributes, bundle, files, meta, publicPath, title});
+      // 3. 通过上下文对象的 emitFile 方法，输出 html 文件
+      const htmlFile: EmittedAsset = {
+        type: 'asset',
+        source,
+        name: 'Rollup HTML Asset',
+        fileName
+      };
+      this.emitFile(htmlFile);
+    }
+  }
+}
+```
+
+相信从插件的具体实现中，你也能感受到这个钩子的强大作用了。入参分别为 `output 配置`、[所有打包产物的元信息对象](https://link.juejin.cn/?target=https%3A%2F%2Frollupjs.org%2Fguide%2Fen%2F%23generatebundle)，通过操作元信息对象你可以删除一些不需要的 chunk 或者静态资源，也可以通过 插件上下文对象的 `emitFile` 方法输出自定义文件。
+
+常用的 Rollup 钩子我们就先介绍到这里，相信这些知识点已经足够你应付大多数的构建场景了。
+
+### 总结
+
+在这篇文章中，我们首先认识到 Rollup 为了追求扩展性和可维护性，引入了插件机制，而后给你介绍了 Rollup 的 `Build` 和`Output` 两大构建阶段，接着给你详细地分析了两大构建阶段的插件工作流，最后通过几个实际的官方插件带你熟悉了一些常见的 Hook。
+
+Rollup 的插件开发整体上是非常简洁和灵活的，总结为以下几个方面:
+
+- **插件逻辑集中管理**。各个阶段的 Hook 都可以放在一个插件中编写，比如上述两个 Webpack 的 Loader 和 Plugin 功能在 Rollup 只需要用一个插件，分别通过 transform 和 renderChunk 两个 Hook 来实现。
+- **插件 API 简洁，符合直觉**。Rollup 插件基本上只需要返回一个包含 name 和各种钩子函数的对象即可，也就是声明一个 name 属性，然后写几个钩子函数即可。
+- **插件间的互相调用**。比如刚刚介绍的`alias`插件，可以通过插件上下文对象的`resolve`方法，继续调用其它插件的 `resolveId`钩子，类似的还有`load`方法，这就大大增加了插件的灵活性。
+
+现在，相信你已经从宏观到细节上，已经对 Rollup 插件有了全面的掌握，为接下来的 Vite 学习打下了坚实的基础。
+
+## Vite 插件开发
 
