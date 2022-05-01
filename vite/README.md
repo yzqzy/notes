@@ -4520,7 +4520,378 @@ closeBundle
 - 服务启动阶段: `config`、`configResolved`、`options`、`configureServer`、`buildStart`
 - 请求响应阶段: 如果是 `html` 文件，仅执行 `transformIndexHtml` 钩子；对于非 HTML 文件，则依次执行 `resolveId`、`load `和`transform` 钩子。
 - 热更新阶段: 执行 `handleHotUpdate` 钩子。
-- 服务关闭阶段: 依次执行 `buildEnd` 和 `closeBundle` 钩子。
+- 服务关闭阶段: 依次执行 `buildEnd` 和 `closeBundle` 钩子。`apply`参数还可以配置成一个函数，进行更灵活的控制:
 
 ### 插件应用位置
+
+梳理完 Vite 的各个钩子函数之后，接下来让我们来了解一下 Vite 插件的**应用情景**和**应用顺序**。
+
+默认情况下 Vite 插件同时被用于开发环境和生产环境，你可以通过 `apply` 属性来决定应用场景:
+
+```js
+{
+  // 'serve' 表示仅用于开发环境，'build'表示仅用于生产环境
+  apply: 'serve'
+}
+```
+
+`apply `参数还可以配置成一个函数，进行更灵活的控制:
+
+```js
+apply(config, { command }) {
+
+  // 只用于非 SSR 情况下的生产环境构建
+  return command === 'build' && !config.build.ssr
+}
+```
+
+同时，你也可以通过 `enforce` 属性来指定插件的执行顺序:
+
+```js
+{
+  // 默认为`normal`，可取值还有`pre`和`post`
+  enforce: 'pre'
+}
+```
+
+Vite 中插件的执行顺序如下图所示:
+
+<img src="./images/vie_plugin_order.png" />
+
+Vite 会依次执行如下的插件:
+
+- Alias (路径别名)相关的插件。
+- ⭐️ 带有 `enforce: 'pre'` 的用户插件。
+- Vite 核心插件。
+- ⭐️ 没有 enforce 值的用户插件，也叫`普通插件`。
+- Vite 生产环境构建用的插件。
+- ⭐️ 带有 `enforce: 'post'` 的用户插件。
+- Vite 后置构建插件(如压缩插件)。
+
+### 插件开发实战
+
+接下来我们将一起编写两个 Vite 插件，分别是 `虚拟模块加载插件` 和 `Svgr 插件`，你将学会从插件开发的常见套路和各种开发技巧。
+
+#### 虚拟模块加载
+
+首先我们来实现一个虚拟模块的加载插件，可能你会有疑问: 什么是虚拟模块呢？
+
+作为构建工具，一般需要处理两种形式的模块，一种存在于真实的磁盘文件系统中，另一种并不在磁盘而在内存当中，也就是`虚拟模块`。通过虚拟模块，我们既可以把自己手写的一些代码字符串作为单独的模块内容，又可以将内存中某些经过计算得出的**变量**作为模块内容进行加载，非常灵活和方便。接下来让我们通过一些具体的例子来实操一下，首先通过脚手架命令初始化一个 `react + ts` 项目:
+
+```js
+pnpm init vite
+```
+
+然后通过 `pnpm i` 安装依赖，接着新建 `plugins` 目录，开始插件的开发:
+
+```js
+// plugins/virtual-module.ts
+import { Plugin, ResolvedConfig } from 'vite';
+
+// 虚拟模块名称
+const virtualFibModuleId = 'virtual:fib';
+// Vite 中约定对于虚拟模块，解析后的路径需要加上`\0`前缀
+const resolvedFibVirtualModuleId = '\0' + virtualFibModuleId;
+
+export default function virtualFibModulePlugin(): Plugin {
+  let config: ResolvedConfig | null = null;
+  return {
+    name: 'vite-plugin-virtual-module',
+    resolveId(id) {
+      if (id === virtualFibModuleId) { 
+        return resolvedFibVirtualModuleId;
+      }
+    },
+    load(id) {
+      // 加载虚拟模块
+      if (id === resolvedFibVirtualModuleId) {
+        return 'export default function fib(n) { return n <= 1 ? n : fib(n - 1) + fib(n - 2); }';
+      }
+    }
+  }
+}
+```
+
+接着我们在项目中来使用这个插件:
+
+```js
+// vite.config.ts
+import virtual from './plugins/virtual-module.ts'
+
+// 配置插件
+{
+  plugins: [react(), virtual()]
+}
+```
+
+然后在 `main.tsx` 中加入如下的代码:
+
+```js
+import fib from 'virtual:fib';
+
+alert(`结果: ${fib(10)}`)
+```
+
+这里我们使用了 `virtual:fib` 这个虚拟模块，虽然这个模块不存在真实的文件系统中，但你打开浏览器后可以发现这个模块导出的函数是可以正常执行的:
+
+<img src="./images/vite_plugin_alert.png" />
+
+接着我们来尝试一下如何通过虚拟模块来读取内存中的变量，在 `virtual-module.ts` 中增加如下代码:
+
+```diff
+import { Plugin, ResolvedConfig } from 'vite';
+
+const virtualFibModuleId = 'virtual:fib';
+const resolvedFibVirtualModuleId = '\0' + virtualFibModuleId;
+
++ const virtualEnvModuleId = 'virtual:env';
++ const resolvedEnvVirtualModuleId = '\0' + virtualEnvModuleId;
+
+export default function virtualFibModulePlugin(): Plugin {
+	let config: ResolvedConfig | null = null;
+  return {
+    name: 'vite-plugin-virtual-fib-module',
++     configResolved(c: ResolvedConfig) {
++       config = c;
++     },
+    resolveId(id) {
+      if (id === virtualFibModuleId) { 
+        return resolvedFibVirtualModuleId;
+      }
++       if (id === virtualEnvModuleId) { 
++        return resolvedEnvVirtualModuleId;
++      }
+    },
+    load(id) {
+      if (id === resolvedFibVirtualModuleId) {
+        return 'export default function fib(n) { return n <= 1 ? n : fib(n - 1) + fib(n - 2); }';
+      }
++      if (id === resolvedEnvVirtualModuleId) {
++        return `export default ${JSON.stringify(config!.env)}`;
++      }
+    }
+  }
+}
+```
+
+在新增的这些代码中，我们注册了一个新的虚拟模块 `virtual:env`，紧接着我们去项目去使用:
+
+```js
+// main.tsx
+import env from 'virtual:env';
+console.log(env)
+```
+
+接着你可以去浏览器观察一下输出的情况:
+
+```js
+{BASE_URL: '/', MODE: 'development', DEV: true, PROD: false}
+BASE_URL: "/"
+DEV: true
+MODE: "development"
+PROD: false
+```
+
+<img src="./images/vite_plugin_env.png" />
+
+Vite 环境变量能正确地在浏览器中打印出来，说明在内存中计算出来的 `virtual:env` 模块的确被成功地加载了。从中你可以看到，虚拟模块的内容完全能够被动态计算出来，因此它的灵活性和可定制程度非常高，实用性也很强，在 Vite 内部的插件被深度地使用，社区当中也有不少知名的插件(如 `vite-plugin-windicss`、`vite-plugin-svg-icons`等)也使用了虚拟模块的技术。
+
+#### Svg 组件形式加载
+
+在一般的项目开发过程中，我们有时候希望能将 svg 当做一个组件来引入，这样我们可以很方便地修改 svg 的各种属性，相比于`img`标签的引入方式也更加优雅。但 Vite 本身并不支持将 svg 转换为组件的代码，需要我们通过插件来实现。
+
+接下来我们就来写一个 Vite 插件，实现在 React 项目能够通过组件方式来使用 svg 资源。首先安装一下需要的依赖:
+
+```js
+pnpm i resolve @svgr/core -D
+```
+
+接着在 `plugins` 目录新建  `svgr.ts`:
+
+```js
+import { Plugin } from 'vite';
+import * as fs from 'fs';
+import * as resolve from 'resolve';
+
+interface SvgrOptions {
+  // svg 资源模块默认导出，url 或者组件
+  defaultExport: 'url' | 'component';
+}
+
+export default function viteSvgrPlugin(options: SvgrOptions) {
+  const { defaultExport='url' } = options;
+  return {
+    name: 'vite-plugin-svgr',
+    async transform(code ,id) {
+      // 转换逻辑: svg -> React 组件
+    }
+  }
+}
+```
+
+让我们先来梳理一下开发需求，用户通过传入 `defaultExport` 可以控制 svg 资源的默认导出:
+
+- 当 `defaultExport`为 `component`，默认当做组件来使用，即:
+
+```js
+import Logo from './Logo.svg'
+
+// 在组件中直接使用
+<Logo />
+```
+
+- 当`defaultExports`为`url`，默认当做 url 使用，如果需要用作组件，可以通过`具名导入`的方式来支持:
+
+```js
+import logoUrl, { ReactComponent as Logo } from './logo.svg';
+
+// url 使用
+<img src={logoUrl} />
+// 组件方式使用
+<Logo />
+```
+
+明确了需求之后，接下来让我们来整理一下插件开发的整体思路，主要逻辑在 `transform `钩子中完成，流程如下:
+
+- 1. 根据 id 入参过滤出 svg 资源；
+- 1. 读取 svg 文件内容；
+- 1. 利用 `@svgr/core` 将 svg 转换为 React 组件代码;
+- 1. 处理默认导出为 url 的情况；
+- 1. 将组件的 jsx 代码转译为浏览器可运行的代码。
+
+下面是插件的完整的代码，你可以参考学习:
+
+```js
+import { Plugin } from 'vite';
+import * as fs from 'fs';
+import * as resolve from 'resolve';
+
+interface SvgrOptions {
+  defaultExport: 'url' | 'component';
+}
+
+export default function viteSvgrPlugin(options: SvgrOptions): Plugin {
+  const { defaultExport = 'component' } = options;
+
+  return {
+    name: 'vite-plugin-svgr',
+    async transform(code, id) {
+      // 1. 根据 id 入参过滤出 svg 资源；
+      if (!id.endsWith('.svg')) {
+        return code;
+      }
+      const svgrTransform = require('@svgr/core').transform;
+      // 解析 esbuild 的路径，后续转译 jsx 会用到，我们这里直接拿 vite 中的 esbuild 即可
+      const esbuildPackagePath = resolve.sync('esbuild', { basedir: require.resolve('vite') });
+      const esbuild = require(esbuildPackagePath);
+      // 2. 读取 svg 文件内容；
+      const svg = await fs.promises.readFile(id, 'utf8');
+      // 3. 利用 `@svgr/core` 将 svg 转换为 React 组件代码
+      const svgrResult = await svgrTransform(
+        svg,
+        {},
+        { componentName: 'ReactComponent' }
+      );
+      // 4. 处理默认导出为 url 的情况
+      let componentCode = svgrResult;
+      if (defaultExport === 'url') {
+        // 加上 Vite 默认的 `export default 资源路径`
+        componentCode += code;
+        componentCode = svgrResult.replace('export default ReactComponent', 'export { ReactComponent }');
+      }
+      // 5. 利用 esbuild，将组件中的 jsx 代码转译为浏览器可运行的代码;
+      const result = await esbuild.transform(componentCode, {
+        loader: 'jsx',
+      });
+      return {
+        code: result.code,
+        map: null // TODO
+      };
+    },
+  };
+}
+
+```
+
+接下来让我们在项目中使用这个插件:
+
+```js
+// vite.config.ts
+import svgr from './plugins/svgr';
+
+// 返回的配置
+{
+  plugins: [
+    // 省略其它插件
+		svgr({ defaultExport: 'component' })
+  ]
+}
+```
+
+接着我们在项目中用组件的方式引入 svg:
+
+```js
+// App.tsx
+import Logo from './logo.svg'
+
+function App() {
+  return (
+    <>
+      <Logo />
+    </>
+  )
+}
+
+export default App;
+```
+
+打开浏览器，可以看到组件已经正常显示:
+
+<img src="./images/logo.png" style="zoom: 60%" />
+
+#### 调试技巧
+
+在开发调试插件的过程，推荐大家在本地装上`vite-plugin-inspect`插件，并在 Vite 中使用它:
+
+```js
+pnpm i vite-plugin-inspect -D
+```
+
+```js
+// vite.config.ts
+import inspect from 'vite-plugin-inspect';
+
+// 返回的配置
+{
+  plugins: [
+    // 省略其它插件
+    inspect()
+  ]
+
+}
+```
+
+这样当你再次启动项目时，会发现多出一个调试地址:
+
+<img src="./images/inspect.png" />
+
+你可以通过这个地址来查看项目中各个模块的编译结果：
+
+<img src="./images/inspect02.png" />
+
+点击特定的文件后，你可以看到这个模块经过各个插件处理后的中间结果，如下图所示:
+
+<img src="./images/inspect03.png" />
+
+通过这个面板，我们可以很清楚地看到相应模块经过插件处理后变成了什么样子，让插件的调试更加方便。
+
+### 总结
+
+你需要重点掌握 Vite **插件钩子的含义**、**作用顺序**以及**插件的实战开发**。
+
+首先我们通过一个最简单的示例让你对 Vite 插件的结构有了初步的印象，然后对 Vite 中的各种钩子函数进行了介绍，主要包括`通用钩子`和`独有钩子`，通用钩子与 Rollup 兼容，而独有钩子在 Rollup 中会被忽略。而由于上一节已经详细介绍了 Rollup 的插件机制，对于通用钩子我们没有继续展开，而是详细介绍了 5 个独有钩子，分别是: `config`、`configResolved`、`configureServer`、`transformIndexHtml `和 `handleHotUpdate`。不仅如此，我还给你从宏观角度分析了 Vite 插件的作用场景和作用顺序，你可以分别通过`apply`和`enforce`两个参数来进行手动的控制。
+
+接下来我们正式进入插件开发实战的环节，实现了 `虚拟模块加载插件` 和 `Svg 组件加载插件`，相信你已经对虚拟模块的概念和使用有了直观的了解，也能通过后者的开发过程了解到如何在 Vite 中集成其它的前端编译工具。总体来说，Vite 插件的设计秉承了 Rollup 的插件设计理念，通过一个个语义化的 Hook 来组织，十分简洁和灵活，上手难度并不大，但真正难的地方在于如何利用 Vite 插件去解决实际开发过程的问题。
+
+## HMR API 原理
 
