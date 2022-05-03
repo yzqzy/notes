@@ -4895,3 +4895,60 @@ import inspect from 'vite-plugin-inspect';
 
 ## HMR API 原理
 
+开始今天的内容之前，我想先问你一个日常开发中的问题：在代码变更之后，如何实时看到更新后的页面效果呢？
+
+很久之前通过 live reload 也就是自动刷新页面的方式来解决的。不过随着前端工程的日益庞大，开发场景也越来越复杂，这种 `live reload` 的方式在诸多的场景下却显得十分鸡肋，简单来说就是 `模块局部更新`+`状态保存` 的需求在 `live reload` 的方案没有得到满足，从而导致开发体验欠佳。当然，针对部分场景也有一些临时的解决方案，比如状态存储到浏览器的本地缓存(localStorage 对象)中，或者直接 mock 一些数据。但这些方式未免过于粗糙，无法满足通用的开发场景，且实现上也不够优雅。
+
+那么，如果在改动代码后，想要进行模块级别的局部更新该怎么做呢？业界一般使用 HMR 技术来解决这个问题，像 Webpack、Parcel 这些传统的打包工具底层都实现了一套 HMR API，而我们今天要讲的就是 Vite 自己所实现的 HMR API，相比于传统的打包工具，Vite 的 HMR API 基于 ESM 模块规范来实现，可以达到毫秒级别的更新速度，性能非常强悍。接下来，让我们一起来谈谈在 Vite 当中，这一套 HMR 相关的 API 是如何设计的，以及我们可以通过这些 API 实现哪些功能。
+
+### HMR 简介
+
+HMR 的全称叫做 `Hot Module Replacement`，即`模块热替换`或者`模块热更新`。在计算机领域当中也有一个类似的概念叫`热插拔`，我们经常使用的 USB 设备就是一个典型的代表，当我们插入 U 盘的时候，系统驱动会加载在新增的 U 盘内容，不会重启系统，也不会修改系统其它模块的内容。HMR 的作用其实一样，就是在页面模块更新的时候，直接把**页面中发生变化的模块替换为新的模块**，同时不会影响其它模块的正常运作。通过 HMR 的技术我们就可以实现`局部刷新`和`状态保存`，从而解决之前提到的种种问题。
+
+### HMR API
+
+Vite 作为一个完整的构建工具，本身实现了一套 HMR 系统，值得注意的是，这套 HMR 系统基于原生的 ESM 模块规范来实现，在文件发生改变时 Vite 会侦测到相应 ES 模块的变化，从而触发相应的 API，实现局部的更新。
+
+Vite 的 HMR API 设计也并非空穴来风，它基于一套完整的 [ESM HMR 规范](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fwithastro%2Fesm-hmr) 来实现，这个规范由同时期的 no-bundle 构建工具 Snowpack、WMR 与 Vite 一起制定，是一个比较通用的规范。
+
+我们可以直观地来看一看 HMR API 的类型定义:
+
+```js
+interface ImportMeta {
+  readonly hot?: {
+    readonly data: any
+    accept(): void
+    accept(cb: (mod: any) => void): void
+    accept(dep: string, cb: (mod: any) => void): void
+    accept(deps: string[], cb: (mods: any[]) => void): void
+    prune(cb: () => void): void
+    dispose(cb: (data: any) => void): void
+    decline(): void
+    invalidate(): void
+    on(event: string, cb: (...args: any[]) => void): void
+  }
+}
+```
+
+这里稍微解释一下，`import.meta `对象为现代浏览器原生的一个内置对象，Vite 所做的事情就是在这个对象上的 `hot` 属性中定义了一套完整的属性和方法。因此，在 Vite 当中，你就可以通过 `import.meta.hot` 来访问关于 HMR 的这些属性和方法，比如`import.meta.hot.accept()`。
+
+#### hot.accept
+
+在 `import.meta.hot` 对象上有一个非常关键的方法`accept`，因为它决定了 Vite 进行热更新的边界，那么如何来理解这个`accept`的含义呢？
+
+从字面上来看，它表示接受的意思。它是用来**接受模块更新**的。 一旦 Vite 接受了这个更新，当前模块就会被认为是 HMR 的边界。那么，Vite 接受谁的更新呢？这里会有三种情况：
+
+- 接受**自身模块**的更新
+- 接受**某个子模块**的更新
+- 接受**多个子模块**的更新
+
+这三种情况分别对应 accept 方法三种不同的使用方式，下面我们就一起来分析一下。
+
+##### 接收自身更新
+
+当模块接受自身的更新时，则当前模块会被认为 HMR 的边界。也就是说，除了当前模块，其他的模块均未受到任何影响。
+
+为了加深你的理解，这里我们以一个[实际的例子]()进行测试。首先展示一下整体的目录结构:
+
+
+
