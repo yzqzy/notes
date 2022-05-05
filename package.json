@@ -2,7 +2,7 @@
   "name": "notes",
   "version": "1.0.0",
   "description": "月落，男，一名热爱前端技术，并致力于大前端的工程师。 <br />\r 这是我的前端学习笔记，目前仍在持续更新中，用于知识总结和技术分享。",
-  "main": "three.js",
+  "main": "index.js",
   "directories": {
     "doc": "doc",
     "test": "test"
