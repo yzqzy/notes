@@ -1,194 +1,6 @@
-# Jest
-
-## 简单测试
-
-```js
-// demo.js
-
-function sum (a, b) {
-  return a + b;
-}
-
-function subtract (x, y) {
-  return x - y;
-}
-
-module.exports = {
-  sum,
-  subtract
-}
-```
-
-```js
-// demo.test.js
-
-// 1. 引入测试函数
-const { sum, subtract } = require('./demo');
-
-// 2. 定义函数输入
-const result = sum(1, 2);
-// 3. 定义预期输出
-const expected = 3;
-
-// 4. 检查函数是否返回预期结果
-if (result !== expected) {
-  throw new Error(`sum(1, 2) result ${ expected }, but get ${ result }`);
-}
-```
-
-## 断言和测试用例
-
-定义 expect 断言函数
-
-```js
-const { sum, subtract } = require('./demo');
-
-expect(sum(1, 2)).toBe(3);
-
-function expect (result) {
-  return {
-    toBe (expected) {
-      if (result !== expected) {
-        throw new Error(`expect result ${ expected }, but get ${ result }`);
-      }
-    }
-  }
-}
-```
-
-```js
-const { sum, subtract } = require('./demo');
-
-expect(sum(1, 2)).toBe(3);
-expect(subtract(2, 1)).toBe(1);
-
-function expect (result) {
-  return {
-    toBe (expected) {
-      if (result !== expected) {
-        throw new Error(`expect result ${ expected }, but get ${ result }`);
-      }
-    }
-  }
-}
-```
-
-定义 test 函数，test 函数其实就是测试用例，一个测试用例可以包含多个断言函数。
-
-```js
-test('sum(1, 2) result is 3', () => {
-  expect(sum(1, 2)).toBe(3);
-})
-test('subtract(2, 1) result is 1', () => {
-  expect(subtract(2, 1)).toBe(1);
-})
-
-function test (message, callback) {
-  try {
-    callback();
-  } catch (error) {
-    console.error(`${ message }: ${ error }`);
-  }
-}
-
-function expect (result) {
-  return {
-    toBe (expected) {
-      if (result !== expected) {
-        throw new Error(`expect result ${ expected }, but get ${ result }`);
-      }
-    }
-  }
-}
-```
-
-## Jest 体验
-
-### 安装、使用
-
-初始化 package.json、安装 jest
-
-```js
-pnpm init -y
-
-pnpm i jest -D
-```
-
-定义 scripts 脚本
-
-```js
-// package.json
-
-{
-  "scripts": {
-    "test": "jest"
-  },
-}
-```
-
-运行测试脚本
-
-```js
-pnpm run test
-```
-
-```js
- PASS  ./demo.test.js
-  √ sum(1, 2) result is 3 (2 ms)
-  √ subtract(2, 1) result is 1                                                                                                                                                         
-                                                                                                                                                                                       
-Test Suites: 1 passed, 1 total                                                                                                                                                         
-Tests:       2 passed, 2 total                                                                                                                                                         
-Snapshots:   0 total
-Time:        0.401 s, estimated 1 s
-Ran all test suites.
-```
-
-> jest 在运行 *.test.js 文件时，会把 test、expect 等相关辅助函数注册到全局环境。
-
-### 增加代码提示
-
-```js
-pnpm i @types/jest -D
-```
-
-安装 @types 模块后，可以直接使用 jest 提示，无须引入。
-
-## Jest 介绍
-
-[Jest](https://jestjs.io/) 是 Facebook 出品的一个 JavaScript 开源测试框架。相对其他测试框架，它最大特点就是内置了常用的测试工具，比如零配置、自带断言、测试覆盖率等功能，实现了开箱即用。
-
-Jest 使用但不限于以下技术项目：Babel、TypeScript、Node、React、Angular、Vue 等。
-
-Jest 特点：
-
-* 零配置
-* 自带断言
-* 作为一个面向前端的测试框架，Jest 可以利用其特有的快照测试功能，通过比对 UI 代码生成的快照文件，实现对 React 等常见框架的自动化测试
-* Jest 的测试用例是并行执行的，只执行发生改变的文件所对应的测试
-* 测试覆盖率
-* Mock 模拟
-
-## 配置文件
-
-Jest 提供默认的零配置的使用方式，不过我们可以通过配置文件的方式去更改默认配置。
-
-生成配置文件
-
-```js
- npx jest --init
-```
-
-<img src="./images/config.png" />
-
-配置文件中会生成所有配置，不过大部分都是默认配置。
-
-```js
-// jest.config.js
-
 /*
  * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration 官方文档地址
+ * https://jestjs.io/docs/configuration
  */
 
 module.exports = {
@@ -340,14 +152,12 @@ module.exports = {
   // Adds a location field to test results
   // testLocationInResults: false,
 
-  // 默认文件配置规则
   // The glob patterns Jest uses to detect test files
   // testMatch: [
   //   "**/__tests__/**/*.[jt]s?(x)",
   //   "**/?(*.)+(spec|test).[tj]s?(x)"
   // ],
 
-  // 默认忽略目录
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   // testPathIgnorePatterns: [
   //   "\\\\node_modules\\\\"
@@ -383,7 +193,3 @@ module.exports = {
   // Whether to use watchman for file crawling
   // watchman: true,
 };
-```
-
-## JestCli 选项
-
