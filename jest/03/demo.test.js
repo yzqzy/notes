@@ -1,6 +1,9 @@
 import { sum, subtract } from './demo';
 import { describe, expect, test } from '@jest/globals';
 
+// jest.autoMockOn
+// jest.useFakeTimers
+
 beforeAll(() => {
   console.log('before All');
 });
