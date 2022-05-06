@@ -1,12 +1,21 @@
-function sum (a, b) {
+// function sum (a, b) {
+//   return a + b;
+// }
+
+// function subtract (x, y) {
+//   return x - y;
+// }
+
+// module.exports = {
+//   sum,
+//   subtract
+// }
+
+
+export function sum (a, b) {
   return a + b;
 }
 
-function subtract (x, y) {
+export function subtract (x, y) {
   return x - y;
-}
-
-module.exports = {
-  sum,
-  subtract
 }
