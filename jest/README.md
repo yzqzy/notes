@@ -625,5 +625,95 @@ Ran all test suites matching /demo.test.js/i.
 测试文件中，Jest 将所有的方法和对象放入到全局环境中，不需要导入任何内容就可以使用。不过也支持显式导入。
 
 ```js
+pnpm i @jest/globals -D
 ```
+
+```js
+import { describe, expect, test } from '@jest/globals';
+```
+
+### Test 函数
+
+test 函数别名：`it(name, fn, timeout)`，test 函数就是一个测试用例。
+
+* `test(name, fn, timeout)`
+* `test.concurrent(name, fn, timeout)`
+* `test.concurrent.each(table)(name, fn, timeout)`
+* `test.concurrent.only.each(table)(name, fn)`
+* `test.each(table)(name, fn, timeout)`
+* `test.only(name, fn, timeout)` ：仅运行当前测试用例（针对当前模块）
+
+### Expect 匹配器
+
+编写测试前，通常需要检查值是否满足某些条件。Expect 支持访问许多 “匹配器”，以验证不同的内容。
+
+```js
+test('global expect', () => {
+  expect(2 + 2).toBe(4); // 匹配数字
+  expect({ name: 'jack' }).toEqual({ name: 'jack' }); // 匹配对象
+  expect('yueluosensen').toMatch(/yueluo/); // 正则匹配
+  expect(4).toBeGreaterThan(2); // 大于
+  expect(4).toBeLessThan(5); // 小于
+})
+```
+
+更多用法：https://jestjs.io/docs/expect
+
+### describe 函数
+
+describe 创建一个将几个测试组合在一起的块。
+
+```js
+describe('demo', () => {
+  test('sum(1, 2) result is 3', () => {
+    expect(sum(1, 2)).toBe(3);
+  })
+  test('subtract(2, 1) result is 1', () => {
+    expect(subtract(2, 1)).toBe(1);
+  })
+})
+
+describe('global', () => {
+  test('global expect', () => {
+    expect(2 + 2).toBe(4); // 匹配数字
+    expect({ name: 'jack' }).toEqual({ name: 'jack' }); // 匹配对象
+    expect('yueluosensen').toMatch(/yueluo/); // 正则匹配
+    expect(4).toBeGreaterThan(2); // 大于
+    expect(4).toBeLessThan(5); // 小于
+  })
+})
+```
+
+如果测试用例同时写在一个文件中，可以将相关的测试用例进行分组。
+
+相关用法：
+
+* `describe(name, fn)`
+* `describe.each(table)(name, fn, timeout)`
+* `describe.only(name, fn)`
+* `describe.only.each(table)(name, fn)`
+* `describe.skip(name, fn)`
+* `describe.skip.each(table)(name, fn)`
+
+### 生命周期钩子
+
+* `beforeAll(fn, timeout)`：测试用例之前执行（仅运行一次）
+* `beforeEach(fn, timeout)`：每个测试用例运行之前，都会执行一次
+* `afterAll(fn, timeout)`：测试用例执行完毕执行（仅运行一次）
+* `afterEach(fn, timeout)`：每个测试用例执行完毕之后，都会执行一次
+
+### Jest 对象
+
+Jest 对象自动位于每个测试文件中的范围内。
+
+jest 对象中的方法有助于创建模拟，可以控制 Jest 的整体行为。也可以手动导入。
+
+```js
+// jest.autoMockOn
+// jest.useFakeTimers
+```
+
+详情内容参考：https://jestjs.io/docs/jest-object。
+
+## 常用匹配器
 
