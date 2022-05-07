@@ -71,6 +71,7 @@ describe('arrays', () => {
   
   test('the shopping list has milk on it', () => {
     expect(shoppingList).toContain('milk');
+    expect(shoppingList.length).toBe(5);
     expect(new Set(shoppingList)).toContain('milk');
   });
 })
