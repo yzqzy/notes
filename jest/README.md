@@ -925,6 +925,230 @@ test('async promise5', async () => {
 
 ### 定时器
 
+#### 长时间处理
 
+```js
+// 针对超长时间的异步函数
+
+describe('timer: long', () => {
+  function getData () {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({ author: 'heora' })
+      }, 10 * 1000)
+    })
+  }
+  
+  // mock 定时器
+  jest.useFakeTimers();
+  
+  test('timer mock', () => {
+    // 至少存在一次断言调用
+    expect.assertions(1);
+  
+    getData().then(data => {
+      expect(data).toEqual({ author: 'heora' })
+    })
+  
+    // 快进所有定时器到结束
+    jest.runAllTimers()
+  })
+});
+```
+
+#### 循环处理
+
+```js
+describe('timer: loop', () => {
+  function getData () {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({ author: 'heora' })
+        getData();
+      }, 10 * 1000)
+    })
+  }
+  
+  // mock 定时器
+  jest.useFakeTimers();
+  
+  test('timer mock', () => {
+    // 至少存在一次断言调用
+    expect.assertions(1);
+  
+    getData().then(data => {
+      expect(data).toEqual({ author: 'heora' })
+    })
+  
+    // 快进当前进行的定时器结束，不等待其它
+    jest.runOnlyPendingTimers()
+  })
+});
+```
+
+#### 快进指定时间
+
+```js
+describe('timer: set time', () => {
+  function getData () {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({ author: 'heora' })
+      }, 10 * 1000)
+    })
+  }
+  
+  // mock 定时器
+  jest.useFakeTimers();
+  
+  test('timer mock', () => {
+    // 至少存在一次断言调用
+    expect.assertions(1);
+  
+    getData().then(data => {
+      expect(data).toEqual({ author: 'heora' })
+    })
+    
+    jest.advanceTimersByTime(9 * 1000);
+    jest.advanceTimersByTime(1 * 1000);
+  })
+});
+```
 
 ### 函数
+
+#### 基本用法
+
+```js
+function forEach (items, callback) {
+  for (let index = 0; index < items.length; index++) {
+    callback(items[index], index);
+  }
+}
+
+test('mock functions', () => {
+  const items = ['js', 'ts', 'nodejs'];
+
+  const mockFn  = jest.fn((value, index) => {
+    return value + 1;
+  });
+
+  // 调用函数设置返回值会覆盖上面的实现 
+  // mockFn.mockReturnValue(123);
+  // 调用函数设置第一个返回值
+  mockFn.mockReturnValueOnce(123);
+
+
+  forEach(items, mockFn);
+
+  console.log(mockFn.mock);
+
+  expect(mockFn.mock.calls.length).toBe(items.length);
+  expect(mockFn.mock.calls[0][0]).toBe('js');
+  expect(mockFn.mock.calls[0][1]).toBe(0);
+}) 
+```
+
+#### 模拟模块
+
+例如使用 axios，不需要真实请求，可以提高测试速度。
+
+```js
+// users.json
+
+[
+  {
+    "author": "yueluo"
+  },
+  {
+    "author": "heora"
+  }
+]
+```
+
+```js
+// user.js
+
+import axios from "axios";
+
+export const getAllUsers = () => {
+  return axios.get('/users.json').then(res => res.data);
+}
+```
+
+```js
+// user.test.js
+
+import axios from 'axios';
+import { getAllUsers } from './user';
+import users from './users.json';
+
+jest.mock('axios');
+
+test('fetch users', async () => {
+  const resp = { data: users };
+
+  axios.get.mockResolvedValue(resp);
+
+  const data = await getAllUsers();
+
+  expect(data).toEqual(users);
+})
+```
+
+#### 模拟实现
+
+当函数内部存在大量计算，或者功能较多时，可以使用。
+
+```js
+// foo.js
+
+export default function () {
+  console.log('foo');
+}
+```
+
+```js
+// foo.test.js
+
+jest.mock('./foo');
+
+import foo from "./foo";
+
+foo.mockImplementation(() => 42);
+
+test('mock implementations', () => {
+  expect(foo()).toBe(42);
+});
+```
+
+#### 模拟名称
+
+```js
+const myMockFn = jest
+  .fn()
+  .mockReturnValue('default')
+  .mockImplementation(scalar => 42 + scalar)
+  .mockName('add42');
+```
+
+#### 自定义匹配器
+
+```js
+// The mock function was called at least once
+expect(mockFunc).toHaveBeenCalled();
+
+// The mock function was called at least once with the specified args
+expect(mockFunc).toHaveBeenCalledWith(arg1, arg2);
+
+// The last call to the mock function was called with the specified args
+expect(mockFunc).toHaveBeenLastCalledWith(arg1, arg2);
+
+// All calls and the name of the mock is written as a snapshot
+expect(mockFunc).toMatchSnapshot();
+```
+
+更多用法可以点击[这里](https://jestjs.io/docs/mock-functions)查看。
+
+## 钩子函数
+
