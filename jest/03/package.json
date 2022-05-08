@@ -16,9 +16,11 @@
     "@jest/globals": "^28.1.0",
     "@types/jest": "^27.5.0",
     "babel-jest": "^28.1.0",
-    "jest": "^28.0.3"
+    "jest": "^28.0.3",
+    "jest-environment-jsdom": "^28.1.0"
   },
   "dependencies": {
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "vue": "2"
   }
 }

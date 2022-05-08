@@ -1152,3 +1152,183 @@ expect(mockFunc).toMatchSnapshot();
 
 ## 钩子函数
 
+可以在测试用例执行前后做一些通用的操作。
+
+```js
+const data = {
+  author: 'yueluo'
+}
+
+let user = null;
+
+beforeAll(() => {
+  console.log('before all')
+})
+
+afterAll(() => {
+  console.log('after all')
+})
+
+// 每个实例运行之前
+beforeEach(() => {
+  user = Object.assign({}, data)
+})
+
+// 每个实例运行之后
+afterEach(() => {
+  user = null
+})
+
+test('test 1', () => {
+  user.author = 'heora';
+  expect(user.author).toBe('heora')
+})
+
+test('test 2', () => {
+  expect(user.author).toBe('yueluo')
+})
+```
+
+分组
+
+> describe 内部的 beforeEach 仅对当前内部的测试用例生效
+
+```js
+describe('group', () => {
+  beforeEach(() => {
+    console.log('group before each')
+  })
+
+  afterEach(() => {
+    console.log('group after each')
+  })
+
+  test('test1', () => {
+    console.log('group test1')
+  })
+
+  test('test2', () => {
+    console.log('group test2')
+  })
+})
+```
+
+## DOM 测试
+
+Jest 配合 `jest-environment-jsdom` 可以做到在 nodejs 环境中模拟 DOM API。
+
+> jsdom 不再默认内置于 jest v28 ，需要显式安装
+
+```js
+pnpm i jest-environment-jsdom -D
+```
+
+```js
+/**
+ * @jest-environment jsdom
+ */
+
+function renderHtml () {
+  const div = document.createElement('div');
+
+  div.innerHTML = `
+    <h1>Hello World</h1>
+  `
+
+  document.body.appendChild(div);
+}
+
+test('dom testing', () => {
+  renderHtml();
+  expect(document.querySelector('h1').innerHTML).toBe('Hello World');
+})
+```
+
+## Vue 组件测试
+
+```js
+pnpm i vue@2
+```
+
+```js
+/**
+ * @jest-environment jsdom
+ */
+
+import Vue from 'vue/dist/vue';
+
+function renderVueComponent () {
+  document.body.innerHTML = `
+    <div id="app"></div>
+  `
+
+  new Vue({
+    template: `
+      <div id="app">
+        <h1>{{ message }}</h1>
+      </div>
+    `,
+    data: {
+      message: 'Hello World'
+    }
+  }).$mount('#app');
+}
+
+test('vue testing', () => {
+  renderVueComponent();
+  console.log(document.body.innerHTML)
+  expect(document.body.innerHTML).toMatch(/Hello World/)
+})
+```
+
+## 快照测试
+
+```js
+/**
+ * @jest-environment jsdom
+ */
+
+import Vue from 'vue/dist/vue';
+
+function renderVueComponent () {
+  document.body.innerHTML = `
+    <div id="app"></div>
+  `
+
+  new Vue({
+    template: `
+      <div id="app">
+        <h1>{{ message }}</h1>
+      </div>
+    `,
+    data: {
+      message: 'Hello World'
+    }
+  }).$mount('#app');
+}
+
+test.only('Snapshot Testing', () => {
+  renderVueComponent();
+  // 首次运行时，会生成快照文件
+  // 下次运行测试会与快照文件进行比对，如果不一致测试失败
+  expect(document.body.innerHTML).toMatchSnapshot();
+})
+```
+
+快照文件（`__snapshots__/vue.test.js.snap`）：
+
+```js
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Snapshot Testing 1`] = `
+"
+    <div id=\\"app\\"><h1>Hello World</h1></div>
+  "
+`;
+```
+
+如果模板确实有更改，我们可以更新快照。
+
+```js
+npx jest vue.test.js --updateSnapshot
+```

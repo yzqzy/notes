@@ -20,7 +20,7 @@
   + [NPM基础](https://github.com/yw0525/notes/tree/master/npm/base) 已完成
   + [NPM私服](https://github.com/yw0525/notes/tree/master/npm/repos) 已完成
 * [JSDOC](https://github.com/yw0525/notes/tree/master/doc) 已完成
-* [Jest](https://github.com/yw0525/notes/tree/master/jest) 更新中... 😁
+* [Jest](https://github.com/yw0525/notes/tree/master/jest) 已完成
 * 网络
   + [网络基础](https://github.com/yw0525/notes/tree/master/network/base) 已完成
   + [网络进阶](https://github.com/yw0525/notes/tree/master/network/plus) 暂停中 😀
