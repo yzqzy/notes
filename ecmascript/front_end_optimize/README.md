@@ -1794,3 +1794,209 @@ CSS 是关键资源，它会阻塞关键渲染路径并不奇怪，但并不是�
 
 ##### 避免使用 @import
 
+我们应该都知道要避免使用 `@import` 加载 css，实际工作中我们也不建议这样去加载 css，这是因为使用 `@import` 加载 CSS 会增加额外的关键路径长度。
+
+```html
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Demos</title>
+    <link rel="stylesheet" href="http://127.0.0.1:8887/style.css">
+    <link rel="stylesheet" href="https://lib.baomitu.com/CSS-Mint/2.0.6/css-mint.min.css">
+</head>
+<body>
+    <div class="cm-alert">Default alert</div>
+</body>
+</html>
+```
+
+这段代码使用 `link` 标签加载了两个 CSS 资源，这两个资源是并行下载的。如果我们使用 `@import` 加载资源：
+
+```css
+/* style.css */
+@import url('https://lib.baomitu.com/CSS-Mint/2.0.6/css-mint.min.css');
+body{background:red;}
+```
+
+```html
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Demos</title>
+    <link rel="stylesheet" href="http://127.0.0.1:8887/style.css">
+</head>
+<body>
+    <div class="cm-alert">Default alert</div>
+</body>
+</html>
+```
+
+代码中使用 link 标签加载一个 CSS，然后在 CSS 文件中使用 `@import` 加载另一个 CSS。
+
+可以看到两个 CSS 变成串行加载，前一个 CSS 加载完成后再去下载使用 `@import` 导入的 CSS 资源。这会导致加载资源的总时间变长。
+
+所以我们要避免使用 `@import` 引入 CSS 样式，可以降低关键路径的长度。
+
+#### 优化 JavaScript
+
+##### 使用 defer 延迟加载
+
+与 CSS 资源相似，JavaScript 资源也是关键资源，JavaScript 资源会阻塞 DOM  的构建，并且 JavaScript 会被 CSS 文件所阻塞。
+
+当浏览器加载 HTML 时遇到 `<script>xxx</script>` 标签，浏览器就不能继续构建 DOM。它必须立即执行此脚本。对于外部脚本 `<script src=""></script>` 也是一样的，浏览器必须等脚本下载完，并执行结束，才能继续处理剩余的页面。
+
+这会导致两个问题：
+
+* 脚本不能访问到位于它们下面的 DOM 元素，因此，脚本也无法给它们添加处理程序；
+* 如果页面顶部有一个很大的脚本，它会 “阻塞页面”。在该脚本下载并执行结束前，用户都不能看到页面内容。
+
+```js
+<p>...content before script...</p>
+
+<script src="https://javascript.info/article/script-async-defer/long.js?speed=1"></script>
+
+<!-- This isn't visible until the script loads -->
+<p>...content after script...</p>
+```
+
+我们可以把脚本放到页面底部。此时，它可以访问上面的元素，并且不会阻塞页面内容显示。
+
+```html
+<body>
+  ...all content is above the script...
+
+  <script src="https://javascript.info/article/script-async-defer/long.js?speed=1"></script>
+</body>
+```
+
+但是这种解决方法并不完美。例如，浏览器只有在下载了完整的 HTML 文档之后才会下载该脚本。对于长的 HTML 文档来说，可能会造成明显的延迟。有两个 `<script>` 特性（attribute）可以为我们解决这个问题：`defer` 和 `async`。
+
+`defer` 特性告诉浏览器不要等待脚本。浏览器会继续处理 HTML，构建 DOM，脚本会在 “后台” 下载，等 DOM 构建完成后，脚本才会执行。下面是与上面相同的示例，不过带有 `defer` 特性：
+
+```html
+<p>...content before script...</p>
+
+<script defer src="https://javascript.info/article/script-async-defer/long.js?speed=1"></script>
+
+<!-- 立即可见 -->
+<p>...content after script...</p>
+```
+
+* 具有 defer 特性的脚本不会阻塞页面；
+* 具有 defer 特性的脚本总是会等到 DOM 解析完毕，在 `DOMContentLoaded` 时间之前执行。
+
+下面这个示例可以验证上面第二句话。
+
+```html
+<p>...content before scripts...</p>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => alert("DOM ready after defer!"));
+</script>
+
+<script defer src="https://javascript.info/article/script-async-defer/long.js?speed=1"></script>
+
+<p>...content after scripts...</p>
+```
+
+* 页面内容立即展示；
+* `DOMContentLoaded` 事件处理程序等待具有 `defer` 特性的脚本执行完成。仅在脚本下载并执行结束后才会被触发。
+
+具有 defer 特性的脚本保持其相对顺序，与常规脚本一致。
+
+假设，我们有两个具有 defer 特性的脚本：`long.js` 在前，`small.js` 在后。
+
+```js
+<script defer src="https://javascript.info/article/script-async-defer/long.js"></script>
+<script defer src="https://javascript.info/article/script-async-defer/small.js"></script>
+```
+
+浏览器扫描页面寻找脚本，然后并行下载它们，以提高性能。因此，在上面的示例中，两个脚本是并行下载的。
+
+`small.js` 可能会先下载完成，但是 defer 特性除了会告诉浏览器不要 “阻塞页面” 之外，还可以确保脚本的相对执行顺序。因此，即使 `small.js` 先加载完成，也需要等到 `long.js` 执行结束后才会被执行。
+
+当我们需要先加载 `javascript` 库，然后再加载依赖于它的脚本时，这可能会很有用。
+
+> 注意：defer 特性仅作用于外部脚本，如果 `<script>` 脚本没有  `src` ，则会忽略 `defer` 特性。
+
+##### 使用 async 延迟加载
+
+async 特性与 defer 类似。它也能够让脚本不阻塞页面，但是在行为上两者有重要的区别。
+
+async 特性意味着脚本是完全独立的：
+
+* 浏览器不会因 async 脚本而阻塞。
+* 其他脚本不会等待 async 脚本加载完成，同样，async 脚本也不会等待其他脚本。
+* `DOMContentLoaded` 和异步脚本不会彼此等待：
+  * `DOMContentLoaded` 可能会发生在异步脚本之前（如果异步脚本在页面完成后才加载成功）；
+  * `DOMContentLoaded` 也可能发生在异步脚本之后（如果异步脚本很短，或者从 HTTP 缓存中加载）。
+
+async 脚本会在后台加载，并在加载完毕后立即执行。DOM 和其他脚本不会等待它们，它们也不会等待其他内容。async 脚本就是一个在加载完成时执行的完全独立的脚本。
+
+下面也有一个例子，和上面的例子类似。同样存在 `long.js` 和 `small.js` 两个脚本，但是由 defer 变成了 `async`。
+
+它们不会等待对方，而是谁先加载完成谁就先执行。
+
+```html
+<p>...content before scripts...</p>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => alert("DOM ready!"));
+</script>
+
+<script async src="https://javascript.info/article/script-async-defer/long.js"></script>
+<script async src="https://javascript.info/article/script-async-defer/small.js"></script>
+
+<p>...content after scripts...</p>
+```
+
+* 页面内容立即显示：加载 async 的脚本不会阻塞页面渲染。
+* `DOMContentLoaded` 可能在 async 之前或之后触发，不能保证谁先谁后。
+* 较小的脚本 `small.js` 排在第二位，但可能会比 `long.js` 这个长脚本先加载完成，所以 `small.js` 会先执行。虽然，可能是 `long.js` 先加载完成，如果它被缓存，那么它就会先执行。换句话说，异步脚本以 “加载优先” 的顺序执行。
+
+当我们将独立的第三方脚本集成到页面时，此时采用异步加载方式是非常棒的，例如计数器、广告等，因为它们不依赖于我们的脚本，我们的脚本也不应该等待它们。
+
+```js
+<!-- Google Analytics 脚本通常是这样嵌入页面的 -->
+<script async src="https://google-analytics.com/analytics.js"></script>
+```
+
+#### 总结
+
+关键渲染路径是浏览器将 HTML，CSS，JavaScript 转换为屏幕上所呈现的实际像素的具体步骤，优化关键渲染路径可以提高网页的呈现速度。上述介绍的内容都是如何优化 DOM、CSSOM 以及 JavaScript，通常在关键渲染路径中，这些步骤的性能最差。这些步骤是导致首屏渲染速度慢的主要原因。
+
+#### 参考链接
+
+* https://github.com/fi3ework/blog/issues/16
+* https://github.com/berwin/Blog/issues/29
+* https://juejin.cn/post/6844903757038223367#heading-4
+* https://segmentfault.com/a/1190000008550336
+* https://segmentfault.com/a/1190000038264609
+
+### JavaScript 执行优化
+
+这一小节我们讨论如何优化 JavaScript 的执行来改善用户在渲染方面的性能体验。
+
+#### 动画效果实现
+
+前端实现动画效果的方法有很多，比如在 CSS 中可以通过 `transition` 和 `animation` 来实现，在 HTML 中可以通过 `canvas` 来实现，而利用 JavaScript 通常最容易想到的方式是利用定时器 `setTimeout` 或 `setInterval` 来实现，即通过设置一个间隔时间来不断地改变目标图像的位置来达到视觉变化的效果。
+
+```js
+setInterval(function() {
+  // animiate something
+}, 1000 / 60)
+```
+
+实践经验告诉我们，使用定时器实现的动画会在一些低端机器上出现抖动或者卡顿的现象，这主要是因为浏览器无法确定定时器的回调函数的执行时机。以 `setInterval` 为例，其创建后回调任务会被放入异步队列，只有当主线程上的任务执行完成后，浏览器才会去检查队列中是否有等待需要执行的任务，如果有就从任务队列中取出执行，这样会使任务的实际执行时机比所设定的延迟时间要晚一些。
+
+其次屏幕分辨率和尺寸也会影响刷新频率，不同设备的屏幕绘制频率可能会有所不同，而 `setInterval` 只能设置某个固定的时间间隔，这个间隔时间不一定与所有屏幕的刷新时间同步，那么导致动画出现随机丢帧也在所难免。
+
+<img src="./images/setInterval.jpg" />
+
+> 关于事件循环更多内容，可以参考下面这两篇文章  ：
+>
+> * []()
+
+为了避免这种动画实现方案中因丢帧造成的卡顿现象，我们推荐使用 `window.requestAnimationFrame` 。与 `setInterval` 方法相比，
