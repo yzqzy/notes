@@ -1995,8 +1995,8 @@ setInterval(function() {
 
 <img src="./images/setInterval.jpg" />
 
-> 关于事件循环更多内容，可以参考下面这两篇文章  ：
+> 关于事件循环更多内容，可以参考这篇文章 - [消息队列和事件循环机制](https://www.yueluo.club/detail?articleId=60373cba61495b7b5aada0db)
 >
-> * []()
 
 为了避免这种动画实现方案中因丢帧造成的卡顿现象，我们推荐使用 `window.requestAnimationFrame` 。与 `setInterval` 方法相比，
+
