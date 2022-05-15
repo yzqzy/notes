@@ -1,19 +1,16 @@
 <template>
   <div>
-    <transition name="modal">
-      <div class="info-wrap" v-if="showModal">
-        <div class="info">啥都没输入！</div>
-      </div>
-    </transition>
+    <span class="dustbin">🗑</span>
 
     <input type="text" v-model="title" @keydown.enter="addTodo" />
     <button v-if="active < all" @click="clear">清理</button>
 
     <ul v-if="todos.length">
       <transition-group name="flip-list">
-        <li v-for="todo in todos" :key="todo.title">
+        <li v-for="(todo, i) in todos" :key="todo.title">
           <input type="checkbox" v-model="todo.done" />
           <span :class="{ done: todo.done }"> {{ todo.title }}</span>
+          <span class="remove-btn" @click="removeTodo($event, i)">❌</span>
         </li>
       </transition-group>
     </ul>
@@ -22,6 +19,18 @@
     <div>
       全选<input type="checkbox" v-model="allDone" />
       <span> {{ active }} / {{ all }} </span>
+    </div>
+    
+    <transition name="modal">
+      <div class="info-wrap" v-if="showModal">
+        <div class="info">啥都没输入！</div>
+      </div>
+    </transition>
+
+    <div class="animate-wrap">
+      <transition @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter">
+        <div class="animate" v-show="animate.show">📋</div>
+      </transition>
     </div>
   </div>
 </template>
@@ -36,9 +45,9 @@ console.log(x.value, y.value);
 
 const {
   title, todos,
-  addTodo, clear,
-  active, all, allDone,
-  showModal,
+  addTodo, removeTodo, clear,
+  active, all, allDone, showModal,
+  animate, enter, afterEnter, beforeEnter
 } = useTodos();
 </script>
 
@@ -80,5 +89,19 @@ const {
 .flip-list-leave-to {
   opacity: 0;
   transform: translateX(30px);
+}
+
+.dustbin {
+  font-size: 20px;
+  position: fixed;
+  right: 10px;
+  top: 10px;
+}
+.animate-wrap .animate {
+  position: fixed;
+  right: 10px;
+  top: 11px;
+  z-index: 100;
+  transition: all .5s linear;
 }
 </style>
