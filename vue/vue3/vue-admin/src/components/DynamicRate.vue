@@ -1,18 +1,39 @@
 
 <template>
-  <div :style="fontstyle">
-    {{ rate }}
+  <div :style="fontStyle">
+    <div class="rate" @mouseout="mouseOut">
+      <span @click="onRate(num)" @mouseover="mouseOver(num)" v-for="num in 5" :key="num">☆</span>
+      <span class="hollow" :style="fontWidth">
+        <span @mouseover="mouseOver(num)" v-for="num in 5" :key="num">★</span>
+      </span>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
-  value: Number,
+  modelValue: Number,
   theme: { type: String, default: 'orange' }
 })
-const rate = computed(() => "★★★★★☆☆☆☆☆".slice(5 - props.value, 10 - props.value))
+const emits = defineEmits('update:modelValue')
+
+function onRate (num) {
+  emits('update:modelValue', num)
+}
+
+const width = ref(props.modelValue)
+
+function mouseOver (i) {
+  width.value = i
+}
+
+function mouseOut () {
+  width.value = props.modelValue
+}
+
+const fontWidth = computed(() => `width: ${ width.value }em;`)
 
 const themeObj = {
   'black': '#00',
@@ -24,7 +45,25 @@ const themeObj = {
   'blue': '#40a9ff',
 }
 
-const fontstyle = computed(() => {
+const fontStyle = computed(() => {
   return `color:${themeObj[props.theme]};`
 })
 </script>
+
+
+<style scoped>
+.rate {
+  position: relative;
+  display: inline-block;
+}
+
+.rate > span.hollow {
+  position: absolute;
+  display: inline-block;
+  top: 0;
+  left: 0;
+  width: 0;
+  z-index: -1;
+  overflow: hidden;  
+}
+</style>
