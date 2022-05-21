@@ -4950,5 +4950,279 @@ interface ImportMeta {
 
 为了加深你的理解，这里我们以一个[实际的例子]()进行测试。首先展示一下整体的目录结构:
 
+```js
+.
+├── favicon.svg
+├── index.html
+├── node_modules
+│   └── ...
+├── package.json
+├── src
+│   ├── main.ts
+│   ├── render.ts
+│   ├── state.ts
+│   ├── style.css
+│   └── vite-env.d.ts
+└── tsconfig.json
+```
 
+这里放出一些关键文件的内容，如下面的 `index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <p>
+      count: <span id="count">0</span>
+    </p>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+```
+
+里面的 DOM 结构比较简单，同时引入了  `/src/main.ts`  这个文件，内容如下:
+
+```js
+import { render } from './render';
+import { initState } from './state';
+
+render();
+initState();
+```
+
+文件依赖了 `render.ts` 和 `state.ts`，前者负责渲染文本内容，而后者负责记录当前的页面状态:
+
+```js
+// src/render.ts
+// 负责渲染文本内容
+import './style.css'
+export const render = () => {
+  const app = document.querySelector<HTMLDivElement>('#app')!
+  app.innerHTML = `
+    <h1>Hello Vite!</h1>
+    <p target="_blank">This is hmr test.123</p>
+  `
+}
+
+// src/state.ts
+// 负责记录当前的页面状态
+export function initState() {
+  let count = 0;
+  setInterval(() => {
+    let countEle = document.getElementById('count');
+    countEle!.innerText =  ++count + '';
+  }, 1000);
+}
+```
+
+仓库当中关键的代码就目前这些了。现在，你可以执行 `pnpm i` 安装依赖，然后 `npm run dev` 启动项目。
+
+每隔一秒钟，你可以看到这里的 `count` 值会加一。现在你可以试着改动一下 `render.ts` 的渲染内容，比如增加一些文本:
+
+```diff
+// render.ts
+export const render = () => {
+  const app = document.querySelector<HTMLDivElement>('#app')!
+  app.innerHTML = `
+    <h1>Hello Vite!</h1>
++   <p target="_blank">This is hmr test.123 这是增加的文本</p>
+  `
+}
+```
+
+页面的渲染内容已经更新，但不知道你有没有注意到最下面的`count`值瞬间被置零了，并且查看控制台，也有这样的 log：
+
+```js
+[vite] page reload src/render.ts
+```
+
+很明显，当 `render.ts` 模块发生变更时，Vite 发现并没有 HMR 相关的处理，然后直接刷新页面了。
+
+现在让我们在 `render.ts` 中加上如下的代码:
+
+```diff
+// 条件守卫
++ if (import.meta.hot) {
++  import.meta.hot.accept((mod) => mod.render())
++ }
+```
+
+`import.meta.hot` 对象只有在开发阶段才会被注入到全局，生产环境是访问不到的，另外增加条件守卫之后，打包时识别到 if 条件不成立，会自动把这部分代码从打包产物中移除，来优化资源体积。因此，我们需要增加这个条件守卫语句。
+
+接下来，可以注意到我们对于  `import.meta.hot.accept` 的使用:
+
+```js
+import.meta.hot.accept((mod) => mod.render())
+```
+
+这里我们传入了一个回调函数作为参数，入参即为 Vite 给我们提供的更新后的模块内容，在浏览器中打印 `mod` 内容如下，正好是`render` 模块最新的内容:
+
+我们在回调中调用了一下  `mod.render`  方法，也就是当模块变动后，每次都重新渲染一遍内容。这时你可以试着改动一下渲染的内容，然后到浏览器中注意一下 `count` 的情况，并没有被重新置零，而是保留了原有的状态:
+
+现在 `render` 模块更新后，只会重新渲染这个模块的内容，而对于 state 模块的内容并没有影响，并且控制台的 log 也发生了变化:
+
+```js
+[vite] hmr update /src/render.ts (x3)
+```
+
+现在我们算是实现了初步的 HMR，也在实际的代码中体会到了 accept 方法的用途。当然，在这个例子中我们传入了一个回调函数来手动调用 render 逻辑，但事实上你也可以什么参数都不传，这样 Vite 只会把 `render`模块的最新内容执行一遍，但 `render` 模块内部只声明了一个函数，因此直接调用 `import.meta.hot.accept() `并不会重新渲染页面。
+
+##### 接收依赖模块更新
+
+上面介绍了 `接受自身模块更新` 的情况，现在来分析一下 `接受依赖模块更新` 是如何做到的。先给大家放一张原理图，直观地感受一下:
+
+<img src="./images/hmr.gif" />
+
+还是拿示例项目来举例，`main `模块依赖 `render` 模块，也就是说，`main`模块是 `render` 父模块，那么我们也可以在 `main` 模块中接受`render`模块的更新，此时 HMR 边界就是 `main` 模块了。
+
+我们将 `render`模块的 accept 相关代码先删除:
+
+```diff
+// render.ts
+- if (import.meta.hot) {
+-   import.meta.hot.accept((mod) => mod.render())
+- }
+```
+
+然后再 `main` 模块增加如下代码:
+
+```diff
+// main.ts
+import { render } from './render';
+import './state';
+
+render();
+
++if (import.meta.hot) {
++  import.meta.hot.accept('./render.ts', (newModule) => {
++    newModule.render();
++  })
++}
+```
+
+在这里我们同样是调用 accept 方法，与之前不同的是，第一个参数传入一个依赖的路径，也就是 `render` 模块的路径，这就相当于告诉 Vite: 我监听了 `render` 模块的更新，当它的内容更新的时候，请把最新的内容传给我。同样的，第二个参数中定义了模块变化后的回调函数，这里拿到了 `render` 模块最新的内容，然后执行其中的渲染逻辑，让页面展示最新的内容。
+
+通过接受一个依赖模块的更新，我们同样又实现了 HMR 功能，你可以试着改动 `render`模块的内容，可以发现页面内容正常更新，并且状态依然保持着原样。
+
+##### 接受多个子模块的更新
+
+<img src="./images/hmr_multi.gif" />
+
+这里的意思是**父模块可以接受多个子模块的更新，当其中任何一个子模块更新之后，父模块会成为 HMR 边界**。还是拿之前的例子来演示，现在我们更改`main`模块代码:
+
+```diff
+// main.ts
+import { render } from './render';
+import { initState } from './state';
+
+render();
+initState();
+
++if (import.meta.hot) {
++  import.meta.hot.accept(['./render.ts', './state.ts'], (modules) => {
++    console.log(modules);
++  })
++}
+```
+
+在代码中我们通过 accept 方法接受了`render`和`state`两个模块的更新，接着让我们手动改动一下某一个模块的代码，观察一下回调中`modules`的打印内容。例如当我改动 `state`模块的内容时，回调中拿到的 modules 是这样的:
+
+<img src="./images/hmr_multi.png" />
+
+可以看到 Vite 给我们的回调传来的参数 `modules` 其实是一个数组，和我们第一个参数声明的子模块数组一一对应。因此 `modules` 数组第一个元素是 `undefined`，表示 `render` 模块并没有发生变化，第二个元素为一个 Module 对象，也就是经过变动后 `state` 模块的最新内容。于是在这里，我们根据 `modules` 进行自定义的更新，修改 `main.ts`:
+
+```js
+// main.ts
+import { render } from './render';
+import { initState } from './state';
+
+render();
+initState();
+
+if (import.meta.hot) {
+  import.meta.hot.accept(['./render.ts', './state.ts'], (modules) => {
+    const [renderModule, stateModule] = modules;
+    
+    if (renderModule) {
+      renderModule.render();
+    }
+    if (stateModule) {
+      stateModule.initState();
+    }
+  })
+}
+```
+
+现在，你可以改动两个模块的内容，可以发现，页面的相应模块会更新，并且对其它的模块没有影响。但实际上你会发现另外一个问题，当改动了`state`模块的内容之后，页面的内容会变得错乱:
+
+<img src="./images/hmr_multi_error.gif" />
+
+这是为什么呢？我们快速回顾一下 `state`模块的内容:
+
+```js
+// state.ts
+export function initState() {
+  let count = 0;
+  setInterval(() => {
+    let countEle = document.getElementById('count');
+    countEle!.innerText =  ++count + '';
+  }, 1000);
+}
+```
+
+其中设置了一个定时器，但当模块更改之后，这个定时器并没有被销毁，紧接着我们在 accept 方法调用 `initState` 方法又创建了一个新的定时器，导致 count 的值错乱。那如何来解决这个问题呢？这就涉及到新的 HMR 方法——`dispose`方法了。
+
+#### hot.dispose
+
+这个方法相较而言就好理解多了，代表在模块更新、旧模块需要销毁时需要做的一些事情，拿刚刚的场景来说，我们可以通过在 `state` 模块中调用 dispose 方法来轻松解决定时器共存的问题，代码改动如下:
+
+```js
+// state.ts
+let timer: number | undefined;
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    if (timer) {
+      clearInterval(timer);
+    }
+  })
+}
+
+export function initState() {
+  let count = 0;
+  timer = setInterval(() => {
+    let countEle = document.getElementById('count');
+    countEle!.innerText =  ++count + '';
+  }, 1000);
+}
+```
+
+此时，我们再来到浏览器观察一下 HMR 的效果:
+
+<img src="./images/hmr_multi_error02.gif" />
+
+可以看到，当我稍稍改动一下 `state` 模块的内容(比如加个空格)，页面确实会更新，而且也没有状态错乱的问题，说明我们在模块销毁前清除定时器的操作是生效的。但你又可以很明显地看到一个新的问题: 原来的状态丢失了，`count` 的内容从 `64` 突然变成`1`。这又是为什么呢？
+
+让我们来重新梳理一遍热更新的逻辑:
+
+<img src="./images/hmr_source.png" />
+
+当我们改动了 `state` 模块的代码，`main`模块接受更新，执行 accept 方法中的回调，接着会执行 `state` 模块的 `initState `方法。注意了，此时新建的 `initState` 方法的确会初始化定时器，但同时也会初始化 count 变量，也就是 `count` 从 0 开始计数了！
+
+这显然是不符合预期的，我们期望的是每次改动 `state` 模块，之前的状态都保存下来。怎么来实现呢？
+
+#### hot.data
+
+这就不得不提到 hot 对象上的 data 属性了，这个属性用来在不同的模块实例间共享一些数据。
+使用上也非常简单，让我们来重构一下 `state` 模块:
+
+```js
+```
 
