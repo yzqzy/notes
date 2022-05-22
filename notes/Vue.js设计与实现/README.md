@@ -7292,3 +7292,24 @@ renderer.render(vnode, container);
 
 #### 挂载子节点与元素属性
 
+当 `vnode.children` 的值是字符串类型时，会把它设置为元素的文本内容。一个元素除了具有文本节点外，还可以包含其他元素子节点，并且子节点可以是很多个。没了描述元素的子节点，我们需要将 `vnode.children` 定义为数组。
+
+```js
+const vnode = {
+  type: 'div',
+  children: [
+    {
+      type: 'p',
+      children: 'hello'
+    }
+  ]
+}
+```
+
+上面这段代码描述的是 “一个 div 标签具有一个子节点，且子节点是 p 标签”。可以看到，`vnode.children` 是一个数组，它的每一个元素都是独立的虚拟节点对象。这样就形成了树形结构，即虚拟 DOM 树。
+
+为了完成子节点的渲染，我们需要修改 `mouneElement` 函数。
+
+```js
+```
+

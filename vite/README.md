@@ -5223,6 +5223,82 @@ export function initState() {
 这就不得不提到 hot 对象上的 data 属性了，这个属性用来在不同的模块实例间共享一些数据。
 使用上也非常简单，让我们来重构一下 `state` 模块:
 
-```js
+```diff
+let timer: number | undefined;
+if (import.meta.hot) {
++  // 初始化 count
++  if (!import.meta.hot.data.count) {
++    import.meta.hot.data.count = 0;
++  }
+  import.meta.hot.dispose(() => {
+    if (timer) {
+      clearInterval(timer);
+    }
+  })
+}
+export function initState() {
++  const getAndIncCount = () => {
++    const data = import.meta.hot?.data || {
++      count: 0
++    };
++    data.count = data.count + 1;
++    return data.count;
++  };
+  timer = setInterval(() => {
+    let countEle = document.getElementById('count');
++    countEle!.innerText =  getAndIncCount() + '';
+  }, 1000);
+}
 ```
+
+我们在 `import.meta.hot.data` 对象上挂载了一个`count` 属性，在二次执行 `initState` 的时候便会复用 `import.meta.hot.data` 上记录的 count 值，从而实现状态的保存。
+
+此时，我们终于大功告成，基本实现了这个示例应用的 HMR 的功能。在这个过程中，我们用到了核心的`accept`、`dispose` 和`data` 属性和方法。当然还有一些方法将会给大家进行介绍，但相较而言就比较简单了，而且用的也不多，大家只需要留下初步的印象，知道这些方法的用途是什么，需要用到的时候再来查阅即可。
+
+#### 其他方法
+
+##### hot.decline
+
+这个方法调用之后，相当于表示此模块不可热更新，当模块更新时会强制进行页面刷新。
+
+##### hot.invalidate
+
+强制刷新页面。
+
+##### 自定义事件
+
+你还可以通过 `import.meta.hot.on` 来监听 HMR 的自定义事件，内部有这几个事件会自动触发:
+
+- `vite:beforeUpdate` 当模块更新时触发；
+- `vite:beforeFullReload` 当即将重新刷新页面时触发；
+- `vite:beforePrune` 当不再需要的模块即将被剔除时触发；
+- `vite:error` 当发生错误时（例如，语法错误）触发。
+
+如果你想自定义事件可以通过上节中提到的 `handleHotUpdate` 这个插件 Hook 来进行触发:
+
+```js
+// 插件 Hook
+handleHotUpdate({ server }) {
+  server.ws.send({
+    type: 'custom',
+    event: 'custom-update',
+    data: {}
+  })
+  return []
+}
+// 前端代码
+import.meta.hot.on('custom-update', (data) => {
+  // 自定义更新逻辑
+})
+```
+
+### 总结
+
+在这一节中，你需要重点掌握 **HMR 的概念**、**Vite HMR API 的使用 **以及 **HMR 的更新原理**。
+
+我们首先认识了 HMR 这个概念，了解它相比于传统的 live reload 所解决的问题：`模块局部更新`和`状态保存`。然后我带你熟悉了 Vite HMR 中的各种 API，尤其是 accept 方法，根据 accept 的不同用法，我们分了三种情况来讨论 Vite 接受更新的策略: `接受自身更新`、`接受依赖模块的更新`和`接受多个子模块的更新`，并通过具体的示例来进行这三种情况的代码演示，可以看到在代码发生变动的时候，Vite 会定位到发生变化的局部模块，也就是找到对应的 HMR 边界，然后基于这个边界进行更新，其他的模块并没有受到影响，这也是 Vite 中的热更新的时间也到达毫秒级别的重要原因。
+
+在 Vite 中，HMR 是一套比较复杂的系统，不过一旦理解了本文提到的`HMR 边界`的作用原理，那么在后面解读 Vite HMR 源码的时候将会倍感轻松。大家加油吧！
+
+## 代码分割
 
