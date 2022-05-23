@@ -7943,8 +7943,70 @@ renderer.render(vnode, document.querySelector('#app'));
 renderer.render(null, document.querySelector('#app'));
 ```
 
-首次挂载完成后，后续渲染时如果传递了 null 作为新 vnode，则意味着什么都不渲染，这时我们需要卸载之前渲染的内容。
+首次挂载完成后，后续渲染时如果传递了 null 作为新 vnode，则意味着什么都不渲染，这时我们需要卸载之前渲染的内容。回顾前文实现的 render 函数，如下：
 
 ```js
+function render (vnode, container) {
+  if (vnode) {
+    patch(container._vnode, vnode, container);
+  } else {
+    if (container._vnode) {
+      container.innerHTML = '';
+    }
+  }
+  container._vnode = vnode;
+}
 ```
 
+可以看到，当 vnode 为 null，并且容器元素的 `container._vnode` 属性存在时，我们直接通过 `innerHTML` 清空容器。但这么做时不严谨的，原因有三点。
+
+* 容器的内容可能时某个或多个组件渲染的，当卸载操作发生时，应该正确地的调用这些组件的 `beforeUnmount`，`unmounted` 等声明周期函数；
+* 即使内容不是由组件渲染的，有的元素存在自定义指令，我们应该在卸载操作发生时正确执行对应的指令钩子函数；
+* 使用 `innerHTML`  清空容器元素内容的另一个缺陷是，它不会移除绑定在 DOM 元素上的事件处理函数。
+
+正如上述三点原因，我们不能简单地使用 `innerHTML` 来完成卸载操作。正确的卸载方式是，根据 `vnode` 对象获取与其相关联的真实 DOM 元素，然后再使用原生 DOM 操作方法将该 DOM 元素移除。为此，我们需要再 vnode 与真实 DOM 元素之间建立联系，修改 `mountElement` 函数，如下面的代码所示：
+
+```diff
+function mountElement (vnode, container) {
+  // 让 vnode.el 引用真实 DOM 元素
+-	const el = createElement(vnode.type);
++ const el = vnode.el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => patch(null, child, el))
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+      patchProps(el, key, null, vnode.props[key]);
+    }
+  }
+
+  insert(el, container);
+}
+```
+
+可以看到，当我们调用 `createElement` 函数创建真实 DOM 元素时，会把真实 DOM 元素赋值给 `vnode.el` 属性。这样，再 vnode 与真实 DOM 元素之间就建立了联系，我们可以通过 `vnode.el` 来获取该虚拟节点对应的真实 DOM 元素。有了这些，当卸载操作发生的时候，只需要根据虚拟节点对象 `vnode.el` 取得真实 DOM 元素，再将其从父元素中移除即可。
+
+```diff
+function render (vnode, container) {
+  if (vnode) {
+    patch(container._vnode, vnode, container);
+  } else {
+    if (container._vnode) {
++    // 根据 vnode 获取要卸载的真实 DOM 元素
++    const el = container._vnode.el;
++    // 获取 el 的父元素
++    const parent = el.parentNode;
++    // 调用 removeChild 移除元素
++    if (parent) parent.removeChild(el);
+-    container.innerHTML = '';
+    }
+  }
+  container._vnode = vnode;
+}
+```
+
+如上面的代码所示，其中
