@@ -7310,6 +7310,641 @@ const vnode = {
 
 为了完成子节点的渲染，我们需要修改 `mouneElement` 函数。
 
+```diff
+function mountElement (vnode, container) {
+  const el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+- }
++ } else if (Array.isArray(vnode.children)) {
++   vnode.children.forEach(child => patch(null, child, el))
++ }
+
+  insert(el, container);
+}
+```
+
+在上面这段代码中，我们增加了新的判断分支。使用 `Array.isArray` 函数判断 `vnode.children` 是否始数组，如果是数字，则循环遍历它，并调用 patch 函数挂载组件中的虚拟节点。在挂载子节点时，需要注意以下两点。
+
+* 传递给 patch 函数的第一个参数是 null。因为是挂载阶段，没有旧 vnode，所以只需要传递 null 即可。这样，当 patch 函数执行时，就会递归地调用 `mountElement` 函数完成挂载。
+* 传递给 patch 函数的第三个参数是挂载点。由于我们正在挂载的子元素是 div 标签的子节点，所以需要把刚刚创建的 div 元素作为挂载点，这样才能保证这些子节点挂载到正确位置。
+
+完成子节点的挂载后，我们再来看看如何用 vnode 描述一个标签的属性，以及如何渲染这些属性。我们知道，HTML 标签有很多属性，其中有些属性是通用的，例如 id、class 等，而有些属性是特定元素才有的，例如 form 元素的 action 属性。实际上，渲染一个元素的属性比想象中更复杂，不过我们仍然秉承一切从简的原则，先来看下最基本的属性处理。
+
+为了描述元素的属性，我们需要未虚拟 DOM 定义新的 `vnode.props` 字段：
+
+```js
+const vnode = {
+  type: 'div',
+  props: {
+    id: 
+  },
+  children: [
+    {
+      type: 'p',
+      children: 'hello'
+    }
+  ]
+}
+```
+
+`vnode.props` 是一个对象，它的键代表元素的属性名称，它的值代表对应属性的值。这样，我们就可以通过遍历 `props` 对象的方式，把这些属性渲染到对应的元素上：
+
+```diff
+function mountElement (vnode, container) {
+  const el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => patch(null, child, el))
+  }
+
++  if (vnode.props) {
++    for (const key in vnode.props) {
++      el.setAttribute(key, vnode.props[key]);
++    }
++  }
+
+  insert(el, container);
+}
+```
+
+这段代码中，我们首先检查了 `vnode.props` 字段是否存在，如果存在则遍历它，并调用 `setAttribute` 函数将属性设置到元素上。实际上，除了使用 `setAttribute` 函数为元素设置属性外，还可以通过 DOM 对象直接设置。
+
+```diff
+function mountElement (vnode, container) {
+  const el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => patch(null, child, el))
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+-     el.setAttribute(key, vnode.props[key]);
++     el[key] = vnode.props[key];
+    }
+  }
+
+  insert(el, container);
+}
+```
+
+在这段代码中，我们没有选择使用 `setAttribute` 函数，而是直接将属性设置到 DOM 对象上，即 `el[key] = vnode.props[key]`。实际上，无论是使用 `setAttribute` 函数，还是直接操作 DOM 对象，都存在缺陷。为元素设置属性比想象中要复杂得多。不过，在讨论具体有哪些缺陷之前，我们有必要先搞清楚两个重要的概念：`HTML Attributes` 和 `DOM Properties`。
+
+#### HTML Attributes 与 DOM Properties
+
+理解 `HTML Attributes` 和 `DOM Properties` 之间的差异和关联非常重要，这能够帮助我们合理地设计虚拟节点的结构，更是正确地为元素设置属性的关键。
+
+我们从最基本的 HTML 说起。
+
+```html
+<input id="J-input" type="text" value="foo" />
+```
+
+HTML Attributes 指的是定义在 HTML 标签上的属性，这里指的事 `id="J-input"` ，`type="text"` 和 `value="foo"` 。当浏览器解析这段 HTML 代码后，会创建一个与之相符的 DOM 元素对象，我们可以通过 JavaScript 代码来读取该 DOM 对象。
+
+```js
+const el = document.querySelector('#j-input');
+```
+
+这个 DOM 对象会包含很多属性（properties）。这些属性就是 DOM Properties。很多 HTML Attributes 在 DOM 对象上与之同名的 DOM Properties。例如 `id="J-input"` 对象 `el.id`，`type="text"` 对应 `el.type`，`value="foo"` 对应 `el.value` 等。但 DOM Properties 与 HTML Attributes 的名字不总是一模一样的。例如：
+
+```html
+<div class="foo"></div>
+```
+
+`class="foo"` 对应的 DOM Properties 则是 `el.className` 。另外，并不是所有 HTML Attributes 都有与之对应的 DOM Properties。
+
+```html
+<div aria-valuenoe="75"></div>
+```
+
+`aria-*` 类的 HTML Attributes 就没有与之对应的 DOM Properties。
+
+类似地，也不是所有的 DOM Properties 都有与之对应的 HTML Attributes，例如可以用 `el.textContent` 来设置元素的文本内容，但并没有与之对应的 HTML Attributes 来完成同样的工作。
+
+HTML Attributes 的值与 DOM Properties 的值是由有关联的，例如下面的 HTML 片段：
+
+```html
+<div id="foo"></div>
+```
+
+这个片段描述了一个具有 id 属性的 div 标签。其中，`id="foo"` 对应的 DOM Properties 是 `el.id`，并且值为字符串 `"foo"` 。我们把这种 HTML Attributes 与 DOM Properties 具有相同名称（即 id）的属性看作直接映射。但并不是所有 HTML Attributes 与 DOM Properties 之间都是直接映射的关系，例如：
+
+```html
+<input value="foo" />
+```
+
+这是一个具有 value 属性的 input 标签。如果用户没有修改文本框的内容，那么通过 `el.value` 读取对应的 DOM Properties 的值就是字符串 `"foo"` 。而如果用户修改了文本框的值，那么 `el.value` 的值就是当前文本框的值。例如，用户将文本框的内容修改为 `"bar"` ，那么：
+
+```js
+console.log(el.value); // "bar"
+```
+
+但如果运行下面的代码，会发生 ”奇怪“ 的现象：
+
+```js
+console.log(el.getAttribute('value')); // 仍然是 "foo"
+console.log(el.value); // "bar"
+```
+
+可以发现，用户对文本框内容的修改并不会影响 `el.getAttribute('value')` 的返回值，这个现象蕴含着 HTML Attributes 所代表的意义。HTML Attributes 的作用是设置与之对应的 DOM Properties 的初始值。一旦值改变，那么 DOM Properties 始终存储着当前值，而通过 `getAttribute` 函数得到的仍然是初始值。
+
+但我们仍然可以通过 `el.defaultValue` 来访问初始值，如下面的代码所示：
+
+```js
+el.getAttribute('value'); // 仍然是 'foo'
+el.value // 'bar'
+el.defaultValue // 'foo'
+```
+
+这说明一个 HTML Attributes 可以能关联多个 DOM Properties。例如在上例中，`value="foo"` 与 `el.value` 和 `el.defaultValue` 都有关联。
+
+虽然我们可以认为 HTML Attributes 是用来设置与之对应 DOM Properties 的初始值的，但有些值是受限制的，就好像浏览器内部做了默认值校验。如果你通过 HTML Attributes 提供的默认值不合法，那么浏览器会使用内建的合法值作为对应 `DOM Properties` 的默认值，例如：
+
+```html
+<input type="foo" />
+```
+
+我们知道，为 `<input />` 标签的 type 属性指定字符串 `'foo'` 是不合法的，因此浏览器会矫正这个不合法的值。所以当我们尝试读取 `el.type` 时，得到的其实时矫正后的值，即字符串 `'text'`，而非字符串 `'foo'`：
+
+```js
+console.log(el.type); // 'text'
+```
+
+从上述分析来看，HTML Attributes 与 DOM Properties 之间的关系很复杂，但其实我们只需要记住一个核心原则即可：HTML Attributes 的作用是设置与之对应的 DOM Properties 的初始值。
+
+#### 正确地设置元素属性
+
+我们详细讨论了 HTML Attributes 和 DOM Properties 相关的内容，因为 HTML Attributes 和 DOM Properties 会影响 DOM 属性的添加方式。对于普通的 HTML 文件来说，当浏览器解析 HTML 代码后，会自动分析 HTML Attributes 并设置合适的 DOM Properties。但用户写在 Vue.js 单文件组件中的模板不会被浏览器系解析，这意味着，原本需要浏览器来完成的工作，现在需要框架来完成。
+
+我们以禁用的按钮为例：
+
+```html
+<button disabled>Button</button>
+```
+
+浏览器在解析这段 HTML 代码时，发现这个按钮存在一个叫做 `disabled` 的 HTML Attributes，于是浏览器会将该按钮设置为禁用状态，并将它的 `el.disabled` 这个 DOM Properties 的值设置为 true，这一切都是浏览器帮我们处理好的。但是同样的代码如果出现在 Vue.js 的模板中，情况会有所不同。首先，这个 HTML 模板会被编译成 vnode，它等价于：
+
+```js
+const buuton = {
+  type: 'button',
+  props: {
+    disabled: ''
+  }
+}
+```
+
+注意，这里的 `props.disabled` 的值时空字符串，如果在渲染器中调用 `setAttribute` 函数设置属性，相当于：
+
+```js
+el.setAttribute('disabled', '');
+```
+
+这样做的确没问题，浏览器会将按钮禁用。但考虑如下模板：
+
+```html
+<button :disabled="false">Button</button>
+```
+
+它对应的 vnode 为：
+
+```js
+const buuton = {
+  type: 'button',
+  props: {
+    disabled: false
+  }
+}
+```
+
+用户的本意是 “不禁用” 按钮，但如果渲染器仍然使用 `setAttribute` 函数设置属性值，则按钮会被禁用：
+
+```js
+el.setAttribute('disabled', false);
+```
+
+这是因为使用 `setAttribute` 函数设置的值总是会被字符串化，所以上面这段代码等价于：
+
+```js
+el.setAttribute('disabled', 'false');
+```
+
+对于按钮来说，它的 `el.disabled` 属性值是布尔类型，并且它不关心具体的 HTML Attributes 的值是什么，只要 disabled 属性存在，按钮就会被禁用。所以我们可以发现，渲染器不应该总是使用 `setAttribute` 函数将 `vnode.props` 对象中的属性设置到元素上。那么应该怎么办？一个很自然的思路是，我们可以优先设置 DOM Properties，例如：
+
+```js
+el.disabled = false;
+```
+
+这样是可以正确工作的，但是也存在新的问题。
+
+```html
+<button disabled>Button</button>
+```
+
+这段代码对应的 vnode 是：
+
+```js
+const buuton = {
+  type: 'button',
+  props: {
+    disabled: ''
+  }
+}
+```
+
+我们注意到，在模板经过编译后得到的 vnode 对象中，`props.disabled` 的值是一个空字符串。如果直接用它设置元素的 DOM Properties，就相当于：
+
+```js
+el.disabled = '';
+```
+
+由于 `el.disabled` 是布尔类型的值，所以当我们尝试将它设置为空字符串时，浏览器会将它的值矫正为布尔类型的值，即 false。所以上面这句代码的执行结果等价于：
+
+```js
+el.disabled = false;
+```
+
+这违背了用户的本意，因为用户希望禁用按钮，而 `el.disabled = false` 则是不禁用。
+
+这样看来，无论使用 `setAttribute` 函数，还是直接设置元素的 DOM Properties，都存在缺陷。要彻底解决这个问题，我们只能做特殊处理，即有限设置元素的 DOM Properties，但当值为空字符串时，要手动将值矫正为 true。只有这样，才能保证代码的行为符合预期。
+
+```diff
+function mountElement (vnode, container) {
+  const el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => patch(null, child, el))
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+-     el[key] = vnode.props[key];
++     if (key in el) {
++       const type = typeof el[key];
++       const values = vnode.props[key];
++       if (type === 'boolean' && value === '') {
++         el[key] = true;
++       } else {
++         el[key] = value;
++       }
++     } else {
++       // 如果要设置的属性没有对应的 DOM Properties，则使用 setAttribute 函数设置属性
++       el.setAttribute(key, vnode.props[key]);
++     }
+    }
+  }
+
+  insert(el, container);
+}
+```
+
+如代码所示，我们检查每一个 `vnode.props` 中的属性，看看是否存在对应的 DOM Properties，如果存在，则优先设置 DOM Properties。同时，我们对布尔类型的 DOM Properties 做了值得矫正，即当要设置得值为空字符串时，将其矫正为布尔值 true。当然，如果 `vnode.props` 中得属性不具有对应的 DOM Properties，则仍然使用 `setAttribute` 函数完成属性的设置。
+
+不过上面给出的实现仍然存在问题，因为有一些 DOM Properties 是只读的。
+
+```html
+<form id="form1"></form>
+<input form="form1" />
+```
+
+在这段代码中，我们为 `<input />` 标签设置了 form 属性（HTML Attributes）。它对应的 DOM Properties 是 `el.form`，但 `el.form` 是只读的，因为我们只能通过 `setAttribute` 函数来设置它。我们需要修改现有逻辑。
+
+```diff
++function sholdSetAsProps (el, key, value) } {
++  if (key === 'form' && el.tagName === 'INPUT') return false
++  return key in el;
++}
+
+function mountElement (vnode, container) {
+  const el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => patch(null, child, el))
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+-    // if (key in el) {
++    if (sholdSetAsProps(el, key, value)) {
+        const type = typeof el[key];
+        const values = vnode.props[key];
+
+        if (type === 'boolean' && value === '') {
+          el[key] = true;
+        } else {
+          el[key] = value;
+        }
+      } else {
+        el.setAttribute(key, vnode.props[key]);
+      }
+    }
+  }
+
+  insert(el, container);
+}
+```
+
+如代码所示，为了代码的可读性，我们提取了 `shouldSetAsProps` 函数。该函数会返回一个布尔值，代表属性是否应该作为 DOM Properties 被设置。如果返回 true，则代表应该作为 DOM Properties 被设置，否则应该使用 `setAttribute` 函数来设置。在 `shouldSetAsProps` 函数内，我们对 `<input form="xxx" />` 进行特殊处理，即 `<input />` 标签的 form 属性必须使用 `setAttribute` 函数来设置。实际上，不仅仅是 `<input />` 标签，所有表单元素都具有 `form` 属性，它们都应该作为 `HTML Attributes` 被设置。
+
+当然，`<input form="xxx" />` 是一个特殊的例子，还有一些其他类似于这种需要特殊处理的情况。我们不需要列表所有情况一一讲解，因为掌握处理问题的思路更加重要。另外，我们也不可能把所有需要特殊处理的地方都记住，更何况有时我们根本不知道在什么情况下才需要特殊处理。所以，上述解决方案本质上都是经验之谈。不要惧怕写出不完美的代码，只要在后续迭代过程中 “见招拆招” ，代码就会变得越来越完善，框架也会变得越来越健壮。
+
+最后，我们需要把属性的设置也变成与平台无关，因此需要把属性设置相关操作也提取到渲染器选项中。
+
+```js
+const renderer = createRenderer({
+  createElement (tag) {
+    console.log(`创建元素 ${ tag }`);
+    return { tag };
+  },
+  setElementText (el, text) {
+    console.log(`设置 ${ JSON.stringify(el) } 的文本内容：${ text }`);
+    el.text = text;
+  },
+  insert (el, parent, anchor = null) {
+    console.log(`将 ${ JSON.stringify(el) } 添加到 ${ JSON.stringify(parent) } 下`);
+    parent.children = el;
+  },
+  patchProps (el, key, preValue, nextValue) {
+    if (sholdSetAsProps(el, key, nextValue)) {
+      const type = typeof el[key];
+      if (type === 'boolean' && nextValue === '') {
+        el[key] = true;
+      } else {
+        el[key] = nextValue;
+      }
+    } else {
+      el.setAttribute(key, nextValue);
+    }
+  }
+});
+```
+
+在 `mountElement` 函数中，只需要调用 `patchProps` 函数，并为其传递相关参数即可：
+
+```js
+function mountElement (vnode, container) {
+  const el = createElement(vnode.type);
+
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => patch(null, child, el))
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+      patchProps(el, key, null, vnode.props[key]);
+    }
+  }
+
+  insert(el, container);
+}
+```
+
+这样我们就把属性相关的渲染逻辑从渲染器的核心中抽离了出来。
+
+完整代码如下：
+
+```js
+// renderer.js
+function createRenderer (options) {
+  const { createElement, insert, setElementText, patchProps } = options;
+
+  function mountElement (vnode, container) {
+    const el = createElement(vnode.type);
+
+    if (typeof vnode.children === 'string') {
+      setElementText(el, vnode.children)
+    } else if (Array.isArray(vnode.children)) {
+      vnode.children.forEach(child => patch(null, child, el))
+    }
+
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        patchProps(el, key, null, vnode.props[key]);
+      }
+    }
+
+    insert(el, container);
+  }
+
+ 	// ...
+
+  return {
+    render,
+    hydrate
+  };
+}
+
+// index.js
+const vnode = {
+  type: 'button',
+  props: {
+    disabled: ''
+  }
+}
+const container = { type: 'root' };
+
+function sholdSetAsProps (el, key, value) {
+  if (key === 'form' && el.tagName === 'INPUT') return false
+  return key in el;
+}
+
+const renderer = createRenderer({
+  createElement (tag) {
+    console.log(`创建元素 ${ tag }`);
+
+    const elem = { tag };
+
+    elem.setAttribute = (key, value) => {
+      console.log(tag, key, value);
+    };
+
+    return elem;
+  },
+	// ...
+  patchProps (el, key, preValue, nextValue) {
+    if (sholdSetAsProps(el, key, nextValue)) {
+      const type = typeof el[key];
+      if (type === 'boolean' && nextValue === '') {
+        el[key] = true;
+      } else {
+        el[key] = nextValue;
+      }
+    } else {
+      el.setAttribute(key, nextValue);
+    }
+  }
+});
+
+renderer.render(vnode, container);
+```
+
+#### class 的处理
+
+我们已经讲解了如何正确地把 `vnode.props` 中定义的属性设置到 DOM 元素上。但在 Vue.js 中，仍然有一些属性需要特殊处理，比如 class 属性。为什么需要对 class 属性进行特殊处理那？这是因为 Vue.js 对 class 做了增强。在 Vue.js 中为元素设置类型有以下几种方式。
+
+**方式一：指定 class 为字符串值**
+
+```html
+<p class="foo bar"></p>
+```
+
+这段模板对应的 vnode 是：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    class: 'foo bar'
+  }
+}
+```
+
+**方式二：指定 class 为一个对象值**
+
+```html
+<p :class="cls"></p>
+```
+
+假设对象 `cls` 的内容如下：
+
+```js
+const cls = { foo: true, bar: false };
+```
+
+那么，这段模板对应的 vnode 是：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    class: { foo: true, bar: false }
+  }
+}
+```
+
+**方式三：class 是包含上述两种类型的数组**
+
+```html
+<p :class="arr"></p>
+```
+
+这个数组可以是字符串值和对象值的组合：
+
+```js
+const arr = [
+  'foo bar',
+  {
+    baz: true
+  }
+]
+```
+
+那么，这段模板对应的 vnode 是：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    class: [
+      'foo bar',
+      { baz: true }
+    ]
+  }
+}
+```
+
+可以看到，因为 class 的值可以是多种类型，所以我们必须在设置元素的 class 之前将值归一化为统一的字符串形式，再把该字符串作为元素的 class 值去设置。因此，我们需要封装 `normalizeClass` 函数，用它来将不同类型的 class 值正常化为字符串，例如：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    class: normalizeClass([
+      'foo bar',
+      {
+        baz: true
+      }
+    ])
+  }
+}
+```
+
+最后的结果等价于：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    class: 'foo bar baz'
+  }
+}
+```
+
+至于 `normalizeClass` 函数的实现，这里就不作详细讲解，因为它本质上就是一个数据转换的小算法，实现起来并不复杂。
+
+假设现在我们已经能够对 class 值进行正常化。接下来，我们将讨论如何将正常化后的 class 值设置到元素上。其实，我们目前实现的渲染器已经能够完成 class 的渲染。因为 class 属性对应的 DOM Properties 是 `el.className` ，所以表达式 `class in el` 的值将会是 false，因此，`patchProps` 函数会使用 `setAttribute` 函数来完成 class 的设置。但是我们知道，在浏览器中为一个元素设置 class 有三种方式，即使用 `setAttribute` ，`el.className` 或 `el.classList`。那么哪一种方法的性能更好呢？
+
+<img src="./images/classname.png" />
+
+> https://measurethat.net/Benchmarks/Show/54/0/classname-vs-setattribute-vs-classlist
+
+可以看到，`el.classname` 的性能最优。因此，我们需要调整 `patchProps` 函数的实现。
+
+```js
+patchProps (el, key, preValue, nextValue) {
+  if (key === 'class') {
+    el.className = nextValue || '';
+  } else if (sholdSetAsProps(el, key, nextValue)) {
+    const type = typeof el[key];
+    if (type === 'boolean' && nextValue === '') {
+      el[key] = true;
+    } else {
+      el[key] = nextValue;
+    }
+  } else {
+    el.setAttribute(key, nextValue);
+  }
+}
+```
+
+从代码中可以看到，我们对 class 进行了特殊处理，即使用 `el.className` 代替 `setAttribute` 函数。其实除了 class 属性之外，Vue.js 还对 style 属性做了增强，所以我们也需要对 style 做类似的处理。
+
+通过对 class 的处理，我们可以知道，`vnode.props` 对象中定义的属性值的类型并不总是与 DOM 元素属性的数据结构保持一致，这取决于上层 API 的设计。Vue.js 允许对象类型的值作为 class 是为了方便开发者，在底层的是线上，必然需要对值进行正常化后再使用。另外，正常化的过程是由代价的，如果需要进行大量的正常化操作，则会消耗更多性能。
+
+#### 卸载操作
+
+前文主要讨论了挂载操作。接下来，我们将会讨论卸载操作。卸载操作发生在更新阶段，更新指的是，在初次挂载完成之后，后续渲染会触发更新。
+
+```js
+// 初次挂载
+renderer.render(vnode, document.querySelector('#app'));
+// 再次挂载新的 vnode，将触发更新操作
+renderer.render(newVnode, document.querySelector('#app'));
+```
+
+更新的情况有几种，我们逐个来看。当后续调用 render 函数渲染空内容（即 null）时，如下面的代码所示：
+
+```js
+// 初次挂载
+renderer.render(vnode, document.querySelector('#app'));
+// 新 vnode 为 null，意味着卸载之前渲染的内容
+renderer.render(null, document.querySelector('#app'));
+```
+
+首次挂载完成后，后续渲染时如果传递了 null 作为新 vnode，则意味着什么都不渲染，这时我们需要卸载之前渲染的内容。
+
 ```js
 ```
 
