@@ -8009,4 +8009,229 @@ function render (vnode, container) {
 }
 ```
 
-如上面的代码所示，其中
+如上面的代码所示，其中 `container._vnode` 代表旧 vnode，即要被卸载的 vnode。然后通过 `container._vnode.el` 取得真实 DOM 元素，并调用 `removeChild` 函数将其从父元素中移除即可。
+
+由于卸载操作时比较常见且基本的操作，所以我们可以将它封装到 `unmount` 函数中，以便后续代码可以复用它，如下面的代码所示：
+
+```js
+function unmount (vnode) {
+  const parent = vnode.el.parentNode;
+  if (parent) {
+    parent.removeChild(vnode.el);
+  }
+}
+```
+
+unmount 函数接收一个虚拟节点作为参数，并将该虚拟节点对应的真实 DOM 元素从父元素中移除。现在 `unmount` 函数的代码还比较简单，后续我们可以慢慢充实它，使之变得更加完善。有了 unmount 函数后，就可以直接在 `render` 函数中调用它来完成卸载任务。
+
+```js
+function unmount (vnode) {
+  const parent = vnode.el.parentNode;
+  if (parent) {
+    parent.removeChild(vnode.el);
+  }
+}
+
+function render (vnode, container) {
+  if (vnode) {
+    patch(container._vnode, vnode, container);
+  } else {
+    if (container._vnode) {
+      // 调用 unmount 函数卸载 vnode
+      unmount(container._vnode);
+    }
+  }
+  container._vnode = vnode;
+}
+```
+
+将卸载操作封装到 unmount 函数中，还可以带来两点额外的好处：
+
+* 在 unmount 函数内，我们有机会调用绑定在 DOM 元素上的指令钩子函数，例如 `beforeUnmount` 、`unmounted` 等。
+* 在 unmount 函数执行时，我们有机会检测虚拟节点 vnode 的类型。如果该虚拟节点描述的是组件，我们有机会调用组件相关的生命周期函数。
+
+#### 区分 vnode 的类型
+
+前面我们了解到，当后续调用 render 函数渲染空内容（即 null）时，会执行卸载操作。如果后续渲染时，传递新的 vnode，则会把新旧 vnode 都传递给 patch 函数进行打补丁操作。
+
+```js
+function patch (n1, n2, container) {
+  if (!n1) {
+    mountElement(n2, container);
+  } else {
+    // 更新
+  }
+}
+```
+
+上面这段代码时我们之前实现的 patch 函数。其中，patch 函数的两个参数 `n1` 和 `n2` 分别代表旧 vnode 与新 vnode。如果旧 vnode 存在，则需要在新旧 vnode 之间打补丁。但在具体执行打补丁操作之前，我们需要保证新旧 vnode 所描述的内容相同。
+
+举个例子，假设初次渲染的 vnode 时一个 p 元素：
+
+```js
+const vnode = { type: 'p' };
+renderer.render(vnode, document.querySelector('#app'));
+```
+
+后续又渲染了一个 input 元素：
+
+```js
+const vnode = { type: 'input' };
+renderer.render(vnode, document.querySelector('#app'));
+```
+
+这就会造成新旧 vnode 所描述的内容不同，即 `vnode.type` 属性的值不同。对于上例来说，p 元素和 input 元素之间不需要打补丁，因为对于不同的元素来说，每个元素都有特有的属性，例如：
+
+```html
+<p id="foo" />
+
+<!-- type 属性是 input 标签特有的，p 标签则没有该属性 -->
+<input type="submit" />
+```
+
+在这种情况下，正确的更新操作是，先将 p 元素卸载，再将 input 元素挂载到容器中。因此我们需要调整 patch 函数的代码：
+
+```js
+function patch (n1, n2, container) {
+  // 如果 n1 存在，对比 n1 和 n2 类型
+  if (n1 && n1.type !== n2.type) {
+    // 如果新旧 vnode 的类型不同，直接将旧 vnode 卸载
+    unmount(n1);
+    n1 = null;
+  }
+  if (!n1) {
+    mountElement(n2, container);
+  } else {
+  }
+}
+```
+
+如上面的代码所示，在真正执行更新操作之前，我们优先检查新旧 vnode 所描述的内容是否相同，如果不同，则直接调用 unmount 函数将旧 vnode 卸载。这里需要注意的是，卸载完成后，我们应该将参数 `n1` 的值重置为 null，这样才能保证后续挂载操作正确执行。
+
+即使新旧 vnode 描述的内容相同，我们仍然需要进一步确认它们的类型是否相同。我们知道，一个 vnode 可以用来描述普通标签，也可以用来描述组件，还可以用来描述 `Fragment` 等。对于不同类型的 vnode，我们需要提供不同的挂载或打补丁的处理方式。所以，我们需要继续修改 patch 函数的代码以满足需求，如下面的代码所示：
+
+```js
+function patch (n1, n2, container) {
+  // 如果 n1 存在，对比 n1 和 n2 类型
+  if (n1 && n1.type !== n2.type) {
+    // 如果新旧 vnode 的类型不同，直接将旧 vnode 卸载
+    unmount(n1);
+    n1 = null;
+  }
+
+  // n1 和 n2 所描述的内容相同
+  const { type } = n2;
+
+  if (typeof type === 'string') {
+    if (!n1) {
+      mountElement(n2, container);
+    } else {
+      patchElement(n1, n2);
+    }
+  } else if (typeof type === 'object') {
+    // 如果 n2.type 值的类型是对象，则描述的是组件
+  } else if (type === 'xxx') {
+    // 处理其他类型的 vnode
+  }
+}
+```
+
+实际上，在前文的讲解中，我们都一直假设 vnode 的类型是普通元素标签。但严谨的做法是根据 `vnode.type` 进一步确认它们的类型是什么，从而使用相应的处理函数进行处理。如果 `vnode.type` 的值的类型是字符串类型，它描述的就是普通标签元素，这时我们会调用 `mouneElement` 或 `patchElement` 完成挂载和更新操作。如果 `vnode.type` 的值的类型是对象，则它描述的是组件，这时我们会调用与组件相关的挂载和更新方法。
+
+#### 事件的处理
+
+本小节我们讨论如何处理事件，包括如何在虚拟节点中描述事件，如果和事件添加到 DOM 元素上，以及如何更新事件。
+
+首先，我们先来解决第一个问题，如何在虚拟节点中描述事件。事件可以视作一种特殊的属性，因此我们可以约定，在 `vnode.props` 对象中，凡是以字符串 `on` 开头的属性都视作事件，例如：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    onClick: () => {
+      alert('clicked');
+    }
+  },
+  children: 'text'
+}
+```
+
+解决了事件在虚拟节点层面的描述问题后，我们再来看看如何将事件添加到 DOM 元素上。这非常简单，只需要在 `patchProps` 中调用 `addEventListener` 函数来绑定事件即可，如下面的代码所示：
+
+```js
+patchProps (el, key, preValue, nextValue) {
+  if (/^on/.test(key)) {
+    // 根据属性名称得到对应的事件名称
+    const name = key.slice(2).toLowerCase();
+    // 绑定事件，nextValue 为事件处理函数
+    el.addEventListener(name, nextValue);
+  } else if (key === 'class') {
+    el.className = nextValue || '';
+  } else if (sholdSetAsProps(el, key, nextValue)) {
+		// ...
+  } else {
+    el.setAttribute(key, nextValue);
+  }
+}
+```
+
+那么，更新事件要如何处理呢？按照一般的思路，我们需要先移除之前添加的事件处理函数，然后再将新的事件处理函数绑定到 DOM 元素上，如下面的代码所示：
+
+```js
+patchProps (el, key, preValue, nextValue) {
+  if (/^on/.test(key)) {
+    // 根据属性名称得到对应的事件名称
+    const name = key.slice(2).toLowerCase();
+    // 移除上一次绑定的事件处理函数
+    preValue && el.removeEventListener(name, preValue);
+    // 绑定事件，nextValue 为事件处理函数
+    el.addEventListener(name, nextValue);
+  } else if (key === 'class') {
+    el.className = nextValue || '';
+  } else if (sholdSetAsProps(el, key, nextValue)) {
+		// ...
+  } else {
+    el.setAttribute(key, nextValue);
+  }
+}
+```
+
+这样做代码能够按照预期工作，但其实还有一种性能更优的方式来完成事件更新。在绑定事件时，我们可以绑定一个伪造的事件处理函数 invoker ，然后把真正的事件处理函数设置为 `invoker.value` 属性的值。这样当更新事件的时候，我们将不再需要调用 `removeEventListener` 函数来移除上一次绑定的事件，只需要更新 `invoke.value` 的值即可，如下面的代码所示：
+
+```js
+patchProps (el, key, preValue, nextValue) {
+  if (/^on/.test(key)) {
+    // 获取为该元素伪造的事件处理函数 invoker
+    const invoker = el._vei;
+    const name = key.slice(2).toLowerCase();
+
+    if (nextValue) {
+      if (!invoker) {
+        // 如果没有 invoker，则将一个伪造的 invoker 缓存到 el._vei 中
+        // vei 是 vue event invoker 的首字母缩写
+        invoker = el._vei = (e) => {
+          // 当伪造的事件处理函数执行时，会执行真正的事件处理函数
+          invoker.value(e);
+        }
+        // 将真正的事件处理函数赋值给 invoker.value
+        invoker.value = nextValue;
+        // 绑定 invoker 作为事件处理函数
+        el.addEventListener(name, invoker);
+      } else {
+        // 如果 invoker 存在，意味着更新，只需要更新 invoker.value 的值即可
+        invoker.value = nextValue;
+      }
+    } else if (invoker) {
+      // 新事件绑定函数不存在，且之前绑定的 invoker 存在，移除绑定
+      el.removeEventListener(name, invoker);   
+    }
+  } else if (key === 'class') {
+    el.className = nextValue || '';
+  }
+  // ...
+}
+```
+
+观察上面的代码，事件绑定主要分为两个步骤：
+
+* 
