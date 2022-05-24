@@ -149,6 +149,8 @@ void、any、never、元组、枚举、高级类型等
 语法：(变量/函数)：type
 
 ```ts
+console.log('-- datatype start --')
+
 // 原始类型
 const bool: boolean = true
 const num: number = 123
@@ -162,7 +164,7 @@ const arr3: Array<number | string> = [1, 2, 3, '4']
 // 元组：特殊的数组，限定数组元素类型和个数
 const tuple: [number, string] = [0, '1']
 tuple.push(2); // 原则上不可以改变，允许 push 应该是一个TypeScript 的一个缺陷
-console.log(tuple)// [0, '1', 2] 
+console.log(tuple)// [0, '1', 2]
 // console.log(tuple[2])// 无法越界访问
 
 // 函数
@@ -207,7 +209,190 @@ const error = () => {
 const endless = () => {
   while(true) {}
 }
+
+console.log('-- datatype end --')
 ```
 
 ts 基础类型完全覆盖了 ES6 的基础类型，并且通过 any 类型实现了对 JS 的兼容。
+
+### 枚举类型
+
+先来看一段代码。
+
+```js
+function initByRole (role) {
+  if (role === 1 || role === 2) {
+    // ...
+  } else if (role === 3 || role === 4) {
+    // ...
+  } else if (role === 5) {
+    // ...
+  } else {
+    // do sth
+  }
+}
+```
+
+上面这段代码存在以下问题：
+
+* 可读性差：很难记住数字的含义；
+* 可维护性差：硬编码，牵一发而动全身；
+
+要想解决上述问题，我们可以使用 ts 的枚举类型。
+
+**枚举：一组有名字的常量集合。**
+
+```ts
+console.log('-- enum start --')
+
+// 数字枚举
+enum Role {
+  Reporter,
+  Developer,
+  Maintainer,
+  Owner,
+  Guest
+}
+console.log(Role.Reporter);
+console.log(Role);
+// 枚举会被编译成一个对象，既可以用名称索引，也可以用值来索引
+// {0: 'Reporter', 1: 'Developer', 2: 'Maintainer', 3: 'Owner', 4: 'Guest', Reporter: 0, Developer: 1, Maintainer: 2, Owner: 3, Guest: 4}
+// 我们可以用 ts playground 来查看其实现，https://www.typescriptlang.org/play。
+// "use strict";
+// var Role;
+// (function (Role) {
+//     Role[Role["Reporter"] = 0] = "Reporter";
+//     Role[Role["Developer"] = 1] = "Developer";
+//     Role[Role["Maintainer"] = 2] = "Maintainer";
+//     Role[Role["Owner"] = 3] = "Owner";
+//     Role[Role["Guest"] = 4] = "Guest";
+// })(Role || (Role = {}));
+// 上面这种代码实现方式叫做反向映射，这就是枚举的实现原理。
+
+// 字符串枚举
+enum Message {
+  Success = 'success',
+  Fail = 'fail'
+}
+// 字符串枚举不可以反向映射
+// "use strict";
+// var Message;
+// (function (Message) {
+//     Message["Success"] = "success";
+//     Message["Fail"] = "fail";
+// })(Message || (Message = {}));
+
+// 异构枚举
+// 不推荐使用，容易引起混淆
+enum Answer {
+  N,
+  Y = 'yes'
+}
+// "use strict";
+// var Answer;
+// (function (Answer) {
+//     Answer[Answer["N"] = 0] = "N";
+//     Answer["Y"] = "yes";
+// })(Answer || (Answer = {}));
+
+// 枚举成员
+// 枚举成员的值是一个只读类型，定义后无法修改
+// Role.Reporter = 2 // 'Reporter' because it is a read-only property.
+// 枚举成员分为两类：
+//  一类是常量枚举（const enum），它会在编译的时候计算出结果，然后以常量的形式出现在运行时环境
+//  一类是计算枚举（computed enum），是一些非常量的表达式 ，这些类型的值不会再编译时计算，而是会保留到程序的执行阶段
+enum Char {
+  // const 
+  a, // 1. 无初始值
+  b = Char.a, // 2. 已有常量的引用
+  c = 1 + 3, // 3. 常量表达式
+  // computed
+  d = Math.random(),
+  e = '123'.length,
+  // f //  Enum member must have initializer.  computed enum 后面的成员必须赋初始值
+}
+// "use strict";
+// var Char;
+// (function (Char) {
+//     // const 
+//     Char[Char["a"] = 0] = "a";
+//     Char[Char["b"] = 0] = "b";
+//     Char[Char["c"] = 4] = "c";
+//     // computed
+//     Char[Char["d"] = Math.random()] = "d";
+//     Char[Char["e"] = '123'.length] = "e";
+// })(Char || (Char = {}));
+
+// 常量枚举
+// const 关键字声明的枚举就是常量枚举，常量枚举会在编译阶段被移除
+// "use strict"; 编译后没有任何代码，也不存在反向映射，因为已经被移除掉
+const enum Month {
+  Jan,
+  Feb,
+  Mar
+}
+// 当我们不需要一个对象，而需要对象的值时，可以使用常量枚举，这样会减少编译后的代码
+let month = [Month.Jan, Month.Feb]
+// "use strict";
+// let month = [0 /* Jan */, 1 /* Feb */];
+// 编译后，枚举会直接被替换成常量，这样在编译后代码就会变得非常简洁
+
+// 枚举类型
+// 某些情况下，枚举和枚举成员都可以作为一种单独的类型存在
+enum E { a, b }
+enum F { a = 0, b = 1 }
+enum G { a = 'apple', b = 'banana' }
+
+let e: E = 3
+let f: F = 3
+// e == f //  This condition will always return 'false' since the types 'E' and 'F' have no overlap. 两种不同类型的枚举是不可以比较的
+
+let e1: E.a
+let e2: E.b
+let e3: E.a
+// e1 === e2 // 不可以比较
+// e1 === e3 // 相同类型可以进行比较
+
+let g1: G
+let g2: G.a
+// 字符串类型枚举只能是枚举成员的类型
+
+console.log('-- enum end --')
+```
+
+我们需要将程序中不容易记忆的硬编码或者在未来中可能改变的常量，抽离出来定义成枚举类型，可以提高程序的可读性和可维护性。
+
+**技术拓展**
+
+将 enum 类型，转换为一个 string iteator type。
+
+```ts
+enum Test {
+  A = 'a',
+  B = 'b',
+  C = 'c'
+}
+
+type TestValue = keyof Record<Test, string>
+```
+
+给定字符串 “a”，获取 `Test.A`
+
+```ts
+function getKey (value: string) {
+  let key: keyof typeof Test
+
+  for (key in Test) {
+    if (value === Test[key]) return key
+  }
+
+  return null
+}
+```
+
+### 接口
+
+#### 对象类型接口
+
+#### 函数类型接口
 

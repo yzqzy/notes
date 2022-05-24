@@ -1,3 +1,5 @@
+console.log('-- datatype start --')
+
 // 原始类型
 const bool: boolean = true
 const num: number = 123
@@ -57,3 +59,4 @@ const endless = () => {
   while(true) {}
 }
 
+console.log('-- datatype end --')
