@@ -8234,4 +8234,142 @@ patchProps (el, key, preValue, nextValue) {
 
 观察上面的代码，事件绑定主要分为两个步骤：
 
-* 
+* 先从 `el._vei` 中读取对应的 `invoker`，如果 `invoker` 不存在，则将伪造的 `invoker` 作为事件处理函数，并将它缓存到 `el._vei` 属性中。
+* 把真正的事件处理函数赋值给 `invoker.value` 属性，然后把伪造的 `invoker` 函数作为事件处理函数绑定到元素上。可以看到，当事件被触发时，实际上执行的是伪造的事件处理函数，在其内部间接执行了真正的事件处理函数 `invoker.value(e)`。
+
+当更新事件时，由于 `el._vei` 已经存在了，所以我们只需要将 `invoker.value` 的值修改为新的事件处理函数即可。这样，在更新事件时可以避免一次 `removeEventListener` 函数的调用，从而提升性能。实际上，伪造的事件处理函数的作用不仅于此，它还能解决冒泡与事件更新之间相互影响的问题。
+
+目前的实现仍然存在问题。我们将事件处理函数缓存在 `el._vei` 属性中，问题是，在同一时刻只能缓存一个事件处理函数。这意味着，如果一个元素同时绑定了多种事件，将会出现事件覆盖的现象。例如同时给元素绑定 `click` 和 `contextmenu` 事件。
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    onClick: () => {
+      alert('clicked')
+    },
+    onContextmenu: () => {
+      alert('contextmeny')
+    }
+  },
+  children: 'text'
+}
+
+renderer.render(vnode, document.querySelector('#app'))
+```
+
+当渲染器尝试渲染上面这段代码时，会先绑定 `click` 事件，然后再绑定 `contextmenu` 事件。后绑定的 `contextmenu` 事件处理函数会覆盖先绑定的 `click` 的事件处理函数。为了解决事件覆盖的问题，我们需要重新设计 `el._vei` 的数据结构。我们应该将 `el._vei` 设计为一个对象，它的键是事件名称，它的值则是对应的事件处理函数，这样就不会发生事件覆盖的现象。
+
+```js
+patchProps (el, key, preValue, nextValue) {
+  if (/^on/.test(key)) {
+    // 定义 el._vei，存储事件名称到事件处理函数的映射
+    const invokers = el._vei || (el._vei = {});
+    const name = key.slice(2).toLowerCase();
+
+    // 根据事件名称获取 invoker
+    let invoker = in][key];
+
+    if (nextValue) {
+      if (!invoker) {
+        // 将事件处理函数缓存到 el._vei[key] 下，避免覆盖
+        invoker = el._vei[key] = (e) => {
+          invoker.value(e);
+        }
+        invoker.value = nextValue;
+        el.addEventListener(name, invoker);
+      } else {
+        invoker.value = nextValue;
+      }
+    } else if (invoker) {
+      el.removeEventListener(name, invoker);   
+    }
+  } else if (key === 'class') {
+    el.className = nextValue || '';
+  } else if (sholdSetAsProps(el, key, nextValue)) {
+		// ...
+  } else {
+    el.setAttribute(key, nextValue);
+  }
+}
+```
+
+另外，一个元素不仅可以绑定多种类型的事件，对于同一类型的事件而言，还可以绑定多个事件处理函数。在元素 DOM 编程中，当多次调用 `addEventListener` 函数为元素绑定同一类型的事件时，多个事件处理函数可以共存，例如：
+
+```js
+el.addEventListener('click', fn1)
+el.addEventListener('click', fn2)
+```
+
+当点击元素时，事件处理函数 `fn` 和 `fn2` 都会执行。因此，为了描述同一事件的多个事件处理函数，我们需要调整 `vnode.props` 对象中事件的数据结构，如下面的代码所示：
+
+```js
+const vnode = {
+  type: 'p',
+  props: {
+    onClick: [
+      () => {
+        alert('clicked 1')
+      },
+      () => {
+        alert('clicked 2')
+      }
+    ]
+  },
+  children: 'text'
+}
+
+renderer.render(vnode, document.querySelector('#app'))
+```
+
+在上面这段代码中，我们使用一个数组来描述事件，数组中的每个元素都是一个独立的事件处理函数，并且这些事件处理函数都能够正确地绑定到对应元素上。为了事件此功能，我们需要继续修改 `patchProps` 函数中事件处理函数相关的代码。
+
+```js
+patchProps (el, key, preValue, nextValue) {
+  if (/^on/.test(key)) {
+    // 定义 el._vei，存储事件名称到事件处理函数的映射
+    const invokers = el._vei || (el._vei = {});
+    const name = key.slice(2).toLowerCase();
+
+    // 根据事件名称获取 invoker
+    let invoker = in][key];
+
+    if (nextValue) {
+      if (!invoker) {
+        // 将事件处理函数缓存到 el._vei[key] 下，避免覆盖
+        invoker = el._vei[key] = (e) => {
+          if (Array.isArray(invoker.value)) {
+            // invoker.value 是数组，遍历并逐个调用事件处理函数
+            invoker.value.forEach(fn => fn(e))
+          } else {
+            // 直接作为函数调用
+            invoker.value(e);
+          }
+        }
+        invoker.value = nextValue;
+        el.addEventListener(name, invoker);
+      } else {
+        invoker.value = nextValue;
+      }
+    } else if (invoker) {
+      el.removeEventListener(name, invoker);   
+    }
+  } else if (key === 'class') {
+    el.className = nextValue || '';
+  } else if (sholdSetAsProps(el, key, nextValue)) {
+		// ...
+  } else {
+    el.setAttribute(key, nextValue);
+  }
+}
+```
+
+上面这段代码中，我们修改了 `invoker` 函数的实现。当 `invoker` 函数执行，调用真正的事件处理之前，要先检查 `invoker.value` 的数据结构是否是数组，如果是数组则遍历它，并逐个调用定义在数组中的事件处理函数。
+
+#### 事件冒泡与更新时机问题
+
+上一节中，我们介绍了基本的事件处理。本小节我们将讨论事件冒泡与更新时机相结合所导致的问题。为了更清晰地的描述问题，我们需要构造一个小例子。
+
+```js
+```
+
