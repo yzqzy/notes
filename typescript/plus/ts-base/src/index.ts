@@ -1,5 +1,6 @@
 require('./datatype');
 require('./enum');
+require('./interface');
 
 ;(() => {
   const hello: string = 'hello world'
