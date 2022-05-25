@@ -3,6 +3,7 @@ require('./enum')
 require('./interface')
 require('./function')
 require('./class')
+require('./class_with_interface')
 
 ;(() => {
   const hello: string = 'hello world'
