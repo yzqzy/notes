@@ -1,7 +1,8 @@
-require('./datatype');
-require('./enum');
-require('./interface');
-require('./function');
+require('./datatype')
+require('./enum')
+require('./interface')
+require('./function')
+require('./class')
 
 ;(() => {
   const hello: string = 'hello world'
