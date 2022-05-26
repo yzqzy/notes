@@ -818,3 +818,147 @@ console.log('-- class_with_interface end --')
 
 ## TypeScript 进阶
 
+### 泛型
+
+#### 泛型函数与泛型接口
+
+很多时候我们希望一个函数或者一个类支持多种数据类型，有很大的灵活性。我们可以用以下方式实现。
+
+```ts
+// 函数支持传入多种类型
+// 1. 函数重载实现
+function log1(value: string): string
+function log1(value: string[]): string
+function log1(value: any) {
+  console.log(value)
+  return value
+}
+// 2. 联合类型实现
+function log2(value: string | string []): string | string[] {
+  console.log(value)
+  return value
+}
+// 3. 支持任意类型 any。 any 类型会丢失类型信息，没有类型之间的约束关系
+function log3(value: any) {
+  console.log(value)
+  return value
+}
+```
+
+似乎 any 类型已经满足我们的需求，但是当一个调用者调用函数的时候，完全无法获取约束关系，这个时候就需要用到泛型。
+
+**泛型：不预先确定的数据类型，具体的类型在使用的时候才能确定。**
+
+```ts
+function log4<T>(value: T): T {
+  console.log(value)
+  return value
+}
+// 显式声明
+log4<String[]>(['a', 'b', 'c'])
+// 利用 ts 类型推断，直接传入数组，推荐使用
+log4(['a', 'b', 'c'])
+```
+
+我们不仅可以利用泛型定义函数，还可以定义一个类。
+
+```ts
+type Log = <T>(value: T) => T
+const logger: Log = log1
+```
+
+泛型同样也可以使用在接口中。
+
+```ts
+// 泛型接口
+// 这种实现和类型别名的方式是等价的
+interface Log{
+  <T>(value: T): T
+}
+// 上述泛型实现仅仅约束了一个函数，我们也可以用泛型约束接口其他成员
+// 当使用泛型约束整个接口之后，实现的时候必须指定一个类型或者在接口的定义中指定一个默认类型
+interface Log2<T = string> {
+  (value: T): T
+}
+const logger: Log2<number> = log4
+logger(1)
+const looger2: Log2 = log4
+looger2('1')
+```
+
+泛型对于前端开发来说是一个比较新的概念，泛型在 ts 的高级类型中有广泛的应用。
+
+**技术拓展**
+
+```ts
+type Log = <T>(value: T) => T;
+type Log<T> = (value: T) => T;
+
+interface Log {
+  <T>(value: T):T
+}
+interface Log<T> {
+  (value: T):T
+}
+
+// 1、3是等价的，使用时无需指定类型。
+// 2、4是等价的，使用时必须指定类型
+```
+
+#### 泛型类与泛型约束
+
+泛型可以用来约束类的成员。
+
+```ts
+class Log<T> {
+  run(value: T) {
+    console.log(value)
+    return value
+  }
+  // Static members cannot reference class type parameters.
+  // 泛型不能应用于类的静态成员
+  // static run(value: T) {
+  //   console.log(value)
+  //   return value
+  // }
+}
+// 指定类型参数
+const logger1 = new Log<number>();
+logger1.run(1)
+// 我们也可以不指定类型参数，这时 value 的值可以是任意的值
+const logger2 = new Log()
+logger2.run({ a: 1 })
+logger2.run('2')
+```
+
+泛型定义约束关系。
+
+```ts
+// 泛型约束
+interface Length {
+  length: number
+}
+// 当我们不仅想使用 value，还想使用 value.length
+function log<T extends Length>(value: T): T {
+  console.log(value, value.length)
+  return value
+}
+// 当我们使用 T 继承 Length 之后，就添加了约束，就不是所有类型都可以传了，输入的类型必须带有 length 属性
+log('1')
+// log(1) // Argument of type 'number' is not assignable to parameter of type 'Length'.
+log([1])
+// log({}) // Argument of type '{}' is not assignable to parameter of type 'Length'.
+```
+
+#### 总结
+
+使用泛型的好处：
+
+* 函数和类可以轻松地支持多种类型，增强程序的扩展性
+* 不必写多条函数重载，冗长的联合类型声明，增强代码可读性
+* 灵活控制类型之间的约束关系
+
+泛型不仅可以保持类型的一致性，又不失程序的灵活性，同时也可以通过泛型约束，控制类型之间的约束。从代码的上来看，可读性，简洁性，远优于函数重载，联合类型声明以及 any 类型的声明。
+
+### 类型检查机制
+

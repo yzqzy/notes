@@ -4,6 +4,7 @@ require('./interface')
 require('./function')
 require('./class')
 require('./class_with_interface')
+require('./generics')
 
 ;(() => {
   const hello: string = 'hello world'
