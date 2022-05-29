@@ -40,7 +40,7 @@ console.log('-- type-check start --')
   // null 是 字符串类型的子类型，之所以要讨论这些兼容性问题，是因为 ts 允许把一些类型不同的变量相互赋值
   // 虽然在某种程度来讲，可能会产生一些不可靠的行为，但可以增加语言的灵活性
   let s: string = 'a'
-  s = null
+  // s = null
 
   // 类型兼容性的例子广泛存在于接口、函数、类中
 
@@ -84,8 +84,8 @@ console.log('-- type-check start --')
     a = b 
     a = c
     // 2) 可选参数不兼容固定参数和剩余参数
-    b = c
-    b = a
+    // b = c
+    // b = a
     // 3) 剩余参数可以兼容固定参数和可选参数
     c = a
     c = b
@@ -201,7 +201,64 @@ console.log('-- type-check start --')
 
 {
   // 类型保护
+  enum Type { Strong, Week }
+  class Java {
+    helloJava() {
+      console.log('hello java')
+    }
+    java: any
+  }
+  class JavaScript {
+    helloJavaScript() {
+      console.log('hello javascript')
+    }
+    javascript: any
+  }
+  function getLanguage(type: Type, x?: string | number) {
+    const lang = type === Type.Strong ? new Java() : new JavaScript()
 
+    // 不推荐
+    if ((lang as Java).helloJava) {
+      (lang as Java).helloJava()
+    } else {
+      (lang as JavaScript).helloJavaScript()
+    }
+    
+    // 1. instanceof 判断实例是否属于某个类
+    if (lang instanceof Java) {
+      lang.helloJava()
+    } else {
+      lang.helloJavaScript()
+    }
+
+    // 2. in 关键字
+    if ('javascript' in lang) {
+      lang.helloJavaScript()
+    } else {
+      lang.helloJava()
+    }
+
+    // 3. typeof
+    if (typeof x === 'string') {
+      x.length
+    } else {
+      x?.toFixed(2)
+    }
+
+    // 4. 通过类型保护函数
+    if (isJava(lang)) {
+      lang.helloJava()
+    } else {
+      lang.helloJavaScript()
+    }
+
+    return lang
+  }
+  // 类型谓词用法
+  function isJava(lang: Java | JavaScript): lang is Java {
+    return (lang as Java ).helloJava !== undefined
+  }
+  getLanguage(Type.Strong)
 }
 
 console.log('-- type-check end --')

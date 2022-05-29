@@ -1192,3 +1192,95 @@ ts 允许我们在类型兼容的变量之间相互赋值，这个特性增加�
 
 #### 类型保护
 
+学习类型保护之前，先来看一段代码。
+
+```ts
+// 类型保护
+enum Type { Strong, Week }
+class Java {
+  helloJava() {
+    console.log('hello java')
+  }
+}
+class JavaScript {
+  helloJavaScript() {
+    console.log('hello javascript')
+  }
+}
+function getLanguage(type: Type) {
+  const lang = type === Type.Strong ? new Java() : new JavaScript()
+  if ((lang as Java).helloJava) {
+    (lang as Java).helloJava()
+  } else {
+    (lang as JavaScript).helloJavaScript()
+  }
+  return lang
+}
+getLanguage(Type.Strong)
+```
+
+相信你已经看出上述代码存在的问题。因为我们不知道程序在运行时到底会传什么样的参数，所以在 `getLanguage` 方法中必须在使用 `lang` 时都加上类型断言。这显然不是理想的方案，代码的可读性很差。
+
+类型保护机制就会用来解决这个问题，它可以提前对类型做出预判。
+
+**所谓类型保护就是，TypeScript 能够在特定的区块中保证变量属于某种确认的类型。可以在此区块中放心地引用此类型的属性，或调用此类型的方法。**
+
+下面我将介绍四种创建这种特定区块的方法。
+
+```ts
+function getLanguage(type: Type, x?: string | number) {
+  const lang = type === Type.Strong ? new Java() : new JavaScript()
+
+  // 不推荐
+  if ((lang as Java).helloJava) {
+    (lang as Java).helloJava()
+  } else {
+    (lang as JavaScript).helloJavaScript()
+  }
+  
+  // 1. instanceof 判断实例是否属于某个类
+  if (lang instanceof Java) {
+    lang.helloJava()
+  } else {
+    lang.helloJavaScript()
+  }
+
+  // 2. in 关键字
+  if ('javascript' in lang) {
+    lang.helloJavaScript()
+  } else {
+    lang.helloJava()
+  }
+
+  // 3. typeof
+  if (typeof x === 'string') {
+    x.length
+  } else {
+    x?.toFixed(2)
+  }
+
+  // 4. 通过类型保护函数
+  if (isJava(lang)) {
+    lang.helloJava()
+  } else {
+    lang.helloJavaScript()
+  }
+
+  return lang
+}
+// 类型谓词用法
+function isJava(lang: Java | JavaScript): lang is Java {
+  return (lang as Java ).helloJava !== undefined
+}
+```
+
+#### 总结
+
+我们学习了 ts 的类型检查机制，分别是类型推断、类型兼容性、类型保护。利用这些机制，再配合 IDE 的自动补全提示功能能够极大地提高我们的开发效率，需要我们善加利用。
+
+### 高级类型
+
+#### 交叉类型与联合类型
+
+
+
