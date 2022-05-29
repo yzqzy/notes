@@ -1280,7 +1280,228 @@ function isJava(lang: Java | JavaScript): lang is Java {
 
 ### 高级类型
 
+所谓高级类型就是 ts 为了保持灵活性所引入的一些元特性。这些特性有助于我们应对复杂多变的开发场景。
+
 #### 交叉类型与联合类型
 
+```ts
+// 交叉类型和联合类型
 
+// 交叉类型指将多个类型合并为一个类型，新的类型具有所有类型的特性，交叉类型特别适合对象混用的场景
+interface DogInterface {
+  run(): void
+}
+interface CatInterface {
+  jump(): void
+}
+// 交叉类型取所有类型的并集
+const pet: DogInterface & CatInterface = {
+  run() {},
+  jump() {}
+}
+
+// 联合类型指声明的类型并不确定，可以为多个类型中的一个，
+const a: number | string = 1
+// 有时候我们不仅需要限制变量类型，还需要限定取值在某个范围内，这时就需要使用字面量类型
+const b: 'a' | 'b' | 'c' = 'b'
+// 字面量类型不仅可以是字符串，还可以是数字
+const c: 1 | 2 | 3 = 3
+class Dog implements DogInterface {
+  run() { }
+  eat() { }
+}
+class Cat implements CatInterface {
+  jump() { }
+  eat() { }
+}
+enum Master { Boy, Girl }
+function getPet(master: Master) {
+  let pet = master === Master.Boy ? new Dog() : new Cat()
+  // 如果一个对象是联合类型，那么在类型未确定的情况下，只能访问所有类型的共有成员
+  // 联合类型从字面上来看，是取所有类型的并集，实际上只能取类成员的交集
+  pet.eat()
+
+  return pet
+}
+
+// 可区分的联合类型
+// 这种模式本质上是结合了联合类型和字面量类型的一种类型保护方法
+// 核心思想是一个类型如果是多个类型的联合类型，并且每个类型之间存储公共的属性，那么我们就可以凭借这个公共属性，创建类型保护区块
+interface Square {
+  kind: "square";
+  size: number
+}
+interface Rectangle {
+  kind: "rectangle";
+  width: number;
+  height: number;
+}
+interface Circle {
+  kind: 'circle',
+  r: number
+}
+type Shape = Square | Rectangle
+// 这种模式的核心就是利用两种模式的公有属性来创建不同的类型保护区块
+function area(s: Shape) {
+  switch (s.kind) {
+    case "square":
+      return s.size * s.size
+    case "rectangle":
+      return s.height * s.width
+  }
+}
+// 如果我们向 Shape 追加一个类型，会发现它并不会报错
+// 这时我们可以指定返回值类型对 area2 函数进行约束，这时就必须实现 Circle 的逻辑
+type Shape2 = Square | Rectangle | Circle
+function area2(s: Shape2): number {
+  switch (s.kind) {
+    case "square":
+      return s.size * s.size
+    case "rectangle":
+      return s.height * s.width
+    case "circle":
+      return 2 * Math.PI * s.r
+  }
+}
+```
+
+交叉类型比较适合做对象的混入，联合类型可以让类型具备一些不确定性，可以增强代码的灵活性。
+
+#### 索引类型
+
+```ts
+// 索引类型
+const obj = {
+  a: 1,
+  b: 2,
+  c: 3
+}
+function getValues(obj: any, keys: string[]) {
+  return keys.map(key => obj[key])
+}
+console.log(getValues(obj, ['a', 'b'])) // [1, 2]
+console.log(getValues(obj, ['e', 'f'])) // [undefined, undefined]
+
+```
+
+如何使用 ts 对上述模式进行约束？说明具体措施之前，我们先来了解一些概念。
+
+索引类型的查询操作符：`keyof T` ，表示类型 T 的所有公共属性的字面量的联合类型
+
+```ts
+interface Obj {
+  a: number;
+  b: string;
+}
+let key: keyof Obj
+```
+
+索引访问操作符：`T[K]`，表示对象 T 的属性 K 所代表的类型
+
+```ts
+let value: Obj['a']
+```
+
+泛型约束：`T extends U` ，表示泛型变量可以通过继承某个类型获得某些属性
+
+下面我们来改造下 `getValues` 函数：
+
+```ts
+function getValues<T, K extends keyof T>(obj: T, keys: K[]): T[K][] {
+  return keys.map(key => obj[key])
+}
+console.log(getValues(obj, ['a', 'b']))
+// console.log(getValues(obj, ['e', 'f'])) //  Type '"f"' is not assignable to type '"a" | "b" | "c"'.
+```
+
+索引类型可以实现对对象属性的查询和访问，然后再配合泛型约束就可以建立对象、对象属性以及属性值之间的约束关系。
+
+#### 映射类型
+
+通过映射类型我们可以从一个旧的类型生成一个新的类型，比如说把一个类型的所有属性变为只读。
+
+```ts
+interface Obj {
+  a: string;
+  b: number;
+  c: boolean;
+}
+type ReadOnlyObj = Readonly<Obj>
+// type ReadOnlyObj = {
+//   readonly a: string;
+//   readonly b: number;
+//   readonly c: boolean;
+// }
+```
+
+```ts
+// Readonly 实现，内置类库
+
+/**
+ * Make all properties in T readonly
+ */
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+};
+
+// readonly 是一个泛型接口，而且是一个可索引的泛型接口
+// 索引签名是 P in keyof T，T 是一个索引类型的查询操作符，表示类型 T 所有属性的联合类型
+// P in 相当于执行了一次遍历，会把变量 P 依次的绑定到 T 的所有属性上
+// 索引签名的返回值就是一个索引访问操作符，T[P] 这里代表属性 P 所指定的类型
+// 最后再加上 readonly，就可以把所有的属性变成只读，这就是 Readonly 的实现原理
+```
+
+```ts
+type PartialObj = Partial<Obj>
+// type PartialObj = {
+//  a?: string | undefined;
+//  b?: number | undefined;
+//  c?: boolean | undefined;
+// }
+
+/**
+ * Make all properties in T optional
+ */
+type Partial<T> = {
+    [P in keyof T]?: T[P];
+};
+
+// Partial 的实现几乎和 Readonly 一致，只不过把只读的属性变成可选
+```
+
+```ts
+// Pick 抽取指定属性的子集
+type PickObject = Pick<Obj, 'a' | 'b'> 
+// type PickObject = {
+//   a: string;
+//   b: number;
+// }
+
+/**
+ * From T, pick a set of properties whose keys are in the union K
+ */
+type Pick<T, K extends keyof T> = {
+    [P in K]: T[P];
+};
+// 第一个参数 T 指定对象，第二个参数 K 存在一个约束，K 一定要来自 T 所有属性字面量的联合类型
+// 新的属性的类型一定要在 K 的属性中选取
+```
+
+以上三种类型，`Readonly`，`Partial`，`Pick`，官方有一个称呼，把它们称为同态。含义就是它们不会引入新的属性，只会用到目标类型属性（两个代数结构保持了结构不变的映射，则称这两个代数结构是同态的）。
+
+下面我们再来介绍一种映射类型，它会创建一些新的属性。
+
+```ts
+type RecordObj = Record<'x' | 'y', Obj>
+// type RecordObj = {
+//   x: Obj;
+//   y: Obj;
+// }
+```
+
+映射类型本质上是一种泛型接口，通常会结合索引类型获取对象属性和属性值，从而将一个对象映射成我们想要的结构。
+
+ts 预置了很多映射类型，如果你感兴趣，可以去它的类库中去学习。
+
+#### 条件类型
 
