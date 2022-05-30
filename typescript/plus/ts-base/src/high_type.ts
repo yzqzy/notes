@@ -147,7 +147,55 @@ console.log('-- high_type start --')
   //   x: Obj;
   //   y: Obj;
   // }
-  
+}
+
+{
+  // 条件类型：T extends U ? X : Y
+  // 条件类型嵌套，依次判断 T 类型，然后返回不同的字符串
+  type TypeName<T> = 
+    T extends string ? 'string' :
+    T extends number ? 'number' :
+    T extends boolean ? 'boolean' :
+    T extends undefined ? 'undefined' :
+    T extends Function ? 'function' :
+    "object"
+  type T1 = TypeName<string> // type T1 = "string"  字面量类型 "string"
+  type T2 = TypeName<string[]> // type T2 = "object"
+
+  // 分布式条件类型：(A | B) extends U ? X : Y
+  // (A extends U ? X : Y) | (B extends U ? X : Y)
+  type T3 = TypeName<string | string[]> // type T3 = "string" | "object"
+
+  // 利用这个特性可以帮助我们实现类型的过滤
+  type Diff<T, U> = T extends U ? never : T
+  type T4 = Diff<"a" | "b" | "c", "a" | "e"> // type T4 = "b" | "c"
+  // => (Diff<"a", "a" | "e">) | (Diff<"b", "a" | "e">) | (Diff<"c", "a" | "e">)
+  // => never | "b" | "c"
+  // => "b" | "c"
+  // 所以 diff 的作用就是从类型 T 中过滤掉可以赋值给类型 U 的类型
+
+  // 我们可以从 Diff 再进行扩展，可以从 Diff 中去除掉我们不需要的类型
+  type NotNull<T> = Diff<T, undefined |  null>
+  type T5 = NotNull<string | number | undefined | null> // type T5 = string | number
+
+  // 我们刚刚实现的两个类型，其实官方也有实现
+  // Diff => Exclude<T, U>
+  // NotNull => NotNullable<T>
+  // 我们实际使用的时候直接使用官方提供的内置类型即可
+
+  // 预置的其他条件类型
+  // Extract<T, U> 作用和 Exclude 相反
+  // Exclude 是从类型 T 中过掉掉可以赋值给类型 U 的类型
+  // Extract 是从类型 T 中抽取出可以赋值给类型 U 的类型
+  type T6 = Exclude<"a" | "c" | "c", "a" | "e"> // type T6 = "c"
+  // type Extract<T, U> = T extends U ? T : never;
+
+  // ReturnType<T>：获取一个函数返回值的类型
+  type T7 = ReturnType<() => string> // type T7 = string
+  // type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;
+  // 1. 首先 ReturnType 要求类型 T 可以被赋值给一个函数，函数存在任意的参数和任意的返回值
+  // 2. 由于返回的返回值是不确定的，所以可以使用 infer 关键字，表示待推断（延迟推断），需要根据实际的情况来确定
+  // 3. 如果实际的情况返回类型 R，那么结果类型就是 R，否则结果就是 any
 }
 
 console.log('-- high_type end --')
