@@ -1572,3 +1572,86 @@ type 和 interface 区别？
 
 ## TypeScript 工程实战
 
+目前主流的模块化解决方案有两种，分别是 ES6 模块化和 CommonJS 模块化。
+
+TS 对这两种模块系统都有比较好的支持。
+
+### ES6 模块化
+
+```typescript
+// a.ts
+
+// 导出
+export const a = 1
+
+// 批量导出
+const b = 2
+const c = 3
+export { b, c }
+
+// 导出接口
+export interface P {
+  x: number
+  y: number
+}
+
+// 导出函数
+export function f() {}
+
+// 导出时起别名
+function g() {}
+export { g as G }
+
+// 默认导出，无需函数函数名
+export default function() {
+  console.log('default')
+}
+
+// 引入外部模块，重新导出
+export { str as hello } from './b'
+```
+
+```typescript
+// b.ts
+
+// 导出常量
+export const str = 'hello'
+```
+
+```typescript
+// c.ts
+
+// 批量导入
+import { a, b, c } from './a'
+// 导入接口
+import { P } from './a'
+// 导入时起别名
+import { f as F } from './a'
+// 导入模块的所有成员，绑定到 All 上
+import * as All from './a'
+// 不加 {}，导入默认
+import defaultFunction from './a'
+
+console.log('-- es6 module start --')
+
+console.log(a, b, c)
+
+const p: P = {
+  x: 1,
+  y: 2
+}
+
+console.log(F)
+
+console.log(All)
+
+defaultFunction()
+
+console.log('-- es6 module end --')
+```
+
+### CommonJS 模块化
+
+```typescript
+```
+

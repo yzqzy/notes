@@ -8,6 +8,8 @@ require('./generics')
 require('./type_check')
 require('./high_type')
 
+import './es6/c'
+
 ;(() => {
   const hello: string = 'hello world'
   
