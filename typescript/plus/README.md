@@ -1570,13 +1570,15 @@ type 和 interface 区别？
 > type：不是创建新的类型，只是为一个给定的类型起一个名字。type还可以进行联合、交叉等操作，引用起来更简洁。
 > interface：创建新的类型，接口之间还可以继承、声明合并。
 
-## TypeScript 工程实战
+## TypeScript 工程化实战
+
+### 模块系统
 
 目前主流的模块化解决方案有两种，分别是 ES6 模块化和 CommonJS 模块化。
 
 TS 对这两种模块系统都有比较好的支持。
 
-### ES6 模块化
+#### ES6 模块化
 
 ```typescript
 // a.ts
@@ -1650,8 +1652,161 @@ defaultFunction()
 console.log('-- es6 module end --')
 ```
 
-### CommonJS 模块化
+#### CommonJS 模块化
 
 ```typescript
+// a.ts
+
+const a = {
+  x: 1,
+  y: 2
+}
+
+// 整体导出
+module.exports = a
 ```
+
+```typescript
+// b.ts
+
+// exports === module.exports
+// 导出多个变量
+exports.c = 3;
+exports.d = 4;
+```
+
+```typescript
+// c.ts
+
+const c1 = require('./a')
+const c2 = require('./b')
+
+console.log('-- commonjs module start --')
+
+console.log(c1)
+console.log(c2)
+
+console.log('-- commonjs module end --')
+```
+
+由于 ts 无法直接用 node 执行，我们可以借助 ts-node 来执行 ts 文件。
+
+```js
+npx ts-node .\src\node\c.ts
+```
+
+#### 总结
+
+ts 对两个模块系统都有比较好的支持。
+
+ts 编译时默认会把所有的模块都编译成 commonjs 模块。ts 会对 es6 写法进行特殊处理。
+
+```js
+tsc .\src\es6\c.ts  
+```
+
+```js
+// a.js
+
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+exports.__esModule = true;
+exports.hello = exports.G = exports.f = exports.c = exports.b = exports.a = void 0;
+// 导出
+exports.a = 1;
+// 批量导出
+var b = 2;
+exports.b = b;
+var c = 3;
+exports.c = c;
+// 导出函数
+function f() { }
+exports.f = f;
+// 导出时起别名
+function g() { }
+exports.G = g;
+// 默认导出，无需函数函数名
+function default_1() {
+    console.log('default');
+}
+exports["default"] = default_1;
+// 引入外部模块，重新导出
+var b_1 = require("./b");
+__createBinding(exports, b_1, "str", "hello");
+```
+
+```js
+// b.js
+
+"use strict";
+exports.__esModule = true;
+exports.str = void 0;
+// 导出常量
+exports.str = 'hello';
+```
+
+```js
+// c.js
+
+"use strict";
+exports.__esModule = true;
+// 批量导入
+var a_1 = require("./a");
+// 导入时起别名
+var a_2 = require("./a");
+// 导入模块的所有成员，绑定到 All 上
+var All = require("./a");
+// 不加 {}，导入默认
+var a_3 = require("./a");
+console.log('-- es6 module start --');
+console.log(a_1.a, a_1.b, a_1.c);
+var p = {
+    x: 1,
+    y: 2
+};
+console.log(a_2.f);
+console.log(All);
+(0, a_3["default"])();
+console.log('-- es6 module end --');
+```
+
+es 中允许一个模块有一个顶级的导出，也就是 `export default` ，同时也允许次级导出 `export`。
+
+commonjs 只允许一个模块有一个顶级的导出，`module.exports`，如果一个模块有次级导出`exports.xx`，不能再存在顶级导出，否则会覆盖次级导入的多个变量（无论定义前后）。
+
+如果 es6 模块存在顶级导出，而且可能会被 node 模块引用，ts 为我们提供了一个兼容性语法。
+
+```ts
+// d.ts
+
+export = function () {
+  console.log('default export')
+}
+// 这个语法会被编译成 module.exports， 相当于 commonjs 的默认导出 
+// 同时也意味着这个模块不能再有其他的导出（不能在具有其他导出元素的模块中使用导出分配）
+// 如果想导出其他变量，可以合并为一个对象中进行导出
+```
+
+导入时可以使用 es6 默认导入，也可以使用特殊语法导入。结果是一样的。
+
+**tsconfig.json - esModuleInterop: "true" 开启时可以支持上述两种方法导入。如果关闭，只能通过 `import c4 =` 的方式导入。**
+
+```ts
+// import c4 = require('../es6/d') 特殊
+import c4 from '../es6/d'
+
+c4();
+```
+
+### 使用命名空间
 
