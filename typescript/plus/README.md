@@ -1799,7 +1799,7 @@ export = function () {
 
 导入时可以使用 es6 默认导入，也可以使用特殊语法导入。结果是一样的。
 
-**tsconfig.json - esModuleInterop: "true" 开启时可以支持上述两种方法导入。如果关闭，只能通过 `import c4 =` 的方式导入。**
+**tsconfig.json - esMod uleInterop: "true" 开启时可以支持上述两种方法导入。如果关闭，只能通过 `import c4 =` 的方式导入。**
 
 ```ts
 // import c4 = require('../es6/d') 特殊
@@ -1809,4 +1809,128 @@ c4();
 ```
 
 ### 使用命名空间
+
+JavaScript 中命名空间可以有效避免全局污染。ES6 引入模块系统之后，命名空间就很少被提及，不过 TS 仍然实现了这个特性。
+
+尽管在模块系统中我们不必考虑全局污染问题，但是如果要使用全局的类库，命名空间仍然是一个比较好的解决方案。
+
+```typescript
+// a.ts
+
+namespace Shape {
+  const pi = Math.PI
+  export function circle(r: number) {
+    return pi * r * 2
+  }
+}
+```
+
+随着程序拓展，命名空间文件会越来越大，命名空间也可以进行拆分。
+
+```typescript
+// b.ts
+
+namespace Shape {
+  export function square(x: number) {
+    return x * x
+  }
+}
+```
+
+当多文件使用同一个名称的命名空间时，它们之间可以共享。
+
+如果使用命名空间：
+
+```typescript
+// b.ts
+
+namespace Shape {
+  export function square(x: number) {
+    return x * x
+  }
+}
+
+
+Shape.circle(1)
+Shape.square(1)
+```
+
+使用命名空间我们需要明确一个原则，命名空间和模块不要混用，不要在一个模块中使用命名空间。命名空间最好在全局环境下使用。
+
+我们可以将 ts 文件编译成 js，然后在 `index.html` 中通过 `script` 标签引用。
+
+```shell
+tsc .\src\name-space\a.ts .\src\name-space\b.ts
+```
+
+```js
+// a.js
+var Shape;
+(function (Shape) {
+    var pi = Math.PI;
+    function circle(r) {
+        return pi * r * 2;
+    }
+    Shape.circle = circle;
+})(Shape || (Shape = {}));
+
+// b.js
+var Shape;
+(function (Shape) {
+    function square(x) {
+        return x * x;
+    }
+    Shape.square = square;
+})(Shape || (Shape = {}));
+Shape.circle(1);
+Shape.square(1);
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ts-base</title>
+</head>
+<body>
+  <div class="app"></div>
+
+  <script src="src/name-space/a.js"></script>
+  <script src="src/name-space/b.js"></script>
+</body>
+</html>
+```
+
+我们现在在使用命名空间成员时都加了前缀 `Shapre` ，有的时候为了简便，我们可以给函数起一个别名。
+
+```ts
+// b.ts
+
+namespace Shape {
+  export function square(x: number) {
+    return x * x
+  }
+}
+
+console.log('-- name space start --')
+
+console.log(Shape.circle(1))
+console.log(Shape.square(1))
+
+import cicle = Shape.circle // 与模块中的 import 没有任何关系，然后我们就可以直接执行 SQL 函数
+
+console.log(cicle(3))
+
+console.log('-- name space end --')
+```
+
+ts 早期版本中，命名空间也叫内部模块，本质上就是一个闭包，可以用于隔离作用域。
+ts 保留命名空间，更多考虑是对全局变量时代的兼容。目前，在一个模块化系统中，我们其实不必使用命名空间。
+
+### 理解声明合并
+
+
 
