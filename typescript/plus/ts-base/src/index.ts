@@ -7,6 +7,7 @@ require('./class_with_interface')
 require('./generics')
 require('./type_check')
 require('./high_type')
+require('./merge')
 
 import './es6/c'
 
