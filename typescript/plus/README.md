@@ -1860,7 +1860,7 @@ Shape.square(1)
 我们可以将 ts 文件编译成 js，然后在 `index.html` 中通过 `script` 标签引用。
 
 ```shell
-tsc .\src\name-space\a.ts .\src\name-space\b.ts
+tsc .\src\name-space\a.ts .\src\name-space\b.ts  --outDir public
 ```
 
 ```js
@@ -1898,8 +1898,8 @@ Shape.square(1);
 <body>
   <div class="app"></div>
 
-  <script src="src/name-space/a.js"></script>
-  <script src="src/name-space/b.js"></script>
+  <script src="a.js"></script>
+  <script src="b.js"></script>
 </body>
 </html>
 ```
