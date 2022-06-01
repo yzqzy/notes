@@ -1,0 +1,5 @@
+global-lib.js
+module-lib.js
+umd-lib.js
+
+以上三个文件定义在 public 目录下

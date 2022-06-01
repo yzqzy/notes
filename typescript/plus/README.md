@@ -1570,7 +1570,7 @@ type 和 interface 区别？
 > type：不是创建新的类型，只是为一个给定的类型起一个名字。type还可以进行联合、交叉等操作，引用起来更简洁。
 > interface：创建新的类型，接口之间还可以继承、声明合并。
 
-## TypeScript 工程化实战
+## TypeScript 工程化
 
 ### 模块系统
 
@@ -2053,4 +2053,111 @@ var Color;
     Color.version = '0.1';
 })(Color || (Color = {}));
 ```
+
+### 编写声明文件
+
+本小节我们来学习如何在 ts 中引入 web 类库以及如何为它们编写声明文件。以 `jQuery` 为例。
+
+```shell
+pnpm install jquery
+```
+
+类库一般分为三类，分别是全局类库、模块类库及 UMD 类库。`jQuery` 是一种 UMD 类库（既可以通过全局方式使用，也可以通过模块化的方式引用）。为了方便，我们采用模块化的方式来使用。
+
+```typescript
+// src/libs/index.ts
+
+import $ from 'jquery' // Could not find a declaration file for module 'jquery'.
+```
+
+直接引用 ts 会报错，无法找到 jqeury 的声明文件。这是因为 jQuery 是用 javascript 编写的，我们在使用非 ts 的类库时，必须为这个类库编写一个声明文件。对外暴露它的 API。有些类库的声明文件是包含在源码中的，有些是单独提供的，需要额外安装。
+
+大多数类库社区都提供了声明文件，使用的方法就是需要额外安装类型声明包。包名通常是 `@types/jquey`。
+
+```shell
+pnpm i @types/jquery -D
+```
+
+声明文件安装完毕后，ts 代码就不会报错了。接下来我们就可以在 ts 中使用 jQuery 了。
+
+```typescript
+// src/libs/index.ts
+
+import $ from 'jquery' // Could not find a declaration file for module 'jquery'.
+
+$('.app').css('color', 'red')
+```
+
+我们在 ts 中使用 web 类库时，首先就要考虑它是否存在声明文件，你可以通过 [这个地址](https://www.typescriptlang.org/dt/search/) 进行查询。
+
+如果社区没有声明文件，就需要你自己编写声明文件。这也是你贡献社区的好机会。
+
+下面我们来学习三种类库的声明文件写法。
+
+首先我们在 public 目录下新建 `gloabl-lib.js`、`module-lib.js`、`umd-lib.js` 文件，并在 `index.html` 引用。
+
+#### 全局库声明文件
+
+```js
+// global-lib.js
+
+function globalLib(options) {
+  console.log(options)
+}
+
+globalLib.version = '1.0.0'
+
+globalLib.doSomething = function() {
+  console.log('globalLib do something')
+}
+
+// 这是一个非常典型的全局类型的使用方法
+```
+
+```typescript
+// src/libs/index.ts
+
+globalLib({ x: 1 }) // Cannot find name 'globalLib'.
+```
+
+直接使用全局模块同样存在找不到 `globalLib` 类库的问题。下面我们来定义声明文件。
+
+```typescript
+// public/global-lib.js
+function globalLib(options) {
+  console.log(options)
+}
+
+globalLib.version = '1.0.0'
+
+globalLib.doSomething = function() {
+  console.log('globalLib do something')
+}
+
+// src/libs/global-lib.d.ts
+declare function globalLib(options: globalLib.Options): void
+
+declare namespace globalLib {
+  const version: string
+
+  function doSomething(): void
+
+  // interface 接口也可以放到全局，但是会对全局暴露，建议放到命名空间中
+  interface Options {
+    [key: string]: any
+  }
+}
+```
+
+我们使用 `declare` 关键字，它可以用外部变量提供类型声明。我们使用函数与 namespace 的声明合并，为函数增加属性。
+
+我们还可以调用 `globalLib` 的内部方法，都可以正常使用。
+
+```typescript
+// src/libs/index.ts
+
+globalLib.doSomething()
+```
+
+#### 模块库声明文件
 

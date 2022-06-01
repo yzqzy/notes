@@ -8,6 +8,7 @@ require('./generics')
 require('./type_check')
 require('./high_type')
 require('./merge')
+require('./libs/index')
 
 import './es6/c'
 

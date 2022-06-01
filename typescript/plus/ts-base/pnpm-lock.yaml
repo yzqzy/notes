@@ -1,8 +1,10 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@types/jquery': ^3.5.14
   clean-webpack-plugin: ^4.0.0
   html-webpack-plugin: ^5.5.0
+  jquery: ^3.6.0
   ts-loader: ^9.3.0
   typescript: ^4.6.4
   webpack: ^5.72.1
@@ -10,7 +12,11 @@ specifiers:
   webpack-dev-server: ^4.9.0
   webpack-merge: ^5.8.0
 
+dependencies:
+  jquery: registry.npmmirror.com/jquery/3.6.0
+
 devDependencies:
+  '@types/jquery': registry.npmmirror.com/@types/jquery/3.5.14
   clean-webpack-plugin: registry.npmmirror.com/clean-webpack-plugin/4.0.0_webpack@5.72.1
   html-webpack-plugin: registry.npmmirror.com/html-webpack-plugin/5.5.0_webpack@5.72.1
   ts-loader: registry.npmmirror.com/ts-loader/9.3.0_typescript@4.6.4+webpack@5.72.1
@@ -137,6 +143,14 @@ packages:
       '@types/node': registry.npmmirror.com/@types/node/17.0.35
     dev: true
 
+  registry.npmmirror.com/@types/jquery/3.5.14:
+    resolution: {integrity: sha512-X1gtMRMbziVQkErhTQmSe2jFwwENA/Zr+PprCkF63vFq+Yt5PZ4AlKqgmeNlwgn7dhsXEK888eIW2520EpC+xg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/jquery/-/jquery-3.5.14.tgz}
+    name: '@types/jquery'
+    version: 3.5.14
+    dependencies:
+      '@types/sizzle': registry.npmmirror.com/@types/sizzle/2.3.3
+    dev: true
+
   registry.npmmirror.com/@types/json-schema/7.0.11:
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/json-schema/-/json-schema-7.0.11.tgz}
     name: '@types/json-schema'
@@ -194,6 +208,12 @@ packages:
     dependencies:
       '@types/mime': registry.npmmirror.com/@types/mime/1.3.2
       '@types/node': registry.npmmirror.com/@types/node/17.0.35
+    dev: true
+
+  registry.npmmirror.com/@types/sizzle/2.3.3:
+    resolution: {integrity: sha512-JYM8x9EGF163bEyhdJBpR2QX1R5naCJHC8ucJylJ3w9/CVBaskdQ8WqBf8MmQrd1kRvp/a4TS8HJ+bxzR7ZJYQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/sizzle/-/sizzle-2.3.3.tgz}
+    name: '@types/sizzle'
+    version: 2.3.3
     dev: true
 
   registry.npmmirror.com/@types/sockjs/0.3.33:
@@ -1759,6 +1779,12 @@ packages:
       merge-stream: registry.npmmirror.com/merge-stream/2.0.0
       supports-color: registry.npmmirror.com/supports-color/8.1.1
     dev: true
+
+  registry.npmmirror.com/jquery/3.6.0:
+    resolution: {integrity: sha512-JVzAR/AjBvVt2BmYhxRCSYysDsPcssdmTFnzyLEts9qNwmjmu4JTAMYubEfwVOSwpQ1I1sKKFcxhZCI2buerfw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/jquery/-/jquery-3.6.0.tgz}
+    name: jquery
+    version: 3.6.0
+    dev: false
 
   registry.npmmirror.com/json-parse-even-better-errors/2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/json-parse-even-better-errors/-/json-parse-even-better-errors-2.3.1.tgz}
