@@ -2094,7 +2094,7 @@ $('.app').css('color', 'red')
 
 下面我们来学习三种类库的声明文件写法。
 
-首先我们在 public 目录下新建 `gloabl-lib.js`、`module-lib.js`、`umd-lib.js` 文件，并在 `index.html` 引用。
+首先我们在 public 目录下新建 `gloabl-lib.js`，并在 `index.html` 引用 `global-lib.js`。
 
 #### 全局库声明文件
 
@@ -2160,4 +2160,111 @@ globalLib.doSomething()
 ```
 
 #### 模块库声明文件
+
+```js
+// src/libs/module-lib.js
+
+const version = '1.0.0'
+
+function doSomething() {
+  console.log('moduleLib do something')
+}
+
+function moduleLib(options) {
+  console.log(options)
+}
+
+moduleLib.version = version
+moduleLib.doSomething = doSomething
+
+module.exports = moduleLib
+```
+
+```typescript
+// src/libs/module-lib.d.ts
+
+declare function moduleLib(options: Options): void
+
+interface Options {
+  [key: string]: any
+}
+
+declare namespace moduleLib {
+  // export const version: string // export 关键字加或不加都可以
+  const version: string
+  function doSomething(): void
+}
+
+export = moduleLib // 这种写法导出兼容性比较好
+```
+
+```typescript
+// src/libs/index.ts
+
+import moduleLib from './module-lib'
+
+moduleLib.doSomething()
+```
+
+#### UMD 库声明文件
+
+ ```js
+ // src/libs/umd-lib.js
+ 
+ (function (root, factory){
+   if (typeof define === 'function' && define.umd) {
+     define(factory)
+   } else if (typeof module === 'object' && module.exports) {
+     module.exports = factory()
+   } else {
+     root.umdLib = factory()
+   }
+ }(this, function() {
+   return {
+     version: '1.0.0',
+     doSomething() {
+       console.log('umdLib do something')
+     }
+   }
+ }))
+ ```
+
+```typescript
+// src/libs/umd-lib.d.ts
+
+declare namespace umdLib {
+  const version: string
+  function doSomething(): void
+}
+
+export as namespace umdLib // 专门为 umd 类库设置的语句
+export = umdLib
+```
+
+```typescript
+// src/libs/index.ts
+
+import umdLib from './umd-lib'
+umdLib.doSomething()
+```
+
+umd 库不仅可以在模块中使用，还可以在全局中引用，和 globalLib 一样。
+
+我们注释掉模块中导入，并在全局引入它。
+
+```typescript
+// import umdLib from './umd-lib'
+umdLib.doSomething()
+//  TS2686: 'umdLib' refers to a UMD global, but the current file is a module. Consider adding an import instead.
+```
+
+注释掉代码，会提示 umdLib 指全局，但当前文件是模块，考虑为其添加导入。如果我们不想看见此报错，可以配置 `tsconfig.json` 文件的 `allowUmdGlobalAccess` 属性为 true。这样就不会报错了。
+
+全局引入 umdLib 和使用 globalLib 方式一致。
+
+#### 模块插件/全局插件
+
+
+
+
 

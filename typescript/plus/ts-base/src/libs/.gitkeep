@@ -1,5 +1,1 @@
-global-lib.js
-module-lib.js
-umd-lib.js
-
-以上三个文件定义在 public 目录下
+global-lib.js 定义在 public 目录下，避免全局引入找不到路径
