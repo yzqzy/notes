@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.base",
+  "exclude": [],
+  "compileOnSave": true
+}

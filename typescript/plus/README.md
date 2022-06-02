@@ -2390,3 +2390,184 @@ export = jQuery;
 
 #### 文件选项
 
+ts 文件有三种类型，分别是 `ts` ，`d.ts` ，`tsx`。
+
+如果没有任何配置，ts 就会按照默认配置编译当前目录下得所有 ts 文件。
+
+```json
+// tsconfig.json
+
+{}
+```
+
+运行以下命令，可以看到 ts 项目中所有 ts 文件都会被编译。
+
+```typescript
+tsc
+```
+
+<img src="./images/tsconfig_default.png" align="left" />
+
+##### files
+
+它是一个文件数组，表示编译器需要编译得单个文件列表。
+
+```json
+{
+  "files": [
+    "src/a.ts"
+  ]
+}
+```
+
+这样再次执行 `tsc` 就只会编译 `a.ts` 文件。
+
+##### include
+
+它也是一个数组，表示编译器需要编译的文件或者目录。
+
+我们可以在 src 目录下新建 lib 目录，创建 `lib.ts` 文件。
+
+```typescript
+// src/lib/lib.ts
+
+let libs = {}
+```
+
+```json
+{
+  "files": [
+    "src/a.ts"
+  ],
+  "include": [
+    "src"
+  ]
+}
+```
+
+如果 include 配置为 src，会编译所有文件，包括子目录文件。
+
+include 支持通配符配置。
+
+```json
+{
+  "files": [
+    "src/a.ts"
+  ],
+  "include": [
+    "src/*"
+  ]
+}
+```
+
+`src/*` 代表只会编译 src 目录下一级目录的文件。子目录不会被编译。
+
+```json
+{
+  "files": [
+    "src/a.ts"
+  ],
+  "include": [
+    "src/*/*"
+  ]
+}
+```
+
+`src/*/*` 代表只会编译 src 目录下二级目录下的文件。
+当前案例下会编译  lib 目录下所有文件以及 a.ts 文件， files 和 include 配置是会合并的。
+
+ ##### exclude
+
+表示编译器需要排除的的文件或者文件夹，默认 exclude 会排除 `node_modules` 目录下所有的文件。也会排除所有的声明文件。
+
+```json
+{
+  "files": [
+    "src/a.ts"
+  ],
+  "include": [
+    "src/*/*"
+  ],
+  "exclude": [
+    "src/lib"
+  ]
+}
+```
+
+上述配置，exclude 会覆盖 include 配置。也就是有 lib 目录不会被编译。
+
+```json
+{
+  "files": [
+    "src/a.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/lib"
+  ]
+}
+```
+
+当前配置编译 src 目录下除 lib 目录的所有文件。
+
+##### 抽离复用
+
+以上就是编译器管理文件的一些选项，此外配置文件之间是可以继承的，我们可以把基础的一些配置抽离出来方便复用。
+
+新建 `tsconfig.base.json` 文件。
+
+```json
+// tsconfig.base.json
+
+{
+  "files": [
+    "src/a.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/lib"
+  ]
+}
+```
+
+```json
+// tsconfig.json
+
+{
+  "extends": "./tsconfig.base"
+}
+```
+
+我们可以用 `extends` 继承基础配置，执行 `tsc` 是一样的效果。
+
+其次在 `tsconfig.json` 文件中，我们也可以覆盖 `tsconfig.base.json` 文件中的配置。
+
+```json
+// tsconfig.json
+
+{
+  "extends": "./tsconfig.base",
+  "exclude": []
+}
+```
+
+这里指定不排除任何目录，这样编译器就会编译 src 目录下所有文件。
+
+##### compileOnSave
+
+它的作用是保存文件时编译器是否自动编译。不过 vscode 并不支持这个配置。你可以用其他编译器尝试使用一下。
+
+```json
+// tsconfig.json
+
+{
+  "extends": "./tsconfig.base",
+  "exclude": [],
+  "compileOnSave": true
+}
+```
+
