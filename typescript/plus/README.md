@@ -2264,7 +2264,129 @@ umdLib.doSomething()
 
 #### 模块插件/全局插件
 
+有时候我们想给一些类库添加一些自定义方法，这时就需要用到插件。
 
+比如我们想给 moment 类库添加一个时间方法。
 
+```shell
+pnpm i moment
+```
 
+当我们给 moment 增加一个方法，这时会提示没有这个方法。
+
+```typescript
+import moment from 'moment'
+moment.myFunction = () => {}
+
+//  TS2339: Property 'myFunction' does not exist on type 'typeof moment'.  
+```
+
+我们可以使用 declare 处理这个问题。
+
+```typescript
+declare module 'moment' {
+  export function myFunction(): void
+}
+```
+
+这样我们就可以给一个外部类库增加一个自定义方法。这就是模块化的插件。
+
+我们还可以给一个全局变量添加一个方法。比如我们给 `globalLib` 增加一个自定义方法。
+
+```typescript
+declare global {
+  namespace globalLib {
+    function doAnything(): void
+  }
+}
+globalLib.doAnything = () => {}
+```
+
+不过这样会对全局的命名空间造成污染，一般不建议这样做。
+
+#### 声明文件依赖
+
+如果一个类库比较大，它的声明文件会很长，一般会按照模块划分。那么这些声明文件就会存在一定的依赖关系。
+
+我们可以来看一下 jQuery 的声明文件是如何组织的。
+
+<img src="./images/jquery.png" align="left" />
+
+```json
+// package.json  types 字段代表声明文件入口
+
+{
+	"types": "index.d.ts",
+}
+```
+
+```typescript
+// index.d.ts
+	
+// 贡献者列表
+// Type definitions for jquery 3.5
+// Project: https://jquery.com
+// Definitions by: Leonard Thieu <https://github.com/leonard-thieu>
+//                 Boris Yankov <https://github.com/borisyankov>
+//                 Christian Hoffmeister <https://github.com/choffmeister>
+//                 Steve Fenton <https://github.com/Steve-Fenton>
+//                 Diullei Gomes <https://github.com/Diullei>
+//                 Tass Iliopoulos <https://github.com/tasoili>
+//                 Sean Hill <https://github.com/seanski>
+//                 Guus Goossens <https://github.com/Guuz>
+//                 Kelly Summerlin <https://github.com/ksummerlin>
+//                 Basarat Ali Syed <https://github.com/basarat>
+//                 Nicholas Wolverson <https://github.com/nwolverson>
+//                 Derek Cicerone <https://github.com/derekcicerone>
+//                 Andrew Gaspar <https://github.com/AndrewGaspar>
+//                 Seikichi Kondo <https://github.com/seikichi>
+//                 Benjamin Jackman <https://github.com/benjaminjackman>
+//                 Josh Strobl <https://github.com/JoshStrobl>
+//                 John Reilly <https://github.com/johnnyreilly>
+//                 Dick van den Brink <https://github.com/DickvdBrink>
+//                 Thomas Schulz <https://github.com/King2500>
+//                 Terry Mun <https://github.com/terrymun>
+//                 Martin Badin <https://github.com/martin-badin>
+//                 Chris Frewin <https://github.com/princefishthrower>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.7
+
+// 依赖文件
+/// <reference types="sizzle" />
+/// <reference path="JQueryStatic.d.ts" />
+/// <reference path="JQuery.d.ts" />
+/// <reference path="misc.d.ts" />
+/// <reference path="legacy.d.ts" />
+
+export = jQuery;
+```
+
+上面的依赖文件分为两种，分别是模块依赖和路径依赖。
+
+模块依赖使用 types 属性，比如文中的 `types="sizzle"` ，sizzle 是 jQuery 的一个引擎。ts 会在 @types 目录下寻找这个模块。然后把对应的定义引入进来。
+
+<img src="./images/sizzle.png" align="left" />
+
+路径依赖使用 path 属性。代表一个相对路径。使用 index.d.ts 同级的一些文件。
+
+#### 总结
+
+如果你觉得编写一个声明文件很困难，或者官方得例子很难看懂，一个比较好得方法就是去看一些知名类库得声明文件是如何编写得。从这个过程中你会受到很大得启发。
+
+**用.d.ts为后缀，ts就能感知这是申明文件并在整个工程下做类型检查？一般项目中这些申明文件编写一般是存放在哪，或者是怎么管理的？**
+
+* 如果开发的是类库，声明文件应该放在 package.json 指定的 "types" 路径下，位置随意；或者在包的根目录下同时放置 index.js 和 index.d.ts，就不需要使用 "types" 指定了；也可单独发布声明文件包 @types/xxx；
+* 如果是普通的项目工程，除非 js 和 ts 混写，且 ts 引用了 js 模块，一般不需要写声明文件，这种情况下，需要把声明文件和源文件放在一起，如 lib.js、lib.d.ts
+
+**为什么说 export = 的兼容性是最好的呢？**
+
+这种导出语法可以兼容ES6模块、CommonJS模块的导入。
+
+**如何确定一个类库是全局库、模块库、还是UMD库中的哪种呢？**
+
+全局库对外保留全局变量，模块库有export 语句，UMD库有典型的UMD封装。
+
+### tsconfig.json 详解
+
+#### 文件选项
 

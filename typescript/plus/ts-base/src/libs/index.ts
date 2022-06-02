@@ -13,4 +13,19 @@ moduleLib.doSomething()
 import umdLib from './umd-lib'
 umdLib.doSomething()
 
+
+import moment from 'moment'
+moment.myFunction = () => {}
+declare module 'moment' {
+  export function myFunction(): void
+}
+
+
+declare global {
+  namespace globalLib {
+    function doAnything(): void
+  }
+}
+globalLib.doAnything = () => {}
+
 console.log('-- declare end --')

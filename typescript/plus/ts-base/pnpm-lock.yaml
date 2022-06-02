@@ -5,6 +5,7 @@ specifiers:
   clean-webpack-plugin: ^4.0.0
   html-webpack-plugin: ^5.5.0
   jquery: ^3.6.0
+  moment: ^2.29.3
   ts-loader: ^9.3.0
   typescript: ^4.6.4
   webpack: ^5.72.1
@@ -14,6 +15,7 @@ specifiers:
 
 dependencies:
   jquery: registry.npmmirror.com/jquery/3.6.0
+  moment: registry.npmmirror.com/moment/2.29.3
 
 devDependencies:
   '@types/jquery': registry.npmmirror.com/@types/jquery/3.5.14
@@ -1945,6 +1947,12 @@ packages:
     dependencies:
       brace-expansion: registry.npmmirror.com/brace-expansion/1.1.11
     dev: true
+
+  registry.npmmirror.com/moment/2.29.3:
+    resolution: {integrity: sha512-c6YRvhEo//6T2Jz/vVtYzqBzwvPT95JBQ+smCytzf7c50oMZRsR/a4w88aD34I+/QVSfnoAnSBFPJHItlOMJVw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/moment/-/moment-2.29.3.tgz}
+    name: moment
+    version: 2.29.3
+    dev: false
 
   registry.npmmirror.com/ms/2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/ms/-/ms-2.0.0.tgz}
