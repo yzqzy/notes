@@ -2571,3 +2571,532 @@ include 支持通配符配置。
 }
 ```
 
+#### 编译选项
+
+本小节我们将学习跟编译相关的选项，这些选项有近 100 个，非常庞杂。我们仅介绍一些常用的选项，对于不常用的可以参考官方文档。
+
+##### incremental
+
+增量编译。ts 编译器可以在第一次编译后生成一个可以存储编译信息的文件，然后在二次编译时会对这个文件进行增量编译。这样可以提高编译速度。执行 `tsc` 命令会在根目录下生成 `tsconfig.tsbuildinfo` 文件。
+
+我们可以设置  `diagnostics`  属性，通过这个可以看出两次编译时间的差距。
+
+```json
+{
+  "compilerOptions": {
+    "incremental": true, // 增量编译
+    "diagnostics": true, // 打印诊断信息
+  }
+}
+```
+
+<img src="./images/compile.png" align="left" />
+
+我们还可以通过 `tsBuildInfoFile` 配置增量编译文件的存储位置（路径、文件名称可以自定义）。
+
+```json
+{
+  "compilerOptions": {
+    "incremental": true, // 增量编译
+    "tsBuildInfoFile": ".tsbuildinfo", // 增量编译文件的存储位置
+    "diagnostics": true, // 打印诊断信息
+  }
+}
+```
+
+##### target/module
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES3", // 目标语言的版本
+    "module": "commonjs", // 生成代码的模块标准
+  }
+}
+```
+
+##### outFile
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES3",
+    "module": "amd",
+    "outFile": "./app.js", // 将多个相互依赖的文件生成一个文件，可以用在 AMD 模块中
+  }
+}
+```
+
+我们定义一个 `amd.ts` 文件。
+
+```typescript
+// src/amd.ts
+
+let a = 1
+
+export = a
+```
+
+然后在 `index.ts` 中引入它。
+
+```typescript
+// src/index.ts
+
+import a = require('./amd')
+```
+
+运行 `tsc` 命令会在根目录下生成 `app.js` 文件。会将 `index.ts` 和 `amd.ts` 这两个文件合并打包成一个文件。 
+
+```typescript
+// app.js
+
+var s = 'a';
+define("amd", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var a = 1;
+    return a;
+});
+define("index", ["require", "exports"], function (require, exports) {
+    "use strict";
+    exports.__esModule = true;
+    (function () {
+        var hello = 'hello world';
+        document.querySelectorAll('.app')[0].innerHTML = hello;
+    })();
+});
+```
+
+##### lib
+
+```json
+{
+  "compilerOptions": {
+    "lib": [], // TS 需要引用的库声明文件，es5 默认 "dom", "es5", "scripthost"
+  }
+}
+```
+
+如果这个配置不指定，也会默认导入一些类库。当 target 为 es5 时，会默认导入 `"dom"，"es5"，"scripthost"` 。
+
+如果我们要在程序中使用 ES 高级版本的特性，就需要用到这个属性。比如我们需要用到 es2019 的特性。
+
+```typescript
+console.log([1, 2, [3, 4]].flat())
+```
+
+```json
+{
+  "compilerOptions": {
+    "lib": ["dom", "es5", "scripthost", "ES2019.Array"],
+  }
+}
+```
+
+##### allowJs/checkJs
+
+```json
+{
+  "compilerOptions": {
+    "allowJs": true, // 允许编译器编译 JS 文件（js、jsx）
+    "checkJs": true, // 允许在 JS 文件中报错，通常与 allowJs 一起使用
+  }
+}
+```
+
+再次执行 tsc 编译会有报错信息。
+
+```shell
+Cannot write file 'D:/workspace/notes/typescript/plus/ts-config/build/webpack.base.config.js' because it would overwrite input file.
+# ...
+```
+
+这是因为 ts 编译器会尝试编译当前目录下的所有 js 文件。包括 webpack 的配置文件。我们需要排除它，只编译 src 目录下文件。
+
+```json
+{
+  "include": ["src"], // 只编译 src 目录下的文件
+  "compilerOptions": {
+    "allowJs": true, // 允许编译器编译 JS 文件（js、jsx）
+    "checkJs": true, // 允许在 JS 文件中报错，通常与 allowJs 一起使用
+  }
+}
+```
+
+这样再次编译就不会有报错了。
+
+##### outDir/rootDir
+
+我们还可以指定输出目录。编译后的文件就会被打包到指定目录。
+
+```json
+{
+  "include": ["src"], // 只编译 src 目录下的文件
+  "compilerOptions": {
+    "allowJs": true, // 允许编译器编译 JS 文件（js、jsx）
+    "checkJs": true, // 允许在 JS 文件中报错，通常与 allowJs 一起使用
+    "outDir": "./temp", // 指定输出目录
+  }
+}
+```
+
+<img src="./images/outDir.png" align="left" />
+
+我们还可以定义 `rootDir` 指定输入文件目录，默认就是当前目录。
+
+```json
+{
+  "include": ["src"], // 只编译 src 目录下的文件
+  "compilerOptions": {
+    "allowJs": true, // 允许编译器编译 JS 文件（js、jsx）
+    "checkJs": true, // 允许在 JS 文件中报错，通常与 allowJs 一起使用
+    "outDir": "./temp", // 指定输出目录
+   	"rootDir": "./" , // 指定输入文件目录（用于输出）
+  }
+}
+```
+
+<img src="./images/rootDir.png" align="left" />
+
+rootDir 指定的是当前目录，所以输出目录中就会包含 src 目录。如果我们把输入目录指定为 src。
+
+```json
+{
+  "include": ["src"], // 只编译 src 目录下的文件
+  "compilerOptions": {
+    "allowJs": true, // 允许编译器编译 JS 文件（js、jsx）
+    "checkJs": true, // 允许在 JS 文件中报错，通常与 allowJs 一起使用
+    "outDir": "./temp", // 指定输出目录
+   	"rootDir": "./src" , // 指定输入文件目录（用于输出）
+  }
+}
+```
+
+<img src="./images/rootDir02.png" align="left" />
+
+从图中可以看到，输出的目录就不包含 src 目录。这个选项是用来控制输出目录结构的。
+
+##### sourcemap
+
+```json
+{
+  "compilerOptions": {
+    "sourceMap": true, // 生成目标文件的 sourceMap
+  }
+}
+```
+
+开启 sourceMap 会为我们自动生成 sourceMap 文件。
+
+<img src="./images/sourceMap.png" align="left" />
+
+```js
+// amd.js.map
+
+{"version":3,"file":"amd.js","sourceRoot":"","sources":["amd.ts"],"names":[],"mappings":";AAAA,IAAI,CAAC,GAAG,CAAC,CAAA;AAET,iBAAS,CAAC,CAAA"}
+```
+
+我们还可以使用 `inlineSourceMap`。
+
+```json
+{
+  "compilerOptions": {
+    // "sourceMap": true, // 生成目标文件的 sourceMap
+    "inlineSourceMap": true, // 生成目标文件的 inline sourceMap
+  }
+}
+```
+
+```js
+// a.js
+
+var s = 'a';
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYS5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImEudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsSUFBSSxDQUFDLEdBQVcsR0FBRyxDQUFBIn0=
+```
+
+`inlineSourceMap` 会包含在生成的 js 文件中。
+
+##### 声明文件
+
+```json
+{
+  "compilerOptions": {
+    "declaration": true, // 生成声明文件
+  }
+}
+```
+
+如果我们配置 declaration，当编译时会自动生成声明文件（默认情况下与文件同级）。
+
+我们还可以控制声明文件路径。
+
+```json
+{
+  "compilerOptions": {
+    "declaration": true, // 生成声明文件
+    "declarationDir": "./typings", // 声明文件路径
+  }
+}
+```
+
+这样声明文件就会输出到 typings 目录下。但是这样会存在一个问题，ts 编译器也会执行编译，生成 js 文件。
+
+我们可以告知 ts 编译器只生成声明文件，而不进行文件编译。
+
+```json
+{
+  "compilerOptions": {
+    "declaration": true, // 生成声明文件
+    "declarationDir": "./typings", // 声明文件路径
+    "emitDeclarationOnly": true, // 只生成声明文件
+  }
+}
+```
+
+我们还可以为声明文件生成 `sourceMap`。
+
+```json
+{
+  "compilerOptions": {
+    "declaration": true, // 生成声明文件
+    "declarationDir": "./typings", // 声明文件路径
+    "emitDeclarationOnly": true, // 只生成声明文件
+    "declarationMap": true, // 生成声明文件的 sourceMap
+  }
+}
+```
+
+<img src="./images/sourceMap02.png" align="left" />
+
+```js
+// a.d.ts.map
+
+{"version":3,"file":"a.d.ts","sourceRoot":"","sources":["../src/a.ts"],"names":[],"mappings":"AAAA,QAAA,IAAI,CAAC,EAAE,MAAY,CAAA"}
+```
+
+下面我们再来看下另外两个配置项。
+
+```json
+{
+  "compilerOptions": {
+    "typeRoots": [], // 声明文件目录，默认查找 node_modules/@types
+    "types": [] , // 声明文件包，指定需要加载的声明文件的包，会在 @types 目录下查找
+  }
+}
+```
+
+对于 types 配置，如果我们指定某一个包，ts 只会加载这个包的声明文件。
+
+##### removeComments
+
+```json
+{
+  "compilerOptions": {
+    "removeComments": true, // 删除注释
+  }
+}
+```
+
+##### noEmit/noEmitOnError
+
+```json
+{
+  "compilerOptions": {
+    "noEmit": true, // 不输出文件
+  }
+}
+```
+
+`noEmit` 不输出任何文件，也就是不做任何事。还有一个类似的选项。
+
+```json
+{
+  "compilerOptions": {
+    // "noEmit": true, // 不输出文件
+    "noEmitOnError": true, // 发生错误时不输出文件
+  }
+}
+```
+
+##### helpers
+
+我们先来看一下 `noEmitHelpers` 。
+
+```json
+{
+  "compilerOptions": {
+    "noEmitHelpers": true, // 不生成 helper 函数，需要额外安装 ts-helpers
+  }
+}
+```
+
+这个选项会涉及一个类的继承。
+
+```typescript
+// src/index.ts
+
+class A {}
+class B extends A {}
+```
+
+我们先来看一下没有配置 `noEmitHelpers`  的编译后文件。
+
+```js
+"use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
+(function () {
+    var hello = 'hello world';
+    document.querySelectorAll('.app')[0].innerHTML = hello;
+})();
+var A = /** @class */ (function () {
+    function A() {
+    }
+    return A;
+}());
+var B = /** @class */ (function (_super) {
+    __extends(B, _super);
+    function B() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return B;
+}(A));
+```
+
+在编译结果中我们可以看到，除了我们的代码，还引入了其他的工具库函数。它会使我们编译后的代码体积增加。通过 `noEmitHelpers` 我们可以控制是否生成 helpers 函数。下面再来看一下配置 `noEmitHelpers` 编译后的文件。
+
+```js
+"use strict";
+exports.__esModule = true;
+(function () {
+    var hello = 'hello world';
+    document.querySelectorAll('.app')[0].innerHTML = hello;
+})();
+var A = /** @class */ (function () {
+    function A() {
+    }
+    return A;
+}());
+var B = /** @class */ (function (_super) {
+    __extends(B, _super);
+    function B() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return B;
+}(A));
+```
+
+可以看到 helpers 函数已经没有了。但是代码中的 `__extends`  函数是未定义的，需要我们额外安装 `ts-helpers`。
+
+之前的做法需要我们额外安装 `ts-helpers` ，现在 ts 为我们提供了另外一种方式去引入 helpers 函数。
+
+```json
+{
+  "compilerOptions": {
+    "noEmitHelpers": true, // 不生成 helper 函数，需要额外安装 ts-helpers
+    "importHelpers": true, // 通过 tslib 引入 helper 函数，文件必须是模块
+  }
+}
+```
+
+我们可以通过 `importHelpers` 配置，使用 ts 内置的库把 helper 函数引入进来（文件必须是一个模块）。我们需要改造一下代码。
+
+```typescript
+// src/index.ts
+
+class A {}
+class B extends A {}
+
+export = B
+```
+
+再次执行 tsc 编译代码。
+
+```js
+"use strict";
+var tslib_1 = require("tslib");
+(function () {
+    var hello = 'hello world';
+    document.querySelectorAll('.app')[0].innerHTML = hello;
+})();
+var A = /** @class */ (function () {
+    function A() {
+    }
+    return A;
+}());
+var B = /** @class */ (function (_super) {
+    tslib_1.__extends(B, _super);
+    function B() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return B;
+}(A));
+module.exports = B;
+```
+
+可以看到编译后的代码引入了 tslib 的库，lib 中就包含了一些 helper 函数。这样就可以减少打包后代码体积。
+
+##### downlevelIteration
+
+```json
+{
+  "compilerOptions": {
+    "downlevelIteration": true, // 降级遍历器的实现（es3/5）
+  }
+}
+```
+
+如果我们的目标语言是 es3 或者 es5，就会对遍历器有一个降级的实现。
+
+```typescript
+// src/index.ts
+
+const arr = [1, 2, 3]
+const arr2 = [4, ...arr]
+```
+
+> 期间可能会报错，请考虑升级 "tslib" 的版本。ts(2343)。我们可以手动安装 tslib 来解决它。
+>
+> pnpm i tslib --save-dev
+
+```js
+"use strict";
+var tslib_1 = require("tslib");
+(function () {
+    var hello = 'hello world';
+    document.querySelectorAll('.app')[0].innerHTML = hello;
+})();
+var A = /** @class */ (function () {
+    function A() {
+    }
+    return A;
+}());
+var B = /** @class */ (function (_super) {
+    tslib_1.__extends(B, _super);
+    function B() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return B;
+}(A));
+var arr = [1, 2, 3];
+var arr2 = tslib_1.__spreadArray([4], tslib_1.__read(arr), false);
+module.exports = B;
+```
+
+##### 类型检查
+
+
+
