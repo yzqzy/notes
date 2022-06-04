@@ -3586,3 +3586,102 @@ tsc -b src --verbose # 构建 src 目录下所有工程
 
 ### 编译工具
 
+#### ts-loader
+
+我们搭建的 webpack 环境中，使用 ts-loader 进行编译。ts-loader 内部使用了官方的编译器 tsc。
+ts-loader 和 tsc 共享 tsconfig.json 文件。此外 ts-loader 还有自己的一些配置。可以通过 options 属性来传入。
+
+```js
+// webpack.base.config.js
+
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+	// ...
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/i,
+        use: [{
+          loader: 'ts-loader',
+          options: {
+            // 当这个配置项开启后，只做语言转换而不做类型检查
+            // 实际项目中，你会发现随着项目越来越大，构建时间越来越长，开启下面这个配置就会启动一种快速构建模式
+            transpileOnly: false,
+          }
+        }],
+        exclude: /node_modules/
+      }
+    ]
+  },
+	// ...
+}
+```
+
+<img src="./images/compiler.png" align="left" />
+
+可以看到未开启 `transpileOnly` 编译需要 3.15s，开启后编译只需要 1.79s。不过这个模式也有缺点，就是编译时不能做类型检查。
+
+```typescript
+// src/index.ts
+
+;(() => {
+  let hello: string = 'hello world'
+  
+  document.querySelectorAll('.app')[0].innerHTML = hello
+
+  hello = 1
+})();
+```
+
+上述代码即使在 vscode 中会有错误提示，但是不会影响 ts 打包编译（开启 transpileOnly 时）。
+
+那么如何在开始 `transpileOnly` 的时候做类型检查那，我们可以借助一个插件来实现，它会把类型检查放到一个独立的进程中进行。
+
+```shell
+pnpm i fork-ts-checker-webpack-plugin -D
+```
+
+```js
+// webpack.base.config.js
+
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+
+module.exports = {
+	// ...
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/i,
+        use: [{
+          loader: 'ts-loader',
+          options: {
+            // 当这个配置项开启后，只做语言转换而不做类型检查
+            // 实际项目中，你会发现随着项目越来越大，构建时间越来越长，开启下面这个配置就会启动一种快速构建模式
+            transpileOnly: true,
+          }
+        }],
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: [
+		// ...
+    new ForkTsCheckerWebpackPlugin()
+  ]
+}
+```
+
+重新进行打包构建可以发现会提示错误。
+
+#### awesome-typescript-loader
+
+与 ts-loader 主要区别：
+
+* 更适合与 Babel 集成，使用 Babel 的转义和缓存
+* 不需要按照额外的插件，就可以把类型检查放在独立进程中执行
+
+```shell
+```
+
