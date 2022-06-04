@@ -3335,4 +3335,254 @@ console.log(util)
 
 #### 工程引用
 
-工程引用是 ts 3.0 引入的新特性。
+工程引用是 ts 3.0 引入的新特性。我们来看下具体的应用场景。
+
+<img src="./images/project.png" align="left" />
+
+我们有一个项目，是一个前后端混合项目，并且有公共的引用文件，且服务端和客户端代码的测试用例都在一个目录中。
+
+```ts
+// src/common/index.ts
+export function getTime() {
+  const time = new Date()
+  return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()}`
+}
+
+// src/client/index.ts
+import { getTime } from '../common'
+
+console.log(`Client Time: ${getTime()}`)
+
+class Client {} 
+
+export = Client
+
+// src/server/index.ts
+import { getTime } from '../common'
+
+console.log(`Server Time: ${getTime()}`)
+
+class Server {} 
+
+export = Server
+
+// test/client.test.ts
+import Client = require('../src/client')
+
+const c = new Client()
+
+// test/server.test.ts
+import Server = require('../src/server')
+
+const c = new Server()
+```
+
+```json
+// tsconfig.json
+
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "CommonJS",
+    "strict": true,
+    "outDir": "./dist"
+  }
+}
+```
+
+以上就是目前工程的所有代码。根据我们的配置，ts 编译器会将编译后的文件输出到 dist 目录，我们可以使用 tsc 命令执行构建。
+
+编译后的文件目录如下。
+
+<img src="./images/project02.png" align="left" />
+
+我们并不希望构建后的目录有一个 src 层级，我们想把 client、common、server 直接构建到 dist 目录下。
+
+我们可以在配置文件中加入 `include` 实现。
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "CommonJS",
+    "strict": true,
+    "outDir": "./dist"
+  },
+  "include": ["src"]
+}
+```
+
+这样可以实现我们的目的，但是你会发现这样就把 test 目录给遗忘。还有一些不方便的地方就是，我们不能单独的构建客户端应用或者服务端应用。此外，我们也不想把测试用例构建到 dist 目录下。以上的问题都是通过单个配置文件不能解决的。工程引用就是用来解决这类问题的。它可以灵活控制输出目录，还可以使工程之间产生依赖关系，可以把一个大的项目拆分成小的项目，同时还可以利用增量编译提升编译速度。下面来看一下使用工程引用改造后的项目。
+
+<img src="./images/new_project.png" align="left" />
+
+上述代码基本没有改动，只是我们为每个目录增加了自己的 tsconfig.json 文件。
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "CommonJS",
+    "strict": true,
+    "composite": true, // 工程可以被引用并且可以增量编译
+    "declaration": true, // 生成声明文件
+  },
+}
+
+// src/client/tsconfig.json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/client"
+  },
+  "references": [
+    {
+      "path": "../common"
+    }
+  ]
+}
+
+// src/server/tsconfig.json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/server"
+  },
+  "references": [
+    {
+      "path": "../common"
+    }
+  ]
+}
+
+// src/common/tsconfig.json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/common"
+  }
+}
+
+// test/tsconfig.json
+{
+  "extends": "../tsconfig.json",
+  "references": [
+    { "path": "../src/client" },
+    { "path": "../src/server" }
+  ]
+}
+```
+
+ts 为了支持工程引用，为我们提供了一种新的构建模式。即 build 构建模式，它可以单独构建一个工程。相关的依赖也会被自动构建。
+
+```shell
+tsc -b src/server --verbose # 构建 server 工程
+tsc -b src/client --verbose # 构建 client 工程
+```
+
+构建完毕后生成目录如下：
+
+<img src="./images/new_project02.png" align="left" />
+
+再次执行构建命令，你会发现构建速度也很快。因为我们启用了增量编译。
+
+下面我们再来构建一下测试用例。
+
+```shell
+tsc -b test --verbose # 构建测试用例
+```
+
+你会发现 test 目录下会生成构建后的文件。
+
+<img src="./images/new_project03.png" align="left" />
+
+我们可以用以下命令清空构建文件。
+
+```shell
+tsc -b test --clean
+```
+
+从以上可以看出，工程引用的优点。首先它解决了输出目录结构的问题，其次它解决了单个工程构建的问题，然后它还可以通过增量编译提升构建速度。其实 typescript 项目本身已经使用工程引用改造过。
+
+我们可以来看一下 [typescript 工程](https://github.com/microsoft/TypeScript/tree/main/src) 的 src 目录。当前目录下有一个基础配置，`tsconfig-base.json` 文件。
+
+```json
+// src/tsconfig.json
+
+{
+    "compilerOptions": {
+        "pretty": true,
+        "lib": ["es2015.iterable", "es2015.generator", "es5"],
+        "target": "es5",
+        "moduleResolution": "node",
+        "rootDir": ".",
+
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "composite": true,
+        "noEmitOnError": true,
+
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictPropertyInitialization": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+
+        "skipLibCheck": true,
+
+        "alwaysStrict": true,
+        "preserveConstEnums": true,
+        "newLine": "lf",
+
+        "types": []
+    }
+}
+```
+
+其他的文件夹都是一个子工程。以 tsc 目录为例。
+
+```json
+// src/tsc/tsconfig.hson
+
+{
+    "extends": "../tsconfig-noncomposite-base",
+    "compilerOptions": {
+        "outFile": "../../built/local/tsc.js"
+    },
+    "files": [
+        "tsc.ts"
+    ],
+    "references": [
+        { "path": "../compiler", "prepend": true },
+        { "path": "../executeCommandLine", "prepend": true }
+    ]
+}
+```
+
+ts 官方配置是一个很好的参照，你可以自己去学习一下。看看它是怎么利用工程引用特性来支撑这样一个庞大项目的构建。
+
+**如何在根目录一次性构建所有工程？**
+
+可以在 `src` 下新建一个 `tsconfig.json` 文件，通过运行 `tsc -b src` 来一次性构建所有工程。
+
+```json
+{
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./client" },
+    { "path": "./common" },
+    { "path": "./server" }
+  ]
+}
+```
+
+```shell
+tsc -b src --verbose # 构建 src 目录下所有工程
+```
+
+### 编译工具
+

@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "CommonJS",
+    "strict": true,
+    "composite": true, // 工程可以被引用并且可以增量编译
+    "declaration": true, // 生成声明文件
+  },
+}
