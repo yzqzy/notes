@@ -35,9 +35,37 @@
     // "noEmit": true, // 不输出文件
     // "noEmitOnError": true, // 发生错误时不输出文件
 
-    "noEmitHelpers": true, // 不生成 helper 函数，需要额外安装 ts-helpers
-    "importHelpers": true, // 通过 tslib 引入 helper 函数，文件必须是模块
+    // "noEmitHelpers": true, // 不生成 helper 函数，需要额外安装 ts-helpers
+    // "importHelpers": true, // 通过 tslib 引入 helper 函数，文件必须是模块
 
     // "downlevelIteration": true, // 降级遍历器的实现（es3/5）
+
+    // "strict": true, // 开启严格代码检查
+    // "alwaysStrict": false, // 在代码中注入 "use strict";
+    // "noImplicitAny": false, // 不允许隐式的 any 类型
+    // "strictNullChecks": false, // 不允许把 null、undefined 赋值给其他类型变量
+    // "strictFunctionTypes": false, // 不允许函数参数双向协变
+    // "strictPropertyInitialization": false, // 类的实例属性必须初始化
+    // "strictBindCallApply": false, // 严格的 bind/call/apply 检查
+    // "noImplicitThis": false, // 不允许 this 有隐式的 any 类型
+
+    // "noUnusedLocals": true, // 检查只声明，未使用的局部变量
+    // "noUnusedParameters": true, // 检查只声明的函数参数
+    // "noFallthroughCasesInSwitch": true, // 防止 switch 语句贯穿
+    // "noImplicitReturns": true, // 每个分支都要有返回值
+
+    // "esModuleInterop": true, // 允许 export = 导出，由 import from 导入
+    // "allowUmdGlobalAccess": true, // 允许在模块中访问 UMD 全局变量
+    // "moduleResolution": "Node", // 模块解析策略，ts 默认使用 node 解析策略
+
+    // "baseUrl": "./", // 解析非相对模块的基地址，默认是当前目录
+    // // 路径映射（如果我们不想导入 jquery 的默认版本，而是当导入精简版本，就可以在这里指定）
+    // "paths": {
+    //   "jquery": ["node_modules/jquery/dist/jquery.slim.min.js"]
+    // },
+    // "rootDirs": ["src", "temp"], // 将多个目录放到一个虚拟目录下，用于运行时
+
+    "listEmittedFiles": true, // 打印输出文件
+    // "listFiles": true, // 打印编译文件（包括引用的声明文件）
   },
 }

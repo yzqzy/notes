@@ -1,44 +1,27 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 exports.__esModule = true;
 (function () {
     var hello = 'hello world';
     document.querySelectorAll('.app')[0].innerHTML = hello;
 })();
-var A = /** @class */ (function () {
-    function A() {
-    }
-    return A;
-}());
-var B = /** @class */ (function (_super) {
-    __extends(B, _super);
-    function B() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return B;
-}(A));
-var arr = [1, 2, 3];
-var arr2 = __spreadArray([4], arr, true);
+// class A {}
+// class B extends A {}
+// const arr = [1, 2, 3]
+// const arr2 = [4, ...arr]
+// function add(x: number, y: number) {
+//   return x + y
+// }
+// add.call(undefined, 1, 2)
+// add.call(undefined, 1, '2') // 类型“string”的参数不能赋给类型“number”的参数。
+// class A {
+//   a: number = 1
+//   getA () {
+//     return function() {
+//       console.log(this.a) // "this" 隐式具有类型 "any"，因为它没有类型注释。
+//     }
+//   }
+// }
+// const a = new A().getA()
+// a()
+// import { util } from './utils'
+// console.log(util)

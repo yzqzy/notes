@@ -3098,5 +3098,241 @@ module.exports = B;
 
 ##### 类型检查
 
+```json
+{
+  "compilerOptions": {
+    "strict": true, // 开启严格代码检查
+    // "alwaysStrict": false, // 在代码中注入 "use strict";
+    // "noImplicitAny": false, // 不允许隐式的 any 类型
+    // "strictNullChecks": false, // 不允许把 null、undefined 赋值给其他类型变量
+    // "strictFunctionTypes": false, // 不允许函数参数双向协变
+    // "strictPropertyInitialization": false, // 类的实例属性必须初始化
+    // "strictBindCallApply": false, // 严格的 bind/call/apply 检查
+    // "noImplicitThis": false, // 不允许 this 有隐式的 any 类型
+  }
+}
+```
+
+如果开启 strict，strict 下面所有注释掉的配置也会默认开启。
 
 
+
+```typescript
+function add(x: number, y: number) {
+  return x + y
+}
+add.call(undefined, 1, 2)
+add.call(undefined, 1, '2') // 类型“string”的参数不能赋给类型“number”的参数。
+```
+
+上述代码如果在严格模式下，会报错，如果关闭 `strictBindCallApply` 。ts 就会放过类型检查。
+
+
+
+```typescript
+class A {
+  a: number = 1
+
+  getA () {
+    return function() {
+      console.log(this.a) // "this" 隐式具有类型 "any"，因为它没有类型注释。
+    }
+  }
+}
+const a = new A().getA()
+a()
+```
+
+上述代码说的就是 `noImplicitThis` ，这里的 this 在某些环境下可能是 undefined。比如运行上面代码就会报错。
+
+##### 函数相关
+
+```json
+{
+  "compilerOptions": {
+    // "noUnusedLocals": true, // 检查只声明，未使用的局部变量
+    // "noUnusedParameters": true, // 检查只声明的函数参数
+    // "noFallthroughCasesInSwitch": true, // 防止 switch 语句贯穿
+    // "noImplicitReturns": true, // 每个分支都要有返回值
+  }
+}
+```
+
+上述的配置会为我们提示错误，但是不会阻碍编译。
+
+switch 语句贯穿的意思就是就是：如果某一个分支没有 break 语句，下面的一系列语句都会依次执行。
+
+##### 模块相关
+
+```json
+{
+  "compilerOptions": {
+    // "esModuleInterop": true, // 允许 export = 导出，由 import from 导入
+    // "allowUmdGlobalAccess": true, // 允许在模块中访问 UMD 全局变量
+    "moduleResolution": "Node", // 模块解析策略
+  }
+}
+```
+
+关于 `moduleResolution` ，ts 默认使用 node 解析策略。还有其他选项，例如 `Classic` ，`Node16`，`NodeNext` 等 。
+
+**classic 模块解析策略**
+
+用于 amd、system js、es2015 模块。
+
+相对导入：
+
+```typescript
+// /root/src/moduleA.ts
+import { b } from './moduleB'
+
+// 文件解析策略
+
+// 1. /root/src/moduleB.ts
+// 2. /root/src/moduleB.d.ts
+```
+
+非相对导入：
+
+```typescript
+// /root/src/moduleA.ts
+import { b } from './moduleB'
+
+// 文件解析策略
+
+// 1. /root/src/node_modules/moduleB.ts
+// 2. /root/src/node_modules/moduleB.d.ts
+
+// 如果本地目录没有，会依次向上查找 ...
+
+// 3. /root/node_modules/moduleB.ts
+// 4. /root/node_modules/moduleB.d.ts
+
+// 5. node_modules/moduleB.ts
+// 6. node_modules/moduleB.d.ts
+```
+
+**node 模块解析策略**
+
+相对导入：
+
+```typescript
+// /root/src/moduleA.ts
+import { b } from './moduleB'
+
+// 文件解析策略
+
+// 1. /root/src/moduleB.ts 
+// 2. /root/src/moduleB.tsx
+// 3. /root/src/moduleB.d.ts
+// 4. /root/src/moduleB/package.json ("types" 属性，优先查找 "types" 属性，如果没有会查找 index)
+// 5. /root/src/moduleB/index.ts 
+// 6. /root/src/moduleB/index.tsx
+// 7. /root/src/moduleB/index.d.ts
+```
+
+非相对导入：
+
+```json
+// /root/src/moduleA.ts
+import { b } from './moduleB'
+
+// 文件解析策略
+
+// 1. /root/src/moduleB.ts 
+// 2. /root/src/moduleB.tsx
+// 3. /root/src/moduleB.d.ts
+// 4. /root/src/moduleB/package.json
+// 5. /root/src/moduleB/index.ts 
+// 6. /root/src/moduleB/index.tsx
+// 7. /root/src/moduleB/index.d.ts
+
+// 8. /root/moduleB.ts 
+// 9. /root/moduleB.tsx
+// 10. /root/moduleB.d.ts
+// 11. /root/moduleB/package.json
+// 12. /root/moduleB/index.ts 
+// 13. /root/moduleB/index.tsx
+// 14. /root/moduleB/index.d.ts
+
+// 如果本地目录没有，会依次向上查找，直到根目录下的 node_modules
+```
+
+下面我们再来看下其他配置。
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": "./", // 解析非相对模块的基地址，默认是当前目录
+    // 路径映射（如果我们不想导入 jquery 的默认版本，而是当导入精简版本，就可以在这里指定）
+    "paths": {
+      "jquery": ["node_modules/jquery/dist/jquery.slim.min.js"]
+    },
+    "rootDirs": ["src", "temp"], // 将多个目录放到一个虚拟目录下，用于运行时
+  }
+} 
+```
+
+这里的 rootDirs 和前面的 rootDir 完全是两个概念，它可以为多个目录建立一个虚拟目录。应用场景如下：
+
+我们新建 temp 目录，用来存放构建之后的文件。
+
+```typescript
+// temp/utils.ts
+
+export const util = {}
+```
+
+我们可以单独编译一下这个文件。
+
+```shell
+tsc .\temp\utils.ts -d # 编译文件并生成声明文件
+```
+
+下面我们把源文件删除。即 `temp/utils.ts` 文件。有些时候我们构件好一个类库后，就不会二次构建了。它会永远放到这个输出目录中。如果在其他位置想引用这个类库，我们可以这样做。
+
+```typescript
+// src/index.ts
+
+import { util } from './utils'
+console.log(util)
+```
+
+因为 index.ts 编译后也会输出到 temp 目录，所以我们要想编译后也可以引用 util 文件，可以假定当前就在 temp 目录。但是这样很明显是有问题的。`找不到模块“./util”或其相应的类型声明。ts(2307)` 。
+
+这时我们就需要用到 `rootDirs` 配置。
+
+```json
+{
+  "compilerOptions": {
+    "rootDirs": ["src", "temp"], // 将多个目录放到一个虚拟目录下，用于运行时
+  }
+} 
+```
+
+这样编译后就会认为它们在一个目录下。这样我们就可以在 src 目录下直接使用 temp 中的 util。编译后引用路径也不会发生改变。
+
+##### 打印相关
+
+```json
+{
+  "compilerOptions": {
+    "listEmittedFiles": true, // 打印输出文件
+    "listFiles": true, // 打印编译文件（包括引用的声明文件）
+  }
+} 
+```
+
+可以在命令行打印相关信息。
+
+<img src="./images/emitter.png" align="left" />
+
+##### 总结
+
+本小节我们介绍了很多编译配置项，不需要你全都记住，建议遵循这样的原则，遇到问题解决问题。
+
+如果在开发中遇到不太清楚的报错，可以去配置中找一找，也许你的报错通过一个配置项就可以解决。同时你可以发现编码中不规范的地方。此外还有一些配置项没有说明，我们后面再来讲解。
+
+#### 工程引用
+
+工程引用是 ts 3.0 引入的新特性。
