@@ -3683,5 +3683,77 @@ module.exports = {
 * 不需要按照额外的插件，就可以把类型检查放在独立进程中执行
 
 ```shell
+pnpm i awesome-typescript-loader -D
 ```
+
+然后我们来修改一下 webpack 配置。
+
+```json
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+// const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const { CheckerPlugin } = require('awesome-typescript-loader')
+
+module.exports = {
+  entry: './src/index.ts',
+  output: {
+    filename: 'app.js'
+  },
+  resolve: {
+    extensions: ['.js', '.ts', '.tsx']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/i,
+        // use: [{
+        //   loader: 'ts-loader',
+        //   options: {
+        //     // 当这个配置项开启后，只做语言转换而不做类型检查
+        //     // 实际项目中，你会发现随着项目越来越大，构建时间越来越长，开启下面这个配置就会启动一种快速构建模式
+        //     transpileOnly: true,
+        //   }
+        // }],
+        use: [{
+          loader: 'awesome-typescript-loader',
+          options: {
+            transpileOnly: true,
+          }
+        }],
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './src/tpl/index.html'
+    }),
+    // new ForkTsCheckerWebpackPlugin()
+    new CheckerPlugin()
+  ]
+}
+```
+
+最后我们来对比一下两个 loader。
+
+| loader                    | 默认配置 | transpileOnly | transpileOnly + 类型检查  |
+| ------------------------- | -------- | ------------- | ------------------------- |
+| ts-loader                 | 1600+    | 500+          | 3000+（时间较长）         |
+| awesome-typescript-loader | 2200+    | 1600+         | 1600+（类型检查存在遗漏） |
+
+就目前来看，其实推荐使用 `ts-loader` 默认配置就可以了。
+
+#### ts 与 babel
+
+我们使用了 ts，为什么还要继续使用 Babel？
+
+|       | 编译能力                    | 类型检查 | 插件     |
+| ----- | --------------------------- | -------- | -------- |
+| tsc   | ts(x)、js(x)  => es3/5/6... | 有       | 无       |
+| babel | ts(x)、js(x)  => es3/5/6... | 无       | 非常丰富 |
+
+babel 7 之前是不支持 ts 的，对于已经使用了 babel 的项目，如果想使用 ts，并不是一件非常容易的事情。需要将用 ts 相关 loader 将 ts 转换为 js，然后再交由 babel 处理。
+
+babel 7 之后，babel 目前已经支持 ts，babel 在编译时可以不使用 ts loader，只让 ts 负责类型检查。
+
+下面我们使用 babel 重新创建一个工程。
 
