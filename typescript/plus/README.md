@@ -3757,3 +3757,133 @@ babel 7 之后，babel 目前已经支持 ts，babel 在编译时可以不使用
 
 下面我们使用 babel 重新创建一个工程。
 
+```
+.
+├── dist
+├── node_modules
+│   └── ...
+├── package.json
+├── src
+│   ├── index.ts
+├── .babelrc
+└── package.json
+```
+
+```ts
+// src/index.ts
+
+class A {
+  a: number = 1
+}
+
+let { x, y, ...z } = { x: 1, y: 2, a: 3, b: 4, c: 5 } 
+let n = { x, y, ...z }
+```
+
+```json
+// .babelrc
+
+{
+  "presets": [
+    "@babel/preset-env",
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    "@babel/proposal-class-properties",
+    "@babel/proposal-object-rest-spread"
+  ]
+}
+```
+
+```json
+// package.json
+
+{
+  "name": "ts-babel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "build": "babel src --out-dir dist --extensions \".ts,.tsx\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-typescript": "^7.3.3"
+  }
+}
+```
+
+以上就是一个最简的 babel + ts 的工程化配置。你可以看到，我们并没有安装 ts，而是直接使用 babel 作为编译工具编译 ts 文件。
+
+不过 babel 是不能进行类型检查的，所以我们还需要引入 ts 进行类型检查。
+
+```shell
+pnpm install typescript -D
+```
+
+```shell
+tsc --init
+```
+
+我们需要在 tsconfig.json 中开启 `noEmit` 选项。这个选项代表 ts 不会输出任何文件，只会做类型检查。
+
+然后我们在添加一个类型检查脚本。
+
+```json
+// package.json
+
+{
+  "name": "ts-babel",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "build": "babel src --out-dir dist --extensions \".ts,.tsx\"",
+    "type-check": "tsc --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/preset-typescript": "^7.3.3",
+    "typescript": "^3.5.2"
+  }
+}
+```
+
+```shell
+pnpm run type-check
+```
+
+这时 ts 就会实时监控编码中的类型错误。这样我们就把 babel 和 ts 结合在一起。babel 只做语言转换，ts 只做类型检查。
+
+在 babel 中是无法编译默认导出语法，会报错。
+
+```typescript
+export = A
+```
+
+#### 总结
+
+如何选择 ts 编译工具？
+
+* 如果没有使用 babel，首选 ts 自身的编译器，可以配合 ts-loader 使用
+* 如果项目中已经使用 babel，安装 `@babel/preset-typescript` ，可以配合 tsc 做类型检查
+* 两种编译工具建议不要混用，这样只会增加工程复杂度
+
+### 代码检查工具
+
+
+
