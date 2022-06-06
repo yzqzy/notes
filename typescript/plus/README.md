@@ -3885,5 +3885,86 @@ export = A
 
 ### 代码检查工具
 
+目前使用 ts 主要有两种代码检查工具，分别是 TSLint 和 ESLint。
+
+由于某些原因，官方由 TypeScript 转向 ESLint：
+
+* TSLint 执行规则的模式存在一些架构问题，从而影响性能，修复这些问题会破坏现有规则；
+* ESLint 的性能更好，并且社区用户熟悉 ESLint 的规则配置（比如针对 React 和 Vue 的规则），但是对 TSLint 并不熟悉。
+
+**使用 TypeScript ，为什么还需要 ESLint？**
+
+TypeScript 主要做两件事，分别是类型检查和语言转换，在这个过程中也会对语法错误进行检查。
+ESLint 除了可以检查语法错误，还可以保证代码风格的统一。两者的功能有部分重合，但是也各自有各自的职责。
+
+但是如果要使用 ESLint 去检查 TS 语法，就会面临一些问题，它们在工作之前，都需要把代码转换成抽象语法树，即 AST。而这两种语法树是不兼容的，相反，TSLint 是完全基于 TSLint 的语法树进行工作的，不会存在兼容性问题，缺点就是无法做到重用（这也是官方放弃 TSLint 的主要原因）。那么如何解决这个问题？我们可以使用 `typescript-eslint` 项目。它为 ESLint 提供了解析 TS 代码的编译器，可以把 TS 代码的语法树转换为 ESLint 所期望的语法树，即 ESTree。
+
+下面我们就来看一下如何在 TS 中使用 ESLint。我们基于之前的 `ts-config` 项目进行改造，项目为为 `ts-eslint`。
+
+我们需要安装 `eslint`，`@typescript-eslint/eslint-plugin` 和 `@typescript-eslint/parser` 。
+
+然后我们看下 eslint 配置。
+
+```json
+// .eslintrc.json
+
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "parserOptions": {
+      "project": "./tsconfig.json"
+  },
+  "extends": [
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/no-inferrable-types": "off"
+  }
+}
+```
+
+然后我们添加 `lint` 脚本。
+
+```json
+// package.json
+
+"scripts": {
+  "start": "webpack-dev-server --mode=development --config ./build/webpack.config.js",
+  "build": "webpack --mode=production --config ./build/webpack.config.js",
+  "lint": "eslint src --ext .js,.ts"
+}
+```
+
+我们可以使用 `pnpm run lint` 执行脚本。
+
+除了使用脚本做代码检查，我们还可以安装 eslint 插件来辅助我们开发。例如 vscode 的 eslint 插件。
+
+```json
+// settings.json
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "html",
+    "vue"
+  ]
+}
+```
+
+这样 vscode 就会在文件保存时使用 eslint 格式化代码。
+
+如果你使用 babel，可以使用 babel-eslint。
+
+* babel-eslint：支持 ts 没有的额外的语法检查，抛弃 ts，不支持类型检查
+* typescript-eslint：基于 ts 的 AST，支持创建基于类型信息的规则（tsconfig.json）
+
+建议：两者底层机制不同，不要混用。Babel 体系建议使用 babel-eslint。
+
+### Jest 单元测试
+
 
 
