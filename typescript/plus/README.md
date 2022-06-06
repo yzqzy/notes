@@ -3912,7 +3912,7 @@ ESLint 除了可以检查语法错误，还可以保证代码风格的统一。�
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
   "parserOptions": {
-      "project": "./tsconfig.json"
+    "project": "./ts-eslint/tsconfig.json"
   },
   "extends": [
     "plugin:@typescript-eslint/recommended"
@@ -3966,5 +3966,77 @@ ESLint 除了可以检查语法错误，还可以保证代码风格的统一。�
 
 ### Jest 单元测试
 
+单元测试可以使用 ts-jest 和或者babel-jest。
 
+首先我们要安装 `jest` 和 `ts-jest` 。
+
+```shell
+pnpm i jest ts-jest @types/jest -D
+```
+
+下面我们配置脚本文件。
+
+```json
+// package.json
+
+"scripts": {
+  "start": "webpack-dev-server --mode=development --config ./build/webpack.config.js",
+  "build": "webpack --mode=production --config ./build/webpack.config.js",
+  "lint": "eslint src --ext .js,.ts",
+  "test": "jest"
+}
+```
+
+然后通过以下命令创建 jest 配置文件。
+
+```shell
+npx ts-jest config:init
+```
+
+```js
+// jest.config.js
+
+/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+};
+```
+
+我们在 src 目录下新建 `math.ts`。
+
+```typescript
+// src/math.ts
+
+function add (a: number, b: number) {
+  return a + b
+}
+
+function sub (a: number, b: number) {
+  return a - b
+}
+
+export default {
+  add,
+  sub
+}
+```
+
+我们在根目录新建 `test` 文件夹，然后建立 `math.test.ts` 文件。
+
+```typescript
+// test/math.test.ts
+
+import math from '../src/math'
+
+test('add: 1 + 1 = 2', () => {
+  expect(math.add(1, 1)).toBe(2)
+})
+
+test('sub: 1 - 2 = -1', () => {
+  expect(math.sub(1, 2)).toBe(-1)
+})
+```
+
+然后我们执行 `pnpm run test`  可以看到两个测试用例都已经通过。使用 ts-jest 的好处就是它能够在测试用例中进行类型检查。
 

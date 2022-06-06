@@ -1,4 +1,3 @@
-      let hello: string = 
-        'hello world'
+const hello: string = 'hello world'
 
-      document.querySelectorAll('.app')[0].innerHTML = hello
+document.querySelectorAll('.app')[0].innerHTML = hello
