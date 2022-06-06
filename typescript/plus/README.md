@@ -4040,3 +4040,47 @@ test('sub: 1 - 2 = -1', () => {
 
 然后我们执行 `pnpm run test`  可以看到两个测试用例都已经通过。使用 ts-jest 的好处就是它能够在测试用例中进行类型检查。
 
+```typescript
+// test/math.test.ts
+
+import math from '../src/math'
+
+test('add: 1 + 1 = 2', () => {
+  expect(math.add(1, 1)).toBe(2)
+})
+
+test('sub: 1 - 2 = -1', () => {
+  expect(math.sub(1, 2)).toBe(-1)
+})
+
+let x: number = '1'
+```
+
+再次运行错误，可以看到错误提示。
+
+接下来我们在使用 `babel-jest` 进行测试，首先我们打开之前创建的 `ts-babel` 工程。同样我们需要安装 jest ，同时也要安装 `babel-jest`。
+
+```shell
+pnpm i jest babel-jest @types/jest -D
+```
+
+jest 安装完毕后，我们把刚才创建的文件拷贝过来。然后编写测试脚本。
+
+```json
+// package.json
+
+"scripts": {
+  "build": "babel src --out-dir dist --extensions \".ts,.tsx\"",
+  "type-check": "tsc --watch",
+  "test": "jest"
+},
+```
+
+执行脚本 `pnpm run test`  也可以正常通过测试。但是它不会进行类型检查。如果想让 `babel-jest` 支持类型检查，我们还需要提供类型检查脚本。我们执行 `pnpm run type-check` 可以看到错误提示。
+
+## TypeScript 实战
+
+
+
+
+
