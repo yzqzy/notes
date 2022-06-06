@@ -1,0 +1,1 @@
+global-lib.js 定义在 public 目录下，避免全局引入找不到路径
