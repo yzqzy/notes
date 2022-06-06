@@ -1,4 +1,4 @@
-#   JS Examples
+# JS 奇技淫巧
 
 ## parseInt 遇上 map
 
