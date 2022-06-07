@@ -4080,7 +4080,106 @@ jest 安装完毕后，我们把刚才创建的文件拷贝过来。然后编写
 
 ## TypeScript 实战
 
+### 函数组件与类组件
 
+```tsx
+// 函数组件
 
+import React from "react"
+import { Button } from 'antd'
 
+interface Greeting {
+  name: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+// const Hello = (props: Greeting) => <Button>Hello { props.name }</Button>
+
+const Hello: React.FC<Greeting> = ({
+  name,
+  firstName,
+  lastName
+}) => <Button>Hello { name }</Button>
+
+export default Hello
+```
+
+react 中使用 `React.FC` 定义组件，相对于普通声明，当我们给函数定义静态属性时，存在提示。
+
+```tsx
+// 函数组件
+
+import React from "react"
+import { Button } from 'antd'
+
+interface Greeting {
+  name: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+// const Hello = (props: Greeting) => <Button>Hello { props.name }</Button>
+
+const Hello: React.FC<Greeting> = ({
+  name,
+  firstName,
+  lastName,
+}) => <Button>Hello { name }</Button>
+
+// 类型提示
+Hello.defaultProps = {
+  firstName: '',
+  lastName: ''
+}
+
+export default Hello
+```
+
+使用 `React.FC` 并不存在明显的好处。其实我们更推荐使用原生写法。
+
+```tsx
+import React, { Component } from "react"
+import { Button } from 'antd'
+
+interface Greeting {
+  name: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface State {
+  count: number
+}
+
+class HelloClass extends Component<Greeting, State> {
+  state: State = {
+    count: 0
+  }
+
+  static defaultProps = {
+    firstName: '',
+    lastName: ''
+  }
+
+  setCount = () => {
+    this.setState({
+      count: this.state.count + 1
+    })
+  }
+
+  render() {
+    return (
+      <>
+        <p>点击了 { this.state.count }</p>
+        <Button onClick={ this.setCount}>Hello { this.props.name }</Button>
+      </>
+    )
+  }
+}
+
+export default HelloClass
+```
+
+### 高阶组件与 Hooks
 
