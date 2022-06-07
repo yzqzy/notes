@@ -4183,3 +4183,34 @@ export default HelloClass
 
 ### 高阶组件与 Hooks
 
+| 组件复用方式    | 优势                                                      | 劣势                                                         | 状态               |
+| --------------- | --------------------------------------------------------- | ------------------------------------------------------------ | ------------------ |
+| 类组件（class） | 发展时间长，接受度广泛                                    | 只能继承父类                                                 | 传统模式，长期存在 |
+| Mixin           | 可以复制任意对象的任意方法                                | 组件相互依赖、耦合，可能产生冲突，不利于维护                 | 被抛弃             |
+| 高阶组件（HOC） | 利用装饰器模式，不改变组件的基础上，动态添加新能力        | 嵌套过多调试困难，需要遵循某些约定（不改变原组件，透传 props） | 能力强大，应用广泛 |
+| Hooks           | 代替 class，多个 Hooks 互不影响，避免嵌套地狱，开发效率高 | 切换到新思维需要成本                                         | React 未来         |
+
+```tsx
+// 高阶组件
+
+import React, { Component } from "react"
+import HelloClass from './HelloClass'
+
+interface Loading {
+  loading: boolean
+}
+
+function HelloHOC<P>(WrapperComponent: React.ComponentType<P>) {
+  return class extends Component<P & Loading> {
+    render() {
+      const { loading, ...props } = this.props
+      return loading ? <div>Loading</div> : <WrapperComponent {...props as unknown as P} />
+    }
+  }
+}
+
+export default HelloHOC(HelloClass)
+```
+
+高阶组件用在 ts 中，我们可能会遇到很多类型问题。这并不是高阶组件本身的问题，而是 React 声明文件还没有很好的兼容高阶组件的类型检查。其实我们更推荐使用 Hooks 编写组件。
+
