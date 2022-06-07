@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import Hello from './components/Hello'
 import HelloClass from './components/HelloClass'
 import HelloHOC from './components/HelloHOC'
+import HelloHooks from './components/HelloHooks'
 
 import './index.css'
 
@@ -17,5 +18,6 @@ root.render(
     <HelloClass name='typescript' />
     <HelloHOC name='typescript' loading={true} />
     <HelloHOC name='typescript' loading={false} />
+    <HelloHooks name='typescript' />
   </React.StrictMode>
 )

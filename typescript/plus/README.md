@@ -4214,3 +4214,44 @@ export default HelloHOC(HelloClass)
 
 高阶组件用在 ts 中，我们可能会遇到很多类型问题。这并不是高阶组件本身的问题，而是 React 声明文件还没有很好的兼容高阶组件的类型检查。其实我们更推荐使用 Hooks 编写组件。
 
+```tsx
+// Hooks 组件
+
+import { useEffect, useState } from "react"
+import { Button } from 'antd'
+
+interface Greeting {
+  name: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+const HelloHooks = (props: Greeting) => {
+  const [count, setCount] = useState(0)
+  const [text, setText] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (count > 5) {
+      setText('休息一下')
+    }
+  }, [ count ])
+
+  return (
+    <>
+      <p>点击了 {count } { text }</p>
+      <Button onClick={ () => setCount(count + 1) }>Hello { props.name }</Button>
+    </>
+  )
+}
+
+// 类型提示
+HelloHooks.defaultProps = {
+  firstName: '',
+  lastName: ''
+}
+
+export default HelloHooks
+```
+
+Hooks 其实就是函数组件，只不过可以使用 react 提供的很多 API。
+
