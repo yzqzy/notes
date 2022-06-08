@@ -173,3 +173,169 @@ console.log(Number.MIN_VALUE > 0) // true
 // // console.log(x) // x is not defin
 
 
+var a = /123/
+var b = /123/
+console.log(a == b) // false
+console.log(a === b) // false
+
+console.log('--------------')
+
+
+var a = [1, 1, 3]
+var b = [1, 2, 3]
+var c = [1, 2, 4]
+
+console.log(a == b) // false
+console.log(a === b) // false
+console.log(a > c) // false
+console.log(a < c) // true
+
+console.log('--------------')
+
+var a = {}
+var b = Object.prototype
+
+console.log(a.prototype === b) // false
+console.log(Object.getPrototypeOf(a) == b) // true
+console.log(a.__proto__ === b) // true
+
+console.log('--------------')
+
+function f() {}
+
+var a = f.prototype
+var b = Object.getPrototypeOf(f)
+
+console.log(a === b) // false
+
+console.log('--------------')
+
+function Person() { }
+
+var p = new Person()
+
+var a = p.__proto__
+var b = Object.getPrototypeOf(p)
+var c = Person.prototype
+
+console.log(a === b, a === c, b === c) // true true true
+
+var d = Person.__proto__
+var e = Object.getPrototypeOf(Person)
+var f = Function.prototype
+
+console.log(d === e, d === f, e === f) // true true true
+
+console.log('--------------')
+
+function foo() { }
+
+var oldName = foo.name
+
+foo.name = 'bar'
+
+console.log(oldName, foo.name) // foo foo
+
+console.log('--------------')
+
+console.log("1 2 3".replace(/\d/g, parseInt)) // 1 NaN 3
+
+console.log('--------------')
+
+function f() { }
+
+var parent = Object.getPrototypeOf(f)
+
+console.log(f.name) // f
+console.log(parent.name) // ''
+console.log(typeof eval(f.name)) // function
+console.log(typeof eval(parent.name)) // undefined
+
+console.log('--------------')
+
+var lowerCaseOnly = /^[a-z]+$/
+console.log(lowerCaseOnly.test(null), lowerCaseOnly.test()) // true true
+
+console.log('--------------')
+
+console.log([, , ,].join(',')) // ,,
+
+console.log('--------------')
+
+var a = { class: 'Animal', name: "heora" }
+console.log(a.class) // Animal
+
+console.log('--------------')
+
+var a = new Date("epoch")
+console.log(a) // Invalid Date
+
+console.log('--------------')
+
+var a = Function.length
+var b = new Function().length
+console.log(a) // 1
+console.log(b) // 0
+console.log(a === b) // false
+
+console.log('--------------')
+
+var a = Date(0)
+var b = new Date(0)
+var c = new Date()
+
+console.log([a === b, b === c, a === c]) // [ false, false, false ]
+
+console.log('--------------')
+
+var min = Math.min()
+var max = Math.max()
+
+console.log(min < max) // false
+
+console.log('--------------')
+
+function captureOne(re, str) {
+  var match = re.exec(str)
+  return match && match[1]
+}
+
+var numRe = /num=(\d+)/ig;
+var wordRe = /word=(\w+)/i;
+
+var a1 = captureOne(numRe, "num=1")
+var a2 = captureOne(wordRe, "word=1")
+var a3 = captureOne(numRe, "NUM=1")
+var a4 = captureOne(wordRe, "WORD=1")
+
+console.log([a1 === a2, a3 == a4]) // true false
+
+console.log(a1) // 1
+console.log(a2) // 1
+console.log(a3) // null
+console.log(a4) // 1
+
+console.log('--------------')
+
+var a = new Date('2022-06-08')
+var b = new Date(2022, 06, 08)
+
+console.log('--------------')
+
+if ("http://giftwrapped.com/picture.jpg".match(".gif")) {
+  console.log("a gif file");
+} else {
+  console.log("not a gif file");
+}
+
+console.log('--------------')
+
+function foo(a) {
+  var a
+  return a
+}
+function bar(a) {
+  var a = 'bye'
+  return a
+}
+console.log([foo('hello'), bar('hello')]) // [ 'hello', 'bye' ]
