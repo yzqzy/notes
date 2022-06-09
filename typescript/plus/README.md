@@ -4257,3 +4257,30 @@ Hooks 其实就是函数组件，只不过可以使用 react 提供的很多 API
 
 ### 事件处理与数据请求
 
+#### 搭建 mock 服务
+
+安装依赖
+
+```shell
+pnpm i http-server -D
+```
+
+编写 server 脚本
+
+```json
+{
+  "scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject",
+  "server": "cd mock && http-server -p 4000 -a localhost"
+}
+```
+
+可以执行 server 命令启动服务。
+
+#### 数据请求
+
+
+
