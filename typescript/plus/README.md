@@ -4280,7 +4280,183 @@ pnpm i http-server -D
 
 可以执行 server 命令启动服务。
 
+#### 代理转发
+
+安装依赖
+
+```shell
+pnpm i http-proxy-middleware -D
+```
+
+编写配置文件
+
+> create-react-app 会在启动的时候自动调用这个文件
+
+```js
+// src/setupProxy.js
+
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+module.exports = function(app) {
+  app.use(createProxyMiddleware('/api/**/*.action', {
+    target: 'http://localhost:4000',
+    pathRewrite(path) {
+      return path.replace('/api', '/').replace('.action', '.json');
+    }
+  }));
+};
+```
+
 #### 数据请求
 
+```typescript
+// src/constants/urls.ts
 
+export const GET_EMPLOYEE_URL = '/api/employee/getEmployee.action';
+```
+
+```typescript
+// src/typings/employee.ts
+
+export interface EmployeeRequest {
+  name: string;
+  departmentId: number | undefined;
+}
+
+interface EmployeeInfo {
+  id: number;
+  key: number;
+  name: string;
+  department: string;
+  hiredate: string;
+  level: string;
+}
+
+export type EmployeeResponse = EmployeeInfo[] | undefined
+```
+
+```typescript
+// src/utils/request.ts
+
+import Axios from 'axios';
+import { message } from 'antd';
+
+const axios = Axios.create({
+  timeout: 20000
+});
+
+axios.interceptors.response.use(
+  function(response) {
+    if (response.data && response.data.error_code) {
+      const errorMsg = response.data.error_msg;
+      message.error(errorMsg);
+      return Promise.reject(errorMsg);
+    }
+    return response.data;
+  },
+  function (error) {
+    return Promise.reject(error)
+  }
+)
+
+export function get(url: string, data: any) {
+  return axios.get(url, {
+    params: data
+  });
+}
+
+export function post(url: string, data: any) {
+  return axios({
+    method: 'post',
+    url,
+    data
+  });
+}
+
+export default axios;
+```
+
+```typescript
+// src/components/employee/QueryForm.tsx
+
+import React, { Component } from 'react';
+import { Form, Input, Select, Button } from 'antd';
+
+import { EmployeeRequest } from '../../typings/employee';
+import { get } from '../../utils/request';
+import { GET_EMPLOYEE_URL } from '../../constants/urls';
+
+const { Option } = Select;
+
+class QueryForm extends Component<{}, EmployeeRequest> {
+	state: EmployeeRequest = {
+		name: '',
+		departmentId: undefined
+	}
+
+	handleNameChange = (e: React.FormEvent<HTMLInputElement>) => {
+		this.setState({
+			name: e.currentTarget.value
+		})
+	}
+
+	handleDepartmentChange = (value: number) => {
+		this.setState({
+			departmentId: value
+		})
+	}
+
+	handleSubmit = () => {
+		this.queryEmployee(this.state)
+	}
+	
+	componentDidMount() {
+		this.queryEmployee(this.state)
+	}
+
+	queryEmployee(param: EmployeeRequest) {
+		get(GET_EMPLOYEE_URL, param)
+			.then(res => {
+				console.log(res)
+			})
+	}
+
+	render() {
+		const { name, departmentId } = this.state
+
+		return (
+			<Form layout="inline">
+				<Form.Item>
+					<Input
+						placeholder="姓名"
+						style={{ width: 120 }}
+						allowClear
+						value={name}
+						onChange={this.handleNameChange}
+					/>
+				</Form.Item>
+				<Form.Item>
+					<Select
+						placeholder="部门"
+						style={{ width: 120 }}
+						allowClear
+						value={departmentId}
+						onChange={this.handleDepartmentChange}
+					>
+						<Option value={1}>技术部</Option>
+						<Option value={2}>产品部</Option>
+						<Option value={3}>市场部</Option>
+						<Option value={4}>运营部</Option>
+					</Select>
+				</Form.Item>
+				<Form.Item>
+					<Button type="primary" onClick={this.handleSubmit}>查询</Button>
+				</Form.Item>
+			</Form>
+		)
+	}
+}
+
+export default QueryForm;
+```
 
