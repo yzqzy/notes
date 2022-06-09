@@ -4607,3 +4607,207 @@ export default QueryForm;
 
 ### Redux 与类型
 
+安装依赖
+
+```shell
+pnpm i react-redux @reduxjs/toolkit
+```
+
+引用 store
+
+```tsx
+// src/index.tsx
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { Provider } from 'react-redux';
+
+import Root from './routers';
+import { store } from './store'
+
+import './index.css'
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+)
+
+root.render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <Root />
+    </Provider>
+  </React.StrictMode>
+)
+```
+
+创建 store 目录
+
+```typescript
+// src/store/employee/index.ts
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { GET_EMPLOYEE_URL } from '../../constants/urls';
+import { EmployeeResponse, EmployeeRequest } from '../../typings/employee';
+import { get } from '../../utils/request'
+
+export interface EmployeeState {
+  employeeList: EmployeeResponse
+}
+
+const initialState: EmployeeState = {
+  employeeList: undefined,
+}
+
+export const getEmployee = createAsyncThunk(
+  "employee/getEmployee",
+  async (action: EmployeeRequest) => {
+    const ans = await get(GET_EMPLOYEE_URL, action)
+    return ans.data
+  }
+)
+
+export const employeeSlice = createSlice({
+  name: 'employee',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(getEmployee.fulfilled, (state, action) => {
+      state.employeeList = action.payload;
+    })
+  }
+});
+
+export default employeeSlice.reducer;
+
+
+// src/store/index.ts
+import { configureStore } from '@reduxjs/toolkit';
+import employeeReducer from './employee';
+
+export const store = configureStore({
+  reducer: {
+    employee: employeeReducer
+  }
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+改造旧代码
+
+```tsx
+// src/components/employee/QueryForm.tsx
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Select, Button } from 'antd';
+import {  useDispatch } from 'react-redux'
+import { getEmployee } from '../../store/employee'
+
+import { EmployeeRequest } from '../../typings/employee';
+import { AnyAction } from '@reduxjs/toolkit';
+
+const { Option } = Select;
+
+const QueryForm = () => {
+	const dispatch = useDispatch()
+
+	const [name, setName] = useState('');
+	const [departmentId, setDepartmentId] = useState<number | undefined>(undefined);
+
+	const handleNameChange = (e: React.FormEvent<HTMLInputElement>) => {
+		setName(e.currentTarget.value);
+	}
+
+	const handleDepartmentChange = (value: number) => {
+		setDepartmentId(value);
+	}
+
+	const queryEmployee = (param: EmployeeRequest) => {
+		dispatch(getEmployee(param) as unknown as AnyAction);
+	}
+
+	const handleSubmit = () => {
+		queryEmployee({
+			name,
+			departmentId
+		})
+	}
+
+	useEffect(() => {
+		queryEmployee({
+			name,
+			departmentId
+		})
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+	
+	return (
+		<Form layout="inline">
+			<Form.Item>
+				<Input
+					placeholder="姓名"
+					style={{ width: 120 }}
+					allowClear
+					value={name}
+					onChange={handleNameChange}
+				/>
+			</Form.Item>
+			<Form.Item>
+				<Select
+					placeholder="部门"
+					style={{ width: 120 }}
+					allowClear
+					value={departmentId}
+					onChange={handleDepartmentChange}
+				>
+					<Option value={1}>技术部</Option>
+					<Option value={2}>产品部</Option>
+					<Option value={3}>市场部</Option>
+					<Option value={4}>运营部</Option>
+				</Select>
+			</Form.Item>
+			<Form.Item>
+				<Button type="primary" onClick={handleSubmit}>查询</Button>
+			</Form.Item>
+		</Form>
+	)
+}
+
+export default QueryForm;
+
+
+// src/components/employee/index.tsx
+import { Table } from 'antd';
+import { useSelector } from 'react-redux'
+
+import './index.css';
+
+import QueryForm from './QueryForm';
+
+import { employeeColumns } from './colums';
+import { RootState } from '../../store';
+
+const  Employee  = () => {
+	const employee = useSelector((state: RootState) => state.employee.employeeList)
+
+	const getTotal = () => {
+		const total: number = typeof employee !== 'undefined' ? employee.length : 0;
+		
+		return (
+			<p style={{ margin: "20px 0" }}>
+				共有 { total } 名员工
+			</p>
+		)
+	}
+
+	return (
+		<>
+			<QueryForm />
+			{ getTotal() }
+			<Table columns={employeeColumns} dataSource={employee} className="table" />
+		</>
+	)
+}
+
+export default Employee;
+```
+

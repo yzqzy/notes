@@ -1,83 +1,76 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, Button } from 'antd';
+import {  useDispatch } from 'react-redux'
+import { getEmployee } from '../../store/employee'
 
-import { EmployeeRequest, EmployeeResponse } from '../../typings/employee';
-import { get } from '../../utils/request';
-import { GET_EMPLOYEE_URL } from '../../constants/urls';
+import { EmployeeRequest } from '../../typings/employee';
+import { AnyAction } from '@reduxjs/toolkit';
 
 const { Option } = Select;
 
-interface Props {
-	onDataChange(data: EmployeeResponse): void
-}
+const QueryForm = () => {
+	const dispatch = useDispatch()
 
-class QueryForm extends Component<Props, EmployeeRequest> {
-	state: EmployeeRequest = {
-		name: '',
-		departmentId: undefined
+	const [name, setName] = useState('');
+	const [departmentId, setDepartmentId] = useState<number | undefined>(undefined);
+
+	const handleNameChange = (e: React.FormEvent<HTMLInputElement>) => {
+		setName(e.currentTarget.value);
 	}
 
-	handleNameChange = (e: React.FormEvent<HTMLInputElement>) => {
-		this.setState({
-			name: e.currentTarget.value
+	const handleDepartmentChange = (value: number) => {
+		setDepartmentId(value);
+	}
+
+	const queryEmployee = (param: EmployeeRequest) => {
+		dispatch(getEmployee(param) as unknown as AnyAction);
+	}
+
+	const handleSubmit = () => {
+		queryEmployee({
+			name,
+			departmentId
 		})
 	}
 
-	handleDepartmentChange = (value: number) => {
-		this.setState({
-			departmentId: value
+	useEffect(() => {
+		queryEmployee({
+			name,
+			departmentId
 		})
-	}
-
-	handleSubmit = () => {
-		this.queryEmployee(this.state)
-	}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 	
-	componentDidMount() {
-		this.queryEmployee(this.state)
-	}
-
-	queryEmployee(param: EmployeeRequest) {
-		get(GET_EMPLOYEE_URL, param)
-			.then(res => {
-				this.props.onDataChange(res.data);
-			});
-	}
-
-	render() {
-		const { name, departmentId } = this.state
-
-		return (
-			<Form layout="inline">
-				<Form.Item>
-					<Input
-						placeholder="姓名"
-						style={{ width: 120 }}
-						allowClear
-						value={name}
-						onChange={this.handleNameChange}
-					/>
-				</Form.Item>
-				<Form.Item>
-					<Select
-						placeholder="部门"
-						style={{ width: 120 }}
-						allowClear
-						value={departmentId}
-						onChange={this.handleDepartmentChange}
-					>
-						<Option value={1}>技术部</Option>
-						<Option value={2}>产品部</Option>
-						<Option value={3}>市场部</Option>
-						<Option value={4}>运营部</Option>
-					</Select>
-				</Form.Item>
-				<Form.Item>
-					<Button type="primary" onClick={this.handleSubmit}>查询</Button>
-				</Form.Item>
-			</Form>
-		)
-	}
+	return (
+		<Form layout="inline">
+			<Form.Item>
+				<Input
+					placeholder="姓名"
+					style={{ width: 120 }}
+					allowClear
+					value={name}
+					onChange={handleNameChange}
+				/>
+			</Form.Item>
+			<Form.Item>
+				<Select
+					placeholder="部门"
+					style={{ width: 120 }}
+					allowClear
+					value={departmentId}
+					onChange={handleDepartmentChange}
+				>
+					<Option value={1}>技术部</Option>
+					<Option value={2}>产品部</Option>
+					<Option value={3}>市场部</Option>
+					<Option value={4}>运营部</Option>
+				</Select>
+			</Form.Item>
+			<Form.Item>
+				<Button type="primary" onClick={handleSubmit}>查询</Button>
+			</Form.Item>
+		</Form>
+	)
 }
 
 export default QueryForm;

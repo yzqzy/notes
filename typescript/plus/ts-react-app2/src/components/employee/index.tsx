@@ -1,24 +1,17 @@
-import { Component } from 'react';
 import { Table } from 'antd';
+import { useSelector } from 'react-redux'
 
 import './index.css';
 
 import QueryForm from './QueryForm';
 
 import { employeeColumns } from './colums';
-import { EmployeeResponse } from '../../typings/employee';
+import { RootState } from '../../store';
 
-interface State {
-	employee: EmployeeResponse
-}
+const  Employee  = () => {
+	const employee = useSelector((state: RootState) => state.employee.employeeList)
 
-class Employee extends Component<{}, State> {
-	state: State = {
-		employee: undefined
-	}
-
-	getTotal = () => {
-		const { employee } = this.state;
+	const getTotal = () => {
 		const total: number = typeof employee !== 'undefined' ? employee.length : 0;
 		
 		return (
@@ -28,23 +21,13 @@ class Employee extends Component<{}, State> {
 		)
 	}
 
-	setEmployee = (employee: EmployeeResponse) => {
-		this.setState({
-			employee
-		});
-	}
-
-	render() {
-		const { employee } = this.state;
-
-		return (
-			<>
-				<QueryForm onDataChange={this.setEmployee} />
-				{ this.getTotal() }
-				<Table columns={employeeColumns} dataSource={employee} className="table" />
-			</>
-		)
-	}
+	return (
+		<>
+			<QueryForm />
+			{ getTotal() }
+			<Table columns={employeeColumns} dataSource={employee} className="table" />
+		</>
+	)
 }
 
 export default Employee;

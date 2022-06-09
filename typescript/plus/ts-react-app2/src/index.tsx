@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { Provider } from 'react-redux';
 
 import Root from './routers';
+import { store } from './store'
 
 import './index.css'
-
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,6 +13,8 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-  <Root />
+    <Provider store={store}>
+      <Root />
+    </Provider>
   </React.StrictMode>
 )
