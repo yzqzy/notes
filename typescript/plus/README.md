@@ -4811,3 +4811,243 @@ const  Employee  = () => {
 export default Employee;
 ```
 
+### 搭建服务端开发环境
+
+```shell
+npm i express-generator -g
+```
+
+```shell
+express ts-express # 使用脚手架工具
+```
+
+安装 `typescript`
+
+```shell
+pnpm i typescript -D
+```
+
+生成 tsconfig 文件
+
+```shell
+tsc --init
+```
+
+首先我们将 `.js` 后缀文件修改为 `.ts` 文件，然后将 `commonjs` 模块代码转换为 `es6` 模块代码。
+
+> 修改 bin 目录下的 bin 文件为 server.ts 文件
+
+安装缺少的声明文件。
+
+```shell
+pnpm i @types/node @types/express -D
+pnpm i @types/http-errors @types/cookie-parser @types/morgan @types/debug -D
+```
+
+代码如下：
+
+**bin/server.ts**
+
+```typescript
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+
+import app from '../app';
+import debug from 'debug';
+debug('ts-express:server');
+import http from 'http';
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '4001');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val: string) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error: any) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr!.port;
+  debug('Listening on ' + bind);
+}
+```
+
+**routes/index.ts**
+
+```typescript
+import express from 'express';
+const router = express.Router();
+
+/* GET home page. */
+router.get('/', function(req, res, next) {
+  res.render('index', { title: 'Express' });
+});
+
+export default router;
+```
+
+**routes/users.ts**
+
+```typescript
+import express from 'express';
+const router = express.Router();
+
+/* GET users listing. */
+router.get('/', function(req, res, next) {
+  res.send('respond with a resource');
+});
+
+export default router;
+```
+
+**app.ts**
+
+```typescript
+import createError from 'http-errors';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import express from 'express';
+
+import indexRouter from './routes/index';
+import usersRouter from './routes/users';
+
+const app = express();
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
+
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+} as express.ErrorRequestHandler);
+
+export default app;
+```
+
+**package.json**
+
+```json
+{
+  "name": "ts-express",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    // ...
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "morgan": "~1.9.1"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.3",
+    "@types/debug": "^4.1.7",
+    "@types/express": "^4.17.13",
+    "@types/http-errors": "^1.8.2",
+    "@types/morgan": "^1.9.3",
+    "@types/node": "^17.0.41",
+    "typescript": "^4.7.3"
+  }
+}
+```
+
+下一步我们需要把所有的 ts 文件转成 js 文件，因为 node 无法执行 ts 文件。
+
+首先我们修改 `tsconfig.json` 指定输出目录。
+
