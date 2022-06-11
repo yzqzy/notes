@@ -152,3 +152,166 @@ console.log(hammingDistance(2, 3)) // 1
 
 ## 最小公倍数
 
+> 几个数共有的倍数叫做这几个数的公倍数，其中除 0 以外最小的一个公倍数，叫做这几个数的最小公倍数。
+
+计算两个或多个数字之间的最小公倍数。
+
+* 使用最常见的（`GCD`）公式以及  `lcm(x, y) = x * y / gcd(x, y)` 确定最小公倍数
+
+* 递归使用 `GCD` 公式
+
+> GCD：Greatest Common Divisor，
+>
+> 最大公约数是能够同时整除 number1 和 number2 而没有余数的最大整数。
+>
+> 如果数a能被数b整除，a就叫做b的 [倍数](https://baike.baidu.com/item/倍数)，b就叫做a的[约数](https://baike.baidu.com/item/约数)。约数和倍数都表示一个[整数](https://baike.baidu.com/item/整数)与另一个整数的关系，不能单独存在。如只能说16是某数的倍数，2是某数的约数，而不能孤立地说16是倍数，2是约数。
+
+```typescript
+const lcm = (...arr: number[]) => {
+  const gcd = (x: number, y: number): number => (!y ? x : gcd(y, x % y))
+  const _lcm = (x: number, y: number) => (x * y) / gcd(x, y)
+  return [...arr].reduce((a, b) => _lcm(a, b))
+}
+
+console.log(lcm(12, 7)) // 84
+console.log(lcm(...[1, 3, 4, 5])) // 60
+```
+
+## 数组随机排序
+
+按随机顺序返回一个新数组。
+
+* 使用 [Fisher-Yates](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#Fisher_and_Yates'_original_method) 算法重新排序数组中的元素
+
+> Fisher–Yates shuffle 算法是一个用来将一个有限集合生成一个随机排列的算法（数组随机排序）。
+
+```typescript
+const shuffle = (arr: number[]) => {
+  let m = arr.length
+  while (m) {
+    const i = Math.floor(Math.random() * m--)
+    ;[arr[m], arr[i]] = [arr[i], arr[m]]
+  }
+  return arr
+}
+
+const foo = [1, 2, 3, 4, 5]
+console.log(shuffle(foo)) // [ 5, 1, 4, 2, 3 ]
+console.log(shuffle(foo)) // [ 4, 5, 3, 1, 2 ]
+console.log(shuffle(foo)) // [ 3, 2, 4, 1, 5 ]
+```
+
+## 向量距离
+
+计算两个向量之间的距离。
+
+* 使用 `Array.prototype.reduce()` ，`Math.row()` 和 `Math.sqrt()` 计算两个向量之间的欧几里得距离。
+
+```typescript
+const vectorDistance = (x: number[], y: number[]) => 
+  Math.sqrt(x.reduce((acc, val, i) => acc + Math.pow(val - y[i], 2), 0))
+
+console.log(vectorDistance([10, 0, 5], [20, 0, 10])) // 11.180339887498949
+```
+
+## 数字的主要因子
+
+使用试除法寻找数组的主要因子。
+
+* 从 2 开始，使用 while 循环迭代所有可能的元素
+* 如果当前因子 `f` 恰好可以整除 `n`, 则将 `f` 添加到因子数组中，并将 `n` 除以 `f`。否则，递增 `f`
+
+```typescript
+const primeFactors = (n: number) => {
+  const ans = []
+  let f = 2
+  while (n > 1) {
+    if (n % f === 0) {
+      ans.push(f)
+      n /= f
+    } else {
+      f++
+    }
+  }
+  return ans
+}
+
+console.log(primeFactors(147)) // [3, 7, 7]
+console.log(primeFactors(245)) // [5, 7, 7]
+```
+
+## 线性查找
+
+使用线性搜索算法在数组中找到目标元素的第一个索引。
+
+* 使用 `for...in` 循环迭代给定数组的索引
+* 检查对应索引元素是否等于目标元素
+* 如果找到元素，使用 unary + 运算符转换字符串为数字，并返回其索引
+* 如果数组迭代完毕，还没有找到目标元素，返回 `-1`
+
+```typescript
+const linearSearch = (arr: number[], item: number) => {
+  for (const i in arr) {
+    if (arr[i] === item) return +i
+  }
+  return -1
+}
+
+console.log(linearSearch([2, 9, 9], 9)) // 1
+console.log(linearSearch([2, 9, 9], 7)) // -1
+```
+
+## 斐波那契数列
+
+生成一个直到第 n 项的包含斐波那契数列的数组。
+
+* 使用 `Array.form()` 初始化一个长度为 n 的空数组,初始化前两个值，分别是 0 和 1
+* 使用 `Array.prototype.reduce()` 和 `Array.prototype.concat()` 方法，计算前两个元素的值的和，添加到数组中
+
+```typescript
+const fibonacci = (n: number) =>
+  Array.from({ length: n }).reduce(
+    (acc: number[], _, i) => acc.concat(i > 1 ? acc[i - 1] + acc[i - 2] : i),
+    []
+  )
+
+console.log(fibonacci(6)) // [0, 1, 1, 2, 3, 5]
+```
+
+## 编辑距离
+
+使用 [Levenshtein 距离算法](https://en.wikipedia.org/wiki/Levenshtein_distance) 计算两个字符串之间的差异。
+
+* 如果两个字符串任意一个的长度为零，返回另一个字符串的长度
+* 使用 for 循环迭代目标字符串的字母及玄幻嵌套迭代源字符串的字母
+* 计算目标和源字符串对应 `i - 1` 和 `j - 1`  替换对应字母的成本（如果相同为 0，否则为 1）
+* 使用 `Math.min()` 在 二维矩阵中填充每个元素，其中一个单元格的最小值由一个元素增量，左侧的单元格向左，由一个或单元格到左上角的计算结果累加
+* 返回数组的最后一行的以后一个元素
+
+```typescript
+const levenshteinDistance = (s: string, t: string) => {
+  if (!s.length) return t.length
+  if (!t.length) return s.length
+  const arr = []
+  for (let i = 0; i <= t.length; i++) {
+    arr[i] = [i]
+    for (let j = 1; j <= s.length; j++) {
+      arr[i][j] = 
+        i == 0 
+          ? j
+        : Math.min(
+            arr[i - 1][j] + 1,
+            arr[i][j - 1] + 1,
+            arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
+          )
+    }
+  }
+  return arr[t.length][s.length]
+}
+
+console.log(levenshteinDistance('duck', 'dark')) // 2
+console.log(levenshteinDistance('thanks', 'thank')) // 1
+```
+
+## 二分查找
+
