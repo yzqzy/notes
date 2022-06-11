@@ -23,7 +23,7 @@
 * [Jest](https://github.com/yw0525/notes/tree/master/jest) 已完成
 * 网络
   + [网络基础](https://github.com/yw0525/notes/tree/master/network/base) 已完成
-  + [网络进阶](https://github.com/yw0525/notes/tree/master/network/plus) 暂停中 😀
+  + ~~[网络进阶](https://github.com/yw0525/notes/tree/master/network/plus) 已废弃~~ 😅
   + [HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
 * [碎片知识](https://github.com/yw0525/notes/tree/master/fragment) 已完成
 * [ESLint](https://github.com/yw0525/notes/tree/master/eslint) 已完成
