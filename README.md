@@ -66,7 +66,7 @@
 * TypeScipt
   + [TypeScipt基础](https://github.com/yw0525/notes/tree/master/typescript/base) 已完成
   + [TypeScipt案例](https://github.com/yw0525/notes/tree/master/typescript/examples/test/src) 已完成
-  + [TypeScipt进阶](https://github.com/yw0525/notes/tree/master/typescript/plus) 更新中... 😁
+  + [TypeScipt进阶](https://github.com/yw0525/notes/tree/master/typescript/plus) 已完成
 * NodeJS
   + [Node基础](https://github.com/yw0525/notes/tree/master/node/base) 已完成
   + ~~[Node进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
