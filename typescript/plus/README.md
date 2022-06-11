@@ -4811,7 +4811,11 @@ const  Employee  = () => {
 export default Employee;
 ```
 
-### 搭建服务端开发环境
+### Express 项目改造
+
+#### 安装依赖
+
+安装 express 脚手架工具
 
 ```shell
 npm i express-generator -g
@@ -4832,6 +4836,8 @@ pnpm i typescript -D
 ```shell
 tsc --init
 ```
+
+#### 修改文件
 
 首先我们将 `.js` 后缀文件修改为 `.ts` 文件，然后将 `commonjs` 模块代码转换为 `es6` 模块代码。
 
@@ -5050,4 +5056,104 @@ export default app;
 下一步我们需要把所有的 ts 文件转成 js 文件，因为 node 无法执行 ts 文件。
 
 首先我们修改 `tsconfig.json` 指定输出目录。
+
+```json
+{
+  compilerOptions: {
+    outDir: "./dist"
+  }
+}
+```
+
+然后修改 package.json 文件
+
+```json
+"scripts": {
+  "start": "node ./bin/www",
+  "build-ts": "tsc"
+}
+```
+
+现在我们的项目就可以正常打包。
+
+#### 构建脚本处理
+
+运行上述命令，会发现模板文件，静态文件没有拷贝到 dist 目录下。
+
+下面我们需要编写一个脚本处理文件拷贝的问题。
+
+首先我们需要安装一个工具。并在根目录下，新建一个 `copy.ts` 文件。
+
+```shell
+pnpm i shelljs @types/shelljs -D
+```
+
+```typescript
+// src/copy.ts
+
+import * as shelljs from 'shelljs';
+
+shelljs.cp('-R', 'public', 'dist');
+shelljs.cp('-R', 'views', 'dist');
+```
+
+我们需要增加一个 scripts 脚本，我们我们还需要安装 `ts-node` 。
+
+```diff
+"scripts": {
+  "start": "node ./bin/www",
+  "build-ts": "tsc",
++ "copy-static": "ts-node copy.ts"
++ "build": "npm run build-ts && npm run copy-static"
+},
+```
+
+```shell
+pnpm i ts-node -D
+```
+
+执行 `npm run build` 命令就完成编译以及文件拷贝的工作。
+
+不过还存在一个问题，执行脚本后，也会把根目录下的 `copy.ts` 的编译结果输出。我们需要配置一下 `tsconfig.json` 。
+
+```json
+{
+  "exclude": [
+    "copy.ts"
+  ]
+}
+```
+
+这样就符合我们的期望，最后我们修改一下启动脚本，
+
+```json
+{
+  "scripts": {
+    "start": "node ./dist/bin/server.js",
+    "build-ts": "tsc",
+    "copy-static": "ts-node copy.ts",
+    "build": "npm run build-ts && npm run copy-static"
+  }
+}
+```
+
+运行 `npm run start` 脚本，访问 `http://localhost:4001/`  可以看到页面可以正常访问了。
+
+我们我们再增加一种编译模式，原因是当我们修改文件后，需要重新构建 ts 文件并且重启服务。
+
+```json
+{
+  "scripts": {
+    "start": "node ./dist/bin/server.js",
+    "watch": "nodemon ./dist/bin/server.js",
+    "build-ts": "tsc",
+    "copy-static": "ts-node copy.ts",
+    "build": "npm run build-ts && npm run copy-static"
+  }
+}
+```
+
+> `nodemon` 个人建议全局安装即可。
+
+至此，我们的 express 项目已经改造完毕。
 
