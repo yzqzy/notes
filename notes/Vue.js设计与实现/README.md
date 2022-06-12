@@ -8373,3 +8373,180 @@ patchProps (el, key, preValue, nextValue) {
 ```js
 ```
 
+### 简易 Diff 算法
+
+简单来说，当新旧 vnode 的字节点都是一组节点时，为了以最小的性能开销完成更新操作，需要比较两组子节点，用于比较的算法就叫做 Diff 算法。我们知道，操作 DOM 的性能开销通常比较大，而渲染器的核心 Diff 算法就是为了解决这个问题而诞生的。
+
+#### 减少 DOM 操作性能开销
+
+核心 Diff 只关心新旧虚拟节点都存在一组子节点的情况。如果我们针对两组子节点的更新，只采用卸载全部，再挂载全部新子节点。这么做确实可以完成更新，单由于没有复用任何 DOM 元素，会产生极大的性能开销。
+
+以下面的新旧虚拟节点为例：
+
+```js
+const oldVnode = {
+  type: 'div',
+  children: [
+    { type: 'p', children: '1' },
+    { type: 'p', children: '2' },
+    { type: 'p', children: '3' }
+  ]
+}
+
+const newVnode = {
+  type: 'div',
+  children: [
+    { type: 'p', children: '4' },
+    { type: 'p', children: '5' },
+    { type: 'p', children: '6' }
+  ]
+}
+```
+
+如果我们采用卸载全部，再挂载全部新子节点的方法，需要执行 6 次 DOM 操作：
+
+* 卸载所有旧子节点，需要 3 次 DOM 删除操作；
+* 挂载所有新子节点，需要 3 次 DOM 添加操作。
+
+但是，通过观察上面新旧 vnode 的子节点，可以发现：
+
+* 更新前后的所有子节点都是 p 标签，即便签元素不变；
+* 只有 p 标签的子节点（文本节点）会发生变化。
+
+例如，`oldVnode` 的第一个子节点是一个 p 标签，且该 p 标签的子节点类型是文本节点，内容是 “1”。而 `newVnode` 的第一个子节点也是一个 p 标签，它的子节点的类型也是文本节点，内容是 "4"。可以发现，更新前后改变的只有 `p` 标签文本节点的内容。所以，最理想的更新方式是，直接更新这个 p 标签的文本节点的内容。这样只需要一次 DOM 操作，即可完成一个 p 标签更新。新旧虚拟节点都有 3 个 p 标签作为子节点，所以一共只需要 3 次 DOM 操作就可以完成全部节点的更新。相比原来需要执行 6 次 DOM 操作才能完成更新的方式，性能提升了一倍。
+
+按照这个思路，我们可以重新实现两组子节点的更新逻辑，如下面 `patchChildren` 函数的代码所示：
+
+```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    // 新旧 children
+    const oldChildren = n1.children
+    const newChildren = n2.children
+    // 遍历旧 children
+    for (let i = 0; i < oldChildren.length; i++) {
+      patch(oldChildren[i], newChildren[i])
+    }
+  } else {
+    // ...
+  }
+}
+```
+
+在前端代码中，`oldChildren` 和 `newChildren` 分别是旧的一组子节点和新的一组子节点。我们遍历前者，并将两者中对应位置的节点分别传递给 patch 函数进行更新。patch 函数在执行更新时，如果发现新旧子节点只有文本内容不同，只会更新其文本节点的内容。这样，我们就可以将 6 次 DOM 操作减少为 3 次。下图是整个更新过程的示意图。
+
+<img src="./images/simple_diff01.png" />
+
+这种做法虽然能够减少 DOM 操作次数，但问题也很明显。我们通过遍历旧的一组子节点，并假设新的一组子节点的数量与之相同，只有在这种情况下，这段代码才能正确地工作。但是，新旧两组子节点的数量未必相同。当新的一组子节点的数量少于旧的一组子节点的数量时，意味着有些节点在更新后应该被卸载。
+
+<img src="./images/simple_diff02.png" />
+
+当旧的一组子节点一共有 4 个 p 标签，而新的一组子节点中只有 3 个 p 标签。这说明，在更新过程中，需要将不存在的 p 标签卸载。类似地，新的一组子节点的数量也可能比旧的一组子节点的数量多。
+
+<img src="./images/simple_diff03.png" />
+
+当新的一组子节点比旧的一组子节点多了一个 p 标签。在这种情况下，我们应该挂载新增节点。
+
+通过上面的分析我们意识到，在进行新旧两组子节点的更新时，不应该总是遍历旧的一组子节点或遍历新的一组子节点，而是应该遍历其中长度较短的那一组。这样，我们才能够尽可能多地调用 patch 函数进行更新。接着，再对比新旧两组子节点的长度，如果新的一组子节点更长，则说明有新子节点需要挂载，否则说明有旧子节点需要卸载。
+
+```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    const oldChildren = n1.children
+    const newChildren = n2.children
+    
+    const oldLen = oldChildren.length
+    const newLen = newChildren.length
+
+    const commonLength = Math.min(oldLen, newLen)
+
+    for (let i = 0; i < commonLength; i++) {
+      patch(oldChildren[i], newChildren[i])
+    }
+
+    if (newLen > oldLen) {
+      for (let i = commonLength; i < newLen; i++) {
+        patch(null, newChildren[i], container)
+      }
+    } else {
+      for (let i = commonLength; i < oldLen; i++) {
+        unmount(oldChildren[i])
+      }
+    }
+  } else {
+    // ...
+  }
+}
+```
+
+这样，无论新旧两组子节点的数量关系如何，我们都可以正确地挂载或卸载它们。
+
+#### DOM 复用与 key 的作用
+
+我们可以通过减少 DOM 操作的次数，提升更新性能。但这种方式仍存在可优化的空间。举个例子，假设新旧两组子节点的内容如下：
+
+```js
+[
+  { type: 'p' },
+  { type: 'div' },
+  { type: 'span' }
+]
+
+[
+  { type: 'span' },
+  { type: 'p' },
+  { type: 'div' }
+]
+```
+
+如果使用上面介绍的算法来完成上述两组子节点的更新，则需要 6 次 DOM 操作。
+
+但是，观察新旧两组子节点，很容易发现，二者只是顺序不同。所以最优的处理方式是，通过 DOM 的移动来完成子节点的更新，这要比不断地执行子节点的卸载和挂载性能更好。但是，想要通过 DOM 的移动来完成更新，必须要保证一个前提：新旧两组子节点中的确存在可复用的节点。这个很好理解，如果新的子节点没有在旧的一组子节点中出现，就无法通过移动节点的方式完成更新。所以现在问题就变成：应该如何确定新的子节点是否出现在旧的一组子节点中。拿上面的例子来说，如果确定新的一组子节点中第 1 个子节点 `{ type: 'sppan' }` 与旧子节点中的第 3 个子节点相同呢？一种解决方案是，通过 `vnode.type` 来判断，只要 `vnode.type` 的值相同，我们就认为两者是相同的节点。但这种方式并不可靠。
+
+```js
+[
+  { type: 'p', children: '1' },
+  { type: 'p', children: '2' },
+  { type: 'p', children: '3' }
+]
+
+[
+  { type: 'p', children: '3' },
+  { type: 'p': children: '1' },
+  { type: 'p', children: '2' }
+]
+```
+
+观察上面两组子节点，我们发现，这个案例可以通过移动 DOM 的方式来完成更新，但是所有节点的 `vnode.type` 属性值都相同，这导致我们无法确定新旧两组子节点中节点的对应关系，也就无法得知应该进行怎样的 DOM 移动才能完成更新。这时，我们就需要引入额外的 key 来作为 vnode 的标识，如下面的代码所示：
+
+```js
+[
+  { type: 'p', children: '1', key: 1 },
+  { type: 'p', children: '2', key: 2 },
+  { type: 'p', children: '3', key: 3 }
+]
+
+[
+  { type: 'p', children: '3', key: 3 },
+  { type: 'p': children: '1', key: 1 },
+  { type: 'p', children: '2', key: 2 }
+]
+```
+
+key 属性就像虚拟节点的 “身份证” 号，只要两个虚拟节点的 type 属性值和 key 属性值都相同，那么我们就认为它们是相同的，即可以进行 DOM 的复用。下图展示了有 key 和无 key 时新旧两组子节点的映射情况。
+
+<img src="./images/simple_diff04.png" />
+
+如果没有 key，我们无法知道新子节点与旧子节点间的映射关系，也就无法知道应该如何移动节点。有 key 的话情况则不同，我们根据子节点的 key 属性，能够明确知道新子节点在旧子节点中的位置，这样就可以进行相应的 DOM 移动操作了。
+
+有必要清掉一点是，DOM 可复用并不意味着不需要更新，如果下面的两个虚拟节点所示：
+
+```js
+const oldVnode = { type: 'p', key: 1, children: 'text 1' }
+const newVnode = { type: 'p', key: 1, children: 'text 2' }
+```
+
