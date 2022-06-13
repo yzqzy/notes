@@ -8543,10 +8543,75 @@ key 属性就像虚拟节点的 “身份证” 号，只要两个虚拟节点�
 
 如果没有 key，我们无法知道新子节点与旧子节点间的映射关系，也就无法知道应该如何移动节点。有 key 的话情况则不同，我们根据子节点的 key 属性，能够明确知道新子节点在旧子节点中的位置，这样就可以进行相应的 DOM 移动操作了。
 
-有必要清掉一点是，DOM 可复用并不意味着不需要更新，如果下面的两个虚拟节点所示：
+有必要强调一点是，DOM 可复用并不意味着不需要更新，如果下面的两个虚拟节点所示：
 
 ```js
 const oldVnode = { type: 'p', key: 1, children: 'text 1' }
 const newVnode = { type: 'p', key: 1, children: 'text 2' }
 ```
 
+这两个虚拟节点拥有相同的 key 值和 `vnode.type` 属性值。这意味着，在更新时可以复用 DOM 元素，即只需要通过移动操作来完成更新。但仍需要对这两个虚拟节点进行打补丁操作，因为新的虚拟节点（`newVNode`）的文本子节点的内容已经改变了。因此，在讨论如何移动 DOM 之前，我们需要先完成打补丁操作。
+
+```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    const oldChildren = n1.children
+    const newChildren = n2.children
+
+    const oldLen = oldChildren.length
+    const newLen = newChildren.length
+
+    // 判断是否可以复用
+    for (let i = 0; i < newChildren.length; i++) {
+      const newVnode = newChildren[i]
+      for (let j = 0; j < oldChildren.length; j++) {
+        const oldVnode = oldChildren[j]
+        // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
+        if (newVnode.key === oldVnode.key) {
+          patchChildren(oldVnode, newVnode, container)
+          break;
+        }
+      }
+    }
+
+		// ...
+  } else {
+    // ...
+  }
+}
+```
+
+在上面这段代码中，我们重新实现了新旧两组子节点的更新逻辑。可以看到，我们使用了两层 for 循环，外层循环用于遍历新的一组子节点，内层循环则遍历旧的一组子节点。在内层循环中，我们逐个对比新旧子节点的 key 值，试图在旧的子节点中找到可复用的节点。一旦找到，则调用 patch 函数进行打补丁。经过这一步操作后，我们能保证所有可复用的节点本身都经过更新完毕。
+
+```js
+const oldVnode = {
+  type: 'div',
+  children: [
+    { type: 'p', children: '1', key: 1 },
+    { type: 'p', children: '2', key: 2 },
+    { type: 'p', children: 'hello', key: 3 }
+  ]
+}
+
+const newVnode = {
+  type: 'div',
+  children: [
+    { type: 'p', children: 'world', key: 3 },
+    { type: 'p', children: '1', key: 1 },
+    { type: 'p', children: '2', key: 2 },
+  ]
+}
+
+renderer.renderer(oldVnode, document.querySelector('#app'))
+setTimeout(() => {
+  renderer.renderer(newVnode, document.querySelector('#app'))
+}, 1000)
+```
+
+运行上面这段代码，1 秒后，key 值为 3 的子节点对应的真实 DOM 的文本内容会由 “hello” 更新为字符串 “world”。
+
+更新操作具体过程分析如下：
+
+* 第一步，取新的一组子节点中的第一个子节点，即
