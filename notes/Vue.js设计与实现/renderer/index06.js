@@ -67,14 +67,26 @@ function patchChildren (n1, n2, container) {
     const oldLen = oldChildren.length
     const newLen = newChildren.length
 
-    // 判断是否可以复用
+    // 存储寻找过程中遇到的最大索引值
+    let lastIndex = 0
+
     for (let i = 0; i < newChildren.length; i++) {
       const newVnode = newChildren[i]
       for (let j = 0; j < oldChildren.length; j++) {
         const oldVnode = oldChildren[j]
+
         // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
         if (newVnode.key === oldVnode.key) {
           patchChildren(oldVnode, newVnode, container)
+
+          if (j < lastIndex) {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值 lastIndex
+            // 说明该节点对应的真实 DOM 需要移动
+          } else {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值
+            // 则更新 lastIndex 的值
+            lastIndex = j
+          }
           break;
         }
       }
