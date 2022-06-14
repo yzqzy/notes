@@ -8712,5 +8712,149 @@ function patchChildren (n1, n2, container) {
 当更新操作发生时，渲染器会调用 `patchElement` 函数在新旧虚拟节点之间进行打补丁。
 
 ```js
+function patchElement (n1, n2) {
+  // 新的 vnode 也引用了真实 DOM 元素
+  const el = n2.el = n1.el
+  // ...
+}
+```
+
+可以看到，`patchElement` 函数首先将旧节点的 `n1.el` 属性赋值给新节点的 `n2.el` 属性。这个赋值语句其实就是 DOM 元素的复用。在复用 DOM 元素之后，新节点也将持有对真实 DOM 的引用。
+
+<img src="./images/simple_diff08.png" />
+
+可以看到，无论是新子节点还是旧子节点，都存在对真实 DOM 的引用，在此基础上，我们就可以进行 DOM 移动操作了。
+
+```js
+const oldVnode = {
+  type: 'div',
+  children: [
+    { type: 'p', children: '1', key: 1 },
+    { type: 'p', children: '2', key: 2 },
+    { type: 'p', children: 'hello', key: 3 }
+  ]
+}
+
+const newVnode = {
+  type: 'div',
+  children: [
+    { type: 'p', children: 'world', key: 3 },
+    { type: 'p', children: '1', key: 1 },
+    { type: 'p', children: '2', key: 2 },
+  ]
+}
+```
+
+<img src="./images/simple_diff06.png" />
+
+以图示为例， 它的更新步骤如下：
+
+* 第一步：取新的一组子节点中第一个节点 p-3，它的 key 为 3，尝试在旧的一组子节点中找到具有相同 key 值的可复用节点。发现可以找到，并且该节点在旧的一组子节点中的索引为 2。此时变量 `lastIndex` 的值为 0，索引 2 不小于 0，所以节点 p-3 对应的真实 DOM 不需要移动，但需要更新变量 `lastIndex`　的值为　２.
+
+* 第二步：取新的一组子节点中第二个节点 p-1，它的 key 为 1，尝试在旧的一组子节点中找到具有相同 key 值的可复用节点。发现可以找到，并且该节点在旧的一组子节点中的索引为 0。此时变量 `lastIndex` 的值为 2，索引 0 小于 2，所以节点 p-1 对应的真实 DOM 需要移动。
+
+  我们发现，节点 p-1 对应的真实 DOM 需要移动，但是应该移动到哪？我们知道，新 children 的顺序其实就是更新后真实 DOM 节点应有的顺序。所以节点 p-1 在新 children 中的位置就代表真实 DOM 更新后的位置。由于节点 p-1 在新 children 中排在节点 p-3 后面，所以我们应该把节点 p-1 所对应的真实 DOM 移动导节点 p-3 所对应的真实 DOM 后面。
+
+  这样操作后，此时真实 DOM 的顺序为 p-2、p-3、p-1。
+
+<img src="./images/simple_diff09.png" />
+
+* 第三步：取新的一组子节点中第二个节点 p-2 ，它的 key 为 2，尝试在旧的一组子节点中找到具有相同 key 值的可复用节点。发现可以找到，并且该节点在旧的一组子节点中的索引为 1。此时变量 `lastIndex` 的值为 2，索引 1 小于 2，所以节点 p-2 对应的真实 DOM 需要移动。
+
+  第三步和第二步类似，节点 p-2 对应的真实 DOM 也需要移动。同样，由于节点 p-2 在新 children 中排在节点 p-1 后面，所以我们应该把节点 p-2 对应的真实 DOM 移动到节点 p-1 对应的真实 DOM 后面。
+
+<img src="./images/simple_diff10.png" />
+
+经过这一步移动操作之后，我们发现，真实 DOM 的顺序与新的一组子节点的顺序想通了。至此，更新操作完成。
+
+```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    const oldChildren = n1.children
+    const newChildren = n2.children
+
+    const oldLen = oldChildren.length
+    const newLen = newChildren.length
+
+    // 存储寻找过程中遇到的最大索引值
+    let lastIndex = 0
+
+    for (let i = 0; i < newChildren.length; i++) {
+      const newVnode = newChildren[i]
+      let j = 0;
+      for (j; j < oldChildren.length; j++) {
+        const oldVnode = oldChildren[j]
+
+        // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
+        if (newVnode.key === oldVnode.key) {
+          patch(oldVnode, newVnode, container)
+
+          if (j < lastIndex) {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值 lastIndex
+            // 说明该节点对应的真实 DOM 需要移动
+            // 获取 newVNode 的前一个 vnode，即 prevVNode
+            const prevVNode = newChildren[i - 1]
+            // 如果 prevVnode 不存在，说明当前 newVNode 是第一个节点，不需要移动
+            if (prevVNode) {
+              // 由于我们要将 newVnode 对应的真实 DOM 移动到 prevVNode 所对应真实 DOM 后面
+              // 所以我们需要获取 prevVNode 所对应真实 DOM 的下一个兄弟节点，并将其作为锚点
+              const anchor = prevVNode.el.nextSibling
+              // 调用 insert 方法将 newVNode 对应的真实 DOM 插入到锚点元素前面
+              // 也就是 prevVNode 对应的真实 DOM 后面
+              insert(newVnode.el, container, anchor)
+            }
+          } else {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值
+            // 则更新 lastIndex 的值
+            lastIndex = j
+          }
+          break;
+        }
+      }
+    }
+  } else {
+    // ...
+  }
+}
+```
+
+在这段代码中，如果条件 `j < lastIndex` 成立，则说明当前 `newVNode` 所对应的真实 DOM 需要移动。根据前文的分析可知，我们需要获取当前 `newVNode` 节点的前一个虚拟节点，即 `newChildren[i - 1]` ，然后使用 insert 函数完成节点的移动，其中 insert 函数依赖浏览器原生的 `insertBefore` 函数。
+
+```js
+const renderer = createRenderer({
+  insert (el, parent, anchor = null) {
+    // insertBefore 需要描点元素 anchor
+    parent.insertBefore(el, anchor)
+  }
+})
+```
+
+#### 添加新元素
+
+本小节我们将讨论添加新节点的情况。
+
+<img src="./images/simple_diff11.png" />
+
+从图中可知，在新的一组子节点中，多出来一个节点 p-4，它的 key 值为 4，该节点在旧的一组子节点不存在，因此应该将其视为新增节点。对于新增节点，在更新时我们应该正确地将它挂载，这主要分为两步：
+
+* 找到新增节点；
+* 将新增节点挂载到正确位置。
+
+首先，我们来看一下如何找到新增节点。为了搞清楚这个问题，我们需要根据图中给出的例子模拟执行下逻辑。在此之前，我们需要弄清楚新旧两组子节点与真实 DOM 元素的当前状态。
+
+<img src="./images/simple_diff12.png" />
+
+接着，我们开始模拟更新逻辑。
+
+* 第一步：取新的一组子节点中第一个节点  p-3，它的 key 值为 3，尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 2。此时，变量 `lastIndex` 的值为 0，索引值 2 不小于 `lastIndex` 的值 0，所以节点 p-3 对应的真实 DOM 不需要移动，但是需要将变量 `lastIndex` 的值更新为 2。
+* 第二步：取新的一组子节点中第一个节点  p-1，它的 key 值为 1，尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 0。此时，变量 `lastIndex` 的值为 2，索引值 0 小于 `lastIndex` 的值 2，所以节点 p-1 对应的真实 DOM 需要移动，并且应该移动到节点 p-3 对应的真实 DOM 后面。经过这一步的移动操作后，真实 DOM 的顺序为 p-2、p-3、p-1。
+* 第三步：取新的一组子节点中第一个节点  p-4，它的 key 值为 4，尝试在旧的一组子节点中寻找可复用的节点。由于在旧的一组子节点中，没有 key 值为 4 的节点，因此渲染器会把节点 p-4 看作新增节点并挂载它。但是，应该将挂载到哪里呢？为了搞清楚这个问题，我们需要观察节点 p-4 在新的一组子节点中的位置。由于节点 p-4 出现在节点 p-1 后面，我们我们应该把节点 p-4 挂载到节点 p- 1 所对应的真实 DOM 后面。经过这一步操作后，此时真实 DOM 的顺序是：p-2、p-3、p-1、p-4，其中 p-4 是刚刚挂载的。
+* 第四步：取新的一组子节点中第一个节点  p-2，它的 key 值为 2，尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 1。此时，变量 `lastIndex` 的值为 2，索引值 1 小于 `lastIndex` 的值 2，所以节点 p-2 对应的真实 DOM 需要移动，并且应该移动到节点 p-4 对应的真实 DOM 后面。经过这一步的移动操作后，真实 DOM 的顺序为 p-3、p-1、p-4、p-2。至此，真实 DOM 顺序已经与新的一组子节点的顺序相同，更新完成。
+
+接着，我们来实现代码。
+
+```js
 ```
 
