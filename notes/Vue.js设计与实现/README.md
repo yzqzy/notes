@@ -8384,7 +8384,7 @@ patchProps (el, key, preValue, nextValue) {
 以下面的新旧虚拟节点为例：
 
 ```js
-const oldVnode = {
+const oldVNode = {
   type: 'div',
   children: [
     { type: 'p', children: '1' },
@@ -8393,7 +8393,7 @@ const oldVnode = {
   ]
 }
 
-const newVnode = {
+const newVNode = {
   type: 'div',
   children: [
     { type: 'p', children: '4' },
@@ -8413,7 +8413,7 @@ const newVnode = {
 * 更新前后的所有子节点都是 p 标签，即便签元素不变；
 * 只有 p 标签的子节点（文本节点）会发生变化。
 
-例如，`oldVnode` 的第一个子节点是一个 p 标签，且该 p 标签的子节点类型是文本节点，内容是 “1”。而 `newVnode` 的第一个子节点也是一个 p 标签，它的子节点的类型也是文本节点，内容是 "4"。可以发现，更新前后改变的只有 `p` 标签文本节点的内容。所以，最理想的更新方式是，直接更新这个 p 标签的文本节点的内容。这样只需要一次 DOM 操作，即可完成一个 p 标签更新。新旧虚拟节点都有 3 个 p 标签作为子节点，所以一共只需要 3 次 DOM 操作就可以完成全部节点的更新。相比原来需要执行 6 次 DOM 操作才能完成更新的方式，性能提升了一倍。
+例如，`oldVNode` 的第一个子节点是一个 p 标签，且该 p 标签的子节点类型是文本节点，内容是 “1”。而 `newVNode` 的第一个子节点也是一个 p 标签，它的子节点的类型也是文本节点，内容是 "4"。可以发现，更新前后改变的只有 `p` 标签文本节点的内容。所以，最理想的更新方式是，直接更新这个 p 标签的文本节点的内容。这样只需要一次 DOM 操作，即可完成一个 p 标签更新。新旧虚拟节点都有 3 个 p 标签作为子节点，所以一共只需要 3 次 DOM 操作就可以完成全部节点的更新。相比原来需要执行 6 次 DOM 操作才能完成更新的方式，性能提升了一倍。
 
 按照这个思路，我们可以重新实现两组子节点的更新逻辑，如下面 `patchChildren` 函数的代码所示：
 
@@ -8546,8 +8546,8 @@ key 属性就像虚拟节点的 “身份证” 号，只要两个虚拟节点�
 有必要强调一点是，DOM 可复用并不意味着不需要更新，如果下面的两个虚拟节点所示：
 
 ```js
-const oldVnode = { type: 'p', key: 1, children: 'text 1' }
-const newVnode = { type: 'p', key: 1, children: 'text 2' }
+const oldVNode = { type: 'p', key: 1, children: 'text 1' }
+const newVNode = { type: 'p', key: 1, children: 'text 2' }
 ```
 
 这两个虚拟节点拥有相同的 key 值和 `vnode.type` 属性值。这意味着，在更新时可以复用 DOM 元素，即只需要通过移动操作来完成更新。但仍需要对这两个虚拟节点进行打补丁操作，因为新的虚拟节点（`newVNode`）的文本子节点的内容已经改变了。因此，在讨论如何移动 DOM 之前，我们需要先完成打补丁操作。
@@ -8565,12 +8565,12 @@ function patchChildren (n1, n2, container) {
 
     // 判断是否可以复用
     for (let i = 0; i < newChildren.length; i++) {
-      const newVnode = newChildren[i]
+      const newVNode = newChildren[i]
       for (let j = 0; j < oldChildren.length; j++) {
-        const oldVnode = oldChildren[j]
+        const oldVNode = oldChildren[j]
         // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
-        if (newVnode.key === oldVnode.key) {
-          patchChildren(oldVnode, newVnode, container)
+        if (newVNode.key === oldVNode.key) {
+          patchChildren(oldVNode, newVNode, container)
           break;
         }
       }
@@ -8586,7 +8586,7 @@ function patchChildren (n1, n2, container) {
 在上面这段代码中，我们重新实现了新旧两组子节点的更新逻辑。可以看到，我们使用了两层 for 循环，外层循环用于遍历新的一组子节点，内层循环则遍历旧的一组子节点。在内层循环中，我们逐个对比新旧子节点的 key 值，试图在旧的子节点中找到可复用的节点。一旦找到，则调用 patch 函数进行打补丁。经过这一步操作后，我们能保证所有可复用的节点本身都经过更新完毕。
 
 ```js
-const oldVnode = {
+const oldVNode = {
   type: 'div',
   children: [
     { type: 'p', children: '1', key: 1 },
@@ -8595,7 +8595,7 @@ const oldVnode = {
   ]
 }
 
-const newVnode = {
+const newVNode = {
   type: 'div',
   children: [
     { type: 'p', children: 'world', key: 3 },
@@ -8604,9 +8604,9 @@ const newVnode = {
   ]
 }
 
-renderer.renderer(oldVnode, document.querySelector('#app'))
+renderer.renderer(oldVNode, document.querySelector('#app'))
 setTimeout(() => {
-  renderer.renderer(newVnode, document.querySelector('#app'))
+  renderer.renderer(newVNode, document.querySelector('#app'))
 }, 1000)
 ```
 
@@ -8614,8 +8614,8 @@ setTimeout(() => {
 
 更新操作具体过程分析如下：
 
-* 第一步，取新的一组子节点中的第一个子节点，即 key 值为 3 的节点。尝试在旧的一组子节点中寻找具有相同 key 值的节点。我们发现，旧的子节点 `oldVnode[2]` 的 key 值为 3，于是调用 patch 函数进行打补丁。在这一步操作完成之后，渲染器会把 key 值为 3 的虚拟节点所对应的真实 DOM 的文本内容由字符串 “hello” 更新为字符串 “world”。
-* 第二步，取新的一组子节点中的第二个子节点，即 key 值为 1 的节点。尝试在旧的一组子节点寻找具有相同 key 值的节点。我们发现，旧的子节点 `oldVnode[0]` 的 key 值为 1，于是调用 patch 函数进行打补丁。由于 key 值等于 1 的新旧子节点没有任何差异，所以什么都不会做。
+* 第一步，取新的一组子节点中的第一个子节点，即 key 值为 3 的节点。尝试在旧的一组子节点中寻找具有相同 key 值的节点。我们发现，旧的子节点 `oldVNode[2]` 的 key 值为 3，于是调用 patch 函数进行打补丁。在这一步操作完成之后，渲染器会把 key 值为 3 的虚拟节点所对应的真实 DOM 的文本内容由字符串 “hello” 更新为字符串 “world”。
+* 第二步，取新的一组子节点中的第二个子节点，即 key 值为 1 的节点。尝试在旧的一组子节点寻找具有相同 key 值的节点。我们发现，旧的子节点 `oldVNode[0]` 的 key 值为 1，于是调用 patch 函数进行打补丁。由于 key 值等于 1 的新旧子节点没有任何差异，所以什么都不会做。
 * 第三步，取新的一组子节点中的最后一个子节点，即 key 值为 2 的节点，最终结果与第二步相同。
 
 经过上述更新操作，所有节点对应的真实 DOM 元素都更新完毕了。但真实 DOM 仍然保持旧的一组子节点的顺序，即 key 值为 3 的节点对应的真实 DOM 仍然是最后一个子节点。由于在新的一组子节点中，key 值为 3 的节点已经变为第一个子节点了，因此我们还需要通过移动节点来完成真实 DOM 顺序的更新。
@@ -8671,13 +8671,13 @@ function patchChildren (n1, n2, container) {
     let lastIndex = 0
 
     for (let i = 0; i < newChildren.length; i++) {
-      const newVnode = newChildren[i]
+      const newVNode = newChildren[i]
       for (let j = 0; j < oldChildren.length; j++) {
-        const oldVnode = oldChildren[j]
+        const oldVNode = oldChildren[j]
 
         // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
-        if (newVnode.key === oldVnode.key) {
-          patchChildren(oldVnode, newVnode, container)
+        if (newVNode.key === oldVNode.key) {
+          patchChildren(oldVNode, newVNode, container)
 
           if (j < lastIndex) {
             // 如果当前找到的节点在旧 children 中的索引小于最大索引值 lastIndex
@@ -8726,7 +8726,7 @@ function patchElement (n1, n2) {
 可以看到，无论是新子节点还是旧子节点，都存在对真实 DOM 的引用，在此基础上，我们就可以进行 DOM 移动操作了。
 
 ```js
-const oldVnode = {
+const oldVNode = {
   type: 'div',
   children: [
     { type: 'p', children: '1', key: 1 },
@@ -8735,7 +8735,7 @@ const oldVnode = {
   ]
 }
 
-const newVnode = {
+const newVNode = {
   type: 'div',
   children: [
     { type: 'p', children: 'world', key: 3 },
@@ -8782,14 +8782,14 @@ function patchChildren (n1, n2, container) {
     let lastIndex = 0
 
     for (let i = 0; i < newChildren.length; i++) {
-      const newVnode = newChildren[i]
+      const newVNode = newChildren[i]
       let j = 0;
       for (j; j < oldChildren.length; j++) {
-        const oldVnode = oldChildren[j]
+        const oldVNode = oldChildren[j]
 
         // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
-        if (newVnode.key === oldVnode.key) {
-          patch(oldVnode, newVnode, container)
+        if (newVNode.key === oldVNode.key) {
+          patch(oldVNode, newVNode, container)
 
           if (j < lastIndex) {
             // 如果当前找到的节点在旧 children 中的索引小于最大索引值 lastIndex
@@ -8850,11 +8850,251 @@ const renderer = createRenderer({
 
 * 第一步：取新的一组子节点中第一个节点  p-3，它的 key 值为 3，尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 2。此时，变量 `lastIndex` 的值为 0，索引值 2 不小于 `lastIndex` 的值 0，所以节点 p-3 对应的真实 DOM 不需要移动，但是需要将变量 `lastIndex` 的值更新为 2。
 * 第二步：取新的一组子节点中第一个节点  p-1，它的 key 值为 1，尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 0。此时，变量 `lastIndex` 的值为 2，索引值 0 小于 `lastIndex` 的值 2，所以节点 p-1 对应的真实 DOM 需要移动，并且应该移动到节点 p-3 对应的真实 DOM 后面。经过这一步的移动操作后，真实 DOM 的顺序为 p-2、p-3、p-1。
+* \kl;
 * 第三步：取新的一组子节点中第一个节点  p-4，它的 key 值为 4，尝试在旧的一组子节点中寻找可复用的节点。由于在旧的一组子节点中，没有 key 值为 4 的节点，因此渲染器会把节点 p-4 看作新增节点并挂载它。但是，应该将挂载到哪里呢？为了搞清楚这个问题，我们需要观察节点 p-4 在新的一组子节点中的位置。由于节点 p-4 出现在节点 p-1 后面，我们我们应该把节点 p-4 挂载到节点 p- 1 所对应的真实 DOM 后面。经过这一步操作后，此时真实 DOM 的顺序是：p-2、p-3、p-1、p-4，其中 p-4 是刚刚挂载的。
 * 第四步：取新的一组子节点中第一个节点  p-2，它的 key 值为 2，尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 1。此时，变量 `lastIndex` 的值为 2，索引值 1 小于 `lastIndex` 的值 2，所以节点 p-2 对应的真实 DOM 需要移动，并且应该移动到节点 p-4 对应的真实 DOM 后面。经过这一步的移动操作后，真实 DOM 的顺序为 p-3、p-1、p-4、p-2。至此，真实 DOM 顺序已经与新的一组子节点的顺序相同，更新完成。
 
 接着，我们来实现代码。
 
 ```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    const oldChildren = n1.children
+    const newChildren = n2.children
+
+    const oldLen = oldChildren.length
+    const newLen = newChildren.length
+
+    // 存储寻找过程中遇到的最大索引值
+    let lastIndex = 0
+
+    for (let i = 0; i < newChildren.length; i++) {
+      const newVNode = newChildren[i]
+      let j = 0;
+
+      // 第一层循环中定义变量 find，代表是否在旧的一组子节点中找到可复用的节点，
+      // 初始值为 false，代表没找到
+      let find = false
+
+      for (j; j < oldChildren.length; j++) {
+        const oldVNode = oldChildren[j]
+
+        // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
+        if (newVNode.key === oldVNode.key) {
+          // 找到可复用的节点，将变量 find 的值设置为 true
+          find = true
+
+          patch(oldVNode, newVNode, container)
+
+          if (j < lastIndex) {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值 lastIndex
+            // 说明该节点对应的真实 DOM 需要移动
+            // 获取 newVNode 的前一个 vnode，即 prevVNode
+            const prevVNode = newChildren[i - 1]
+            // 如果 prevVnode 不存在，说明当前 newVNode 是第一个节点，不需要移动
+            if (prevVNode) {
+              // 由于我们要将 newVnode 对应的真实 DOM 移动到 prevVNode 所对应真实 DOM 后面
+              // 所以我们需要获取 prevVNode 所对应真实 DOM 的下一个兄弟节点，并将其作为锚点
+              const anchor = prevVNode.el.nextSibling
+              // 调用 insert 方法将 newVNode 对应的真实 DOM 插入到锚点元素前面
+              // 也就是 prevVNode 对应的真实 DOM 后面
+              insert(newVnode.el, container, anchor)
+            }
+          } else {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值
+            // 则更新 lastIndex 的值
+            lastIndex = j
+          }
+          break;
+        }
+      }
+
+      // 如果代码运行到这里，find 仍然是 false
+      // 说明当前 newVNode 没有在旧的一组子节点中找到可复用的节点
+      // 也就是说，当前 newVNode 是新增节点，需要挂载
+      if (!find) {
+        // 为了将节点挂载到正确位置，我们需要先获取锚点元素
+        // 首先获取当前 newVNode 的前一个 vnode 节点
+        const parentVNode = newChildren[i - 1]
+        
+        let anchor = null
+
+        if (prevVNode) {
+          // 如果存在前一个 vnode 节点，则使用它的下一个兄弟节点作为锚点元素
+          anchor = prevVNode.el.nextSibling
+        } else {
+          // 如果没有前一个 vnode 节点，说明即将挂载的新节点是第一个子节点
+          // 这时我们使用容器元素的 fristChild 作为锚点
+          anchor = container.firstChild
+        }
+
+        // 挂载 newVNode
+        patch(null, newVnode, container, anchor)
+      }
+    }
+  } else {
+    // ...
+  }
+}
 ```
+
+观察上面这段代码。首先，我们在外层循环中定义了名为 find 的变量，它代表渲染器能否在旧的一组子节点中找到可复用的节点。变量 find 的初始值为 false，一旦寻找到可复用的节点，则将变量 find 的值设置为 true。如果内层循环结束后，变量 find 的值仍然为 false，则说明 `newVNode` 是一个全新的节点，需要挂载它。为了将节点挂载到正确位置，我们需要先获取锚点元素：找到 `newVNode` 的前一个虚拟节点，即 `preVNode`，如果存在，则使用它对应的真实 DOM 的下一个兄弟节点作为锚点元素；如果不存在，则说明即将挂载的 `newVNode` 节点是容器元素的第一个子节点，此时应该使用容器元素的 `container.firstChild` 作为锚点元素。最后，将锚点元素 anchor 作为 patch 函数的第四个参数，调用 patch 函数完成节点的挂载。
+
+```js
+function patch (n1, n2, container, anchor) {
+  // ...
+  if (typeof type === 'string') {
+    if (!n1) {
+      // 挂载时将锚点元素作为第三个参数传递给 mountElement 函数
+      mountElement(n2, container, anchor)
+    } else {
+      patchElement(n1, n2)
+    }
+  } else if (type === Text) {
+    // ...
+  } else if (type === Fragment) {
+    // ...
+  }
+}
+
+function mountElement (vnode, container, anchor) {
+  // ...
+
+  // 插入节点时，将锚点元素透传给 insert 函数
+  insert(el, container, anchor)
+}
+```
+
+#### 移动不存在的元素
+
+在更新子节点时，不仅会遇到新增元素，还会出现元素被删除的情况。
+
+<img src="./images/simple_diff13.png" />
+
+在新的一组节点中，节点 p-2 已经不存在了，这说明该节点被删除了。渲染器应该能找到那些需要删除的节点并正确地将其删除。
+
+首先我们来讨论如何找到需要删除的节点。
+
+<img src="./images/simple_diff14.png" />
+
+现在我们开始模拟执行更新的过程。
+
+* 第一步：取新的一组子节点中的第一个节点 p-3，它的 key 值为 3。尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 2 。此时变量 `lastIndex` 的值 为 0，索引 2 不小于 `lastIndex` 的值 0，所以节点 p-3 对应的真实 DOM 不需要移动，但需要更新变量 `lastIndex` 的值为 2。
+* 第二步：取新的一组子节点中的第一个节点 p-1，它的 key 值为 1。尝试在旧的一组子节点中寻找可复用的节点。发现能够找到，并且该节点在旧的一组子节点中的索引值为 0 。此时变量 `lastIndex` 的值 为 2，索引 0 小于 `lastIndex` 的值 2，所以节点 p-1 对应的真实 DOM 需要移动，并且应该移动到节点 p-3 对应的真实 DOM 后面。经过这一步的移动操作后，真实 DOM 的状态如下：
+
+<img src="./images/simple_diff15.png" />
+
+至此，更新结束。不过我们会发现，节点 p-2 对应的真实 DOM 仍然存在，所以需要增加额外的逻辑来删除遗留节点。思路很简单，当基本的更新结束时，我们需要遍历旧的一组子节点，然后取新的一组子结点中寻找具有相同 key 值得节点。如果找不到，则说明应该删除该节点。
+
+```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    const oldChildren = n1.children
+    const newChildren = n2.children
+
+    const oldLen = oldChildren.length
+    const newLen = newChildren.length
+
+    // 存储寻找过程中遇到的最大索引值
+    let lastIndex = 0
+    for (let i = 0; i < newChildren.length; i++) {
+      const newVNode = newChildren[i]
+      let j = 0;
+
+      // 第一层循环中定义变量 find，代表是否在旧的一组子节点中找到可复用的节点，
+      // 初始值为 false，代表没找到
+      let find = false
+
+      for (j; j < oldChildren.length; j++) {
+        const oldVNode = oldChildren[j]
+
+        // 如果找到具有相同 key 值的节点，说明可以复用，但是仍需要调用 patch 函数更新
+        if (newVNode.key === oldVNode.key) {
+          // 找到可复用的节点，将变量 find 的值设置为 true
+          find = true
+
+          patch(oldVNode, newVNode, container)
+
+          if (j < lastIndex) {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值 lastIndex
+            // 说明该节点对应的真实 DOM 需要移动
+            // 获取 newVNode 的前一个 vnode，即 prevVNode
+            const prevVNode = newChildren[i - 1]
+            // 如果 prevVnode 不存在，说明当前 newVNode 是第一个节点，不需要移动
+            if (prevVNode) {
+              // 由于我们要将 newVNode 对应的真实 DOM 移动到 prevVNode 所对应真实 DOM 后面
+              // 所以我们需要获取 prevVNode 所对应真实 DOM 的下一个兄弟节点，并将其作为锚点
+              const anchor = prevVNode.el.nextSibling
+              // 调用 insert 方法将 newVNode 对应的真实 DOM 插入到锚点元素前面
+              // 也就是 prevVNode 对应的真实 DOM 后面
+              insert(newVNode.el, container, anchor)
+            }
+          } else {
+            // 如果当前找到的节点在旧 children 中的索引小于最大索引值
+            // 则更新 lastIndex 的值
+            lastIndex = j
+          }
+          break;
+        }
+      }
+
+      // 如果代码运行到这里，find 仍然是 false
+      // 说明当前 newVNode 没有在旧的一组子节点中找到可复用的节点
+      // 也就是说，当前 newVNode 是新增节点，需要挂载
+      if (!find) {
+        // 为了将节点挂载到正确位置，我们需要先获取锚点元素
+        // 首先获取当前 newVNode 的前一个 vnode 节点
+        const parentVNode = newChildren[i - 1]
+        
+        let anchor = null
+
+        if (prevVNode) {
+          // 如果存在前一个 vnode 节点，则使用它的下一个兄弟节点作为锚点元素
+          anchor = prevVNode.el.nextSibling
+        } else {
+          // 如果没有前一个 vnode 节点，说明即将挂载的新节点是第一个子节点
+          // 这时我们使用容器元素的 fristChild 作为锚点
+          anchor = container.firstChild
+        }
+
+        // 挂载 newVNode
+        patch(null, newVNode, container, anchor)
+      }
+    }
+
+    // 上一步得更新操作完成后
+    // 遍历旧的一组子节点
+    for (let i = 0; i < oldChildren.length; i++) {
+      const oldVNode = oldChildren[i]
+      // 拿旧子节点 oldVNode 去新的一组子节点中寻找具有相同 key 值得节点
+      const has = newChildren.find(vnode => vnode.key === oldVNode.key)
+      if (!has) {
+        // 如果没有找到具有相同 key 值得节点，则说明需要删除该节点
+        // 调用 unmount 函数将其卸载
+        unmount(oldVNode)
+      }
+    }
+  } else {
+    // ...
+  }
+}
+```
+
+如以上代码注释所示，在上一步得更新操作完成后，我们还需要遍历旧得一组子节点，目的是检查旧子节点在新的一组子节点中是否仍然存在，如果已经不存在，则调用 unmount 函数将其卸载。
+
+#### 总结
+
+本篇文章，我们首先讨论了 Diff 算法的作用。Diff 算法用来计算两组子节点的差异，并试图最大程度地复用 DOM 元素。通过遍历新旧两组子节点中数量多的那一组，逐个调用 patch 函数进行打补丁，然后比较新旧两组子节点的数量，如果新的一组子节点数量更多，说明新子节点需要挂载。否则说明在旧的一组子节点中，有节点需要卸载。
+
+然后，我们讨论子虚拟节点中 key 属性的作用。在更新时，渲染器通过 key 属性找到可复用的节点，然后尽可能地通过 DOM 移动操作来完成更新，避免过多地对 DOM 元素进行销毁和重建。
+
+接着，我们讨论了简单 Diff 算法时如何寻找要移动的节点的。简单 Diff 算法的核心逻辑时，拿新的一组子节点中的节点去旧的一组子节点中寻找可复用的节点。如果找到，则记录该节点的位置索引。然后我们把逐个位置索引称为最大索引。在整个更新过程中，如果一个节点的索引值小于最大索引，则说明该节点对应的真实 DOM 元素需要移动。
+
+最后，我们通过几个例子讲解了渲染器是如何移动、添加、删除虚拟节点所对应的 DOM 元素的。
+
+### 双端 Diff 算法
 
