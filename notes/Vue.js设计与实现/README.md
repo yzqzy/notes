@@ -9098,3 +9098,73 @@ function patchChildren (n1, n2, container) {
 
 ### 双端 Diff 算法
 
+我们已经介绍过简易 Diff 算法的实现原理。简易 Diff 算法利用虚拟节点的 key 属性，尽可能复用 DOM 元素，并通过移动 DOM 的方式来完成更新，从而减少不断创建和销毁 DOM 元素带来的性能开销。但是，简易 Diff 算法仍然存在很多缺陷，这些缺陷可以通过双端 Diff 算法解决。
+
+#### 双端比较的原理
+
+简易 Diff 算法的问题在于，它对 DOM 的移动操作并不是最优的。
+
+<img src="./images/double_diff01.png" />
+
+以图中的例子来看，如果使用简单 Diff 算法来更新它，会发生两次 DOM 移动操作。
+
+第一次 DOM 移动操作会将真实 DOM 节点 p-1 移动到真实 DOM 节点 p-3 后面。第二次移动操作会将真实 DOM 节点 p-2 移动到真实 DOM 节点 p-1 后面。最终真实 DOM 节点的顺序和新的一组子节点顺序一致：p-3、p-1、p-2。
+
+<img src="./images/double_diff02.png" />
+
+但是，上述更新过程并非最优解。在这个例子中，其实只需要通过一步 DOM 节点的移动操作就可以完成更新，只需要把真实 DOM 节点 p-3 移动到真实 DOM 节点 p-1 前面。
+
+<img src="./images/double_diff03.png" />
+
+可以看到，理论上我们只需要一次 DOM 移动操作即可完成更新。但简单 Diff 算法做不到这一点。这就需要我们使用双端 Diff 算法。
+
+顾名思义，双端 Diff 算法是一种对新旧两组子节点的两个端点进行比较的算法。因此，我们需要四个索引值，分别指向新旧两组子节点的端点。
+
+<img src="./images/double_diff04.png" />
+
+用代码来表达四个端点，如下面的 `patchChildren` 和 `patchKeyedChildren` 函数：
+
+```js
+function patchChildren (n1, n2, container) {
+  if (typeof n2.children === 'string') {
+    // ...
+  } else if (Array.isArray(n2.children)) {
+    // 封装 patchKeyedChild 函数处理两组子节点
+    patchKeyedChildren(n1, n2, container)
+  } else {
+    // ...
+  }
+}
+
+function patchKeyedChildren (n1, n2, container) {
+  const oldChildren = n1.children
+  const newChildren = n2.children
+
+  let oldStartIdx = 0
+  let oldEndIdx = oldChildren.length - 1
+  let newStartIdx = 0
+  let newEndIdx = newChildren.length - 1
+}
+```
+
+上面这段代码中，我们将两组子节点的打补丁工作封装到了 `patchKeyedChildren` 函数中。在该函数内，首先获取新旧两组子节点 `oldChildren` 和 `newChildren` ，接着创建四个索引值，分别指向新旧两组子节点的头和尾，即 `oldStartIdx`、`oldEndIdx`、`newStartIdx` 和 `newEndIdx` 。有了索引后，就可以找到它所指向的虚拟节点了。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const oldChildren = n1.children
+  const newChildren = n2.children
+
+  let oldStartIdx = 0
+  let oldEndIdx = oldChildren.length - 1
+  let newStartIdx = 0
+  let newEndIdx = newChildren.length - 1
+
+  let oldStartVNode = oldChildren[oldStartIdx]
+  let oldEndVNodoe = oldChildren[oldEndIdx]
+  let newStartVNode = newChildren[newStartIdx]
+  let newEndVNODE = newChildren[newEndIdx]
+}
+```
+
+其中，`oldStartVNode` 和 `oldEndVNode` 是旧的一组子节点中的第一个和最后一个节点，`newStartVNode` 和 `newEndVNode` 则是新的一组子节点中的第一个节点和最后一个节点。有了这些信息后，我们就可以进行双端比较了。
+
