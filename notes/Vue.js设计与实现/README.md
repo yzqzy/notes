@@ -9168,3 +9168,54 @@ function patchKeyedChildren (n1, n2, container) {
 
 其中，`oldStartVNode` 和 `oldEndVNode` 是旧的一组子节点中的第一个和最后一个节点，`newStartVNode` 和 `newEndVNode` 则是新的一组子节点中的第一个节点和最后一个节点。有了这些信息后，我们就可以进行双端比较了。
 
+<img src="./images/double_diff05.png" />
+
+在双端比较中，每一轮比较都分为四个步骤。
+
+* 第一步：比较旧的一组子节点中的第一个子节点 p-1 与新的一组子节点中的第一个子节点 p-4，看看它们是否相同。由于两者的 key 值不同，因此不相同，不可复用，于是怎么都不做。
+* 第二步：比较旧的一组子节点中的最后一个子节点 p-4 与新的一组子节点中的最后一个子节点 p-3 ，看看它们是否相同。由于两者的 key 值不同，因此不相同，不可复用，于是什么都不做。
+* 第三步：比较旧的一组子节点中的第一个子节点 p-1 与新的一组子节点中的最后一个子节点 p-3，看看它们是否相同。由于两者的 key 值不同，因此不相同，不可复用，于是什么都不做。
+* 第四步：比较旧的一组子节点中的最后一个子节点 p-4 与新的一组子节点中的第一个子节点 p-4。由于它们的 key 值相同，因此可以进行 DOM 复用。
+
+可以看到，我们在第四步时找到了相同的节点，这说明它们对应的真实 DOM 节点可以复用。对于可复用的 DOM 节点，我们只需要通过 DOM 移动操作完成更新即可。那么应该如何移动 DOM 元素呢？
+
+第四步是比较旧的一组子节点的最后一个子节点与新的一组子节点的第一个子节点。换句话来说，节点 p-4 在更新之后应该是第一个子节点。对应到程序的逻辑，可以将其翻译为：将索引 `oldEndIdx` 指向的虚拟节点所对应的真实 DOM 移动到索引 `oldStartIdx` 指向的虚拟节点所对应的真实 DOM 前面。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const oldChildren = n1.children
+  const newChildren = n2.children
+
+  let oldStartIdx = 0
+  let oldEndIdx = oldChildren.length - 1
+  let newStartIdx = 0
+  let newEndIdx = newChildren.length - 1
+
+  let oldStartVNode = oldChildren[oldStartIdx]
+  let oldEndVNode = oldChildren[oldEndIdx]
+  let newStartVNode = newChildren[newStartIdx]
+  let newEndVNode = newChildren[newEndIdx]
+
+  if (oldStartVNode.key === newStartVNode.key) {
+    // 第一步：oldStartVNode 和 newStartVNode 比较
+  } else if (oldEndVNode.key === newEndVNode.key) {
+    // 第二步：oldEndVNode 和 newEndVNode 比较
+  } else if (oldStartVNode.key === newEndVNode.key) {
+    // 第三步：oldStartVNode 和 newEndVNode 比较
+  } else if (oldEndVNode.key === newStartVNode.key) {
+    // 第四步：oldEndVNode 和 newStartVNode 比较
+
+    // 仍然需要调用 patch 函数进行打补丁
+    patch(oldEndVNode, newStartVNode, container)
+    // 移动 DOM 操作
+    // oldEndVNode.el 移动到 oldStartVNode.el 前面
+    insert(oldEndVNode.el, container, oldStartVNode.el)
+    // 移动 DOM 完成后，更新索引值，并指向下一个位置
+    oldEndVNode = oldChildren[--oldEndIdx]
+    newStartVNode = newChildren[++newStartIdx]
+  }
+}
+```
+
+在这段代码中，我们增加了一系列的 `if...else if ...` 语句，用来实现四个索引指向的虚拟节点之间的比较。当我们在第四步中找到具有相同 key 值的节点。这说明，原来处于尾部的节点在新的顺序中应该处于头部。于是，我们只需要以头部元素 `oldStartVNode.el` 作为锚点，将尾部元素 `oldEndVNode.el` 移动到锚点前面即可。但需要注意的是，在进行 DOM 的移动操作之前，仍然需要调用 `patch` 函数在新旧虚拟节点之间打补丁。
+
