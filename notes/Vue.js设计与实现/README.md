@@ -9219,3 +9219,215 @@ function patchKeyedChildren (n1, n2, container) {
 
 在这段代码中，我们增加了一系列的 `if...else if ...` 语句，用来实现四个索引指向的虚拟节点之间的比较。当我们在第四步中找到具有相同 key 值的节点。这说明，原来处于尾部的节点在新的顺序中应该处于头部。于是，我们只需要以头部元素 `oldStartVNode.el` 作为锚点，将尾部元素 `oldEndVNode.el` 移动到锚点前面即可。但需要注意的是，在进行 DOM 的移动操作之前，仍然需要调用 `patch` 函数在新旧虚拟节点之间打补丁。
 
+这一步 DOM 的移动操作完成会，接下来就是比较关键的步骤，即更新索引值，由于第四步涉及的两个索引分别是 `oldEnIdx` 和 `newStartIdx`，所以我们需要更新两者的值，让它们各自朝正确的方向前进一步，并指向下一个节点。
+
+<img src="./images/double_diff06.png" />
+
+此时，真实 DOM 节点顺序为 p-4、p-1、p-2、p-3，这与新的一组子节点顺序不一致。这时因为 Diff 算法还没有结束，还需要进行下一轮更新。因此，我们需要将更新逻辑封装到一个 while 循环中。
+
+```js
+
+function patchKeyedChildren (n1, n2, container) {
+  const oldChildren = n1.children
+  const newChildren = n2.children
+
+  let oldStartIdx = 0
+  let oldEndIdx = oldChildren.length - 1
+  let newStartIdx = 0
+  let newEndIdx = newChildren.length - 1
+
+  let oldStartVNode = oldChildren[oldStartIdx]
+  let oldEndVNode = oldChildren[oldEndIdx]
+  let newStartVNode = newChildren[newStartIdx]
+  let newEndVNode = newChildren[newEndIdx]
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+
+      // 仍然需要调用 patch 函数进行打补丁
+      patch(oldEndVNode, newStartVNode, container)
+      // 移动 DOM 操作
+      // oldEndVNode.el 移动到 oldStartVNode.el 前面
+      insert(oldEndVNode.el, container, oldStartVNode.el)
+      // 移动 DOM 完成后，更新索引值，并指向下一个位置
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newStartVNode = newChildren[++newStartIdx]
+    }
+  }
+}
+```
+
+由于在每一轮更新完成之后，紧接着都会更新四个索引中与当前更新轮次相关联的索引，所以整个 while 循环执行的条件是：头部索引值要小于等于尾部索引值。
+
+在第一轮更新结束后循环条件仍然成立，因此需要进行下一轮的比较。
+
+* 第一步：比较旧得一组子节点中得头部节点 p-1 与新得一组子节点中得头部节点 p-2，看看它们是否相同。由于两者的 key 值不同，不可复用，所以什么都不做。
+
+  这里我们使用了新的名词：头部节点。它指的是头部索引 `oldStartIdx` 和 `newStartIdx` 所指向的节点。
+
+* 第二步：比较旧的一组子节点中的尾部节点 p-3 与新的一组子节点中的尾部节点 p-3，两者的 key 值相同，可以复用。另外，由于两者都处于尾部，因此不需要对真实 DOM 进行移动操作。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+  
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+
+      // 节点在新的顺序中仍然处于尾部，不需要移动，但仍需要打补丁
+      patch(oldEndVNode, newEndVNode, container)
+      // 更新索引和头尾部的节点变量
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newEndVNode = newChildren[--newEndIdx]
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+      
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+
+      // 仍然需要调用 patch 函数进行打补丁
+      patch(oldEndVNode, newStartVNode, container)
+      // 移动 DOM 操作
+      // oldEndVNode.el 移动到 oldStartVNode.el 前面
+      insert(oldEndVNode.el, container, oldStartVNode.el)
+      // 移动 DOM 完成后，更新索引值，并指向下一个位置
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newStartVNode = newChildren[++newStartIdx]
+    }
+  }
+}
+
+```
+
+这一轮更新完成之后，新旧两组子节点与真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff07.png" />
+
+真实 DOM 的顺序相比上一轮没有变化，因为在这一轮的比较重没有对 DOM 节点进行移动，只是对 p-3 节点打补丁。
+
+接下来，我们再根据图中所示的状态执行下一轮的比较：
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-2，看看它们是否相同。由于两者的 key 值不同，不可复用，因此什么都不做。
+* 第二步：比较旧的一组子节点中的尾部节点 p-2 与新的一组子节点中的尾部节点 p-1，看看它们是否相同。由于两者的 key 值不同，不可复用，因此什么都不做。
+* 第三步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的尾部节点 p-1 。两者的 key 值相同，可以复用。
+
+在第三步的比较中，我们找到了相同的节点，这说明：节点 p-1 原本是头部节点，但在新的顺序中，它变成了尾部节点。因此，我们需要将节点 p-1 对应的真实 DOM 移动到旧的一组子节点的尾部节点 p-2 所对应的真实 DOM 后面，同时还需要更新相应的索引到下一个位置。
+
+<img src="./images/double_diff08.png" />
+
+这一步的代码如下：
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+
+      // 节点在新的顺序中仍然处于尾部，不需要移动，但仍需要打补丁
+      patch(oldEndVNode, newEndVNode, container)
+      // 更新索引和头尾部的节点变量
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newEndVNode = newChildren[--newEndIdx]
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+
+      // 调用 patch 函数在 oldStartVNode 和 newEndVNode 之间打补丁
+      patch(oldStartVNode, newEndVNode, container)
+      // 将旧的一组子节点的头部节点对应的真实 DOM 节点 oldStartVNode.el 移动到
+      // 旧的一组子节点的尾部节点对应的真实 DOM 节点后面
+      insert(oldStartVNode.el, container, oldEndVNode.el.nextSibling)
+      // 更新索引
+      oldStartVNode = oldChildren[++oldStartIdx]
+      newEndVNode = newChildren[--newEndIdx]
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+
+      // 仍然需要调用 patch 函数进行打补丁
+      patch(oldEndVNode, newStartVNode, container)
+      // 移动 DOM 操作
+      // oldEndVNode.el 移动到 oldStartVNode.el 前面
+      insert(oldEndVNode.el, container, oldStartVNode.el)
+      // 移动 DOM 完成后，更新索引值，并指向下一个位置
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newStartVNode = newChildren[++newStartIdx]
+    }
+  }
+}
+```
+
+如上面的代码所示，如果旧的一组子节点的头部节点与新的一组子节点的尾部节点匹配，则说明该旧节点所对应的真实 DOM 节点需要移动到尾部。因此，我们需要获取当前尾部节点的下一个兄弟节点作为锚点，即 `oldEndVNode.el.nextSibling` 。最后，更新相关索引到下一个位置。
+
+通过上图可以看到，此时，新旧两组子节点的头部索引和尾部索引发生重合，但仍然满足遵循的条件，所以还会进行下一轮的更新。
+
+* 第一步：比较旧的一组子节点的头部节点 p-2 与新的一组子节点中的头部节点 p-2。发现两者 key 值相同，可以复用。但两者在新旧两组子节点中都是头部节点，因此不需要移动，只需要调用 patch 函数进行打补丁即可。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+
+      // 调用 patch 函数在 oldStartVNode 与 newStartVNode 之间打补丁
+      patch(oldStartVNode, newStartVNode, container)
+      // 更新索引
+      oldStartVNode = oldChildren[++oldStartIdx]
+      newStartVNode = newChildren[++newStartIdx]
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+
+      // 节点在新的顺序中仍然处于尾部，不需要移动，但仍需要打补丁
+      patch(oldEndVNode, newEndVNode, container)
+      // 更新索引和头尾部的节点变量
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newEndVNode = newChildren[--newEndIdx]
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+
+      // 调用 patch 函数在 oldStartVNode 和 newEndVNode 之间打补丁
+      patch(oldStartVNode, newEndVNode, container)
+      // 将旧的一组子节点的头部节点对应的真实 DOM 节点 oldStartVNode.el 移动到
+      // 旧的一组子节点的尾部节点对应的真实 DOM 节点后面
+      insert(oldStartVNode.el, container, oldEndVNode.el.nextSibling)
+      // 更新索引
+      oldStartVNode = oldChildren[++oldStartIdx]
+      newEndVNode = newChildren[--newEndIdx]
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+
+      // 仍然需要调用 patch 函数进行打补丁
+      patch(oldEndVNode, newStartVNode, container)
+      // 移动 DOM 操作
+      // oldEndVNode.el 移动到 oldStartVNode.el 前面
+      insert(oldEndVNode.el, container, oldStartVNode.el)
+      // 移动 DOM 完成后，更新索引值，并指向下一个位置
+      oldEndVNode = oldChildren[--oldEndIdx]
+      newStartVNode = newChildren[++newStartIdx]
+    }
+  }
+}
+```
+
+这一轮更新之后，真实 DOM 节点的顺序与新的一组子节点的顺序已经相同了。另外，更新完成后，索引 `newStartIdx` 和索引 `oldStartIdx` 的值分别大于 `newEndIdx` 和 `oldEndIdx` ，所以循环终止，双端 Diff 算法也执行完毕。
+
+#### 双端比较的优势
+
+
+
+
+
