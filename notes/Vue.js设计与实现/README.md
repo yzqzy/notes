@@ -9427,7 +9427,9 @@ function patchKeyedChildren (n1, n2, container) {
 
 #### 双端比较的优势
 
+理解双端比较的原理之后，我们来看看与简单 Diff 算法相比，双端 Diff 算法具有怎样的优势。我们以下面的例子来看。
 
+<img src="./images/double_diff09.png" />
 
-
+图中给出了新旧两组子节点的节点顺序。当使用简单 Diff 算法对示例进行更新时，会发生两次 DOM 移动。
 
