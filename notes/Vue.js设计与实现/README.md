@@ -9431,5 +9431,229 @@ function patchKeyedChildren (n1, n2, container) {
 
 <img src="./images/double_diff09.png" />
 
-图中给出了新旧两组子节点的节点顺序。当使用简单 Diff 算法对示例进行更新时，会发生两次 DOM 移动。
+当使用简单 Diff 算法对示例进行更新时，会发生两次 DOM 移动。图中给出了新旧两组子节点的节点顺序。
+
+* 遍历新节点
+  * 如果找到，对节点进行复用（根据索引值进行对比）
+  * 如果找不到，挂载新节点
+* 遍历旧节点，寻找旧节点存在，但是新节点不存在的情况，将其卸载
+
+<img src="./images/double_diff10.png" />
+
+如果使用双端 Diff 算法对这个例子进行更新，会有怎样的表现？接下来，我们以双端比较的思路来完成此例的更新，看一看双端 Diff 算法能否减少 DOM 移动操作次数。
+
+下图出了算法执行之前新旧两组子节点与真实 DOM 节点的状态。
+
+<img src="./images/double_diff11.png" />
+
+接下来，我们按照双端比较的步骤执行更新：
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-3，两者 key 值不同，不可复用。
+* 第二步：比较旧的一组子节点中的尾部节点 p-3 与新的一组子节点中的尾部节点 p-2，两者 key 值不同，不可复用。
+* 第三步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的尾部节点 p-2，两者 key 值不同，不可复用。
+* 第四步：比较旧的一组子节点中的尾部节点 p-3 与新的一组子节点中的头部节点 p-3，发现可以复用。
+
+可以看到，在第四步的比较中，我们找到了可复用的节点 p-3。该节点原本处于所有子节点的尾部，但在新的一组子节点中它处于头部。因此，只需要让节点 p-3 对应的真实 DOM 变成新的头部节点即可。在这一步操作之后，新旧两组子节点以及真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff12.png" />
+
+在这一轮比较过后，真实 DOM 节点的顺序已经与新的一组子节点顺序一致了。我们已经完成了更新，不过算法仍然会进行执行。
+
+* 第一步比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-1，两者的 key 值相同，可以复用。但由于两者都处于头部，因此不需要移动，只需要打补丁即可。
+
+这一轮比较过后，新旧两组子节点与真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff13.png" />
+
+此时，双端 Diff 算法仍然没有停止，开始新一轮的比较。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-2 与新的一组子节点中的头部节点 p-2，两种的 key 值相同，可以复用。但由于两者都处于头部，因此不需要移动，只需要打补丁。
+
+在这一轮比较过后，新旧两组子节点与真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff14.png" />
+
+到这一步后，索引 `newStartIdx` 和 `oldStartIdx` 的值比索引 `newEndIdx` 和 `oldEndIdx` 的值大，于是更新结束。可以看到，对于相同的例子，采用简单 Diff 算法需要两次 DOM 移动操作才能完成更新，而使用双端 Diff 算法只需要一次 DOM 移动操作即可完成更新。
+
+#### 非理想状况的处理方式
+
+上一小节，我们用到了一个比较理想的例子。我们知道，双端 Diff 算法的每一轮比较的过程都分为四个步骤。在上一小节的例子中，每一轮比较都会命中四个步骤中的一个，这是非常理想的情况。但实际上，并非所有情况都这么理想。
+
+<img src="./images/double_diff15.png" />
+
+在这个例子中，新旧两组子节点的顺序如下：
+
+* 旧的一组子节点：p-1、p-2、p-3、p-4。
+* 新的一组子节点：p-2、p-4、p-1、p-3。
+
+当我们尝试按照双端 Diff 算法的思路进行第一轮比较时，会发现无法命中四个步骤中的任何一步。
+
+* 第一步：比较旧的一组子节点的头部节点 p-1 与新的一组子节点中的头部节点 p-2，不可复用。
+* 第二步：比较旧的一组子节点的尾部节点 p-4 与新的一组子节点中的尾部节点 p-3，不可复用。
+* 第二步：比较旧的一组子节点的头部节点 p-1 与新的一组子节点中的尾部节点 p-3，不可复用。
+* 第二步：比较旧的一组子节点的尾部节点 p-4 与新的一组子节点中的头部节点 p-2，不可复用。
+
+在这四个步骤的比较过程中，都无法找到可复用的节点。这时，我们只能通过增加额外的处理步骤来处理这种非理想情况。既然两个头部和两个尾部的四个节点中都没有可复用的节点，那么我们久长时看看非头部、非尾部的节点能否复用。具体做法是，拿新的一组子节点中的头部节点去旧的一组子节点中寻找。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const oldChildren = n1.children
+  const newChildren = n2.children
+
+  let oldStartIdx = 0
+  let oldEndIdx = oldChildren.length - 1
+  let newStartIdx = 0
+  let newEndIdx = newChildren.length - 1
+
+  let oldStartVNode = oldChildren[oldStartIdx]
+  let oldEndVNode = oldChildren[oldEndIdx]
+  let newStartVNode = newChildren[newStartIdx]
+  let newEndVNode = newChildren[newEndIdx]
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+    } else {
+      // 乱序比较
+
+      // 遍历旧的一组子节点，寻找与 newStartVNode 拥有相同 key 值的节点
+      // idxInOld 就是新的一组子节点的头部节点在旧的一组子节点中的索引
+      const idxInOld = oldChildren.findIndex(node => node.key === newStartVNode.key)
+    }
+  }
+}
+```
+
+在上面这段代码中，我们遍历旧的一组子节点，尝试在其中寻找与新的一组子节点的头部节点具有相同 key 值的节点，并将该节点在旧的一组子节点中的索引存在到变量 `idxInOld` 中。不过这么做的目的是什么呢？想要搞清楚这个问题，本质上需要我们先搞清楚：在旧的一组子节点中，找到与新的一组子节点中的头部节点具有相同 key 值的节点意味着什么？
+
+<img src="./images/double_diff16.png" />
+
+当我们拿新的一组子节点的头部节点 p-2 去旧的一组子节点中查找时，会在索引为 1 的位置找到可复用的节点。这意味着，节点 p-2 原本不是头部节点，但在更新之后，它应该变成头部节点。所以我们需要将节点 p-2 对应的真实 DOM 节点移动到当前旧的一组子节点的头部节点 p-1 所对应的真实 DOM 节点之前。具体实现如下：
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const oldChildren = n1.children
+  const newChildren = n2.children
+
+  let oldStartIdx = 0
+  let oldEndIdx = oldChildren.length - 1
+  let newStartIdx = 0
+  let newEndIdx = newChildren.length - 1
+
+  let oldStartVNode = oldChildren[oldStartIdx]
+  let oldEndVNode = oldChildren[oldEndIdx]
+  let newStartVNode = newChildren[newStartIdx]
+  let newEndVNode = newChildren[newEndIdx]
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+    } else {
+      // 乱序比较
+
+      // 遍历旧的一组子节点，寻找与 newStartVNode 拥有相同 key 值的节点
+      // idxInOld 就是新的一组子节点的头部节点在旧的一组子节点中的索引
+      const idxInOld = oldChildren.findIndex(node => node.key === newStartVNode.key)
+      // idxInOld 大于 0，说明找到了可复用的节点，并且需要将其对应的真实 DOM 移动到头部
+      if (idxInOld) {
+        // idxInOld 位置对应的 vnode 就是需要移动的节点
+        const vnodeToMove = oldChildren[idxInOld]
+        // 打补丁操作
+        patch(vnodeToMove, newStartVNode, container)
+        // 将 vnodeToMove.el 移动到头部节点 oldStartVNode.el 之前，因此使用后者作为锚点
+        insert(vnodeToMove.el, container, oldStartVNode.el)
+        // 由于位置 idxInOld 处的节点所对应的真实 DOM 已经移动到别处，因此将其设置为 undefined
+        oldChildren[idxInOld] = undefined
+        // 更新 newStartIdx 到下一个位置
+        newStartVNode = newChildren[++newStartIdx]
+      }
+    }
+  }
+}
+```
+
+在上面这段代码中，首先判断 `idxInOld` 是否大于 0。如果条件成立，则说明找到可复用的节点，然后将该节点对应的真实 DOM 移动到头部。为此，我们先要获取需要移动的节点，这里的 `oldChildren[idxInOld]` 所指向的节点就是需要移动的节点。在移动节点之前，不要忘记调用 patch 函数进行打补丁。接着，调用 insert 函数，并以现在的头部节点对应的真实 DOM 节点 `oldStartVNode.el` 作为锚点参数来完成节点的移动操作。当节点移动完成后，还有两步工作需要做。
+
+* 由于处理 `idxInOld` 处的节点已经处理过（对应的真实 DOM 移动到别处），因此我们应该将 `oldChildren[idxInOld]` 设置为 undefined。
+* 新的一组子节点中的头部节点已经处理完毕，因此将 `newStartIdx` 前进到下一个位置。
+
+经过上述两个步骤的操作之后，新旧两组节点以及真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff17.png" />
+
+接着，双端 Diff 算法会继续进行。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-4，两者 key 值不同，不可复用。
+* 第二步：比较旧的一组子节点中的尾部节点 p-4 与新的一组子节点中的尾部节点 p-3，两者 key 值不同，不可复用。
+* 第三步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的尾部节点 p-3，两者 key 值不同，不可复用。
+* 第四步：比较旧的一组子节点中的尾部节点 p-4 与新的一组子节点中的头部节点 p-4，两者 key 值相同，可以复用。
+
+在这一轮的比较中，我们找到了可以复用的节点。因此，按照双端 Diff 算法的逻辑移动真实 DOM，即把 p-4 对应的真实 DOM 移动到旧的一组子节点中头部节点 p-1 所对应的真实 DOM 前面。
+
+<img src="./images/double_diff18.png" />
+
+此时，真实 DOM 节点的顺序是：p-2、p-4、p-1、p-3。接着，开始下一轮的比较。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-1，两者 key 值相同，可以复用。
+
+在这一轮比较中，第一步就找到了可复用的节点。由于两者都处于头部，所以不需要对真实 DOM 进行移动，只需要打补丁即可。在这一步操作过后，新旧两组子节点与真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff19.png" />
+
+此时，真实 DOM 的节点顺序是：p-2、p-4、p-1、p-3。接着，进行下一轮比较。因为此时旧的一组子节点的头部节点是 undefined。这说明该节点已经被处理过，因此我们不需要在处理它，直接跳过即可。为此，我们需要补充这部分代码逻辑。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    // 增加两个判断分支，如果头尾部节点为 undefined，说明该节点已经被处理过，直接跳到下一个位置
+    if (!oldStartVNode) {
+      oldStartVNode = oldChildren[++oldStartIdx]
+    } else if (!oldEndVNode) {
+      oldEndVNode = newChildren[--oldEndIdx]
+    } else if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+    } else {
+      // 乱序比较
+    }
+  }
+}
+```
+
+在循环开始时，我们优先判断头部节点和尾部节点是否存在。如果不存在，则说明它们已经被处理过，直接跳到下一个位置即可。在这一轮比较过后，新旧两组子节点与真实 DOM 节点的状态如图所示：
+
+<img src="./images/double_diff20.png" />
+
+现在，四个步骤又重合了，接着进行最后一轮的比较：
+
+* 第一步：比较旧的一组子节点中的头部节点 p-3 与新的一组子节点中的头部节点 p-3，两者 key 值相同，可以复用。
+
+在第一步中找到了可复用的节点。由于两者都是头部节点，因此不需要进行 DOM 移动操作，直接打补丁即可。
+
+<img src="./images/double_diff21.png" />
+
+这一轮比较过后，最终状态如上图所示。这时，满足循环停止的条件，于是更新完成。最终，真实 DOM 节点的顺序与新的一组子节点的顺序一致，都是：p-2、p-4、p-1、P-3.
+
+#### 添加新元素
+
+我们已经讲解了非理想情况的处理，即在新一轮比较过程中，不会命中四个步骤中的任何一步。这时，我们会拿到新的一组子节点中的头部节点去旧的一组子节点中中寻找可复用的节点，然而并非总能找得到。
 
