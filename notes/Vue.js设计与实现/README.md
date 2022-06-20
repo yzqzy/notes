@@ -9750,5 +9750,39 @@ function patchKeyedChildren (n1, n2, container) {
 
 <img src="./images/double_diff27.png" />
 
-当这一轮更新完毕后，由于变量 `oldStarIdx` 的值大于 `oldENdIdx` 的值，更新停止。
+当这一轮更新完毕后，由于变量 `oldStarIdx` 的值大于 `oldEndIdx` 的值，更新停止。但通过观察可知，节点 p-4 在整个更新过程中被遗漏了，这说明我们的算法是有缺陷的。为了弥补这个缺陷，我们需要添加额外的处理代码。
 
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+		// ...
+  }
+  
+  // 循环结束检查索引值的情况
+  if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+    // 如果满足条件，则说明有新的节点遗漏，需要挂载它们
+    for (let i = newStartIdx; i <= newEndIdx; i++) {
+      patch(null, newChildren[i], container, oldStartVNode.el)
+    }
+  }
+}
+```
+
+我们在 while 循环结束后增加了一个 if 条件语句，检查四个索引值的情况。如果条件 `oldEndIdx < oldStartIdx && setStartIdx <= newEndIdx` 成立，说明新的一组子节点中有遗留的节点需要作为新节点挂载。哪些节点是新节点呢？索引值位于 `newStartIdx`  和 `newEndIdx` 这个区间内的都是新节点。于是我们开启一个 for 循环来遍历这个区间内的节点并逐一挂载。挂载时的锚点仍然使用当前的头部节点 `oldStartVNode.el`，这样就完成了对新增元素的处理。
+
+#### 移除不存在的元素
+
+解决了新增节点的问题后，我们再来讨论关于移除元素的情况。
+
+<img src="./images/double_diff28.png" />
+
+在这个例子中，新旧两组子节点的顺序如下：
+
+* 旧的一组子节点：p-1、p-2、p-3
+* 新的一组子节点：p-1、p-3
+
+可以看到，在新的一组子节点中 p-2 节点已经不存在了。为了搞清楚应该如何处理节点被移除的情况，我们还是按照双端 Diff 算法的思路执行更新。
+
+* 第一步：

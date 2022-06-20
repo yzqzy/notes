@@ -93,4 +93,12 @@ function patchKeyedChildren (n1, n2, container) {
       newStartVNode = newChildren[++newStartIdx]
     }   
   }
+
+  // 循环结束检查索引值的情况
+  if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+    // 如果满足条件，则说明有新的节点遗漏，需要挂载它们
+    for (let i = newStartIdx; i <= newEndIdx; i++) {
+      patch(null, newChildren[i], container, oldStartVNode.el)
+    }
+  }
 }
