@@ -9657,3 +9657,98 @@ function patchKeyedChildren (n1, n2, container) {
 
 我们已经讲解了非理想情况的处理，即在新一轮比较过程中，不会命中四个步骤中的任何一步。这时，我们会拿到新的一组子节点中的头部节点去旧的一组子节点中中寻找可复用的节点，然而并非总能找得到。
 
+<img src="./images/double_diff22.png" />
+
+在这个例子中，新旧两组子节点的顺序如下：
+
+* 旧的一组子节点：p-1、p-2、p-3
+* 新的一组子节点：p-4、p-1、p-3、p-2
+
+首先，我们尝试进行第一轮比较，发现在四个步骤中的比较重都找到不到可复用的节点。于是我们尝试拿新的一组子节点的头部节点 p-4 去旧的一组子节点中寻找具有相同 key 值的节点，但在旧的一组子节点中根本就没有 p-4 节点。
+
+这说明节点 p-4 是一个新增节点，我们应该将它挂载到正确的位置。那么应该挂载到哪里呢？很简单，因为节点 p-4 是新的一组子节点中的头部节点，所以只需要将它挂载到当前头部节点之前即可。“当前” 头部节点指的是，旧的一组子节点中的头部节点所对应的真实 DOM 节点 p-1。
+
+<img src="./images/double_diff23.png" />
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+    // 增加两个判断分支，如果头尾部节点为 undefined，说明该节点已经被处理过，直接跳到下一个位置
+    if (!oldStartVNode) {
+      oldStartVNode = oldChildren[++oldStartIdx]
+    } else if (!oldEndVNode) {
+      oldEndVNode = newChildren[--oldEndIdx]
+    } else if (oldStartVNode.key === newStartVNode.key) {
+      // 第一步：oldStartVNode 和 newStartVNode 比较
+    } else if (oldEndVNode.key === newEndVNode.key) {
+      // 第二步：oldEndVNode 和 newEndVNode 比较
+    } else if (oldStartVNode.key === newEndVNode.key) {
+      // 第三步：oldStartVNode 和 newEndVNode 比较
+    } else if (oldEndVNode.key === newStartVNode.key) {
+      // 第四步：oldEndVNode 和 newStartVNode 比较
+    } else {
+      // 乱序比较
+
+      // 遍历旧的一组子节点，寻找与 newStartVNode 拥有相同 key 值的节点
+      // idxInOld 就是新的一组子节点的头部节点在旧的一组子节点中的索引
+      const idxInOld = oldChildren.findIndex(node => node.key === newStartVNode.key)
+
+      // idxInOld 大于 0，说明找到了可复用的节点，并且需要将其对应的真实 DOM 移动到头部
+      if (idxInOld > 0) {
+        // idxInOld 位置对应的 vnode 就是需要移动的节点
+        const vnodeToMove = oldChildren[idxInOld]
+        // 打补丁操作
+        patch(vnodeToMove, newStartVNode, container)
+        // 将 vnodeToMove.el 移动到头部节点 oldStartVNode.el 之前，因此使用后者作为锚点
+        insert(vnodeToMove.el, container, oldStartVNode.el)
+        // 由于位置 idxInOld 处的节点所对应的真实 DOM 已经移动到别处，因此将其设置为 undefined
+        oldChildren[idxInOld] = undefined
+      } else {
+        // 将 newStartVNode 作为新节点挂载到头部，使用当前头部节点 oldStartVNode.el 作为锚点
+        patch(null, newStartVNode, container, oldStartVNode.el)
+      } 
+         
+      // 更新 newStartIdx 到下一个位置
+      newStartVNode = newChildren[++newStartIdx]
+    }
+  }
+}
+```
+
+如上面的代码所示，当条件 `idxInOld > 0` 不成立时，说明 `newStartVNode` 节点是全新的节点。又由于 `newStartVNode` 节点是头部节点，因此我们应该将其作为新的头部节点进行挂载。所以，在调用 patch 函数挂载节点时，我们使用 `oldStartVNode.el` 作为锚点。
+
+当新节点 p-4 挂载完成后，会进行后续的更新，知道全部更新完成为止。但是这样并不完美，我们再来看另外一个例子。
+
+<img src="./images/double_diff24.png" />
+
+这个例子与上一个例子的不同之处在于，我们调整了新的一组子节点的顺序：p-4、p-1、p-2、p-3 。下面我们按照双端 Diff 算法的思路来执行更新。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-4，两者 key 值不同，不可以复用。
+* 第二步：比较旧的一组子节点中的尾部节点 p-3 与新的一组子节点中的尾部节点 p-3，两者 key 值相同，可以复用。
+
+在第二步找到了可复用的节点，因此进行更新。更新后的新旧两组子节点以及真实 DOM 节点的状态如图所示。
+
+<img src="./images/double_diff25.png" />
+
+接着进行下一轮的比较。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-4，两者 key 值不同，不可以复用。
+* 第二步：比较旧的一组子节点中的尾部节点 p-2 与新的一组子节点中的尾部节点 p-2，两者 key 值相同，可以复用。
+
+我们在第二步又找到了可以复用的节点，于是再次进行更新。更新后的新旧两个子节点以及真实 DOM 节点的状态如图所示。
+
+<img src="./images/double_diff26.png" />
+
+接着，进行下一轮的更新。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-1 与新的一组子节点中的头部节点 p-4，两者 key 值不同，不可以复用。
+* 第二步：比较旧的一组子节点中的尾部节点 p-1 与新的一组子节点中的尾部节点 p-1，两者 key 值相同，可以复用。
+
+还是在第二步找到了可复用的节点，再次进行更新。更新后的新旧两组子节点以及真实 DOM 节点的状态如图所示。
+
+<img src="./images/double_diff27.png" />
+
+当这一轮更新完毕后，由于变量 `oldStarIdx` 的值大于 `oldENdIdx` 的值，更新停止。
+
