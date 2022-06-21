@@ -9783,6 +9783,53 @@ function patchKeyedChildren (n1, n2, container) {
 * 旧的一组子节点：p-1、p-2、p-3
 * 新的一组子节点：p-1、p-3
 
-可以看到，在新的一组子节点中 p-2 节点已经不存在了。为了搞清楚应该如何处理节点被移除的情况，我们还是按照双端 Diff 算法的思路执行更新。
+可以看到，在新的一组子节点中 p-2 节点已经不存在了。为了搞清楚应该如何处理节点被移除的情况，我们还是按照双端 Diff 算法的思路执行更新。 
 
-* 第一步：
+* 第一步：比较旧的一组子节点的头部节点 p-1 与新的一组子节点中的头部节点 p-1，两者的 key 值相同，可以复用。
+
+在第一步的比较重找到可复用的节点，于是执行更新。在这一轮比较过后，新旧两组子节点以及真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff29.png" />
+
+接着，执行下一轮更新。
+
+* 第一步：比较旧的一组子节点中的头部节点 p-2 与新的一组子节点中的头部节点 p-3，两者的 key 值不同，不可以复用。
+* 第二步：比较旧的一组子节点中的尾部节点 p-3 与新的一组子节点中的尾部节点 p-3，两者的 key 值相同，可以复用。
+
+在第二步找到了可复用的节点，于是进行更新。更新后的新旧两组子节点以及真实 DOM 节点的状态如下：
+
+<img src="./images/double_diff30.png" />
+
+此时变量 `newStartIdx` 的值大于变量 `newEndIdx` 的值，满足更新停止的条件，于是更新结束。但是观察上图可知，旧的一组子节点中存在未被处理的节点，应该将其移除。因此，我们需要增加额外的代码来处理它。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+	// ...
+
+  while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+		// ...
+  }
+  
+  // 循环结束检查索引值的情况
+  if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+    // 如果满足条件，则说明有新的节点遗漏，需要挂载它们
+    for (let i = newStartIdx; i <= newEndIdx; i++) {
+      patch(null, newChildren[i], container, oldStartVNode.el)
+    }
+  } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
+    // 移除操作
+    for (let i = oldStartIdx; i <= oldEndIdx; i++) {
+      unmount(oldChildren[i])
+    }
+  }
+}
+```
+
+与处理新增节点类似，我们在 while 结束后有增加了一个 `else...if` 分支，由于卸载已经不存在的节点。由上图可知，索引值位于 `oldStartIdx` 和 `oldEndIdx` 这个区间内的节点都应该被卸载，于是我们开启一个 for 循环将它们逐一卸载。
+
+#### 总结
+
+本篇文章我们介绍了双端 Diff 算法的原理及其优势。顾名思义，双端 Diff 算法指的是，在新旧两组子节点的四个断点分别进行比较，并试图找到可复用的节点。相比简单 Diff 算法，双端 Diff 算法的优势在于，对于同样的场景，执行的 DOM 移动次数更少。
+
+### 快速 Diff 算法
+
