@@ -9833,3 +9833,63 @@ function patchKeyedChildren (n1, n2, container) {
 
 ### 快速 Diff 算法
 
+本篇文章我们将讨论第三种用于比较新旧两组子节点的方式：快速 Diff 算法。该算法的实测速度非常快，最早应用与 `ivi` 和 `inferno` 这两个框架，vue.js 3 借鉴并扩展了它。
+
+<img src="./images/js_framework.jpg" align="left" />
+
+上图来自 `js-framework-benchmark` ，从中可以看出，在 DOM 操作的各个方面，`ivi` 和 `inferno` 所采用的快速 Diff 算法的性能都要优于 vue.js 2 所采用的双端 Diff 算法。既然快速 Diff 算法如此高效，我们就有必要了解它的思路。接下来，我们就着重讨论快速 Diff 算法的实现原理。
+
+#### 相同的前置元素和后置元素
+
+不同于简单 Diff 算法和双端 Diff 算法，快速 Diff 算法包含预处理步骤，这其实是借鉴了纯文本 Diff 算法的思路。在纯文本 Diff 算法中，存在对两段文本进行预处理的过程。例如，在对两段文本进行 Diff 之前，可以先对它进行全等比较。
+
+```js
+if (text1 === text2) return
+```
+
+这也称为快捷路径。如果两端文本全等，那么就无需进入核心 Diff 算法的步骤了。除此之外，预处理过程还会处理两端文本相同的前缀和后缀。假设有如下两端文本：
+
+```js
+TEXT1: I use vue for app development
+TEXT2: I use react for app development
+```
+
+通过肉眼可以很容易发现，这两段文本的头部和尾部分别一段相同的内容。对于内容相同的问题，是不需要进行核心 Diff 操作的。因此，对于 `TEXT1` 和 `TEXT2` 来说，真正需要进行 Diff 操作的部分是：
+
+```js
+TEXT1: vue
+TEXT2: react
+```
+
+ 这实际上是简化问题的一种方式。这么做的好处是，在特定情况下我们能够轻松地判断文本的插入和删除。例如下面这两个字符串：
+
+```js
+TEXT1: I like you
+TEXT2: I like you too
+```
+
+经过预处理，去掉这两段文本相同的前缀内容和后缀内容之后，它将变成：
+
+```js
+TEXT1: 
+TEXT2: too
+```
+
+可以看到，经过预处理，`TEXT1` 的内容为空。这说明 `TEXT2` 在 `TEXT1` 的基础上增加了字符串 too。相反，我们还可以将这两段文本的位置互换：
+
+```js
+TEXT1: I like you too
+TEXT2: I like you
+```
+
+这两端文本降火预处理后讲变成：
+
+```js
+TEXT1: too
+TEXT2: 
+```
+
+由此可知，`TEXT2` 是在 `TEXT1` 的基础上删除了字符串 `too`。
+
+快速 Diff 算法借鉴了纯文本 Diff 算法中预处理的步骤。以下图为例：
+
