@@ -9933,4 +9933,149 @@ function patchKeyedChildren (n1, n2, container) {
 
 <img src="./images/quick_diff03.png" />
 
-这里需要注意的是，当 while 循环终止时，索引 j 的值为 1。接下来，我们需要处理相同的后置节点。
+这里需要注意的是，当 while 循环终止时，索引 j 的值为 1。接下来，我们需要处理相同的后置节点。由于两组新旧子节点的数量可能不同，所以我们需要两个索引 `newEnd` 和 `oldEnd`，分别指向新旧两组子节点中的最后一个节点。
+
+<img src="./images/quick_diff04.png" />
+
+然后，在开启一个 while 循环，并从后向前遍历这两组子节点，知道遇到 key 值不同的节点为止。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+  // 索引 j 指向新旧两组子节点的开头
+  let j = 0
+  let oldVNode = oldChildren[j]
+  let newVNode = newChildren[j]
+  // while 循环向后遍历，直到遇到拥有不同 key 值的节点为止
+  while (oldVNode.key === newVNode.key) {
+    // 调用 patch 函数进行更新
+    patch(oldVNode, newVNode, container)
+    // 更新索引 j，让其递增
+    j++
+    oldVNode = oldChildren[j]
+    newVNode = newChildren[j]
+  }
+
+  // 更新相同的后置节点
+  // 索引 oldEnd 指向旧的一组子节点的最后一个节点
+  let oldEnd = oldChildren.length - 1
+  // 索引 newEnd 指向新的一组子节点的最后一个节点
+  let newEnd = newChildren.length - 1
+
+  oldVNode = oldChildren[oldEnd]
+  newVNode = newChildren[newEnd]
+
+  // while 循环从后向前遍历，直到遇到拥有不同的 key 值的节点为止
+  while (oldVNode.key !== newVNode.key) {
+    // 调用 patch 函数进行更新
+    patch(oldVNode, newVNode, container)
+    // 递减 oldEnd 和 newEnd
+    oldEnd--
+    newEnd--
+    oldVNode = oldChildren[oldEnd]
+    newVNode = newChildren[newEnd]
+  }
+}
+```
+
+与处理相同的前置节点一样，在 while 循环内，需要调用 patch 函数进行打补丁，然后递减两个索引 `oldEnd`、`newEnd` 的值。在这一步更新操作之后，新旧两组子节点的状态如图所示：
+
+<img src="./images/quick_diff05.png" />
+
+由图可知，当相同的前置节点和后置节点被处理完毕后，旧的一组子节点已经全部被处理了，而在新的一组子节点中，还遗留了一个未被处理的节点 p-4。节点 p-4 是一个新增节点。
+
+* 条件一：`oldEnd < j` 成立，说明在预处理过程中，所有旧节点都处理完毕了；
+* 条件二：`newEnd >= j` 成立，说明在预处理过程中，在新的一组子节点中，仍然有未被处理的节点，而这些遗留的节点都被视作新增节点。
+
+我们需要把这些遗留的节点挂载到正确的位置。
+
+在新的一组子节点中，索引值处于 j 和 `newEnd` 之间的任何节点都需要作为新的子节点进行挂载。那么，应该怎样将这些节点挂载到正确位置呢？这就要求我们必须找到正确的锚点元素。观察图中新的一组子节点可知，新增节点应该挂载到节点 `p-2` 所对应的真实 DOM 前面。所以，节点 `p-2` 对应的真实 DOM 节点就是挂载操作的锚点元素。有了这些信息，我们就可以给出具体的代码实现。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+	// ...
+
+  // 更新相同的后置节点
+	// ...
+  
+  // 预处理完毕后，如果满足如下条件，则说明 j --> nextEnd 之间的节点应作为新节点插入
+  if (j > oldEnd && j <= newEnd) {
+    // 锚点的索引
+    const anchorIndex = newEnd + 1
+    // 锚点元素
+    const anchor = anchorIndex > newChildren.length ? newChildren[anchorIndex].el : null
+    // 采用 while 循环，调用 patch 函数逐个挂载新增节点
+    while (i <= newEnd) {
+      patch(null, newChildren[j++], container, anchor)
+    }
+  }
+}
+```
+
+上面的案例展示了新增节点的情况，我们再来看删除节点的情况。
+
+<img src="./images/quick_diff06.png" />
+
+在这个例子中：新旧两组子节点的顺序如下：
+
+* 旧的一组子节点：p-1、p-2、p-3
+* 新的一组子节点：p-1、p-3
+
+我们同样使用索引 j、`oldEnd` 和 `newEnd` 进行标记。
+
+<img src="./images/quick_diff07.png" />
+
+接着，对相同的前置节点进行预处理，处理后的状态如图所示：
+
+<img src="./images/quick_diff08.png" />
+
+然后，对相同的后置节点进行预处理，处理后的状态如图所示：
+
+<img src="./images/quick_diff09.png" />
+
+由上图可知，当相同的前置节点和后置节点全部都被处理完毕后，新的一组子节点已经全部被处理完毕了，而旧的一组子节点中遗留了一个节点 p-2。这说明，应该卸载 p-2。实际上，遗留的节点可能有多个。
+
+索引 `j` 和索引 `oldEnd` 之间的任何节点都应该被卸载。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+	// ...
+
+  // 更新相同的后置节点
+	// ...
+
+  if (j > oldEnd && j <= newEnd) {
+    // 预处理完毕后，如果满足如下条件，则说明 j --> nextEnd 之间的节点应作为新节点插入
+    // 锚点的索引
+    const anchorIndex = newEnd + 1
+    // 锚点元素
+    const anchor = anchorIndex > newChildren.length ? newChildren[anchorIndex].el : null
+    // 采用 while 循环，调用 patch 函数逐个挂载新增节点
+    while (i <= newEnd) {
+      patch(null, newChildren[j++], container, anchor)
+    }
+  } else if (j <= oldEnd) {
+    // j --> oldEnd 之间的节点应该被卸载
+    while (j <= oldEnd) {
+      unmount(oldChildren[j++])
+    }
+  }
+}
+```
+
+在上面这段代码中，我们新增了一个 `else...if` 分支。当满足条件 `j > newEnd && j <= oldEnd` 时，则开启一个 `while` 循环，并调用 `unmount` 函数逐个卸载这些遗留节点。
+
+#### 判断是否需要进行 DOM 移动操作
+
+ 
