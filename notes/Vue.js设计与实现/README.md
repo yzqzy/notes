@@ -9835,9 +9835,13 @@ function patchKeyedChildren (n1, n2, container) {
 
 本篇文章我们将讨论第三种用于比较新旧两组子节点的方式：快速 Diff 算法。该算法的实测速度非常快，最早应用与 `ivi` 和 `inferno` 这两个框架，vue.js 3 借鉴并扩展了它。
 
-<img src="./images/js_framework.jpg" align="left" />
+关于框架对比可以查看下面这个网站。
 
-上图来自 `js-framework-benchmark` ，从中可以看出，在 DOM 操作的各个方面，`ivi` 和 `inferno` 所采用的快速 Diff 算法的性能都要优于 vue.js 2 所采用的双端 Diff 算法。既然快速 Diff 算法如此高效，我们就有必要了解它的思路。接下来，我们就着重讨论快速 Diff 算法的实现原理。
+* 网站：[https://krausest.github.io/js-framework-benchmark/current.html](https://krausest.github.io/js-framework-benchmark/current.html)。
+
+* github：[https://github.com/krausest/js-framework-benchmark](https://github.com/krausest/js-framework-benchmark)
+
+在 DOM 操作的各个方面，`ivi` 和 `inferno` 所采用的快速 Diff 算法的性能都要优于 vue.js 2 所采用的双端 Diff 算法。既然快速 Diff 算法如此高效，我们就有必要了解它的思路。接下来，我们就着重讨论快速 Diff 算法的实现原理。
 
 #### 相同的前置元素和后置元素
 
@@ -9893,3 +9897,40 @@ TEXT2:
 
 快速 Diff 算法借鉴了纯文本 Diff 算法中预处理的步骤。以下图为例：
 
+<img src="./images/quick_diff01.png" />
+
+对于相同的前置节点和后置节点，由于它们在新旧两组子节点中的相对位置不变，所以我们无须移动它们，但仍然需要在它们之前打补丁。
+
+对于前置节点，我们可以建议索引 j，其初始值为 0，用来指向两组子节点的开头。
+
+<img src="./images/quick_diff02.png" />
+
+然后开启一个 while 循环，让索引 j 递增，直到遇到不相同的节点为止。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 处理相同的前置节点
+  // 索引 j 指向新旧两组子节点的开头
+  let j = 0
+  let oldVNode = oldChildren[j]
+  let newVNode = newChildren[j]
+  // while 循环向后遍历，直到遇到拥有不同 key 值的节点为止
+  while (oldVNode.key === newVNode.key) {
+    // 调用 patch 函数进行更新
+    patch(oldVNode, newVNode, container)
+    // 更新索引 j，让其递增
+    j++
+    oldVNode = oldChildren[j]
+    newVNode = newChildren[j]
+  }
+}
+```
+
+在上面这段代码中，我们使用 while 循环查找所有相同的前置节点，并调用 patch 函数进行打补丁，直到遇到 key 值不同的节点为止。这样，我们就完成了对前置节点的更新。在这一步更新操作后，新旧两组子节点的状态如图所示：
+
+<img src="./images/quick_diff03.png" />
+
+这里需要注意的是，当 while 循环终止时，索引 j 的值为 1。接下来，我们需要处理相同的后置节点。
