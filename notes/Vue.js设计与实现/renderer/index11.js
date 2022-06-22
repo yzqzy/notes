@@ -1,19 +1,85 @@
-function patchKeyedChildren (n1, n2, container) {
-  const newChildren = n2.children
-  const oldChildren = n1.children
-  
-  // 处理相同的前置节点
-  // 索引 j 指向新旧两组子节点的开头
-  let j = 0
-  let oldVNode = oldChildren[j]
-  let newVNode = newChildren[j]
-  // while 循环向后遍历，直到遇到拥有不同 key 值的节点为止
-  while (oldVNode.key === newVNode.key) {
-    // 调用 patch 函数进行更新
-    patch(oldVNode, newVNode, container)
-    // 更新索引 j，让其递增
-    j++
-    oldVNode = oldChildren[j]
-    newVNode = newChildren[j]
-  }
+function shouldSetAsProps(el, key, value) {
+  if (key === 'form' && el.tagName === 'INPUT') return false
+  return key in el
 }
+
+const renderer = createRenderer({
+  createElement(tag) {
+    return document.createElement(tag)
+  },
+  setElementText(el, text) {
+    el.textContent = text
+  },
+  insert(el, parent, anchor = null) {
+    parent.insertBefore(el, anchor)
+  },
+  createText(text) {
+    return document.createTextNode(text)
+  },
+  setText(el, text) {
+    el.nodeValue = text
+  },
+  patchProps(el, key, prevValue, nextValue) {
+    if (/^on/.test(key)) {
+      const invokers = el._vei || (el._vei = {})
+      let invoker = invokers[key]
+      const name = key.slice(2).toLowerCase()
+      if (nextValue) {
+        if (!invoker) {
+          invoker = el._vei[key] = (e) => {
+            console.log(e.timeStamp)
+            console.log(invoker.attached)
+            if (e.timeStamp < invoker.attached) return
+            if (Array.isArray(invoker.value)) {
+              invoker.value.forEach(fn => fn(e))
+            } else {
+              invoker.value(e)
+            }
+          }
+          invoker.value = nextValue
+          invoker.attached = performance.now()
+          el.addEventListener(name, invoker)
+        } else {
+          invoker.value = nextValue
+        }
+      } else if (invoker) {
+        el.removeEventListener(name, invoker)
+      }
+    } else if (key === 'class') {
+      el.className = nextValue || ''
+    } else if (shouldSetAsProps(el, key, nextValue)) {
+      const type = typeof el[key]
+      if (type === 'boolean' && nextValue === '') {
+        el[key] = true
+      } else {
+        el[key] = nextValue
+      }
+    } else {
+      el.setAttribute(key, nextValue)
+    }
+  }
+})
+
+const Fragment = Symbol()
+const vnode1 = {
+  type: 'div',
+  children: [
+    { type: 'p', children: '1', key: 1 },
+    { type: 'p', children: '2', key: 2 },
+    { type: 'p', children: 'hello', key: 3 }
+  ]
+}
+renderer.render(vnode1, document.querySelector('#app'))
+const vnode2 = {
+  type: 'div',
+  children: [
+    { type: 'p', children: 'world', key: 3 },
+    { type: 'p', children: '1', key: 1 },
+    { type: 'p', children: '2', key: 2 },
+    { type: 'p', children: '4', key: 4 },
+  ]
+}
+
+setTimeout(() => {
+  renderer.render(vnode2, document.querySelector('#app'))
+}, 400);
