@@ -22,10 +22,8 @@ function patchKeyedChildren (n1, n2, container) {
   let oldEnd = oldChildren.length - 1
   // 索引 newEnd 指向新的一组子节点的最后一个节点
   let newEnd = newChildren.length - 1
-
   oldVNode = oldChildren[oldEnd]
   newVNode = newChildren[newEnd]
-
   // while 循环从后向前遍历，直到遇到拥有不同的 key 值的节点为止
   while (oldVNode.key !== newVNode.key) {
     // 调用 patch 函数进行更新
@@ -52,6 +50,12 @@ function patchKeyedChildren (n1, n2, container) {
     while (j <= oldEnd) {
       unmount(oldChildren[j++])
     }
+  } else {
+    // else 分支处理非理想情况
+    // 新的一组子节点中剩余未处理节点的数量
+    const count = newEnd - j + 1
+    const source = new Array(count)
+    source.fill(-1)
   }
 }
 
