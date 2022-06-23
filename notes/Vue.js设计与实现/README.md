@@ -10076,7 +10076,7 @@ function patchKeyedChildren (n1, n2, container) {
 
 在上面这段代码中，我们新增了一个 `else...if` 分支。当满足条件 `j > newEnd && j <= oldEnd` 时，则开启一个 `while` 循环，并调用 `unmount` 函数逐个卸载这些遗留节点。
 
-#### 判断是否需要进行 DOM 移动操作
+#### 判断是否需要移动 DOM 
 
 上一节中，我们讲解了快速 Diff 算法的预处理过程，即处理相同的前置节点和后置节点。但是，上一节给出的例子比较理想化，当处理完相同的前置节点或后置节点后，新旧两组子节点中总会有一组子节点全部被处理完毕。在这种情况下，只需要简单地挂载、卸载节点即可。但有时情况会比较复杂。
 
@@ -10161,10 +10161,259 @@ function patchKeyedChildren (n1, n2, container) {
 
 * 新的一组子节点中的节点 p-3 在旧的一组子节点中的索引为 2，因此 source 数组的第一个元素值为 2；
 * 新的一组子节点中的节点 p-4 在旧的一组子节点中的索引为 3，因此 source 数组的第一个元素值为 3；
-* 新的一组子节点中的节点 p-2 在旧的一组子节点中的索引为 1，因此 source 数组的第一个元素值为 1。
+* 新的一组子节点中的节点 p-2 在旧的一组子节点中的索引为 1，因此 source 数组的第一个元素值为 1;
+* 新的一组子节点中的节点 p-7 比较特殊，因为在旧的一组子节点中没有与其 key 值相等的节点，所以 source 数组的第四个元素值保留原来的 -1。
 
 我们可以通过两层 for 循环来完成 source 数组的填充工作，外层循环用于遍历旧的一组节点，内层循环用于遍历新的一组子节点。
 
 ```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+	// ...
+
+  // 更新相同的后置节点
+	// ...
+  
+  if (j > oldEnd && j <= newEnd) {
+		// ...
+  } else if (j <= oldEnd) {
+ 		// ...
+  } else {
+    // else 分支处理非理想情况
+    // 新的一组子节点中剩余未处理节点的数量
+    const count = newEnd - j + 1
+    const source = new Array(count)
+    source.fill(-1)
+
+    // oldStart 和 newStart 分别为起始索引，即 j
+    const oldStart = j
+    const newStart = j
+    // 遍历旧的一组子节点
+  	for (let i = oldStart; i <= oldEnd; i++) {
+      const oldVNode = oldChildren[i]
+      // 遍历新的一组子节点
+      for (let k = newStart; k <= newEnd; k++) {
+        const newVNode = newChildren[k]
+        // 找到拥有相同 key 值的可复用节点
+        if (oldVNode.key === newVNode.key) {
+          // 调用 patch 进行更新
+          patch(oldVNode, newVNode, container)
+          // 最后填充 source 数组
+          source[k - newStart] = i
+        }
+      }
+    }
+  }
+}
 ```
+
+这里需要注意的是，由于数组 source 的索引是从 0 开始的，而未处理节点的索引未必从 0 开始，所以在填充数组时需要使用表达式 `k - newStart` 的值作为数组的索引值。外层循环的变量 i 就是当前节点在旧的一组子节点中的位置索引，因此直接将变量 i 的值赋值给 `souce[k - newStart]` 即可。
+
+现在，source 数组已经填充完毕，我们后面会用到它。在进一步讲解前，我们需要思考一下上面那段用于填充 source 数组的代码存在怎样的问题。这段代码中我们采用了两层嵌套的循环，其时间复杂度为 `O(n1 * n2)`，其中 `n1` 和 `n2` 为新旧两组子节点的数量，我们也可以使用 `O(n^2)` 来表示。当新旧两组子节点的数量较多时，两层嵌套的循环就会带来性能问题。出于优化的目的，我们可以为新的一组子节点构建一张索引表，用来存储节点的 key 和节点位置索引之间的映射。
+
+<img src="./images/quick_diff14.png" />
+
+有了索引表，我们就可以利用它快速地填充 source 数组。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+	// ...
+
+  // 更新相同的后置节点
+	// ...
+  
+  if (j > oldEnd && j <= newEnd) {
+		// ...
+  } else if (j <= oldEnd) {
+ 		// ...
+  } else {
+    // else 分支处理非理想情况
+    // 新的一组子节点中剩余未处理节点的数量
+    const count = newEnd - j + 1
+    const source = new Array(count)
+    source.fill(-1)
+   
+    // oldStart 和 newStart 分别为起始索引，即 j
+    const oldStart = j
+    const newStart = j
+    // 构建索引表
+    const keyIndx = {}
+    for (let i = newStart; i <= newEnd; i++) {
+      keyIndx[newChildren[i].key] = i
+    }
+    // 遍历旧的一组子节点剩余未处理的节点为止
+    for (let i = oldStart; i <= oldEnd; i++) {
+      const oldVNode = oldChildren[i]
+
+      // 通过索引表快速找到新的一组子节点中具有相同 key 值的节点位置
+      const k = keyIndx[oldVNode.key]
+
+      if (typeof k !== 'undefined') {
+        newVNode = newChildren[k]
+        // 调用 patch 进行更新
+        patch(oldVNode, newVNode, container)
+        // 最后填充 source 数组
+        source[k - newStart] = i
+      } else {
+        // 没找到
+        unmount(oldVNode)
+      }
+    }
+  }
+}
+```
+
+在上面这段代码中，同样使用了两个 for 循环，不过它们不再是嵌套的关系，所以能够将代码的时间复杂度降至 `O(n)` 。其中，第一个 for 循环用来构建索引表，索引表存储的是节点的 key 值与节点在新的一组子节点中位置索引之间的映射，第二个 for 循环用来遍历旧的一组子节点。可以看到，我们拿旧子节点的 key 值去索引表 `keyIndex` 中查找该节点在新的一组子节点中的位置，并将查找结果存储到变量 k 中。如果 k 存在，说明该节点是可复用的，所以我们调用 patch 函数进行打补丁，并填充 source 数组。否则说明该节点已经不存在与新的一组子节点中，这时我们需要调用 unmount 函数卸载它。
+
+上述流程执行完毕后，source 数组已经填充完毕了。接下来我们应该思考的是，如果判断节点是否需要移动。实际上，快速 Diff 算法判断节点是否需要移动的方法与简单 Diff 算法类似。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+	// ...
+
+  // 更新相同的后置节点
+	// ...
+  
+  if (j > oldEnd && j <= newEnd) {
+		// ...
+  } else if (j <= oldEnd) {
+ 		// ...
+  } else {
+    // else 分支处理非理想情况
+    // 新的一组子节点中剩余未处理节点的数量
+    const count = newEnd - j + 1
+    const source = new Array(count)
+    source.fill(-1)
+    
+    // oldStart 和 newStart 分别为起始索引，即 j
+    const oldStart = j
+    const newStart = j
+    // 新增两个变量，moved 和 pos
+    let moved = false
+    let pos = 0
+    // 构建索引表
+    const keyIndx = {}
+    for (let i = newStart; i <= newEnd; i++) {
+      keyIndx[newChildren[i].key] = i
+    }
+    // 遍历旧的一组子节点剩余未处理的节点为止
+    for (let i = oldStart; i <= oldEnd; i++) {
+      const oldVNode = oldChildren[i]
+
+      // 通过索引表快速找到新的一组子节点中具有相同 key 值的节点位置
+      const k = keyIndx[oldVNode.key]
+
+      if (typeof k !== 'undefined') {
+        newVNode = newChildren[k]
+        // 调用 patch 进行更新
+        patch(oldVNode, newVNode, container)
+        // 最后填充 source 数组
+        source[k - newStart] = i
+        // 判断节点是否需要移动
+        if (k < pos) {
+          moved = true
+        } else {
+          pos = k
+        }
+      } else {
+        // 没找到
+        unmount(oldVNode)
+      }
+    }
+  }
+}
+```
+
+我们新增了两个变量 `moved` 和 `pos`。前者的初始值为 false，代表是否需要移动节点，后者的初始值为 0，代表遍历旧的一组子节点中的过程中遇到的最大索引值 k。我们在编写简单 diff 算法时提到，如果在便利过程中遇到的索引值呈现递增趋势，则说明不需要移动节点，反之则需要。所以在第二个 for 循环内，我们通过比较变量 k 与变量 `pos` 的值来判断是否需要移动节点。
+
+除此之外，我们还需要一个数量标识，代表已经更新过的节点数量。我们知道，已经更新过的节点数量应该小于新的一组子节点中需要更新的节点数量。一旦前者超过后者，则说明有多余的节点，我们应该将它们卸载。
+
+```js
+function patchKeyedChildren (n1, n2, container) {
+  const newChildren = n2.children
+  const oldChildren = n1.children
+  
+  // 更新相同的前置节点
+	// ...
+
+  // 更新相同的后置节点
+	// ...
+  
+  if (j > oldEnd && j <= newEnd) {
+		// ...
+  } else if (j <= oldEnd) {
+ 		// ...
+  } else {
+    // else 分支处理非理想情况
+    // 新的一组子节点中剩余未处理节点的数量
+    const count = newEnd - j + 1
+    const source = new Array(count)
+    source.fill(-1)
+    
+    // oldStart 和 newStart 分别为起始索引，即 j
+    const oldStart = j
+    const newStart = j
+    // 新增两个变量，moved 和 pos
+    let moved = false
+    let pos = 0
+    // 构建索引表
+    const keyIndx = {}
+    for (let i = newStart; i <= newEnd; i++) {
+      keyIndx[newChildren[i].key] = i
+    }
+    // 新增 patched 变量，代表更新过的节点数量
+    let patched = 0
+    // 遍历旧的一组子节点剩余未处理的节点为止
+    for (let i = oldStart; i <= oldEnd; i++) {
+      const oldVNode = oldChildren[i]
+
+      if (patched <= count) {
+        // 通过索引表快速找到新的一组子节点中具有相同 key 值的节点位置
+        const k = keyIndx[oldVNode.key]
+
+        if (typeof k !== 'undefined') {
+          newVNode = newChildren[k]
+          // 调用 patch 进行更新
+          patch(oldVNode, newVNode, container)
+          // 每更新一个节点，将 patched 变量 +1
+          patched++
+          // 最后填充 source 数组
+          source[k - newStart] = i
+          // 判断节点是否需要移动
+          if (k < pos) {
+            moved = true
+          } else {
+            pos = k
+          }
+        } else {
+          // 没找到
+          unmount(oldVNode)
+        }
+      } else {
+        // 如果更新过的节点数量大于需要更新的节点数量，卸载多余的节点
+        unmount(oldVNode)
+      }
+    }
+  }
+}
+```
+
+这上面这段代码中，我们增加了 `patched` 变量，其初始值为 0，代表更新过的节点数量。接着，在第二个 for 循环中增加了判断 `patched < count`，如果此条件成立，则正常执行更新，并且每次更新后都让变量 `patched` 自增；否则说明剩余的节点都是多余的，于是调用 `unmount` 函数将它们卸载。
+
+现在，我们通过判断变量 `moved` 的值，已经能够知道是否需要移动节点，同时也处理了很多边界条件。接下来我们讨论如何移动节点。
+
+#### 如何移动元素
+
+我们已经实现了两个目标：
 

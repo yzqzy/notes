@@ -56,6 +56,51 @@ function patchKeyedChildren (n1, n2, container) {
     const count = newEnd - j + 1
     const source = new Array(count)
     source.fill(-1)
+
+    // oldStart 和 newStart 分别为起始索引，即 j
+    const oldStart = j
+    const newStart = j
+    // 新增两个变量，moved 和 pos
+    let moved = false
+    let pos = 0
+    // 构建索引表
+    const keyIndx = {}
+    for (let i = newStart; i <= newEnd; i++) {
+      keyIndx[newChildren[i].key] = i
+    }
+    // 新增 patched 变量，代表更新过的节点数量
+    let patched = 0
+    // 遍历旧的一组子节点剩余未处理的节点为止
+    for (let i = oldStart; i <= oldEnd; i++) {
+      const oldVNode = oldChildren[i]
+
+      if (patched <= count) {
+        // 通过索引表快速找到新的一组子节点中具有相同 key 值的节点位置
+        const k = keyIndx[oldVNode.key]
+
+        if (typeof k !== 'undefined') {
+          newVNode = newChildren[k]
+          // 调用 patch 进行更新
+          patch(oldVNode, newVNode, container)
+          // 每更新一个节点，将 patched 变量 +1
+          patched++
+          // 最后填充 source 数组
+          source[k - newStart] = i
+          // 判断节点是否需要移动
+          if (k < pos) {
+            moved = true
+          } else {
+            pos = k
+          }
+        } else {
+          // 没找到
+          unmount(oldVNode)
+        }
+      } else {
+        // 如果更新过的节点数量大于需要更新的节点数量，卸载多余的节点
+        unmount(oldVNode)
+      }
+    }
   }
 }
 
