@@ -10690,4 +10690,32 @@ function getSequence(arr: number[]): number[] {
 
 快速 Diff 算法在实测中性能最优。它借鉴了文本 Diff 的预处理思路，先处理新旧两组子节点中相同的前置节点和相同的后置节点。当前置节点和后置节点全部处理完毕后，如果无法简单地通过挂载新节点或者卸载已经不存在的节点来完成更新，则需要根据节点的索引关系，构造出一个最长递增子序列。最长递增子序列所指向的节点即为不需要移动的节点。
 
-如果你想调试本节案例，可以查看 notes 仓库中
+如果你想调试本篇文档案例，可以查看 [notes ](https://github.com/yw0525/notes/tree/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/renderer)中仓库中的 `books/Vue.js设计与实现/renderer` 文件夹，运行 `index.html` 文件即可。
+
+`books/Vue.js设计与实现` 目录结构如下：
+
+```
+.
+├── browser
+├── effect
+├── reactivity
+├── ref
+├── renderer
+├── utils
+├── vue
+│   ├── computed.js
+│   ├── effect.js
+│   ├── reactive.js
+│   ├── ref.js
+│   ├── renderer.js
+│   ├── util.js
+│   └── watch.js
+└── README.md
+```
+
+## 四、组件化
+
+TODO
+
+## 五、编译器
+
