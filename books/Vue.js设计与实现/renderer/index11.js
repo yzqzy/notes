@@ -60,7 +60,10 @@ const renderer = createRenderer({
   }
 })
 
-const Fragment = Symbol()
+// diff 问题案例
+// 单纯算法比较是没问题的，有问题的是第一次 diff 的时候，key 为 3 的节点的真实 DOM 已经移动到顶部，
+// 然后最后新增 key 为 4 的节点时，取的是 oStartVNode 作为锚点，这时 oStartVNode 指向的就是 key 为 3 的节点。所以就插入到顶部了。
+// vue2 会判断新增节点的下一个节点，如果下一个节点的真实 DOM 为空，那么就会父级追加节点。否则就会插入到下一个节点的前面。总之最后一个节点都是空。并不是执行 patch 逻辑。
 const vnode1 = {
   type: 'div',
   children: [
