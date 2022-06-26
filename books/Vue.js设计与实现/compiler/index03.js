@@ -25,7 +25,7 @@ const ast = parse('<div><p>Vue</p><p>Template</p></div>')
 
 function traverseNode(ast, context) {
   // 当前节点，ast 本身就是 Root 节点
-  const currentNode = ast
+  context.currentNode = ast
 
   // context.nodeTransforms 是一个数组，其中每一个元素都是一个函数
   const transforms = context.nodeTransforms || []
@@ -38,6 +38,11 @@ function traverseNode(ast, context) {
   const children = currentNode.children
   if (children) {
     children.forEach(cur => {
+      // 设置父节点
+      context.parent - context.currentNode
+      // 设置位置索引
+      context.childIndex = i
+      // 递归调用
       traverseNode(cur, context)
     })
   }
@@ -51,13 +56,33 @@ function transformElement(node) {
 }
 function transdormText(node) {
   if (node.type === 'Text') {
+    // 如果当前转换的节点是文本节点，调用 replaceNode 函数将其替换为元素节点
     node.content = node.content.repeat(2)
+    content.replaceNode({
+      type: 'Element',
+      tag: 'span'
+    })
   }
 }
 
 function transform(ast) {
   // 在 transform 函数内创建 context 对象
   const context = {
+    // 增加 currentNode，存储当前正在转换的节点
+    currentNode: null,
+    // 增加 childIndex，存储当前节点在父节点的 children 中的位置索引
+    childIndex: 0,
+    // 增加 parent，存储当前转换节点的父节点
+    parent: null,
+    // 用于替换节点的函数，接收新节点作为参数
+    replaceNode(node) {
+      // 为了替换节点，我们需要修改 AST
+      // 找到当前节点在父节点的 children 中的位置：context.childIndex
+      // 然后使用新节点替换即可
+      context.parent.children[context.childIndex] = node
+      // 由于当前新节点已经被新节点替换掉，因此我们需要将 currentNode 更新为新节点
+      context.currentNode = node
+    },
     // 注册 nodeTransforms 数组
     nodeTransforms: [
       transformElement,

@@ -11503,3 +11503,126 @@ Root:
 
 ##### 转换上下文与节点操作
 
+在上下文中，我们将转换函数注册到 `context.nodeTransform` 数组中。那么，为什么要使用 `context` 对象呢？直接定义一个数组不可以吗？你可能或多或少听说过关于 Context（上下文）的内容，我们可以把 Context 看做程序在某个范围内的 “全局变量” 。实际上，上下文并不是一个具象的东西，它依赖于具体的使用场景。
+
+* 编写 React 应用时，我们可以使用 `React.createContext` 函数创建一个上下文对象，该上下文对象允许我们将数据通过组件树一层层地传递下去。无论组件树的层级有多深，只要组件在这颗组件树的层级内，那么它就能够访问上下文对象中的数据。
+* 编写 Vue.js 应用时，我们也可以通过 `provied/inject` 等能力，向一整颗组件树提供数据。这些数据可以称之为上下文。
+* 编写 Koa 应用时，中间件接收的 context 参数也是一种上下文对象，所有中间件都可以通过 context 来访问相同的数据。
+
+通过上面三个例子我们能够认识到，上下文对象其实就是程序在某个范围内的 “全局变量”。换句话来说，我们也可以把全局变量看作是全局上下文。
+
+回到我们讲解的 `context.nodeTransform` 数组，这里的 context 可以看做 AST 转换函数过程中的上下文数据。所有 AST 转换函数都可以通过 context 来共享数据。上下文对象中通常会维护程序的当前状态，例如当前转换的节点是哪一个？当先转换的节点的父节点是谁？甚至当前节点是父节点的第几个子节点？等等。这些信息对于编写复杂的转换函数非常有用。所以，接下来我们要做的就是构造上下文信息。
+
+```js
+function transform(ast) {
+  // 在 transform 函数内创建 context 对象
+  const context = {
+    // 增加 currentNode，存储当前正在转换的节点
+    currentNode: null,
+    // 增加 childIndex，存储当前节点在父节点的 children 中的位置索引
+    childIndex: 0,
+    // 增加 parent，存储当前转换节点的父节点
+    parent: null,
+    // 注册 nodeTransforms 数组
+    nodeTransforms: [
+      transformElement,
+      transdormText
+    ]
+  }
+
+  // 调用 traverseNode 完成转换
+  traverseNode(ast, context)
+  // 打印 AST 信息
+  dump(ast)
+}
+```
+
+在上段代码中，我们为转换上下文对象扩展了一些重要信息。
+
+* `currentNode`：用来存储当前正在转换的节点。
+* `childIndex`：用来存储当前节点在父节点的 children 中的位置索引。
+* `parent`：用来存储当前转换节点的父节点。
+
+紧接着，我们需要在合适的地方设置转换上下文对象中的数据。
+
+```js
+function traverseNode(ast, context) {
+  // 当前节点，ast 本身就是 Root 节点
+  context.currentNode = ast
+
+  // context.nodeTransforms 是一个数组，其中每一个元素都是一个函数
+  const transforms = context.nodeTransforms || []
+  transforms.forEach(cur => {
+    // 将当前节点 currentNode 和 context 都传递给 nodeTransforms 中注册的回调函数
+    cur(currentNode, context)
+  })
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = currentNode.children
+  if (children) {
+    children.forEach(cur => {
+      // 设置父节点
+      context.parent - context.currentNode
+      // 设置位置索引
+      context.childIndex = i
+      // 递归调用
+      traverseNode(cur, context)
+    })
+  }
+}
+```
+
+观察上端代码，其关键点在于，在递归地调用 `traverseNode` 函数进行子节点的转换之前，我们必须设置 `context.parent` 和 `context.childIndex` 的值，这样才能保证在接下来的递归转换中，context 对象所存储的信息是正确的。
+
+有了上下文数据后，我们就可以实现节点替换功能。在对 AST 进行转换的时候，我们可能希望把某些节点替换为其他类型的节点。例如，将所有文本节点替换成一个元素节点。为了完成节点替换，我们需要在上下文对象中添加 `context.replaceNode`　函数。该函数接收新的 AST 节点作为参数，并使用新节点替换当前正在转换的节点。
+
+```js
+function transform(ast) {
+  // 在 transform 函数内创建 context 对象
+  const context = {
+    // 增加 currentNode，存储当前正在转换的节点
+    currentNode: null,
+    // 增加 childIndex，存储当前节点在父节点的 children 中的位置索引
+    childIndex: 0,
+    // 增加 parent，存储当前转换节点的父节点
+    parent: null,
+    // 用于替换节点的函数，接收新节点作为参数
+    replaceNode(node) {
+      // 为了替换节点，我们需要修改 AST
+      // 找到当前节点在父节点的 children 中的位置：context.childIndex
+      // 然后使用新节点替换即可
+      context.parent.children[context.childIndex] = node
+      // 由于当前新节点已经被新节点替换掉，因此我们需要将 currentNode 更新为新节点
+      context.currentNode = node
+    },
+    // 注册 nodeTransforms 数组
+    nodeTransforms: [
+      transformElement,
+      transdormText
+    ]
+  }
+
+  // 调用 traverseNode 完成转换
+  traverseNode(ast, context)
+  // 打印 AST 信息
+  dump(ast)
+}
+```
+
+观察上面的代码中的 `replaceNode` 函数。在该函数内，我们首先通过 `context.childIndex` 属性取得当前节点的位置索引，然后通过 `context.parent.children` 取得当前节点所在集合，最后配合使用 `context.childrenIndex` 与 `context.parent.children` 即可完成节点替换。另外，由于当前节点已经替换为新节点，所以我们应该使用新节点更新 `context.currentNode` 属性的值。
+
+接下来，我们就可以在转换函数中使用 `replaceNode` 函数对 AST 中的节点进行替换了。
+
+```js
+function transdormText(node) {
+  if (node.type === 'Text') {
+    // 如果当前转换的节点是文本节点，调用 replaceNode 函数将其替换为元素节点
+    node.content = node.content.repeat(2)
+    content.replaceNode({
+      type: 'Element',
+      tag: 'span'
+    })
+  }
+}
+```
+
