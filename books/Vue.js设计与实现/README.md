@@ -10760,5 +10760,323 @@ Vue.js 模板编译器的目标代码其实就是渲染函数。详细来说，V
 AST 是 abstract syntax tree 的首字母缩写，即抽象语法树。所谓模板 AST，其实就是用来描述模板的抽象语法树。举个例子，假设我们有如下模板。
 
 ```vue
+<div>
+  <h1 v-if="ok">
+    Vue Template
+  </h1>
+</div>
 ```
+
+这段代码会被编译为如下所示的 AST：
+
+```js
+const ast = [
+  // 逻辑根节点
+  type: 'Root',
+  children: [
+    // div 标签节点
+    {
+      type: 'Element',
+      tag: 'div',
+      children: [
+        // h1 标签节点
+        {
+          type: 'Element',
+          tag: 'h1',
+          props: [
+            // v-if 指令界定啊
+            {
+              type: 'Directive', // 类型为 Directive 代表指令
+              name: 'if', // 指令名称为 if，不带有前缀 v0
+              exp: {
+                // 表达式节点
+                type: 'Expression',
+                content: 'ok'
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+]
+```
+
+可以看到，AST 其实就是一个具有层级结构的对象。模板 AST 具有与模板同构的嵌套结构。每一棵 AST 都有一个逻辑上的根节点，其类型为 Root。模板中真正的根节点则作为 Root 节点的 children 存在。观察上面的 AST，我们可以得出如下结论：
+
+* 不同类型的节点是通过 type 属性进行区分的。例如标签节点的 type 值为 `Element`。
+* 标签节点的子节点存储在其 children 数组中。
+* 标签节点的属性节点和指令节点会存储在 props 数组中。
+* 不同类型的节点会使用不同对象属性进行描述。例如指令节点拥有 name 属性，用来表达指令的名称，而表达式节点拥有的 content 属性，用来描述表达式的内容。
+
+我们可以通过封装 parse 函数来完成对模板的词法分析和语法分析，得到模板 AST。
+
+<img src="./images/compiler03.png" />
+
+我们可以用下面的代码来表达模板解析的过程：
+
+```js
+const template = `
+  <div>
+    <h1 v-if="ok">Vue Template</h1>
+  </div>
+`
+
+const templateAST = parse(template)
+```
+
+可以看到，parse 函数接收字符串模板作为参数，并将解析后得到的 AST 作为返回值返回。
+
+有了模板 AST 后，我们就可以对其进行语义分析，并对模板 AST 进行转换。什么是语义分析呢？举几个例子：
+
+* 检查 v-else 指令是否存在相符的 v-if 指令。
+* 分析属性值是否是静态的，是否是常量等。
+* 插槽是否还会引起上层作用域的变量。
+* ......
+
+在语义分析的基础上，我们即可得到模板 AST。接着，我们还需要将模板 AST 转换为 JavaScript AST。因为 Vue.js 模板编译器的最终目标是生成渲染函数，而渲染函数本质上是 JavaScript 代码，所以我们需要将模板 AST 转换成用于描述渲染函数的 JavaScript AST。
+
+我们可以封装 transform 函数来完成模板 AST 到 JavaScript AST 的转换工作。
+
+<img src="./images/compiler04.png" />
+
+同样，我们也可以用下面的代码来表示：
+
+```js
+const templateAST = parse(template)
+const jsAST = transform(templateAST)
+```
+
+我们会在后面详细介绍 JavaScript AST 的结构。
+
+有了 JavaScript AST 后，我们就可以根据它生成渲染函数了，这一步可以通过封装 generate 函数来完成。
+
+<img src="./images/compiler05.png" />
+
+我们也可以用下面的代码来表达代码生成的过程：
+
+```js
+const templateAST = parse(template)
+const jsAST = transform(templateAST)
+const code = generate(jsAST)
+```
+
+上面这段代码中，generate 函数会将渲染函数的代码以字符串的形式返回，并存储在常量中。下图是将 Vue.js 模板编译为渲染函数的完整流程。
+
+<img src="./images/compiler06.png" />
+
+#### parser 的实现原理与状态机
+
+上一节中，我们讲解了 Vue.js 模板编译器的基本结构和工作流程，它主要有三个部分组成：
+
+* 用来将模板字符串解析为模板 AST 的解析器（parser）；
+* 用来将模板 AST 转换为 JavaScript AST 的转换器（transformer）；
+* 用来根据 JavaScript AST 生成渲染函数代码的生成器（generator）。
+
+本节，我们将详细讨论解析器 parser 的实现原理。
+
+解析器的入参是字符串模板，解析器会逐个读取字符串模板中的字符串，并根据一定的规则将整个字符串切割为一个个 Token。这里的 Token 可以视作词法记号，后续我们将使用 Token 一词来代表词法记号进行讲解。举例来说，假设有这样一段模板：
+
+```vue
+<p>Vue</p>
+```
+
+解析器会把这段字符串模板切割为三个 Token。
+
+* 开始标签：`<p>`。
+* 文本标签：Vue。
+* 结束标签：`</p>`。
+
+那么，解析器是如何对模板进行切割的呢？依据什么规则？这里就不得不提到有限状态自动机。千万不要被整个名词吓到，它理解起来并不难。所谓 “有限状态”，就是指有限个状态，而 "自动机" 意味着随着字符的输入，解析器会自动地在不同状态间迁移。拿上面的模板来说，当我们分析这段模板字符串时，parse 函数会逐个读取字符，状态机会有一个初始状态，我们记为 “初始状态 1”。下图给出了状态迁移的过程。
+
+<img src="./images/compiler07.png" />
+
+我们用自然语言来描述图中给出的状态迁移过程。
+
+* 状态机始于 “初始状态 1”；
+* 在 “初始状态 1” 下，读取模板的第一个字符 < ，状态机会进入下一个状态，即 “标签开始状态 2” ;
+* 在 “标签开始状态 2” 下，读取下一个字符 p。由于字符 p 是字母，所以状态机会进入 “标签名称状态 3”；
+* 在 “标签名称状态 3” 下，读取下一个字符 >，此时状态机会从 “标签名称状态 3” 迁移回 “初始状态 1”，并记录 “标签名称状态” 下产生的标签名称 P；
+* 在 “初始状态 1” 下，独起下一个字符 w，此时状态机会进入 “文本状态 4”；
+* 在 “文本状态 3” 下，继续读取后续字符，知道遇到字符 < 时，状态机回再次进入 “标签开始状态 2”，并记录在 “文本状态 4” 下产生的文本内容，即字符串 “Vue”；
+* 在 “标签开始状态 2” 下，读取下一个字符 /，状态机会进入 “结束标签状态 5”；
+* 在 “结束标签状态 5” 下，读取下一个字符 p，状态机会进入 “结束标签名称状态 6”；
+* 在 “结束标签名称状态 6” 下，读取最后一个字符 >，它是结束标签的闭合标签，于是状态机迁移回 “初始状态 1”，并记录在 “结束标签名称状态 6” 下生成的结束标签名称。
+
+经过这样一系列的状态迁移过程之后，我们最终就能够得到相应的 Token 了。在上图中，有的圆圈是单线的，有的圆圈是双线的。双线代表此时状态机是一个合法的 Token。
+
+另外，图中中给出的状态机并不严谨。实际上，解析 HTML 并构造 Token 的过程是有规范可循的。在 **WHATWG** 发布的关于浏览器解析 HTML 的规范中，详细阐述了状态迁移。下图截取了该规范中定义的在 “初始状态” 下状态机的状态迁移过程。
+
+> https://html.spec.whatwg.org/multipage/parsing.html#data-state
+>
+> WHATWG（*Web Hypertext Application Technology Working GroupWeb* 超文本应用程序技术工作组）是一个负责[维护与开发 Web 标准](https://spec.whatwg.org/)的社区，他们的工作成果包括 [DOM](https://developer.mozilla.org/zh-CN/docs/Glossary/DOM)、Fetch API，和 [HTML](https://developer.mozilla.org/zh-CN/docs/Glossary/HTML)。一些来自 Apple、Mozilla，和 Opera 的员工在 2004 年建立了 WHATWG。
+
+<img src="./images/compiler08.png" />
+
+可以看到，在 “初始状态” （Data State）下，当遇到字符 < 时，状态机会迁移到 `tag open state`，即 “标签开始状态“ 。如果遇到字符 < 以外的字符，规范中也有对应的说明，应该让状态机迁移到怎样的状态。不过 Vue.js 的模板作为一个 DSL，并非必须遵守该规范。但 Vue.js 的模板毕竟是类 HTML 的实现，因此，也需要尽可能按照规范来做，不会有什么坏处。更重要的一点是，规范中已经定义了非常详细的状态迁移过程，这对于我们编写解析器非常有帮助。
+
+按照有限状态自动机的状态迁移过程，我们可以很容易地编写对应的代码实现。因此，有限状态自动机可以帮助我们完成对模板的**标记化（tokenized）**，最终我们将得到一系列 Token。图中描述的状态机的实现如下：
+
+```js
+// 定义状态机的状态
+const State = {
+  initial: 1, // 初始状态
+  tagOpen: 2, // 标签开始状态
+  tagName: 3, // 标签名称状态
+  text: 4, // 文本状态
+  tagEnd: 5, // 结束标签状态
+  tagEndName: 6, // 结束标签名称状态
+}
+
+// 辅助函数，用于判断是否是字母
+function isAlpha(char) {
+  return char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z'
+}
+
+// 接收模板字符串作为参数，并将模板切割为 Token 返回
+function tokenzie(str) {
+  // 状态机的当前状态：初始状态
+  let currentState = State.initial
+  // 缓存字符
+  const chars = []
+  // 生成的 Token 会存储到 tokens 数组中，并作为函数的返回值返回
+  const tokens = []
+  
+  // 使用 while 循环开启自动机
+  while (str) {
+    const char = str[0]
+
+    // switch 匹配当前状态
+    switch (currentState) {
+      case State.initial: // 初始状态
+        // 遇到字符 <
+        if (char === '<') {
+          // 1. 状态机切换到标签开启状态
+          currentState = State.tagOpen
+          // 2. 消费字符 <
+          str = str.slice(1)
+        } else if (isAlpha(char)) {
+          // 1. 遇到字母，切换到文本状态
+          currentState = State.text
+          // 2. 将当前字母缓存到 chars 数组
+          chars.push(char)
+          // 3. 消费当前字符
+          str = str.slice(1)
+        }
+        break;
+      case State.tagOpen: // 标签开始状态
+        if (isAlpha(char)) {
+          // 1. 遇到字母，切换到标签名称状态
+          currentState = State.tagName
+          // 2. 将当前字符缓存到 chars 数组
+          chars.push(char)
+          // 3. 消费当前字符
+          str = str.slice(1)
+        } else if (char === '/') {
+          // 1. 遇到字符 /，切换到结束标签状态
+          currentState = State.tagEnd
+          // 2. 消费字符 /
+          str = str.slice(1)
+        }
+        break;
+      case State.tagName: // 标签名称状态
+        if (isAlpha(char)) {
+          // 1. 遇到字母，保持状态不变，缓存当前字符到 chars 数组
+          chars.push(char)
+          // 2. 消费当前字符
+          str = str.slice(1)
+        } else if (char === '>') {
+          // 1. 遇到字符 >，切换到初始状态
+          currentState = State.initial
+          // 2. 创建一个标签 Token，并添加到 tokens 数组中
+          // tip：cahrs 数组中缓存的字符就是标签名称
+          tokens.push({
+            type: 'tag',
+            name: chars.join('')
+          })
+          // 3. 清空已消费的 chars 数组
+          chars.length = 0
+          // 4. 消费当前字符 >
+          str = str.slice(1)
+        }
+        break;
+      case State.text: // 文本状态
+        if (isAlpha(char)) {
+          // 1. 遇到字母，保持状态不变，缓存当前字符到 chars 数组
+          chars.push(char)
+          // 2. 消费当前字符
+          str = str.slice(1)
+        } else if (char === '<') {
+          // 1. 遇到字符 < ，切换到标签开始状态
+          currentState = State.tagOpen
+          // 2. 从文本状态 --> 标签开始状态，此时应该创建文本 Token，并添加到 Token 数组中
+          // tip: cahrs 数组中缓存的字符就是文本内容
+          tokens.push({
+            type: 'text',
+            content: chars.join('')
+          })
+          // 3. 清空已消费的 chars 数组
+          chars.length = 0
+          // 4. 消费当前字符 <
+          str = str.slice(1)
+        }
+        break;
+      case State.tagEnd: // 标签结束状态
+        if (isAlpha(char)) {
+          // 1. 遇到字母，切换到结束标签名称状态
+          currentState = State.tagEndName
+          // 2. 将当前字符缓存到 chars 数组
+          chars.push(char)
+          // 3. 消费当前字符
+          str = str.slice(1)
+        }
+        break;
+      case State.tagEndName: // 结束表明名称状态
+        if (isAlpha(char)) {
+          // 1. 遇到字母，保持状态不变，缓存当前字符到 chars 数组
+          chars.push(char)
+          // 2. 消费当前字符
+          str = str.slice(1)
+        } else if (char === '>') {
+          // 1. 遇到字母 >，切换到初始状态
+          currentState = State.initial
+          // 2. 从结束标签名称状态 --> 初始状态，应该保存结束标签名称 Token
+          // tip: cahrs 数组中缓存的字符就是标签名称
+          tokens.push({
+            type: 'tagEnd',
+            name: chars.join('')
+          })
+          // 3. 清空已消费的 chars 数组
+          chars.length = 0
+          // 4. 消费当前字符 >
+          str = str.slice(1)
+        }
+        break;
+    }
+  }
+
+  // 返回 tokens
+  return tokens
+}
+```
+
+这段代码看上去比较冗长，可优化的点非常多。这段代码高度还原了图中展示的状态机，配合代码中的注释会更容易理解。
+
+使用上面给出的 `tokenzie` 函数来解析模板 `<p>Vue</p>` ，我们将得到三个 Token。
+
+```js
+const tokens = tokenzie(`<p>Vue</p>`)
+
+// [
+//   { type: 'tag', name: 'p' },
+//   { type: 'text', content: 'Vue' },
+//   { type: 'tagEnd', name: 'p' }
+// ]
+```
+
+现在，你已经明白了状态机的工作原理，以及模板编译器将模板字符串切割为一个个 Token 的过程。以上述例子来说，我们并非总是需要所有 Token。例如，在解析模板的过程中，结束标签 Token 可以省略。这时，我们就可以调整 `tokenzie` 函数的代码，并选择性地忽略结束标签 Token。当然，有时我们也可能需要更多的 Token，这都取决于具体的需求，然后据此可以灵活地调整代码实现。
+
+总而言之，通过有限自动机，我们能够将模板解析为一个个 Token，进而可以用它们构建一颗 AST。在具体构建 AST 之前，我们需要思考能够简化 `tokenzie` 函数的代码。实际上，我们可以通过正则表达式来精简 `tokenzie` 函数的代码。上文之所以没有从最开始就采用正则表达式来实现，是因为**正则表达式的本质就是有限自动机**。当你编写正则表达式时，其实就是在编写有限自动机。
+
+#### 构造 AST
 
