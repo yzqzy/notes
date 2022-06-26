@@ -196,3 +196,7 @@ const tokens = tokenzie(`<p>Vue</p>`)
 //   { type: 'text', content: 'Vue' },
 //   { type: 'tagEnd', name: 'p' }
 // ]
+
+module.exports = {
+  tokenzie
+}

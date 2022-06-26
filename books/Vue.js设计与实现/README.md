@@ -10717,7 +10717,7 @@ function getSequence(arr: number[]): number[] {
 
 ## 五、编译器
 
-### 编译器核心技术概览
+### 核心技术概览
 
 编译技术是一门庞大的学科，我们无法用几个章节对其做完善的讲解。但不同用途的编译器或编译技术的难度可能相差很大，对知识的掌握要求也会相差很多。如果你要实现例如 C、JavaScript 这类 **通用用途语言（general purpose language）**，那么就需要掌握较多编译技术只是。例如，理解上下文无关文法，使用巴科斯范式（`BNF`），扩展巴克斯范式（`EBNF`）书写语法规则，完成语法推导，理解和消除左递归，递归下降算法，甚至类型系统方面的知识等。但作为前端工程师，我们应用编译技术的场景通常是：表格、报表中的自定义公式计算器，设计一种领域特定语言（`DSL`）等。其中，实现公式计算器甚至只涉及编译前端技术，而领域特定语言根据其具体使用场景和目标平台的不同，难度会有所不同。Vue.js 的模板和 JSX 都属于领域特定语言，它们的实现难度属于中、低级别，只要掌握基本的编译技术理论即可实现这些功能。
 
@@ -10865,7 +10865,7 @@ const code = generate(jsAST)
 
 <img src="./images/compiler06.png" />
 
-#### parser 的实现原理与状态机
+#### parser 的实现原理
 
 上一节中，我们讲解了 Vue.js 模板编译器的基本结构和工作流程，它主要有三个部分组成：
 
@@ -11079,4 +11079,199 @@ const tokens = tokenzie(`<p>Vue</p>`)
 总而言之，通过有限自动机，我们能够将模板解析为一个个 Token，进而可以用它们构建一颗 AST。在具体构建 AST 之前，我们需要思考能够简化 `tokenzie` 函数的代码。实际上，我们可以通过正则表达式来精简 `tokenzie` 函数的代码。上文之所以没有从最开始就采用正则表达式来实现，是因为**正则表达式的本质就是有限自动机**。当你编写正则表达式时，其实就是在编写有限自动机。
 
 #### 构造 AST
+
+实际上，不同用途的编译器之间可能会存在非常大的差异。它们唯一的共同点是，都会将源代码转换成目标代码。但如果深入细节即可发现，不同编译器之间的实现思路甚至可能完全不同，其中就包括 AST 的构造方式。对于通用用途语言（GPL）来说，例如 JavaScript 这样的脚本语言，想要为其构造 AST，较常用的一种算法叫做递归下降算法，这里面需要解决 GPL 层面才会遇到的很多问题，例如最基本的运算符优先级问题。然而，对于像 Vue.js 模板这种的 DSL 来说，首先可以确定的一点是，它不具备远算符，所以也就没有所谓的运算符优先级问题。DSL 和 GPL 的区别在于，GPL 是图灵完备的，我们可以使用 GPL 来实现 DSL。而 DSL 不要求图灵完备，它只需要满足场景下的特定用途即可。
+
+为 Vue.js 的模板构造 AST 是一件很简单的事。HTML 是一种标记语言，它的格式非常固定，标签元素之间天然嵌套，形成父子关系。因此，一颗用于描述 HTML 的 AST 将拥有与 HTML 标签非常相似的树形结构。举例来说，假设有如下模板：
+
+```html
+<div>
+  <p>Vue</p>
+  <p>Template</p>
+</div>
+```
+
+在上面这段模板中，最外层的根结点是 div 标签，它有两个 p 标签作为子节点。同时，这两个 p 标签都具有一个文本节点作为子节点。我们可以将这段模板对应的 AST 设计为：
+
+```js
+const ast = {
+  type: 'Root',
+  children: [
+    {
+      type: 'Element',
+      tag: 'div',
+      children: [
+        {
+          type: 'Element',
+          tag: 'p',
+          children: [
+            {
+              type: 'Text',
+              content: 'Vue'
+            }
+          ]
+        }
+      ]
+    },
+    {
+      type: 'Element',
+      tag: 'div',
+      children: [
+        {
+          type: 'Element',
+          tag: 'p',
+          children: [
+            {
+              type: 'Text',
+              content: 'Template'
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+可以看到，AST 在结构上与模板是 “同构” 的，它们都具有树形结构。
+
+<img src="./images/compiler09.png" />
+
+了解了 AST 的结构，接下来我们的任务是，使用程序根据模板解析后生成的 Token 构造出这样一颗 AST。首先，我们使用上一节的 `tokenize` 函数将开头给出的模板进行标记化。解析这段模板得到的 tokens 如下所示。
+
+```js
+const tokens = tokenzie(`<div><p>Vue</p><p>Template</p></div>`)
+```
+
+执行上段代码，我们将得到如下 tokens：
+
+```js
+[
+  { type: 'tag', name: 'div' },          // div 开始标签节点
+  { type: 'tag', name: 'p' },            // p 开始标签节点
+  { type: 'text', content: 'Vue' },      // 文本节点
+  { type: 'tagEnd', name: 'p' },         // p 结束标签节点
+  { type: 'tag', name: 'p' },            // p 开始标签节点
+  { type: 'text', content: 'Template' }, // 文本节点
+  { type: 'tagEnd', name: 'p' },         // p 结束标签节点
+  { type: 'tagEnd', name: 'div' }        // div 结束标签节点
+]
+```
+
+根据 Token 列表构建 AST 的过程，其实就是对 Token 列表进行扫描的过程。从第一个 Token 开始，顺序地扫描整个 Token 列表，直到列表中的所有 Token 处理完毕。在这个过程中，我们需要维护一个栈 `elementStack` ，这个栈将用于维护元素间的父子关系。每遇到一个开始标签节点，我们就构造一个 Element 类型的 AST 节点，并将其亚茹栈中。类似地，每当遇到一个结束标签节点，我们就将当前栈顶的节点弹出。这样，栈顶的节点将始终充当父节点的角色。扫描过程中遇到的所有节点，都会作为当前栈顶节点的子节点，并添加到栈顶节点的 children 属性下。
+
+下图给出在扫描 Token 列表之前，Token 列表、父级元素栈和 AST 三者的状态。
+
+<img src="./images/compiler10.png" />
+
+在图中，左侧的事 Token 列表，我们将会按照从上到下的顺序扫描 Token 列表，中间和右侧分别展示了栈 `elementStack` 的状态和 AST 的状态。可以看到，它们最初都只有 Root 根节点。
+
+接着，我们对 Token 列表进行扫描。首先，扫描到第一个 Token，即 "开始标签(div)"。
+
+<img src="./images/compiler11.png" />
+
+由于当前扫描到的 Token 是一个开始标签节点，因此我们创建一个类型为 `Element` 的 AST 节点 `Element(div)` ，然后将该节点作为当前栈顶节点的子节点。由于当前栈顶节是 Root 根节点，所以我们将新建的 `Element(div)` 节点作为 Root 根节点的子节点添加到 AST 中，最后将新建的 `Element(div)` 节点压入 `elementStack` 栈。
+
+接着，我们扫描下一个 Token。
+
+扫描到的第二个 Token 也是一个开始标签节点，因此我们创建一个类型为 `Element` 的 AST 节点 `Element(p)`，然后将该节点作为当前栈顶节点的子节点。由于当前栈顶节点为 `Element(div)` 节点，所以我们将新建的 `Element(div)` 节点的子节点添加到 AST 中，最后将新建的 `Element(p)` 节点压入 `elementStack` 栈。
+
+<img src="./images/compiler12.png" />
+
+接着，我们扫描下一个 Token。扫描到的第三个 Token 是一个文本节点，于是我们创建一个类型为 `Text` 的 AST 节点 `Text(vue)` ，于是我们创建一个类型为 `Text` 的 AST 节点 `Text(Vue)`，然后将该节点作为当前栈顶节点的子节点。当前栈顶节点为 `Element(p)` 节点，所以我们将新建的 `Text(p)` 节点作为 `Element(p)` 节点的子节点添加到 AST 中。
+
+<img src="./images/compiler13.png" />
+
+接着，扫描下一个 Token。此时扫描的 Token 是一个结束标签，所以我们需要将栈顶的 `Element(p)` 节点从 `elementStack` 栈中弹出。
+
+<img src="./images/compiler14.png" />
+
+接着，扫描下一个 Token。此时扫描到的是一个开始标签，我们为它新建一个 AST 节点 `Element(p)` ，并将其作为当前栈顶节点 `Element(div)` 的子节点。最后，将 `Element(p)` 压入 `elementStack` 栈中，使其成为新的栈顶节点。
+
+<img src="./images/compiler15.png" />
+
+接着，开始扫描下一个 Token。此时扫描到的 Token 是一个文本节点，所以只需要为其创建一个相应的 AST 节点 `Text(Template)` 即可，然乎将其作为当前栈顶节点 `Element(p)` 的子节点添加到 AST 中。
+
+<img src="./images/compiler16.png" />
+
+接着，扫描下一个 Token。此时扫描到的 Token 是一个结束标签，于是我们将当前的栈顶节点 `Element(p)` 从 `elementStack` 栈中弹出。
+
+<img src="./images/compiler17.png" />
+
+接着，扫描下一个 Token。此时，扫描到最后一个 Token，它是一个 div 结束标签，所以我们需要再次将当前栈顶节点 `Element(div)` 从 `elementStack` 栈中弹出。至此，所有 Token 都被扫描完毕，AST 构建完成。
+
+<img src="./images/compiler18.png" />
+
+下图是最终状态。在所有 Token 扫描完毕后，一颗 AST 就构建完成了。
+
+<img src="./images/compiler19.png" />
+
+扫描 Token 列表并构建 AST 的具体实现如下：
+
+```js
+// parse 函数接收模板作为参数
+function parse(str) {
+  // 首先对模板进行标记化，得到 tokens
+  const tokens = tokenzie(str)
+  //  创建 Root 根节点
+  const root = {
+    type: 'Root',
+    children: []
+  }
+  // 创建 elementStack 栈
+  const elementStack = [root]
+
+  // 开启 while 循环扫描 tokens
+  while (tokens.length) {
+    // 获取当前栈顶节点作为父节点 parent
+    const parent = elementStack[elementStack.length - 1]
+    // 当前扫描的 Token
+    const t = tokens[0]
+
+    switch (t.type) {
+      case 'tag':
+        // 如果当前 Token 是开始标签，创建 Element 类型的 AST 节点
+        const elementNode = {
+          type: 'Element',
+          tag: t.name,
+          children: []
+        }
+        // 将其添加到父级节点的 children 中
+        parent.children.push(elementNode)
+        // 将当前节点压入栈
+        elementStack.push(elementNode)
+        break;
+      case 'text':
+        // 如果当前 Token 是文本，创建 Text 类型的 AST 节点
+        const textNode = {
+          type: 'Text',
+          content: t.content
+        }
+        // 将其添加到父节点的 children 中
+        parent.children.push(textNode)
+        break;
+      case 'tagEnd':
+        // 遇到结束标签，将栈顶节点弹出
+        elementStack.pop()
+        break;
+    }
+
+    // 消费已扫描过的 token
+    tokens.shift()
+  }
+
+  // 返回 ast
+  return root
+}
+```
+
+上述代码很好地还原了上文中介绍的构建 AST 的思路，我们可以使用如下代码对其进行测试。
+
+```js
+const ast = parse('<div><p>Vue</p><p>Template</p></div>')
+```
+
+运行这句代码，我们会得到与本节开头给出的 AST 一致的结果。不过当前的实现仍然存在很多问题。这些问题我们会在后面详细讲解。
+
+#### AST 转换与插件化结构
 
