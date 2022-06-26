@@ -10717,7 +10717,7 @@ function getSequence(arr: number[]): number[] {
 
 ## 五、编译器
 
-### 核心技术概览
+### 编译器核心技术概览
 
 编译技术是一门庞大的学科，我们无法用几个章节对其做完善的讲解。但不同用途的编译器或编译技术的难度可能相差很大，对知识的掌握要求也会相差很多。如果你要实现例如 C、JavaScript 这类 **通用用途语言（general purpose language）**，那么就需要掌握较多编译技术只是。例如，理解上下文无关文法，使用巴科斯范式（`BNF`），扩展巴克斯范式（`EBNF`）书写语法规则，完成语法推导，理解和消除左递归，递归下降算法，甚至类型系统方面的知识等。但作为前端工程师，我们应用编译技术的场景通常是：表格、报表中的自定义公式计算器，设计一种领域特定语言（`DSL`）等。其中，实现公式计算器甚至只涉及编译前端技术，而领域特定语言根据其具体使用场景和目标平台的不同，难度会有所不同。Vue.js 的模板和 JSX 都属于领域特定语言，它们的实现难度属于中、低级别，只要掌握基本的编译技术理论即可实现这些功能。
 
@@ -11274,4 +11274,232 @@ const ast = parse('<div><p>Vue</p><p>Template</p></div>')
 运行这句代码，我们会得到与本节开头给出的 AST 一致的结果。不过当前的实现仍然存在很多问题。这些问题我们会在后面详细讲解。
 
 #### AST 转换与插件化结构
+
+上一节中，我们完成了 AST 的构造。本节，我们将讨论关于 AST 的转换。所谓 AST 的转换。指的是对 AST 进行一系列操作，将其转换为新的 AST 的过程。新的 AST 可以是原语言或原 DSL 的描述，也可以是其他语言或其他 DSL 的描述。例如，我们可以对模板 AST 进行操作，将其转换为 JavaScript AST。转换后的 AST 可以用于代码生成。这其实就是 Vue.js 的模板编译器将模板编译为渲染函数的过程。
+
+<img src="./images/compiler20.png" />
+
+其中 transform 函数就是用来完成 AST 转换工作的。
+
+##### 节点的访问
+
+为了对 AST 进行转换，我们需要能访问 AST 的每一个节点，这样才有机会对特定节点进行修改、替换、删除等操作。由于 AST 是树形数据结构，所以我们需要编写一个深度优先的遍历算法，实现对 AST 中节点的访问。不过，在开始编写之前，我们有必要编写一个 `dump`  工具函数，用来打印当前 AST 中节点的信息。
+
+```js
+const { parse } = require('../vue/compiler')
+
+function dump(node, indent = 0) {
+  // 节点类型
+  const type = node.type
+  // 节点的描述，如果是根节点，则没有描述
+  // 如果是 Element 类型的节点，则使用 node.tag 作为节点的描述
+  // 如果是 Text 类型的节点，则使用 ndoe.content 作为节点的描述
+  const desc = node.type === 'Root'
+    ? ''
+    : node.type === 'Element' 
+      ? node.tag
+      : node.content
+  // 打印节点的类型和描述信息
+  console.log(`${'-'.repeat(indent)}${type}: ${desc}`)
+  // 递归地打印子节点
+  if (node.children) {
+    node.children.forEach(n => dump(n, indent + 2))
+  } 
+}
+
+const ast = parse('<div><p>Vue</p><p>Template</p></div>')
+
+dump(ast)
+```
+
+我们还是使用上一节的例子，使用 dump 函数输出结果。
+
+```js
+Root: 
+--Element: div
+----Element: p
+------Text: Vue
+----Element: p
+------Text: Template
+```
+
+可以看到，dump 函数可以以清晰的格式来展示 AST 中的节点。在后续编写 AST 的转换代码是，我们可以使用 dump 函数展示转换后的结果。
+
+接下来，我们将着手实现对 AST 中节点的访问。访问节点的方式是，从 AST 根节点开始，进行深度优先遍历。
+
+```js
+function traverseNode(ast) {
+  // 当前节点，ast 本身就是 Root 节点
+  const currentNode = ast
+
+  console.log(currentNode)
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = currentNode.children
+  if (children) {
+    children.forEach(item => {
+      traverseNode(item)
+    })
+  }
+}
+```
+
+`traverseNode` 函数以深度优先的方式遍历 AST，它的实现与 dump 函数几乎相同。有了 `traverseNode` 函数后，我们就可以实现对 AST 中节点的访问。例如，我们可以实现一个转换功能，将 AST 中所有 `p` 标签转换为 `h1` 标签。
+
+```js
+function traverseNode(ast) {
+  // 当前节点，ast 本身就是 Root 节点
+  const currentNode = ast
+
+  // 当节点进行操作
+  if (currentNode.type === 'Element' && currentNode.tag === 'p') {
+    // 将所有 p 标签转换为 h1 标签
+    currentNode.tag = 'h1'
+  }
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = currentNode.children
+  if (children) {
+    children.forEach(item => {
+      traverseNode(item)
+    })
+  }
+}
+```
+
+在上面这段代码中，我们通过检查当前节点的 type 属性和 tag 属性，来确保被操作的节点是 p 标签。接着，我们将符合条件的节点的 tag 属性值修改为 `h1` ，从而实现 `p` 标签到 `h1` 标签的转换。我们可以使用 dump 函数打印转换后的 AST 的信息。
+
+```js
+function transform(ast) {
+  // 调用 traverseNode 完成转换
+  traverseNode(ast)
+  // 打印 AST 信息
+  dump(ast)
+}
+```
+
+运行上段代码，我们可以得到如下输出：
+
+```js
+Root: 
+--Element: div
+----Element: h1
+------Text: Vue
+----Element: h1
+------Text: Template
+```
+
+可以看到，所有 `p` 标签都已经变成 `h1` 标签。
+
+我们还可以对 AST 进行其他转换。例如，实现一个转换，将文本节点的内容重复两次。
+
+```js
+function traverseNode(ast) {
+  // 当前节点，ast 本身就是 Root 节点
+  const currentNode = ast
+
+  // 当节点进行操作
+  if (currentNode.type === 'Element' && currentNode.tag === 'p') {
+    // 将所有 p 标签转换为 h1 标签
+    currentNode.tag = 'h1'
+  }
+  if (currentNode.type === 'Text') {
+    currentNode.content = currentNode.content.repeat(2)
+  }
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = currentNode.children
+  if (children) {
+    children.forEach(item => {
+      traverseNode(item)
+    })
+  }
+}
+```
+
+最终，我们可以得到如下输出：
+
+```js
+Root: 
+--Element: div
+----Element: h1
+------Text: VueVue
+----Element: h1
+------Text: TemplateTemplate
+```
+
+可以看到，文本节点的内容全部重复了两次。
+
+不过，随着功能的不断增加，`traverseNode` 函数将会变得越来越 “臃肿”。这时，我们很自然地想到，能够最节点的操作和访问进行解耦呢？答案是 “当前可以”，我们可以使用回调函数的机制实现解耦。
+
+```js
+function traverseNode(ast, context) {
+  // 当前节点，ast 本身就是 Root 节点
+  const currentNode = ast
+
+  // context.nodeTransforms 是一个数组，其中每一个元素都是一个函数
+  const transforms = context.nodeTransforms || []
+  transforms.forEach(cur => {
+    // 将当前节点 currentNode 和 context 都传递给 nodeTransforms 中注册的回调函数
+    cur(currentNode, context)
+  })
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = currentNode.children
+  if (children) {
+    children.forEach(cur => {
+      traverseNode(cur, context)
+    })
+  }
+}
+```
+
+在上面这段代码中，我们首先为 `traverseNode` 函数增加了第二个参数 context。关于 context 的内容，后面会详细介绍。接着，我们把回调函数存储到 `context.nodeTransforms` 数组中，然后遍历该数组，并逐个调用注册在其中的回调函数。最后，我们将当前节点 `currentNode` 和 `context` 对象分别作为参数传递给回调函数。
+
+有了修改后的 `traverseNode` 函数，我们就可以这样使用它。
+
+```js
+function transformElement(node) {
+  if (node.type === 'Element' && node.tag === 'p') {
+    // 将所有 p 标签转换为 h1 标签
+    node.tag = 'h1'
+  }
+}
+function transdormText(node) {
+  if (node.type === 'Text') {
+    node.content = node.content.repeat(2)
+  }
+}
+
+function transform(ast) {
+  // 在 transform 函数内创建 context 对象
+  const context = {
+    // 注册 nodeTransforms 数组
+    nodeTransforms: [
+      transformElement,
+      transdormText
+    ]
+  }
+
+  // 调用 traverseNode 完成转换
+  traverseNode(ast, context)
+  // 打印 AST 信息
+  dump(ast)
+}
+```
+
+运行上述代码，可以实现和改造前同样的打印效果：
+
+```js
+Root: 
+--Element: div
+----Element: h1
+------Text: VueVue
+----Element: h1
+------Text: TemplateTemplate
+```
+
+可以看到，解耦之后，节点操作封装到 `transformElment` 和 `transformText` 这样的独立函数中。我们甚至可以编写任意多个类似的转换函数，只需要将它们注册到 `context.nodeTransforms` 中即可。这样就解决了功能增加所导致的 `traverseNode` 函数 “臃肿” 的问题。
+
+##### 转换上下文与节点操作
 
