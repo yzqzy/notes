@@ -313,5 +313,332 @@ console.log(levenshteinDistance('duck', 'dark')) // 2
 console.log(levenshteinDistance('thanks', 'thank')) // 1
 ```
 
+## 最大公约数
+
+计算两个或多个数字之间的最大公约数。
+
+* 内部 `_gcd` 函数使用递归；
+* 当 y 等于 0 时，返回 x；
+* 否则返回 `gcd(y, x % y)`。
+
+```js
+const gcd = (...arr: number[]): number => {
+  const _gcd = (x: number, y: number) => (!y ? x : gcd(y, x % y))
+  return [...arr].reduce((a: number, b: number) => _gcd(a, b))
+}
+
+console.log(gcd(8, 36)) // 4
+console.log(gcd(...[12, 8, 32])) // 4
+console.log(gcd(...[3, 9, 27])) // 3
+```
+
+## 等比数列
+
+初始化一个包含指定范围内（start-end）数字的数组，使用 step 作为步长。如果步长为 1，抛出错误信息。
+
+* 使用 `Array.form`，`Math.log()` 和 `Math.floor()` 创建数组，并使用 `Array.prototype.map()` 填充它；
+* start 的默认值是 1，step 的默认值是 2。
+
+```js
+const geometricProgression = (end: number, start = 1, step = 2) => 
+  Array.from({
+    length: Math.floor(Math.log(end / start) / Math.log(step)) + 1
+  }).map((_, i) => start * step ** i)
+
+console.log(geometricProgression(256)) // [1, 2, 4, 8, 16, 32, 64, 128, 256]
+console.log(geometricProgression(256, 3)) // [3, 6, 12, 24, 48, 96, 192]
+console.log(geometricProgression(256, 1, 4)) // [1, 4, 16, 64, 256]
+```
+
+## 幂集
+
+> 所谓幂集（Power Set）， 就是原集合中所有的子集（包括全集和空集）构成的集族。
+
+返回给定数组的幂集。
+
+* 使用 `Array.prototype.reduce()` 结合 `Array.prototype.map()` 迭代所有元素，并将它们组合成包含所有组合的数组。
+
+```js
+const powerset = (arr: number[]): number[][] => 
+  arr.reduce((a: number[][], v: number) => a.concat(a.map((r: number[]) => r.concat(v))), [[]])
+
+console.log(powerset([1, 2])) // [[], [1], [2], [1, 2]]
+```
+
 ## 二分查找
 
+使用二分搜索算法在排序的数组中找到给定元素的索引。
+
+* 初始化左右搜索边界条件 l 和 r，分别初始化为 0 和数组的长度；
+* 使用 `Math.floor()` 将其分成两半，然后使用 while 循环逐步缩小搜索范围；
+* 如果找到元素返回元素索引，否则返回 `-1` 。
+
+```js
+const binarySearch = (arr: number[], item: number) => {
+  let l = 0
+  let r = arr.length - 1
+
+  while (l <= r) {
+    const mid = Math.floor((l + r) / 2)
+    const guess = arr[mid]
+
+    if (guess === item) return mid
+
+    if (guess > item) {
+      r = mid - 1
+    } else {
+      l = mid + 1
+    }
+  }
+
+  return -1
+}
+
+console.log(binarySearch([1, 2, 3, 4, 5], 1)) // 0
+console.log(binarySearch([1, 2, 3, 4, 5], 5)) // 4
+console.log(binarySearch([1, 2, 3, 4, 5], 6)) // -1
+```
+
+## 插入排序
+
+使用插入排序算法对数字数组进行排序。
+
+* 使用 `Array.prototype.reduce()` 迭代数组；
+* 使用 `Array.prototype.some()` 迭代 `acc`，直到找到正确的位置；
+* 使用 `Array.prototyoe.splice()` 将当前元素插入到累加器中。
+
+```js
+const insertionSort = (arr: number[]) =>
+  arr.reduce((acc: number[], x: number) => {
+    if (!acc.length) return [x]
+    acc.some((y, j) => {
+      if (x < y) {
+        acc.splice(j, 0, x)
+        return true
+      }
+      if (x > y && j === acc.length - 1) {
+        acc.splice(j + 1, 0, x)
+        return true
+      }
+      return false
+    })
+    return acc
+  }, [])
+
+console.log(insertionSort([6, 3, 4, 1])) // [1, 3, 4, 6]
+console.log(insertionSort([1, 3, 4, 1])) // [1, 1, 3, 4]
+```
+
+## 冒泡排序
+
+使用冒泡排序算法对数字数组进行排序。
+
+* 声明一个变量 `swapped`，该变量表明在当前迭代期间是否交换过值；
+* 使用拓展运算符克隆原数组；
+* 使用 for 循环迭代数组；
+* 使用嵌套循环在，如果满足条件，交换元素并设置 `swapped` 的值为 true；
+* 如果首次迭代后，`swapped` 仍为 false，返回克隆数组。
+
+```js
+const bubbleSort = (arr: number[]) => {
+  let swapped = false
+  const a = [...arr]
+  
+  for (let i = 1; i < a.length; i++) {
+    swapped = false
+
+    for (let j = 0; j < a.length - i; j++) {
+      if (a[j + 1] < a[j]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]]
+        swapped = true
+      }
+    }
+
+    if (!swapped) return a
+  }
+
+  return a
+}
+
+console.log(bubbleSort([1, 1, 8, 7, 3])) // [ 1, 1, 3, 7, 8 ]
+console.log(bubbleSort([2, 1, 4, 3])) // [1, 2, 3, 4]
+```
+
+## 归并排序
+
+使用归并排序算法对数字数组进行排序。
+
+* 使用递归；
+* 如果数组长度小于 2，直接返回数组；
+* 使用 `Math.floor()` 计算数组的中间位置；
+* 使用 `Array.prototype.slice()` 分割数组并递归调用 `mergeSort()` 方法；
+* 最后，使用 `Array,form()` 和 `Array.prototype.shift()` 合并子序列。
+
+```js
+const mergeSort = (arr: number[]): number[] => {
+  if (arr.length < 2) return arr
+  const mid = Math.floor(arr.length / 2)
+  const l = mergeSort(arr.slice(0, mid))
+  const r = mergeSort(arr.slice(mid, arr.length))
+  return Array.from({ length: l.length + r.length }, () => {
+    if (!l.length) {
+      return r.shift()
+    } else if (!r.length) {
+      return l.shift()
+    } else {
+      return l[0] > r[0] ? r.shift() : l.shift()
+    }
+  }) as number[]
+}
+
+console.log(mergeSort([5, 1, 4, 2, 3])) // [1, 2, 3, 4, 5]
+```
+
+## 选择排序
+
+使用选择排序算法对数字数字进行排序。
+
+* 使用扩展运算符克隆数组；
+* 使用 for 循环迭代数组；
+* 使用 `Array.prototype.slice()` 和 `Array.prototype.reduce()` 在当前索引的右侧子数组中找到最小元素的索引。如果有必要，执行交换。
+
+```js
+const selectionSort = (arr: number[]) => {
+  const a = [...arr]
+
+  for (let i = 0; i < a.length; i++) {
+    const min = a
+      .slice(i + 1)
+      .reduce((acc, val, j) => (val < a[acc] ? j + i + 1 : acc), i)
+    if (min !== i) [a[i], a[min]] = [a[min], a[i]]
+  }
+
+  return a
+}
+
+console.log(selectionSort([5, 1, 4, 2, 3])) // [1, 2, 3, 4, 5]
+```
+
+## 快速排序
+
+使用快速排序算法对数字数组进行排序。
+
+* 使用递归；
+
+* 使用扩展运算符克隆数组；
+
+* 如果数组长度小于 2，直接返回克隆后的数组；
+
+* 使用 `Math.floor()` 计算数组的中间位置；
+
+* 使用 `Array.prototype.reduce()` 和 `Array.prototype.push()` 将数组分割为两个子数组。
+
+  第一个包含小于等于中间位置的元素，第二个包含其他元素。
+
+* 递归调用 `quickSort()` 创建子数组。
+
+```js
+const quickSort = (arr: number[]): number[] => {
+  const a = [...arr]
+
+  if (a.length < 2) return a
+
+  const pivotIndex = Math.floor(arr.length / 2)
+  const pivot = a[pivotIndex]
+
+  const [lo, hi] = a.reduce(
+    (acc: number[][], val: number, i: number) => {
+      if (val < pivot || (val === pivot && i != pivotIndex)) {
+        acc[0].push(val)
+      } else if (val > pivot) {
+        acc[1].push(val)
+      }
+      return acc
+    },
+    [[], []]
+  )
+
+  return [...quickSort(lo), pivot, ...quickSort(hi)]
+}
+
+console.log(quickSort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
+```
+
+## 桶排序
+
+使用桶排序算法对数字数组进行排序。
+
+* 使用 `Math.min()` , `Math.max()` 和拓展运算符找到给定数组的最小值和最大值；
+* 使用 `Array.from()` 和 `Math.floor()` 创建适当数量的存储桶（空数组）；
+* 使用 `Array.prototype.forEach()` 用数组中的适当元素填充每个存储桶；
+* 使用 `Array.prototype.reduce()` 对每个存储桶进行排序并合并到结果上。
+
+```js
+const bucketSort = (arr: number[], size = 5) => {
+  const min = Math.min(...arr)
+  const max = Math.max(...arr)
+  const buckets = Array.from(
+    { length: Math.floor((max - min) / size) + 1 },
+    () => []
+  ) as number[][]
+
+  arr.forEach(val => {
+    buckets[Math.floor((val - min) / size)].push(val)
+  })
+  
+  console.log(buckets)
+  return buckets.reduce((acc, b) => [...acc, ...b.sort((a, b) => a - b)], [])
+}
+
+console.log(bucketSort([6, 3, 4, 1])) // [1, 3, 4, 6]
+console.log(bucketSort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
+```
+
+## 堆排序
+
+使用堆排序算法对数字数组进行排序。
+
+* 使用递归；
+* 使用拓展运算符克隆原数组；
+* 声明闭包来声明变量 l 和 函数 `heapify`；
+* 使用 for 循环和 `Math.floor()` 与 `heapify` 结合使用，创建大顶堆；
+* 使用 for 循环缩小范围，并根据需要使用 `heapify` 和数值交换对克隆后的数组进行排序。
+
+```js
+const heapsort = (arr: number[]) => {
+  const a = [...arr]
+  let l = a.length
+
+  const heapify = (a: number[], i: number) => {
+    const left = 2 * i + 1
+    const right = 2 * i + 2
+
+    let max = i
+
+    if (left < l && a[left] > a[max]) max = left
+    if (right < l && a[right] > a[max]) max = right
+    if (max !== i) {
+      [a[max], a[i]] = [a[i], a[max]]
+      heapify(a, max)
+    }
+  }
+
+  let i
+
+  for (i = Math.floor(l / 2); i >= 0; i -= 1) heapify(a, i)
+  for (i = a.length - 1; i > 0; i--) {
+    [a[0], a[i]] = [a[i], a[0]]
+    l--
+    heapify(a, 0)
+  }
+
+  return a
+}
+
+console.log(heapsort([6, 3, 4, 1])) // [1, 3, 4, 6]
+console.log(heapsort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
+```
+
+## 欧几里得距离
+
+TODO

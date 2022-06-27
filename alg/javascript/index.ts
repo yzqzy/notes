@@ -185,3 +185,227 @@ const levenshteinDistance = (s: string, t: string) => {
 console.log(levenshteinDistance('duck', 'dark')) // 2
 console.log(levenshteinDistance('thanks', 'thank')) // 1
 
+console.log('---------------------')
+
+
+const binarySearch = (arr: number[], item: number) => {
+  let l = 0
+  let r = arr.length - 1
+
+  while (l <= r) {
+    const mid = Math.floor((l + r) / 2)
+    const guess = arr[mid]
+
+    if (guess === item) return mid
+
+    if (guess > item) {
+      r = mid - 1
+    } else {
+      l = mid + 1
+    }
+  }
+
+  return -1
+}
+
+console.log(binarySearch([1, 2, 3, 4, 5], 1)) // 0
+console.log(binarySearch([1, 2, 3, 4, 5], 5)) // 4
+console.log(binarySearch([1, 2, 3, 4, 5], 6)) // -1
+
+console.log('---------------------')
+
+const geometricProgression = (end: number, start = 1, step = 2) => 
+  Array.from({
+    length: Math.floor(Math.log(end / start) / Math.log(step)) + 1
+  }).map((_, i) => start * step ** i)
+
+console.log(geometricProgression(256)) // [1, 2, 4, 8, 16, 32, 64, 128, 256]
+console.log(geometricProgression(256, 3)) // [3, 6, 12, 24, 48, 96, 192]
+console.log(geometricProgression(256, 1, 4)) // [1, 4, 16, 64, 256]
+
+console.log('---------------------')
+
+const insertionSort = (arr: number[]) =>
+  arr.reduce((acc: number[], x: number) => {
+    if (!acc.length) return [x]
+    acc.some((y, j) => {
+      if (x < y) {
+        acc.splice(j, 0, x)
+        return true
+      }
+      if (x > y && j === acc.length - 1) {
+        acc.splice(j + 1, 0, x)
+        return true
+      }
+      return false
+    })
+    return acc
+  }, [])
+
+console.log(insertionSort([6, 3, 4, 1])) // [1, 3, 4, 6]
+console.log(insertionSort([1, 3, 4, 1])) // [1, 1, 3, 4]
+
+console.log('---------------------')
+
+const gcd = (...arr: number[]): number => {
+  const _gcd = (x: number, y: number) => (!y ? x : gcd(y, x % y))
+  return [...arr].reduce((a: number, b: number) => _gcd(a, b))
+}
+
+console.log(gcd(8, 36)) // 4
+console.log(gcd(...[12, 8, 32])) // 4
+console.log(gcd(...[3, 9, 27])) // 3
+
+console.log('---------------------')
+
+const bubbleSort = (arr: number[]) => {
+  let swapped = false
+  const a = [...arr]
+  
+  for (let i = 1; i < a.length; i++) {
+    swapped = false
+
+    for (let j = 0; j < a.length - i; j++) {
+      if (a[j + 1] < a[j]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]]
+        swapped = true
+      }
+    }
+
+    if (!swapped) return a
+  }
+
+  return a
+}
+
+console.log(bubbleSort([1, 1, 8, 7, 3])) // [ 1, 1, 3, 7, 8 ]
+console.log(bubbleSort([2, 1, 4, 3])) // [1, 2, 3, 4]
+
+console.log('---------------------')
+
+const powerset = (arr: number[]): number[][] => 
+  arr.reduce((a: number[][], v: number) => a.concat(a.map((r: number[]) => r.concat(v))), [[]])
+
+console.log(powerset([1, 2])) // [[], [1], [2], [1, 2]]
+
+console.log('---------------------')
+
+const mergeSort = (arr: number[]): number[] => {
+  if (arr.length < 2) return arr
+  const mid = Math.floor(arr.length / 2)
+  const l = mergeSort(arr.slice(0, mid))
+  const r = mergeSort(arr.slice(mid, arr.length))
+  return Array.from({ length: l.length + r.length }, () => {
+    if (!l.length) {
+      return r.shift()
+    } else if (!r.length) {
+      return l.shift()
+    } else {
+      return l[0] > r[0] ? r.shift() : l.shift()
+    }
+  }) as number[]
+}
+
+console.log(mergeSort([5, 1, 4, 2, 3])) // [1, 2, 3, 4, 5]
+
+console.log('---------------------')
+
+const selectionSort = (arr: number[]) => {
+  const a = [...arr]
+
+  for (let i = 0; i < a.length; i++) {
+    const min = a
+      .slice(i + 1)
+      .reduce((acc, val, j) => (val < a[acc] ? j + i + 1 : acc), i)
+    if (min !== i) [a[i], a[min]] = [a[min], a[i]]
+  }
+
+  return a
+}
+
+console.log(selectionSort([5, 1, 4, 2, 3])) // [1, 2, 3, 4, 5]
+
+console.log('---------------------')
+
+const quickSort = (arr: number[]): number[] => {
+  const a = [...arr]
+
+  if (a.length < 2) return a
+
+  const pivotIndex = Math.floor(arr.length / 2)
+  const pivot = a[pivotIndex]
+
+  const [lo, hi] = a.reduce(
+    (acc: number[][], val: number, i: number) => {
+      if (val < pivot || (val === pivot && i != pivotIndex)) {
+        acc[0].push(val)
+      } else if (val > pivot) {
+        acc[1].push(val)
+      }
+      return acc
+    },
+    [[], []]
+  )
+
+  return [...quickSort(lo), pivot, ...quickSort(hi)]
+}
+
+console.log(quickSort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
+
+console.log('---------------------')
+
+const bucketSort = (arr: number[], size = 5) => {
+  const min = Math.min(...arr)
+  const max = Math.max(...arr)
+  const buckets = Array.from(
+    { length: Math.floor((max - min) / size) + 1 },
+    () => []
+  ) as number[][]
+
+  arr.forEach(val => {
+    buckets[Math.floor((val - min) / size)].push(val)
+  })
+  
+  console.log(buckets)
+  return buckets.reduce((acc, b) => [...acc, ...b.sort((a, b) => a - b)], [])
+}
+
+console.log(bucketSort([6, 3, 4, 1])) // [1, 3, 4, 6]
+console.log(bucketSort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
+
+console.log('---------------------')
+
+const heapsort = (arr: number[]) => {
+  const a = [...arr]
+  let l = a.length
+
+  const heapify = (a: number[], i: number) => {
+    const left = 2 * i + 1
+    const right = 2 * i + 2
+
+    let max = i
+
+    if (left < l && a[left] > a[max]) max = left
+    if (right < l && a[right] > a[max]) max = right
+    if (max !== i) {
+      [a[max], a[i]] = [a[i], a[max]]
+      heapify(a, max)
+    }
+  }
+
+  let i
+
+  for (i = Math.floor(l / 2); i >= 0; i -= 1) heapify(a, i)
+  for (i = a.length - 1; i > 0; i--) {
+    [a[0], a[i]] = [a[i], a[0]]
+    l--
+    heapify(a, 0)
+  }
+
+  return a
+}
+
+console.log(heapsort([6, 3, 4, 1])) // [1, 3, 4, 6]
+console.log(heapsort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
+
+console.log('---------------------')
