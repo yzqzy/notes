@@ -11554,15 +11554,15 @@ function traverseNode(ast, context) {
   const transforms = context.nodeTransforms || []
   transforms.forEach(cur => {
     // 将当前节点 currentNode 和 context 都传递给 nodeTransforms 中注册的回调函数
-    cur(currentNode, context)
+    cur(context.currentNode, context)
   })
 
   // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
-  const children = currentNode.children
+  const children = context.currentNode.children
   if (children) {
-    children.forEach(cur => {
+    children.forEach((cur, i) => {
       // 设置父节点
-      context.parent - context.currentNode
+      context.parent = context.currentNode
       // 设置位置索引
       context.childIndex = i
       // 递归调用
@@ -11614,11 +11614,10 @@ function transform(ast) {
 接下来，我们就可以在转换函数中使用 `replaceNode` 函数对 AST 中的节点进行替换了。
 
 ```js
-function transdormText(node) {
+function transdormText(node, context) {
   if (node.type === 'Text') {
     // 如果当前转换的节点是文本节点，调用 replaceNode 函数将其替换为元素节点
-    node.content = node.content.repeat(2)
-    content.replaceNode({
+    context.replaceNode({
       type: 'Element',
       tag: 'span'
     })
@@ -11626,3 +11625,285 @@ function transdormText(node) {
 }
 ```
 
+如上面的代码所示，转换函数的第二个参数就是 `context` 对象，所以我们可以在转换函数内部使用该对象上的任意属性或函数。在 `transformText` 函数内部，首先检查当前转换的节点是否是文本节点，如果是，则调用 `context.replaceNode` 函数将其替换为新的 `span` 标签节点。
+
+```js
+const ast = parse('<div><p>Vue</p><p>Template</p></div>')
+transform(ast)
+```
+
+运行上段代码，转换前后的结果分别是。
+
+```js
+// 转换前
+Root: 
+--Element: div
+----Element: h1
+------Text: VueVue
+----Element: h1
+------Text: TemplateTemplate
+
+// 转换后
+Root: 
+--Element: div
+----Element: h1
+------Element: span
+----Element: h1
+------Element: span
+```
+
+可以看到，转换后的 AST 中的文本节点全部变为 `span`标签节点了。
+
+处理替换节点，有时我们还希望移除当前访问的节点。我们可以通过实现 `context.removeNode` 函数来达到目的。
+
+```js
+function transform(ast) {
+  // 在 transform 函数内创建 context 对象
+  const context = {
+    // 增加 currentNode，存储当前正在转换的节点
+    currentNode: null,
+    // 增加 childIndex，存储当前节点在父节点的 children 中的位置索引
+    childIndex: 0,
+    // 增加 parent，存储当前转换节点的父节点
+    parent: null,
+    // 用于替换节点的函数，接收新节点作为参数
+    replaceNode(node) {
+      // 为了替换节点，我们需要修改 AST
+      // 找到当前节点在父节点的 children 中的位置：context.childIndex
+      // 然后使用新节点替换即可
+      context.parent.children[context.childIndex] = node
+      // 由于当前新节点已经被新节点替换掉，因此我们需要将 currentNode 更新为新节点
+      context.currentNode = node
+    },
+    // 删除当前节点
+    removeNode() {
+      if (context.parent) {
+        // 调用数组的 splice 方法，根据当前节点的索引删除当前节点
+        context.parent.children.splice(context.childIndex, 1)
+        // 将 context.currentNode 置空
+        context.currentNode = null
+      }
+    },
+    // 注册 nodeTransforms 数组
+    nodeTransforms: [
+      transformElement,
+      transdormText
+    ]
+  }
+
+  // 调用 traverseNode 完成转换
+  traverseNode(ast, context)
+  // 打印 AST 信息
+  dump(ast)
+}
+```
+
+移除当前访问的节点也非常简单，只需要取得其位置索引 `context.childIndex`，再调用数组的 `splice` 方法将其从所属的 `children` 列表中移除即可。另外，当节点被移除之后，不要忘记将 `context.currentNode` 的值置空。这里需要注意一点，由于当前节点已被移除，后续的转换函数将不再需要处理该节点。因此，我们需要对 `traveseNode` 函数做一些调整。
+
+```js
+function traverseNode(ast, context) {
+  // 当前节点，ast 本身就是 Root 节点
+  context.currentNode = ast
+
+  // context.nodeTransforms 是一个数组，其中每一个元素都是一个函数
+  const transforms = context.nodeTransforms || []
+  for (let i = 0; i < transforms.length; i++) {
+    // 将当前节点 currentNode 和 context 都传递给 nodeTransforms 中注册的回调函数
+    transforms[i](context.currentNode, context)
+    // 由于任何转换函数都可能移除当前节点，因此每个转换函数执行完毕后，
+    // 都应该检查当前节点是否以经被移除，如果被移除，直接返回即可
+    if (!context.currentNode) return
+  }
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = context.currentNode.children
+  if (children) {
+    children.forEach((cur, i) => {
+      // 设置父节点
+      context.parent = context.currentNode
+      // 设置位置索引
+      context.childIndex = i
+      // 递归调用
+      traverseNode(cur, context)
+    })
+  }
+}
+```
+
+在修改后的 `traverseNode` 函数中，我们增加了一行代码，用于检查 `context.currentNode` 是否存在。由于任何转换函数都可能移除当访问的节点，所以每个转换函数执行完毕后，都应该检查当前访问的节点是否已经被移除，如果检测到节点已被移除，直接返回即可，无须做后续的处理。
+
+有了 `context.removeNode` 函数之后，我们即可实现用于移除文本节点的转换函数。
+
+```js
+function transdormText(node, context) {
+  if (node.type === 'Text') {
+    // 如果是文本节点，直接调用 context.rmeoveNode 函数将其移除即可
+    context.removeNode()
+  }
+}
+```
+
+继续下面的用例：
+
+```js
+const ast = parse('<div><p>Vue</p><p>Template</p></div>')
+transform(ast)
+```
+
+转换前后输出结果是：
+
+```js
+// 转换前
+Root: 
+--Element: div
+----Element: h1
+------Text: VueVue
+----Element: h1
+------Text: TemplateTemplate
+
+// 转换后
+Root: 
+--Element: div
+----Element: h1
+----Element: h1
+```
+
+可以看到，在转换后的 AST 中，将不再有任何文本节点。
+
+##### 进入与退出
+
+在转换 AST 节点的过程中，往往需要根据其子节点的情况来决定如何对当前节点进行转换。这就要求父节点的转换操作必须等待所有子节点全部转换完毕后再执行。然而，我们目前设计的转换工作流并不支持这一能力。上文中介绍的转换工作流，是一种从根节点开始、顺序执行的工作流。
+
+<img src="./images/compiler21.png" />
+
+从图中可以看出，Root 根节点第一个被处理，节点层次越深，对它的处理将越靠后，这种顺序处理的工作流存在的问题是，当一个节点被处理时，意味着它的父节点已经被处理完毕了，并且我们无法再回头重新处理父节点。
+
+更加理想的转换工作流应该如下图所示。
+
+<img src="./images/compiler22.png" />
+
+对节点的访问分为两个阶段，即进入阶段和退出阶段。当转换函数处理进入阶段时，它会先进入父节点，再进入子节点。当转换函数出去退出阶段时，会先退出子节点，再退出父节点。这样，只要我们再退出节点阶段对当前访问的节点进行处理，就一定能保证其子节点全部处理完毕。
+
+为了实现图中所示的转换工作流，我们需要重新设计转换函数的能力。
+
+```js
+function traverseNode(ast, context) {
+  // 当前节点，ast 本身就是 Root 节点
+  context.currentNode = ast
+  // 增加退出阶段的回调函数数组
+  const exitFns = []
+
+  // context.nodeTransforms 是一个数组，其中每一个元素都是一个函数
+  const transforms = context.nodeTransforms || []
+  for (let i = 0; i < transforms.length; i++) {
+    // 转换函数可以返回另外一个函数，该函数作为退出阶段的回调函数
+    const onExit = transforms[i](context.currentNode, context)
+
+    if (onExit) {
+      // 将退出阶段的回调函数添加到 exitFns 数组中
+      exitFns.push(onExit)
+    }
+    
+    // 由于任何转换函数都可能移除当前节点，因此每个转换函数执行完毕后，
+    // 都应该检查当前节点是否以经被移除，如果被移除，直接返回即可
+    if (!context.currentNode) return
+  }
+
+  // 如果有子节点，则递归地调用 traverseNode 函数进行遍历
+  const children = context.currentNode.children
+  if (children) {
+    children.forEach((cur, i) => {
+      // 设置父节点
+      context.parent = context.currentNode
+      // 设置位置索引
+      context.childIndex = i
+      // 递归调用
+      traverseNode(cur, context)
+    })
+  }
+
+  // 节点处理的最后阶段执行缓存到 exitFns 中的回调函数
+  // tip：这里我们要反序执行
+  let i = exitFns.length
+  while (i--) {
+    exitFns[i]()
+  }
+}
+```
+
+在上面这段代码中，我们增加了一个数组 `exitFns` ，用来存储由转换函数返回的回调函数。接着，在 `traverseNode` 函数的最后，执行这些缓存在 `exitFns` 数组中的回调函数。这样就可以保证，当退出阶段的回调函数执行时，当前访问的节点的子节点已经全部处理过了。有了这些能力之后，我们在编写转换函数时，可以将转换逻辑编写在退出阶段的回调函数中，从而保证在对当前访问的阶段进行转换之前，其子节点一定全部处理完毕了。
+
+```js
+function transformElement(node) {
+  // 进入节点
+
+  // 返回一个会在退出节点执行的回调函数
+  return () => {
+    // 在这里编写退出节点的逻辑，当这里的代码运行时，当前转换的子节点一定处理完毕了
+  }
+}
+```
+
+另外还有一点需要注意，退出阶段的回调函数时反序执行的。这意味着，如果注册了多个转换函数，则它们的注册顺序将决定代码的执行结果。假设我们注册的两个转换函数分别是 `transformA` 和 `transformB`。
+
+```js
+function transform(ast) {
+  const context = {
+		// ...
+    nodeTransforms: [
+      transformA,
+      transdormB
+    ]
+  }
+
+  traverseNode(ast, context)
+  dump(ast)
+}
+```
+
+在这段代码中，转换函数 `transformA` 先于 `transformB` 被注册。这意味着，在执行转换时，`transformA` 的 “进入阶段” 会先与 `transformB` 的 “进入阶段” 执行，而 `transformA` 的 “退出阶段” 将晚于 `transformB`  的 “退出阶段” 执行：
+
+```js
+-- transformA 进入阶段执行
+---- transformB 进入阶段执行
+---- transformB 退出阶段执行
+-- transformA 退出阶段执行
+```
+
+这么设计的好处是，转换函数 `transformA` 将有机会等待 `transformB` 执行完毕后，再根据具体情况决定应该如何工作。
+
+如果将 `transformA` 与 `transformB` 的顺序调换，那么转换函数的执行顺序也将改变：
+
+```js
+-- transformB 进入阶段执行
+---- transformA 进入阶段执行
+---- transformA 退出阶段执行
+-- transformB 退出阶段执行
+```
+
+由此可见，当把转换逻辑编写在转换函数的退出阶段时，不仅能够保证所有子节点全部处理完毕，还能够保证所有后续注册的转换函数执行完毕。
+
+#### 将模板 AST 转为 JavaScript AST
+
+上一节中，我们讨论了如何对 AST 进行转换，并实现了一个基本的插件架构，即通过注册自定义的转换函数实现对 AST 的操作。本节，我们将讨论如何将模板 AST 转换为 JavaScript AST，为后续讲解代码生成做铺垫。
+
+为什么要将模板 AST 转化为 JavaScript AST？我们需要将模板编译为渲染函数。而渲染函数是由 JavaScript 代码来描述的，因此，我们需要将模板 AST 转换为用于描述渲染函数的 JavaScript AST。
+
+以上一节给出的模板为例：
+
+```vue
+<div><p>Vue</p><p>Template</p></div>
+```
+
+与这段模板等价的渲染函数是：
+
+```js
+function render() {
+  return h('div', [
+    h('p', 'Vue'),
+    h('p', 'Template')
+  ])
+}
+```
+
+上面这段渲染函数的 JavaScript 代码所对应的 JavaScript AST 就是我们的转换目标。那么，
