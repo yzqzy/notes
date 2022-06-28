@@ -11906,4 +11906,183 @@ function render() {
 }
 ```
 
-上面这段渲染函数的 JavaScript 代码所对应的 JavaScript AST 就是我们的转换目标。那么，
+上面这段渲染函数的 JavaScript 代码所对应的 JavaScript AST 就是我们的转换目标。那么，它对应的 JavaScript AST 是什么样子的呢？与模板 AST 是模板的描述一样，JavaScript AST 是 JavaScript 代码的描述。所以，本质上我们需要设计一些数据结构来描述渲染函数的代码。
+
+首先，我们观察上面这段渲染函数的代码。它是一个函数声明，所以我们首先要描述 JavaScript 中的函数声明语句。一个函数声明语句由以下几部分组成。
+
+* id：函数名称，它是一个标识符 `Identifier`；
+* params：函数的参数，它是一个数组；
+* body：函数体，由于函数体可以包含多个语句，因此它也是一个数组。
+
+为了简化问题，我们暂时不考虑箭头函数、生成器函数、async 函数等情况。根据以上信息，我们就可以设计一个基本的数据结构来描述函数声明语句。
+
+```js
+const FunctionDeclNode = {
+  type: 'FunctionDecl', // 标识该节点是函数声明
+  // 函数名称是一个标识符，标识符本身也是一个节点
+  id: {
+    type: 'Identifier',
+    name: 'render', // name 用来存储标识符的名称，在这里它就是渲染函数的名称 render
+  },
+  parmas: [], // 参数，目前渲染函数还不需要参数，所以这里是一个空数组
+  // 渲染函数的函数体只有一个语句，即 return 语句
+  body: [
+    {
+      type: 'ReturnStatement',
+      return: null // 暂时留空，后续会继续讲解
+    }
+  ]
+}
+```
+
+如上面的代码所示，我们使用一个对象来描述一个 JavaScript AST 节点。每个界节点都具有 type 字段，该字段用来代表节点的类型。对于函数声明语句来说，它的类型是 `FunctionDecl`。接着，我们使用 id 字段来存储函数的名称。函数的名称应该是一个合法的标识符，因此 id 字段本身也是一个类型为 `Identifier` 的节点。当然，我们在设计 JavaScript AST 的时候，可以根据实际需要进行调整。例如，我们完全可以将 id 字段设计为一个字符串类型的值。这样做虽然不完全符合 JavaScript 的定义，但是能够满足我们的需求。对于函数的参数，我们使用 `params` 数组来存储。目前，我们设计的渲染函数还不需要参数，因此暂时设置为空数组。最后，我们使用 body 字段来描述函数的函数体。一个函数的函数体内可以存在多个语句，所以我们使用一个数组来描述它。该数组内的每个元素都对应一条语句，对于渲染函数来说，目前它只有一个返回语句，所以我们使用一个类型为 `ReturnStatement` 的节点来描述该返回语句。
+
+介绍完函数声明语句的节点结构后，我们再来看一下渲染函数的返回值。渲染函数返回的是虚拟 DOM 节点，具体体现在 `h` 函数的调用。我们可以使用 `CallExpression` 类型的节点来描述函数调用语句。
+
+```js
+const CallExp = {
+  type: 'CallExpression',
+  // 被调用函数的名称，它是一个标识符
+  callee: {
+    type: 'Identifier',
+    name: 'h'
+  },
+  // 参数
+  arguments: []
+}
+```
+
+类型为 `CallExpression` 的节点拥有两个属性：
+
+* callee：用来描述被调用函数的名称，它本身是一个标识符节点
+* arguments：被调用函数的形式参数，多个参数的话用数组描述
+
+我们再次观察渲染函数的返回值：
+
+```js
+function render() {
+  // h 函数的第一个参数是一个字符串字面量
+  // h 函数的第二个参数是一个数组
+  return h('div', [])
+}
+```
+
+可以看到，最外层的 h 函数的第一个参数是一个字符串字面量，我们可以使用类型为 `StringLiteral` 的节点描述它：
+
+```js
+const Str = {
+  type: 'StringLiteral',
+  value: 'div'
+}
+```
+
+最外层的 h 函数的第二个参数是一个数组，我们可以使用类型为 `ArrayExpression` 的节点来描述它：
+
+```js
+const Arr = {
+  type: 'ArrayExpression',
+  // 数组中的元素
+  elements: []
+}
+```
+
+使用上述 `CallExpression`、`StringLiteral`、`ArrayExpression` 等节点来填充渲染函数的返回值，其最终结果如下面的代码所示：
+
+```js
+const FunctionDeclNode = {
+  type: 'FunctionDecl', // 标识该节点是函数声明
+  // 函数名称是一个标识符，标识符本身也是一个节点
+  id: {
+    type: 'Identifier',
+    name: 'render', // name 用来存储标识符的名称，在这里它就是渲染函数的名称 render
+  },
+  parmas: [], // 参数，目前渲染函数还不需要参数，所以这里是一个空数组
+  // 渲染函数的函数体只有一个语句，即 return 语句
+  body: [
+    {
+      type: 'ReturnStatement',
+      return: {
+        type: 'CallExpression',
+        callee: { type: 'Identifier', name: 'h' },
+        arguments: [
+          // 第一个参数是字符串字面量 'div'
+          {
+            type: 'StringLiteral',
+            value: 'div'
+          },
+          // 第二个参数是一个数组
+          {
+            type: 'ArrayExpression',
+            elements: [
+              // 数组的第一个元素是 h 函数的调用
+              {
+                type: 'CallExpression',
+                callee: { type: 'Identifier', name: 'h' },
+                arguments: [
+                  // 该 h 函数调用的第一个参数是字符串字面量
+                  { type: 'StringLiteral', value: 'p' },
+                  // 第二个参数也是一个字符串字面量
+                  { type: 'StringLiteral', value: 'Vue' },
+                ]
+              },
+                // 数组的第二个元素也是 h 函数的调用
+                {
+                  type: 'CallExpression',
+                  callee: { type: 'Identifier', name: 'h' },
+                  arguments: [
+                    // 该 h 函数调用的第一个参数是字符串字面量
+                    { type: 'StringLiteral', value: 'p' },
+                    // 第二个参数也是一个字符串字面量
+                    { type: 'StringLiteral', value: 'Template' },
+                  ]
+                }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+如上面这段 JavaScript AST 的代码所示，它是对渲染函数代码的完整描述。接下来我们的任务就是编写转换函数，将模板 AST 转换为上述 JavaScript AST。在开启之前，我们需要编写一些用来创建 JavaScript AST 节点的辅助函数。
+
+```js
+// 用来创建 StringLiteral 节点
+function createStringLiteral(value) {
+  return {
+    type: 'StringLiteral',
+    value
+  }
+}
+// 用来创建 Identifier
+function createIdentifier(name) {
+  return {
+    type: 'Identifier',
+    name
+  }
+}
+// 用来创建 ArrayExpression 节点
+function createArrayExpression(elements) {
+  return {
+    type: 'ArrayExpression',
+    elements
+  }
+}
+// 用来创建 CallExpression 节点
+function createCallExpression(callee, arguments) {
+  return {
+    type: 'CallExpression',
+    callee: createIdentifier(callee),
+    arguments
+  }
+}
+```
+
+有了这些辅助函数，我们可以更容易地编写转换代码。
+
+为了把模板 AST 转换为 JavaScript AST，我们同样需要两个转换函数：`transformElement` 和 `transformText`，它们分别用来处理标签节点和文本节点。
+
+```js
+```
+
