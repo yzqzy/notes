@@ -409,3 +409,138 @@ console.log(heapsort([6, 3, 4, 1])) // [1, 3, 4, 6]
 console.log(heapsort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
 
 console.log('---------------------')
+
+const euclideanDistance = (a: number[], b: number[]) =>
+  Math.hypot(...Object.keys(a).map((k) => b[+k] - a[+k]))
+
+console.log(euclideanDistance([1, 1], [2, 3])) // ~2.2361
+console.log(euclideanDistance([1, 1, 1], [2, 3, 2])) // ~2.4495
+
+console.log('---------------------')
+
+const arithmeticProgression = (n: number, limit: number) =>
+  Array.from({ length: Math.ceil(limit / n) }, (_, i) => (i + 1) * n)
+
+console.log(arithmeticProgression(5, 25)) // [5, 10, 15, 20, 25]
+
+console.log('---------------------')
+
+const primes = (num: number) => {
+  let arr = Array.from({ length: num - 1 }).map((x, i) => i + 2)
+  const sqroot = Math.floor(Math.sqrt(num))
+  const numsTillSqroot = Array.from({ length: sqroot - 1 }).map((_, i) => i + 2)
+  numsTillSqroot.forEach(x => (arr = arr.filter(y => y % x !== 0 || y === x)))
+  return arr
+}
+
+console.log(primes(10)) // [2, 3, 5, 7]
+console.log(primes(30)) // [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+console.log('---------------------')
+
+const countSubstrings = (str: string, searchValue: string) => {
+  let count = 0
+  let i = 0
+
+  while (true) {
+    const r = str.indexOf(searchValue, i)
+
+    if (r !== -1) {
+      [count, i] = [count + 1, r + 1]
+    } else {
+      return count
+    }
+  }
+}
+
+console.log(countSubstrings('tiktok tok tok tik tok tik', 'tik')) // 3
+console.log(countSubstrings('tutut tut tut', 'tut')) // 4
+
+console.log('---------------------')
+
+const caesarCipher = (str: string, shift: number, decrypt: boolean = false) => {
+  const s = decrypt ? (26 - shift) % 26 : shift
+  const n = s > 0 ? s : 26 + (s % 26)
+  return [...str]
+    .map((l, i) => {
+      const c = str.charCodeAt(i)
+      if (c >= 65 && c <= 90) {
+        return String.fromCharCode(((c - 65 + n) % 26) + 65)
+      }
+      if (c >= 97 && c <= 122) {
+        return String.fromCharCode(((c - 97 + n) % 26) + 97)
+      }
+      return l
+    })
+    .join('')
+}
+
+console.log(caesarCipher('Hello World!', -3)) // 'Ebiil Tloia!'
+console.log(caesarCipher('Ebiil Tloia!', 23, true)) // 'Hello World!'
+
+console.log('---------------------')
+
+const permutations = (arr: number[]): number[][] => {
+  if (arr.length <= 2) return arr.length === 2 ? [arr, [arr[1], arr[0]]] : [arr]
+  return arr.reduce(
+    (acc, item, i) =>
+      acc.concat(
+        permutations([...arr.slice(0, i), ...arr.slice(i + 1)]).map(val => [
+          item,
+          ...val
+        ])
+      ),
+    [] as number[][]
+  )
+}
+
+console.log(permutations([1, 33, 5]))
+// [
+//   [ 1, 33, 5 ],
+//   [ 1, 5, 33 ],
+//   [ 33, 1, 5 ],
+//   [ 33, 5, 1 ],
+//   [ 5, 1, 33 ],
+//   [ 5, 33, 1 ]
+// ]
+
+console.log('---------------------')
+
+const indexOfSubstrings = function* (str: string, searchValue: string) {
+  let i = 0
+  while (true) {
+    const r = str.indexOf(searchValue, i)
+    if (r !== -1) {
+      yield r
+      i = r + 1
+    } else {
+      return
+    }
+  }
+}
+
+console.log([...indexOfSubstrings('tiktok tok tok tik tok tik', 'tik')]) // [0, 15, 23]
+console.log([...indexOfSubstrings('tutut tut tut', 'tut')]) // [0, 2, 6, 10]
+console.log([...indexOfSubstrings('hello', 'hi')]) // []
+
+console.log('---------------------')
+
+const luhnCheck = (num: number | string) => {
+  const arr = (num + '')
+    .split('')
+    .reverse()
+    .map(x => parseInt(x))
+  const lastDigit = arr.shift() as number
+  let sum = arr.reduce(
+    (acc, val, i) => (i % 2 !== 0 ? acc + val : acc + ((val *= 2) > 9 ? val - 9 : val)),
+    0
+  )
+  sum += lastDigit
+  return sum % 10 === 0
+}
+
+console.log(luhnCheck('4485275742308327')) // true
+console.log(luhnCheck(6011329933655299)) //  true
+console.log(luhnCheck(123456789)) // false
+
+console.log('---------------------')

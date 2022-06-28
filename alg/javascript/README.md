@@ -641,4 +641,195 @@ console.log(heapsort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
 
 ## 欧几里得距离
 
-TODO
+在任意数量的维度中计算两点之间的距离。
+
+* 使用 `Object.keys` 和 `Array.prototype.map()` 计算两个坐标单点之间的差；
+* 使用 `Math.hypot()` 计算两个点之间的欧几里得距离。
+
+```js
+const euclideanDistance = (a: number[], b: number[]) =>
+  Math.hypot(...Object.keys(a).map((k) => b[+k] - a[+k]))
+
+console.log(euclideanDistance([1, 1], [2, 3])) // ~2.2361
+console.log(euclideanDistance([1, 1, 1], [2, 3, 2])) // ~2.4495
+```
+
+## 等差数列
+
+创建一个从指定正整数到指定限制的数组。
+
+* 使用 `Array.from()` 创建所需长度的数组，在给定范围内填充数组。
+
+```js
+const arithmeticProgression = (n: number, limit: number) =>
+  Array.from({ length: Math.ceil(limit / n) }, (_, i) => (i + 1) * n)
+
+console.log(arithmeticProgression(5, 25)) // [5, 10, 15, 20, 25]
+```
+
+## 给定数值的质数
+
+生成给定数字的质数。
+
+* 生成一个从 2 到给定数字的数组；
+* 使用 `Array.prototype.filter` 过滤符合条件的数字。
+
+```js
+const primes = (num: number) => {
+  let arr = Array.from({ length: num - 1 }).map((x, i) => i + 2)
+  const sqroot = Math.floor(Math.sqrt(num))
+  const numsTillSqroot = Array.from({ length: sqroot - 1 }).map((_, i) => i + 2)
+  numsTillSqroot.forEach(x => (arr = arr.filter(y => y % x !== 0 || y === x)))
+  return arr
+}
+
+console.log(primes(10)) // [2, 3, 5, 7]
+console.log(primes(30)) // [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+```
+
+## 子字符串的数量
+
+统计给定子串的字符串中的数量。
+
+* 使用 `Array.prototype.indexOf()` 在 str 中搜索值；
+* 如果找到该值更新索引，并递增 counter；
+* 使用 while 循环，该循环在 `Array.prototype.indexOf()` 为 `-1` 时立即返回。
+
+```js
+const countSubstrings = (str: string, searchValue: string) => {
+  let count = 0
+  let i = 0
+
+  while (true) {
+    const r = str.indexOf(searchValue, i)
+
+    if (r !== -1) {
+      [count, i] = [count + 1, r + 1]
+    } else {
+      return count
+    }
+  }
+}
+
+console.log(countSubstrings('tiktok tok tok tik tok tik', 'tik')) // 3
+console.log(countSubstrings('tutut tut tut', 'tut')) // 4
+```
+
+## 子字符串的索引
+
+在给定的字符串中找到子字符串的所有索引。
+
+* 使用 `Array.prototype.indexOf()` 在 str 中搜索值；
+* 如果找到该值更新索引并用 yield 返回索引；
+* 使用 while 循环，该循环在 `Array.prototype.indexOf()` 为 `-1` 时立即返回。
+
+```js
+const indexOfSubstrings = function* (str: string, searchValue: string) {
+  let i = 0
+  while (true) {
+    const r = str.indexOf(searchValue, i)
+    if (r !== -1) {
+      yield r
+      i = r + 1
+    } else {
+      return
+    }
+  }
+}
+
+console.log([...indexOfSubstrings('tiktok tok tok tik tok tik', 'tik')]) // [0, 15, 23]
+console.log([...indexOfSubstrings('tutut tut tut', 'tut')]) // [0, 2, 6, 10]
+console.log([...indexOfSubstrings('hello', 'hi')]) // []
+```
+
+## 凯撒密码
+
+使用 “凯撒密码” 对给定的字符串进行加密或解密。
+
+* 使用 % 运算符和三元运算符计算正确地加密/解密密钥；
+* 使用扩展运算符和 `Array.prototype.map()` 在给定的字母上迭代；
+* 使用 `String.prototype.CharCodeAt()` 和 `String.fromCharCode()` 转换每个字母，忽略特殊字符，空格等；
+* 使用 `Array.prototype.join()` 将所有字母组合到字符串中；
+* 最后一个参数用于设置是否是解密操作。
+
+```js
+const caesarCipher = (str: string, shift: number, decrypt: boolean = false) => {
+  const s = decrypt ? (26 - shift) % 26 : shift
+  const n = s > 0 ? s : 26 + (s % 26)
+  return [...str]
+    .map((l, i) => {
+      const c = str.charCodeAt(i)
+      if (c >= 65 && c <= 90) {
+        return String.fromCharCode(((c - 65 + n) % 26) + 65)
+      }
+      if (c >= 97 && c <= 122) {
+        return String.fromCharCode(((c - 97 + n) % 26) + 97)
+      }
+      return l
+    })
+    .join('')
+}
+
+console.log(caesarCipher('Hello World!', -3)) // 'Ebiil Tloia!'
+console.log(caesarCipher('Ebiil Tloia!', 23, true)) // 'Hello World!'
+```
+
+## 全排列
+
+生成数组元素的所有排列方式。
+
+```js
+const permutations = (arr: number[]): number[][] => {
+  if (arr.length <= 2) return arr.length === 2 ? [arr, [arr[1], arr[0]]] : [arr]
+  return arr.reduce(
+    (acc, item, i) =>
+      acc.concat(
+        permutations([...arr.slice(0, i), ...arr.slice(i + 1)]).map(val => [
+          item,
+          ...val
+        ])
+      ),
+    [] as number[][]
+  )
+}
+
+console.log(permutations([1, 33, 5]))
+// [
+//   [ 1, 33, 5 ],
+//   [ 1, 5, 33 ],
+//   [ 33, 1, 5 ],
+//   [ 33, 5, 1 ],
+//   [ 5, 1, 33 ],
+//   [ 5, 33, 1 ]
+// ]
+```
+
+## 卢恩算法
+
+实现用于验证各种标识号的卢恩算法，例如信用卡号、IMEI 编号等。
+
+* 使用 `String.prototype.split()`，`Array.prototype.reverse()`、`Array.prototype.map()` 与 `parseInt()` 结合使用，以获取数字数组；
+* 使用 `Array.prototype.shift()` 获取最后一个数字；
+* 使用 `Array.prototype.reduce()` 实现卢恩算法；
+* 如果总和除以 10 等于 0 返回 true，否则返回 false。
+
+```js
+const luhnCheck = (num: number | string) => {
+  const arr = (num + '')
+    .split('')
+    .reverse()
+    .map(x => parseInt(x))
+  const lastDigit = arr.shift() as number
+  let sum = arr.reduce(
+    (acc, val, i) => (i % 2 !== 0 ? acc + val : acc + ((val *= 2) > 9 ? val - 9 : val)),
+    0
+  )
+  sum += lastDigit
+  return sum % 10 === 0
+}
+
+console.log(luhnCheck('4485275742308327')) // true
+console.log(luhnCheck(6011329933655299)) //  true
+console.log(luhnCheck(123456789)) // false
+```
+
