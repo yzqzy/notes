@@ -12174,3 +12174,172 @@ compiler('<div><p>Vue</p><p>Template</p></div>')
 
 #### 代码生成
 
+上一节中，我们完成了 JavaScript AST 的构造。本节，我们将讨论如何根据 JavaScript AST 生成渲染函数的代码，即代码生成。代码生成的本质是字符串拼接的艺术。我们需要访问 JavaScript AST 中的节点，为每一种类型的节点生成相符的 JavaScript 代码。
+
+本节，我们将实现 generate 函数来完成代码生成的任务。代码生成也是编译器的最后一步：
+
+```js
+const { parse } = require('../vue/compiler/parse')
+const { transform } = require('../vue/compiler/transform')
+
+function compiler(template) {
+  // 模板 AST
+  const ast = parse(template)
+  // 将模板 AST 转换为 javaScript AST
+  transform(ast)
+  // 代码生成
+  const code = genertae(ast.JjsNode)
+  return code
+}
+
+compiler('<div><p>Vue</p><p>Template</p></div>')
+```
+
+与 AST 转换一样，代码生也需要上下文对象。该上下文对象用来维护代码生过程中程序的运行状态。
+
+```js
+function genertae(node) {
+  const context = {
+    // 存储最终生成的渲染函数代码
+    code: '',
+    // 生成代码时，通过调用 push 函数完成代码拼接
+    push(code) {
+      context.code += code
+    }
+  }
+
+  // 调用 genNode 函数完成代码生成工作
+  genNode(node, context)
+
+  // 返回渲染函数代码
+  return context.code
+}
+```
+
+在上面这段 generate 函数的代码中，首先我们定义了上下文对象 context，它包含了 `context.cod` 属性，用来存储最终生成的渲染函数代码，还定义了 `context.push` 函数，用来完成代码拼接，接着调用 `genNode` 函数完成代码的生成工作，最后将最终生成的渲染函数代码返回。
+
+另外，我们希望最终生成的代码具有较强的可读性，因此我们应该考虑生成代码的格式，例如缩进和换行等。这就需要我们扩展 context 对象，为其增加用来完成换行和缩进的工具函数。
+
+```js
+function genertae(node) {
+  const context = {
+    // 存储最终生成的渲染函数代码
+    code: '',
+    // 生成代码时，通过调用 push 函数完成代码拼接
+    push(code) {
+      context.code += code
+    },
+    // 当前缩进级别，初始值为 0，即没有缩进
+    currentIndent: 0,
+    // 该函数用来换行，即在代码字符串的后买你追加 \n 字符
+    // 另外，换行时应该保留缩进，所以我们还要追加 currentIdent * 2 个空格字符
+    newLine() {
+      context.code += '\m' + `  `.repeat(context.currentIndent)
+    },
+    // 用来缩进，即让 currentIdent 自增后，调用换行函数
+    indent() {
+      context.currentIndent++
+      context.newLine()
+    },
+    // 取消缩进，即让 currentIdent 自减后，调用换行函数
+    deIndent() {
+      context.currentIndent--
+      context.newLine()
+    }
+  }
+
+  // 调用 genNode 函数完成代码生成工作
+  genNode(node, context)
+
+  // 返回渲染函数代码
+  return context.code
+}
+```
+
+在上面这段代码中，我们增加了 `context.currentIndent` 属性，它代表缩进的级别，初始值为 0，代表没有缩进，还增加了 `context.newLine()` 函数，每次调用该函数时，都会在代码字符串后面追加换行符 \n。由于换行时需要保留缩进，所以我们还要追加 `context.currentIdent * 2` 个空格字符。这里我们假设缩进为两个空格字符，后续我们可以将其设计为可配置的。同时，我们还增加了 `context.ident()` 函数用来完成代码缩进，它的原理很简单，即让缩进级别 `context.currentIdent` 进行自增，再调用 `context.newLine()` 函数。与之对应的 `context.deIndent()` 函数则用来取消缩进，既让缩进级别 `context.currentIndent` 进行自减，再调用 `context.newLine()` 函数。
+
+有了这些基础能力之后，我们就可以开始编写 `genNode` 函数来完成代码生成的工作。代码生成的原理其实很简单，只需要匹配各种类型的 JavaScript AST 节点，并调用对应的生成函数即可。
+
+```js
+function genNode(node, context) {
+  switch (node.type) {
+    case 'FunctionDecl':
+      genFunctionDecl(node, context)
+      break;
+    case 'ReturnStatement':
+      genRturnStateMent(node, context)
+      break;
+    case 'CallExpression':
+      genCallExpression(node, context)
+      break;
+    case 'StringLiteral':
+      genStringLiteral(node, context)
+      break;
+    case 'ArrayExpression':
+      genArrayExpression(node, context)
+      break;
+  }
+}
+```
+
+在 `genNode` 函数内部，我们使用 switch 语句来匹配不同类型的节点，并调用与之对应的生成器函数。
+
+* 对于 `FunctionDecl` 节点，使用 `genFunctionDecl` 函数为改类型节点生成对应的 JavaScript 代码；
+* 对于 `ReturnStatement` 节点，使用 `genRturnStateMent` 函数为改类型节点生成对应的 JavaScript 代码；
+* 对于 `CallExpression` 节点，使用 `genCallExpression` 函数为改类型节点生成对应的 JavaScript 代码；
+* 对于 `StringLiteral` 节点，使用 `genStringLiteral` 函数为改类型节点生成对应的 JavaScript 代码；
+* 对于 `ArrayExpression` 节点，使用 `genArrayExpression` 函数为改类型节点生成对应的 JavaScript 代码。
+
+由于我们目前只涉及这五种类型的 JavaScript 节点，所以现在的 `genNode` 函数足够完成上述案例。如果后续需要增加节点类型，只需要在 `genNode` 函数中添加相应的处理分支即可。
+
+接下来，我们将逐步完善代码生成工作。首先，我们来实现函数声明语句的代码生成，即 `genFunctionDecl` 函数。
+
+```js
+function genFunctionDecl() {
+  // 从 conext 对象中取出工具函数
+  const { push, indent, deIndent } = context
+  // node.id 是一个标识符，用来描述函数的名称，即 node.id.name
+  push(`function ${node.id.name}`)
+  push(`(`)
+  // 调用 genNodeList 为函数的参数生成代码
+  genNodeList(node.params, context)
+  push(`)`)
+  push(`{`)
+  // 缩进
+  indent()
+  // 为函数体生成代码，递归地调用 genNode 函数
+  node.body.forEach(n => genNode(n, context))
+  // 取消缩进
+  deIndent()
+  push(`}`)
+}
+```
+
+`genFunctionDecl` 函数用来为函数声明类型的节点生成对应的 JavaScript 代码。以渲染函数的声明节点为例，它最终生成的代码将会是：
+
+```js
+function render() {
+  // ... 函数体
+}
+```
+
+另外我们注意到，在 `genFunctionDecl` 函数内部调用了 `genNodeList` 函数来为函数的参数生成对应的代码。
+
+```js
+function genNodeList(nodes, context) {
+  const { push } = context
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]
+    genNode(node, context)
+    if (i < nodes.length - 1) {
+      push(', ')
+    }
+  }
+}
+```
+
+`genNodeList` 函数接收一个节点数组作为参数，并为每一个节点递归地调用 `genNode` 函数完成代码生成工作。这里要注意的一点是，没处理完一个节点，需要在生成的代码后面拼接都好字符串（，）。
+
+```js
+```
+
