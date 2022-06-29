@@ -646,7 +646,7 @@ console.log(heapsort([1, 6, 1, 5, 3, 2, 1, 4])) // [1, 1, 1, 2, 3, 4, 5, 6]
 * 使用 `Object.keys` 和 `Array.prototype.map()` 计算两个坐标单点之间的差；
 * 使用 `Math.hypot()` 计算两个点之间的欧几里得距离。
 
-```js
+```typescript
 const euclideanDistance = (a: number[], b: number[]) =>
   Math.hypot(...Object.keys(a).map((k) => b[+k] - a[+k]))
 
@@ -660,7 +660,7 @@ console.log(euclideanDistance([1, 1, 1], [2, 3, 2])) // ~2.4495
 
 * 使用 `Array.from()` 创建所需长度的数组，在给定范围内填充数组。
 
-```js
+```typescript
 const arithmeticProgression = (n: number, limit: number) =>
   Array.from({ length: Math.ceil(limit / n) }, (_, i) => (i + 1) * n)
 
@@ -674,7 +674,7 @@ console.log(arithmeticProgression(5, 25)) // [5, 10, 15, 20, 25]
 * 生成一个从 2 到给定数字的数组；
 * 使用 `Array.prototype.filter` 过滤符合条件的数字。
 
-```js
+```typescript
 const primes = (num: number) => {
   let arr = Array.from({ length: num - 1 }).map((x, i) => i + 2)
   const sqroot = Math.floor(Math.sqrt(num))
@@ -695,7 +695,7 @@ console.log(primes(30)) // [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 * 如果找到该值更新索引，并递增 counter；
 * 使用 while 循环，该循环在 `Array.prototype.indexOf()` 为 `-1` 时立即返回。
 
-```js
+```typescript
 const countSubstrings = (str: string, searchValue: string) => {
   let count = 0
   let i = 0
@@ -723,7 +723,7 @@ console.log(countSubstrings('tutut tut tut', 'tut')) // 4
 * 如果找到该值更新索引并用 yield 返回索引；
 * 使用 while 循环，该循环在 `Array.prototype.indexOf()` 为 `-1` 时立即返回。
 
-```js
+```typescript
 const indexOfSubstrings = function* (str: string, searchValue: string) {
   let i = 0
   while (true) {
@@ -752,7 +752,7 @@ console.log([...indexOfSubstrings('hello', 'hi')]) // []
 * 使用 `Array.prototype.join()` 将所有字母组合到字符串中；
 * 最后一个参数用于设置是否是解密操作。
 
-```js
+```typescript
 const caesarCipher = (str: string, shift: number, decrypt: boolean = false) => {
   const s = decrypt ? (26 - shift) % 26 : shift
   const n = s > 0 ? s : 26 + (s % 26)
@@ -778,7 +778,7 @@ console.log(caesarCipher('Ebiil Tloia!', 23, true)) // 'Hello World!'
 
 生成数组元素的所有排列方式。
 
-```js
+```typescript
 const permutations = (arr: number[]): number[][] => {
   if (arr.length <= 2) return arr.length === 2 ? [arr, [arr[1], arr[0]]] : [arr]
   return arr.reduce(
@@ -813,7 +813,7 @@ console.log(permutations([1, 33, 5]))
 * 使用 `Array.prototype.reduce()` 实现卢恩算法；
 * 如果总和除以 10 等于 0 返回 true，否则返回 false。
 
-```js
+```typescript
 const luhnCheck = (num: number | string) => {
   const arr = (num + '')
     .split('')
@@ -831,5 +831,109 @@ const luhnCheck = (num: number | string) => {
 console.log(luhnCheck('4485275742308327')) // true
 console.log(luhnCheck(6011329933655299)) //  true
 console.log(luhnCheck(123456789)) // false
+```
+
+## 近邻算法
+
+使用近邻算法将数据集合中每一个记录进行分类。
+
+* 使用 `Array.prototype.map()` 将数据映射成对象，使用 `Math.hypot()`，`Object.keys()` 及其标签计算元素与点的欧几里得距离；
+* 使用 `Array.prototype.sort()` 和 `Array.prototype.slice()` 计算点的 k 最近邻居；
+* 使用 `Array.prototype.recue()` 、`Object.keys()` 与 `Array.prototype.indexOf()` ，查找其中最常见的标签。
+
+```typescript
+interface ClassCount {
+  [key: number]: number
+}
+
+const kNearestNeighbors = (data: number[][], labels: number[], point: number[], k: number = 3) => {
+  const kNearest = data
+    .map((el, i) => ({
+      dist: Math.hypot(...Object.keys(el).map((key) => point[+key] - el[+key])),
+      label: labels[i]
+    }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, k)
+
+  return kNearest.reduce(
+    (acc, { label }, i) => {
+      acc.classCounts[label] =
+        Object.keys(acc.classCounts).indexOf(label + '') !== -1
+          ? acc.classCounts[label] + 1
+          : 1
+      if (acc.classCounts[label] > acc.topClassCount) {
+        acc.topClassCount = acc.classCounts[label]
+        acc.topClass = label
+      }
+      return acc
+    },
+    {
+      classCounts: {} as ClassCount,
+      topClass: kNearest[0].label,
+      topClassCount: 0
+    }
+  ).topClass
+}
+
+const data = [[0, 0], [0, 1], [1, 3], [2, 0]];
+const labels = [0, 1, 1, 0];
+
+console.log(kNearestNeighbors(data, labels, [1, 2], 2)) // 1
+console.log(kNearestNeighbors(data, labels, [1, 0], 2)) // 0
+```
+
+ ## 均值聚类算法
+
+使用 k-均值聚类算法将给定数据分组为 k。
+
+* 使用 `Array.from()` 和 `Array.prototype.slice()` 初始化群集质心，距离和类别；
+* 如果 `itr` 在上一个迭代中有更改，使用 while 循环重新分配和更新步骤；
+* 使用 `Math.hypot()`、`Object.keys()`  和 `Array.prototype.map()` 计算每个数据点和质心之间的欧几里得距离；
+* 使用 `Array.prototype.indexOf()` 、`Math.min()` 查找最接近的质心；
+* 使用 `Array.from()` 、`Array.prototype.reduce()`  和 `parseFloat()` ，以及 `Number.prototype.toFixed()` 来计算新的质心。
+
+```typescript
+const kMeans = (data: number[][], k: number = 1) => {
+  const centroids = data.slice(0, k)
+  const distances = Array.from<number[][], number[]>({ length: data.length }, () =>
+   Array.from<number[], number>({ length: k }, () => 0)
+  )
+  const classes = Array.from({ length: data.length }, () => -1)
+
+  let itr = true
+
+  while (itr) {
+    itr = false
+
+    for (let d in data) {
+      for (let c = 0; c < k; c++) {
+        distances[d][c] = Math.hypot(
+          ...Object.keys(data[0]).map(key => data[d][+key] - centroids[c][+key])
+        )
+      }
+      const m = distances[d].indexOf(Math.min(...distances[d]))
+      if (classes[d] !== m) itr = true
+      classes[d] = m
+    }
+
+    for (let c = 0; c < k; c++) {
+      centroids[c] = Array.from({ length: data[0].length }, () => 0)
+      const size = data.reduce((acc, _, d) => {
+        if (classes[d] === c) {
+          acc++
+          for (let i in data[0]) centroids[c][i] += data[d][i]
+        }
+        return acc
+      }, 0)
+      for (let i in data[0]) {
+        centroids[c][i] = parseFloat(Number(centroids[c][i] / size).toFixed(2))
+      }
+    }
+  }
+
+  return classes
+}
+
+console.log(kMeans([[0, 0], [0, 1], [1, 3], [2, 0]], 2)) // [0, 1, 1, 0]
 ```
 

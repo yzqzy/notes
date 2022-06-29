@@ -544,3 +544,89 @@ console.log(luhnCheck(6011329933655299)) //  true
 console.log(luhnCheck(123456789)) // false
 
 console.log('---------------------')
+
+interface ClassCount {
+  [key: number]: number
+}
+
+const kNearestNeighbors = (data: number[][], labels: number[], point: number[], k: number = 3) => {
+  const kNearest = data
+    .map((el, i) => ({
+      dist: Math.hypot(...Object.keys(el).map((key) => point[+key] - el[+key])),
+      label: labels[i]
+    }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, k)
+
+  return kNearest.reduce(
+    (acc, { label }, i) => {
+      acc.classCounts[label] =
+        Object.keys(acc.classCounts).indexOf(label + '') !== -1
+          ? acc.classCounts[label] + 1
+          : 1
+      if (acc.classCounts[label] > acc.topClassCount) {
+        acc.topClassCount = acc.classCounts[label]
+        acc.topClass = label
+      }
+      return acc
+    },
+    {
+      classCounts: {} as ClassCount,
+      topClass: kNearest[0].label,
+      topClassCount: 0
+    }
+  ).topClass
+}
+
+const data = [[0, 0], [0, 1], [1, 3], [2, 0]];
+const labels = [0, 1, 1, 0];
+
+console.log(kNearestNeighbors(data, labels, [1, 2], 2)) // 1
+console.log(kNearestNeighbors(data, labels, [1, 0], 2)) // 0
+
+console.log('---------------------')
+
+const kMeans = (data: number[][], k: number = 1) => {
+  const centroids = data.slice(0, k)
+  const distances = Array.from<number[][], number[]>({ length: data.length }, () =>
+   Array.from<number[], number>({ length: k }, () => 0)
+  )
+  const classes = Array.from({ length: data.length }, () => -1)
+
+  let itr = true
+
+  while (itr) {
+    itr = false
+
+    for (let d in data) {
+      for (let c = 0; c < k; c++) {
+        distances[d][c] = Math.hypot(
+          ...Object.keys(data[0]).map(key => data[d][+key] - centroids[c][+key])
+        )
+      }
+      const m = distances[d].indexOf(Math.min(...distances[d]))
+      if (classes[d] !== m) itr = true
+      classes[d] = m
+    }
+
+    for (let c = 0; c < k; c++) {
+      centroids[c] = Array.from({ length: data[0].length }, () => 0)
+      const size = data.reduce((acc, _, d) => {
+        if (classes[d] === c) {
+          acc++
+          for (let i in data[0]) centroids[c][i] += data[d][i]
+        }
+        return acc
+      }, 0)
+      for (let i in data[0]) {
+        centroids[c][i] = parseFloat(Number(centroids[c][i] / size).toFixed(2))
+      }
+    }
+  }
+
+  return classes
+}
+
+console.log(kMeans([[0, 0], [0, 1], [1, 3], [2, 0]], 2)) // [0, 1, 1, 0]
+
+console.log('---------------------')
