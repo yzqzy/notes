@@ -12188,7 +12188,7 @@ function compiler(template) {
   // 将模板 AST 转换为 javaScript AST
   transform(ast)
   // 代码生成
-  const code = genertae(ast.JjsNode)
+  const code = genertae(ast.jsNode)
   return code
 }
 
@@ -12234,7 +12234,7 @@ function genertae(node) {
     // 该函数用来换行，即在代码字符串的后买你追加 \n 字符
     // 另外，换行时应该保留缩进，所以我们还要追加 currentIdent * 2 个空格字符
     newLine() {
-      context.code += '\m' + `  `.repeat(context.currentIndent)
+      context.code += '\n' + `  `.repeat(context.currentIndent)
     },
     // 用来缩进，即让 currentIdent 自增后，调用换行函数
     indent() {
@@ -12267,7 +12267,7 @@ function genNode(node, context) {
       genFunctionDecl(node, context)
       break;
     case 'ReturnStatement':
-      genRturnStateMent(node, context)
+      genReturnStateMent(node, context)
       break;
     case 'CallExpression':
       genCallExpression(node, context)
@@ -12295,15 +12295,15 @@ function genNode(node, context) {
 接下来，我们将逐步完善代码生成工作。首先，我们来实现函数声明语句的代码生成，即 `genFunctionDecl` 函数。
 
 ```js
-function genFunctionDecl() {
-  // 从 conext 对象中取出工具函数
+function genFunctionDecl(node, context) {
+  // 从 context 对象中取出工具函数
   const { push, indent, deIndent } = context
   // node.id 是一个标识符，用来描述函数的名称，即 node.id.name
-  push(`function ${node.id.name}`)
+  push(`function ${node.id.name} `)
   push(`(`)
   // 调用 genNodeList 为函数的参数生成代码
   genNodeList(node.params, context)
-  push(`)`)
+  push(`) `)
   push(`{`)
   // 缩进
   indent()
@@ -12341,5 +12341,102 @@ function genNodeList(nodes, context) {
 `genNodeList` 函数接收一个节点数组作为参数，并为每一个节点递归地调用 `genNode` 函数完成代码生成工作。这里要注意的一点是，没处理完一个节点，需要在生成的代码后面拼接都好字符串（，）。
 
 ```js
+// 如果节点数组为
+const node = [节点1, 节点2, 节点3]
+// 生成的代码类似于
+// '节点1, 节点2, 节点3'
+// 如果在这段代码的前后分别添加圆括号，那么它将可用于函数的参数声明
+// ('节点1, 节点2, 节点3')
+// 如果在这段代码的前后分别添加方括号，那么它将是一个数组
+// ['节点1, 节点2, 节点3']
 ```
+
+由上例可知，`genNodeList` 函数会在节点代码之间补充逗号字段。而 `genArrayExpression` 函数就利用了这个特点来实现对数组表达式的代码生成。
+
+```js
+function genArrayExpression(node, context) {
+  const { push } = context
+  // 追加方括号
+  push('[')
+  // 调用 genNodeList 为数组元素生成代码
+  genNodeList(node.elements, context)
+  // 补全方括号
+  push(']')
+}
+```
+
+不过，由于目前渲染函数暂时没有接收任何参数，所以 `genNodeList` 函数不会为其生成任何代码。对于 `genFunctionDecl` 函数，由于函数体本身也是一个节点数组，所以我们遍历它并递归地调用 `genNode` 函数生成代码。
+
+对于 `ReturnStatement` 和 `StringLiteral` 类型的节点来说，为它们生成代码很简单。
+
+```js
+function genReturnStateMent(node, context) {
+  const { push } = context
+  // 追加 return 关键字和空格
+  push(`return `)
+  // 调用 genNode 函数递归生成返回值代码
+  genNode(node.return, context)
+}
+
+function genStringLiteral(node, context) {
+  const { push } = context
+  // 对于字符串字面量，只需要追加与 node.value 对应的字符串即可
+  push(`'${node.value}'`)
+}
+```
+
+最后，只剩下 `genCallExpression` 函数。
+
+```js
+function genCallExpression(node, context) {
+  const { push } = context
+  // 取得被调用函数名称和参数列表
+  const { callee, arguments: args } = node
+  // 生成函数调用代码
+  push(`${callee.name}(`)
+  // 调用 genNodeList 生成参数代码
+  genNodeList(args, context)
+  // 补全括号
+  push(`)`)
+}
+```
+
+可以看到，在 `genCallExpression` 函数内，我们也用到了 `genNodeList` 函数来为函数调用时的参数生成对应的代码。配合上述生成器函数的实现，我们就可以得到符合预期的渲染函数代码。运行如下测试用例：
+
+```js
+function compiler(template) {
+  const ast = parse(template)
+  transform(ast)
+  const code = genertae(ast.jsNode)
+  return code
+}
+
+compiler('<div><p>Vue</p><p>Template</p></div>')
+```
+
+最重得到的代码字符串如下：
+
+```js
+function render () {
+  return h('div', [h('p', 'Vue'), h('p', 'Template')])
+}
+```
+
+#### 总结
+
+本篇文章中，我们首先讨论了 Vue.js 模板编译器的工作流程。Vue.js 的模板编译器用于把模板编译为渲染函数。它的工作流程大致分为三个步骤。
+
+* 解析模板，将其解析为模板 AST；
+* 将模板 AST 转换为用于描述渲染函数的 JavaScript AST；
+* 根据 JavaScript AST 生成渲染函数代码。
+
+接着，我们讨论了 `parser` 的实现原理，以及如何使用有限状态自动机构造一个词法分析器。词法分析的过程就是状态机在不同状态之间迁移的过程。在此过程中，状态机会产生一个个 Token，形成一个 Token 列表。我们将使用该 Token 列表来构造用于描述模板的 AST。具体做法是，扫描 Token 列表并维护一个开始标签栈。没当扫描到一个开始标签节点，就将其压入栈顶。栈顶的节点始终作为下一个扫描的节点的父节点。这样，当所有 Token 扫描完毕后，即可构建出一颗树型 AST。
+
+然后，我们讨论了 AST 的转换与插件化结构。AST 是树形结构，为了访问 AST 中的节点，我们采用深度优先的方式对 AST 进行遍历。在遍历过程中，我们可以对 AST 节点进行各种操作，从而实现对 AST 的转换。为了解耦节点的访问和操作，我们设计了插件化结构，将节点的操作封装到独立的转换函数中。这些转换函数可以通过 `context.nodeTransforms` 来注册。这里的 `context` 称为转换上下文。上下文对象中通常会维护程序的当前状态，例如当前访问的节点、当前访问的节点的父节点、当前访问的节点的位置索引等信息。有了上下文对象及其包含的重要信息后，我们即可轻松地实现节点的替换、删除等能力。但有时，当前访问节点的转换工作依赖于其子节点的转换结果，所以为了优先完成子节点的转换，我们将整个转换过程分为 "进入阶段" 与 “退出阶段”。每个转换函数都分为两个阶段执行，这样就可以实现更加细粒度的转换控制。
+
+之后，我们讨论了如何将模板 AST 转换为用于描述渲染函数的 JavaScript AST。模板 AST 用来描述模板，类似地，JavaScript AST 用于描述 JavaScript 代码，只有把模板 AST 转换为 JavaScript AST 后，我们才能据此生成最重的渲染函数代码。
+
+最后，我们讨论了渲染函数代码的生成工作。代码生成是只模板编译器的最后一步工作，生成的代码将作为组件的渲染函数。代码生成的过程就是字符串拼接的过程。我们需要为不同的 AST 节点编写对应的代码生成函数。为了让生成的代码具有更强的可读性，我们还讨论了如何对生成的代码进行缩进和换行。我们将用于缩进和换行的代码封装为工具函数，并且定义到代码生成过程中的上下文对象中。
+
+### 解析器
 

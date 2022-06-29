@@ -1,6 +1,3 @@
-const { parse } = require('../vue/compiler/parse')
-const { transform } = require('../vue/compiler/transform')
-
 function genNodeList(nodes, context) {
   const { push } = context
   for (let i = 0; i < nodes.length; i++) {
@@ -121,16 +118,6 @@ function genertae(node) {
   return context.code
 }
 
-function compiler(template) {
-  // 模板 AST
-  const ast = parse(template)
-  // 将模板 AST 转换为 javaScript AST
-  transform(ast)
-  // 代码生成
-  const code = genertae(ast.jsNode)
-  return code
+module.exports = {
+  genertae
 }
-
-const jsAST = compiler('<div><p>Vue</p><p>Template</p></div>')
-
-console.log(jsAST)
