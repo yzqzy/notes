@@ -12440,3 +12440,85 @@ function render () {
 
 ### 解析器
 
+我们初步讨论了解析器（parser）的工作原理，知道了解析器本质是一个状态机。但我们也曾提到，正则表达式其实也是一个状态机。因此在编写 `parser` 的时候，利用正则表达式能够让我们少写不少代码。本篇文章我们将更多地利用正则表达式来实现 HTML 解析器。
+
+一个完善的 HTML 解析器远比想象中复杂。我们知道，浏览器会对 HTML 文本进行解析，那么它是如何做的呢？其实关于 HTML 文本的解析，是由规范可循的，即 `WHATWG` 关于 HTML 的解析规范，其中定义了完整的错误处理和状态机的状态迁移流程，还提及了一些特殊的状态，例如 `DATA`、`CDATA`、`RCDATA`、`RAWTEXT` 等。那么，这些状态有什么含义呢？它们对解析器有哪些影响呢？什么是 HTML 实体，以及 Vue.js 模板解析器需要如何处理 HTML 实体呢？
+
+#### 文本模式
+
+文本模式指的是解析器在工作时所进入的一些特殊状态，在不同的特殊状态下，解析器对文本的解析行为会有所不同。具体来说，当解析器遇到一些特殊标签时，会切换模式，从而影响其对文本的解析行为。这些特殊标签是：
+
+* `<title>` 标签、`<textarea>` 标签，当解析器遇到这两个标签时，会切换到 `RCDATA` 模式；
+* `<style>`、`<xmp>`、`<iframe>`、`<noembed>`、`noframes>`、`<noscript>` 等标签，当解析器遇到这些标签时，会切换到 `RAWTEXT` 模式；
+* 当解析器遇到 `<![CDATA[` 字符串时，会进入 `CDATA` 模式。
+
+解析器的初始模式是 DATA 模式。对于 Vue.js 的模板 DSL 来说，模板中不允许出现 `<script>` 标签，因此 Vue.js 模板解析器在遇到 `<script>` 标签时也会切换到 `RAWTEXT` 模式。
+
+解析器的行为会因工作模式的不同而不同。`WAHTWG` 规范的第 13.2.5.1 节给出了初始模式下解析器的过程流程。
+
+> https://html.spec.whatwg.org/multipage/parsing.html#data-state
+
+<img src="./images/parser01.png" />
+
+在默认的 `DATA` 模式下，解析器在遇到字符 < 时，会切换到`标签开始状态（tag open state）`。换句话说，在该模式下，解析器能够解析标签元素。当解析器遇到字符 `&` 时，会切换到`字符引用状态（character reference state）`，也称 HTML 字符实体状态。也就是说，在 `DATA` 模式下，解析器能够处理 HTML 字符实体。
+
+我们再来看看当解析器处理 `RCDATA` 状态时，它的工作状态如何。
+
+<img src="./images/parser02.png" />
+
+由图可知，当解析器遇到字符 < 时，不会切换到标签开始状态，而回切换到 `RCDATA less-than sign state` 状态。下图给出了 `RCDATA less-than sign state` 状态下解析器的工作方式。
+
+<img src="./images/parser03.png" />
+
+由图可知 `RCDATA less-than sign state` 状态下，如果解析器遇到字符 /，则直接切换到到 `RCDATA` 的结束标签状态，即 `RCDATA end tag open state` 。否则会将当前字符 < 作为普通字符处理，然后继续处理后面的字符。由此可以，在 `RCDATA` 状态下，解析器不能识别标签元素，这其实间接说明了在 `<textarea>` 内可以将字符 < 作为普通文本，解析器并不会认为字符 < 是标签开始的标志。
+
+```html
+<textarea>
+	<div>asdf</div>asdfasdf
+</textarea>
+```
+
+在上面这段 HTML代码中，`<textarea>` 标签内存在一个 `<div>` 标签。但解析器并不会把 `<div>` 解析为标签元素，而是作为普通文本处理。但是，由 `13.2.5.2 RCDATA state` 可知，在 `RCDATA` 模式下，解析器仍然支持 HTML 实体。因为当解析器遇到字符 & 时，会切换到字符引用状态。如下面的代码所示：
+
+```html
+<textarea>&copy;</textarea>
+```
+
+浏览器在渲染器这段 HTML 代码时，会在文本框内展示字符 `©`。
+
+解析在 `RAWTEXT` 模式下的工作方式与在 `RCDATA` 模式下类似。唯一不同的是，在 `RAWTEXT` 模式下，解析器将不再支持 HTML 实体。下图给出了 `WAHTWG` 规范中第 `13.2.5.3` 节中所定义的 `RAWTEXT` 模式下状态机的工作方式。
+
+<img src="./images/parser04.png" />
+
+对比 `13.2.5.3 RAWTEXT state` 和 `13.2.5.2 RCDATA state` 可知，`RAWTEXT` 模式的确不支持 HTML 实体。在该模式下，解析器会将 HTML 尸体字符作为普通字符串处理。Vue.js 的单文件组件的解析器在遇到 `<script>` 标签时就会进入 `RAWTEXT` 模式，这时他会把 `<script>` 标签内的内容全部作为普通文本处理。
+
+`CDATA` 模式在 `RAWTEXT` 模式的基础上更进一步。下图给出了 `WHATWG` 规范第 `13.2.5.69` 节中所定义的 `CDATA` 模式下状态机的工作方式。
+
+<img src="./images/parser05.png" />
+
+在 `CDATA` 模式下，解析器会把任何字符都作为普通字符处理，直到遇到 `CDATA` 的结束标志为止。
+
+实际上，在 `WHATWG` 规范中还定义了 `PLAINTEXT` 模式，该模式与 `RAWTEXT` 模式类似。不同的是，解析器一旦进入 `PLAINTEXT` 模式，将不会再退出。另外，Vue.js 的模板 DSL 解析器是用不到 `PLAINTEXT` 模式的，因此我们也不会过多介绍它。
+
+下图汇总了不同的模式及各自的特性。
+
+| 模式    | 能否解析标签 | 是否支持 HTML 实体 |
+| ------- | ------------ | ------------------ |
+| DATA    | 能           | 是                 |
+| RCDATA  | 否           | 是                 |
+| RAWTEXT | 否           | 否                 |
+| CDATA   | 否           | 否                 |
+
+除了表中列出的特性之外，不同的模式还会影响解析器对于终止解析的判断，后面会继续讨论。另外，后续编写解析器代码时，我们会将上述模式定义为状态表。
+
+```js
+const TextModes = {
+  DATA: 'DATA',
+  RCDATA: 'RCDATA',
+  RAETEXT: 'RAETEXT',
+  CDATA: 'CDATA'
+}
+```
+
+#### 递归下降算法构造模板 AST
+
