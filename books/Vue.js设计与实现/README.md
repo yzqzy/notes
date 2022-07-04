@@ -12522,3 +12522,87 @@ const TextModes = {
 
 #### 递归下降算法构造模板 AST
 
+从本节开始，我们将着手实现一个更加完善的模板解析器。解析器的基本架构模型如下：
+
+```js
+// 定义文本模式，作为状态表
+const TextModes = {
+  DATA: 'DATA',
+  RCDATA: 'RCDATA',
+  RAETEXT: 'RAETEXT',
+  CDATA: 'CDATA'
+}
+
+// 解析器函数，接收模板作为参数
+function parse(str) {
+  // 定义上下文对象
+  const context = {
+    // source 是模板内容，用于解析过程中进行消费
+    source: str,
+    // 解析器当前处于文本模式，初始模式为 DATA
+    mode: TextModes.DATA
+  }
+  // 调用 parseChildren 函数开始解析，它返回解析后得到的子节点
+  // parseChildren 函数接收两个参数
+  // 第一个参数是上下文对象 context
+  // 第二个参数是由父代节点构成的节点栈，初始时栈为空
+  const nodes = parseChildren(context, [])
+
+  // 解析器返回 Root 根节点
+  return {
+    type: 'Root',
+    // 使用 nodes 作为根节点的 children
+    children: nodes
+  }
+}
+```
+
+上面这段代码中，我们首先定义了一个状态表 `TextModes`，它用来描述预定义的文本模式。然后，我们定义了 parse 函数，即解析器函数，在其中定义了上下文对象 `context`，用来维护解析程序执行程序中的各种状态。接着，调用 `parseChildren` 函数进行解析，该函数会返回解析后得到的子节点，并使用这些子节点作为 `children` 来创建 Root 根节点。最后，parse 函数返回根节点，完成模板 AST 的构建。
+
+这段代码的思路与我们[之前讲述的](https://www.yueluo.club/detail?articleId=62bce6f0397c3e0980cc9649#parser__151)关于模板 AST 的构建思路有所不同。在之前的代码中，我们首先对模板内容进行标记化得到一系列 Token，然后根据这些 Token 构建模板 AST。实际上，创建 Token 与构造模板 AST 的过程可以同时进行，因为模板和模板 AST 具有同构特性。
+
+另外，在上面这段代码中，`parseChildren` 函数是整个解析器的核心。后续我们会递归地调用它来不断地消费模板内容。`parseChildren` 函数会返回解析后得到的子节点。假设有如下模板。
+
+```html
+<p>1</p>
+<p>2</p>
+```
+
+上面这段模板有两个根节点，即两个 `<p>` 标签。`parseChildren` 函数在解析这段模板后，会得到由这两个 `<p>` 节点组成的数组：
+
+```js
+[
+  { type: 'Element', tag: 'p', children: [/*...*/] },
+  { type: 'Element', tag: 'p', children: [/*...*/] },
+]
+```
+
+之后，这个数组将作为 Root 根节点的 children。
+
+* 第一个参数：上下文对象 context；
+* 第二个参数：由父代节点构成的栈，用于维护节点间的父子级关系。
+
+`parseChildren` 函数本质也是一个状态机，该状态机有多少种状态取决于子节点的类型数量。在模板中，元素的子节点可以是以下几种：
+
+* 标签节点，例如 `<div>`。
+* 文本插值节点，例如 `{{ val }}`。
+* 普通文本节点，例如：text。
+* 注释节点，例如 `<!---->`。
+* `CDATA` 节点，例如 `<![CDATA[ xxx ]]>` 。
+
+在标准的 HTML 中，节点的类型将会更多，例如 `DOCTYPE` 节点等。为了降低复杂度，我们仅考虑上述类型的节点。
+
+<img src="./images/parser06.png" />
+
+我们可以把上图展示的状态迁移过程总结如下：
+
+* 当遇到 < 时，进行临时状态
+  * 如果下一个字符匹配正则 `/a-z/i`，则认为是一个标签节点，于是调用 `parseElement` 函数完成标签解析。注意正则表达式 `/a-z/i` 中的 i，这里是忽略大小写（case-insensitive）。
+  * 如果字符串以 `<!--` 开头，则认为是一个注释节点，于是调用 `parseComment` 函数完成注释节点的界限。
+  * 如果字符串以 `<![CDATA[` 开头，则认为这是一个 `CDATA` 节点，于是调用 `parseCDATA` 函数完成 `CDATA` 节点的解析。
+* 如果字符串以 `{{` 开头，则认为这是一个插值节点，于是调用 `parseInterpolation` 函数完成插值节点的解析。
+* 其他情况，都作为普通文本，调用 `parseText` 函数完成文本节点的解析。
+
+```js
+```
+
