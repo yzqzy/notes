@@ -12604,5 +12604,136 @@ function parse(str) {
 * 其他情况，都作为普通文本，调用 `parseText` 函数完成文本节点的解析。
 
 ```js
+function parseChildren(context, ancestors) {
+  // 定义 nodes 数组存储子节点，它将作为最终的返回值
+  let nodes = []
+  // 从上下文对象中取得当前状态，包括模式 mode 和模板内容 source
+  const { mode, source } = context
+
+  // 开始 while 循环，只要满足条件就会一直对字符串进行解析
+  while (!isEnd(context, ancestors)) {
+    let node
+    // 只有 DATA 模式和 RCDATA 模式才支持插值节点的解析
+    if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
+      // 只有 DATA 模式才支持标签节点的解析
+      if (mode === TextModes.DATA && source[0] === '<') {
+        if (source[1] === '!') {
+          if (source.starsWidth('<!--')) {
+            // 注释
+            node = parseComment(context)
+          } else if (source.starsWidth('<![CDATA[')) {
+            // CDATA
+            node = parseCDATA(context, ancestors)
+          }
+        } else if (source[1] === '/') {
+          // 结束标签，这里需要抛出错误
+        } else if (/[a-z]/i.test(source[1])) {
+          // 标签
+          node = parseElement(context, ancestors)
+        }
+      } else if (source.starsWidth('{{')) {
+        // 解析插值
+        node = parseInterpolation(context)
+      }
+    }
+
+    // node 不存在，说明处理其他模式，即非 DATA 模式且非 RCDATA 模式
+    // 这时一切内容作为文本处理
+    if (!node) {
+      // 解析文本节点
+      node = parseText(context)
+    }
+
+    // 将节点添加到 nodes 数组中
+    nodes.push(node)
+  }
+
+  // 当 while 循环停止后，说明子节点解析完毕，返回子节点
+  return nodes
+}
+```
+
+上面这段代码完整地描述了图中所示的状态迁移过程，这里有几点需要注意。
+
+* `parseChildren` 函数的返回值是由子节点组成的数组，每次 while 循环都会解析一个或多个节点，这些节点会被添加到 nodes 数组中，并作为 `parseChildren` 函数的返回值返回；
+* 解析过程中需要判断当前的文本模式。只有处于 `DATA` 模式或 `RCDATA` 模式时，解析器才会支持插值节点的解析。并且，只有处于 DATA 模式时，解析器才支持标签节点、注释节点和 `CDATA` 节点的解析。
+
+| 模式    | 能否解析标签 | 是否支持 HTML 实体 |
+| ------- | ------------ | ------------------ |
+| DATA    | 能           | 是                 |
+| RCDATA  | 否           | 是                 |
+| RAWTEXT | 否           | 否                 |
+| CDATA   | 否           | 否                 |
+
+* 当遇到特定标签时，解析器会切换模式。一旦解析器切换到 `DATA` 模式和 `RCDATA` 模式之外的模式时，一切字符都将作为文本节点被解析。当然，即使在 `DATA` 模式或 `RCDATA` 模式下，如果无法匹配标签节点、注释节点、`CDATA` 节点、插值节点，那么也会作为文本节点解析。
+
+你可能对这段代码仍然有疑问，例如 while 循环何时停止？`isEnd` 函数的作用是什么？这里给出简单解释，`parseChildren` 函数是用来解析子节点的，因为 `while` 循环一定要遇到父级节点的结束标签才会停止，这是正常的思路。
+
+我们可以通过一个例子来更加直观地了解 `parseChildren` 函数，以及其他解析函数在解析模板时的工作职责和工作流程。
+
+```js
+const template = `<div>
+  <p>Text1</>
+  <p>Text2</>
+</div>`
+```
+
+这里需要强调的是，在解析模板时，我们不能会忽略空白字符。这些空白字符包括：换行符(`\n`)，回车符(`\r`)，空格(`''`)，制表符(`\t`)以及换页符(`\f`)。如果我们用加号 (`+`) 代表换行符，用减号 (`-`) 代表空格字符。那么上面的模板可以表示为。
+
+```js
+const template = `<div>+--<p>Text1</p>+--<p>Text2</p>+</div>`
+```
+
+接下来，我们以这段模板作为输入来执行解析过程。
+
+解析器一开始处于 `DATA` 模式。开始执行解析后，解析器遇到的第一个字符为 `<`，并且第二个字符能够匹配正则表达式 `/a-z/i`，所以解析器会进入标签节点状态，并调用 `parseElement` 函数进行解析。
+
+`parseElement` 函数会做三件事：解析开始标签、解析子节点、解析结束标签。
+
+```js
+function parseElement() {
+  // 解析开始标签
+  const element = parseTag()
+  // 递归调用 parseChildren 函数进行 <div> 标签子节点的解析
+  element.children = parseChildren()
+  // 解析结束标签
+  parseEndTag()
+
+  return element
+}
+```
+
+如果一个标签不是闭合标签，则可以认为，一个完整的标签元素是由开始标签、子节点和结束标签这三部分构成的。因此，在 `parseElement` 函数内，我们分别调用三个解析函数来处理这三部分内容。
+
+* `parseTag` 解析开始标签。`parseTag` 函数用于解析开始标签，包括开始标签上的属性和指令。因此，在 `parseTag` 解析函数执行完毕后，会消费字符串中的内容 `<div>`，处理后的模板内容将变为：
+
+  ```js
+  const template = `+--<p>Text1</p>+--<p>Text2</p>+</div>`
+  ```
+
+* 递归地调用 `parseChildren` 函数解析子节点。`parseElement` 函数在解析开始标签时，会产生一个标签节点 `element`。在 `parseElement` 函数执行完毕后，剩下的模板内容应该作为 `element` 的子节点被解析，即 `element.children`。因此，我们要递归地调用 `parseChildren` 函数。在这个过程中，`parseChildren` 函数会消费字符串中的内容：`+--<p>Text1</p>+--<p>Text2</p>+`。处理后的模板内容将变为：
+
+  ```js
+  const template = `</div>`
+  ```
+
+* `parseEngTag` 处理结束标签。在经过 `parseChildren` 函数处理后，模板内容只剩下一个结束标签。因此，只需要调用 `parseEndTag` 解析函数来消费它即可。
+
+经过这三个步骤的处理后，这段模板就被解析完毕了，最终得到模板 AST。但这里值得注意的是，为了解析标签的子节点，我们递归地调用了 `parseChildren` 函数。这意味着，一个新的状态机开始运行，我们可以将其称之为 "状态机2"。"状态机2" 所处理的模板内容为：
+
+```js
+const template = `+--<p>Text1</p>+--<p>Text2</p>+`
+```
+
+接下来，我们解析分析 “状态机2”  的状态迁移过程。在 "状态机2" 开始运行时，模板的第一个字符是换行符（字符+ 代表换行符）。因此，解析器会进入文本节点状态，并调用 `parseText` 函数完成文本节点的解析。`parseText` 函数会将下一个 `<` 字符之前的所有字符都视为文本节点内容的内容。 `parseText` 会消费模板内容 `+--`，并产生一个文本节点。在 `parseText` 解析函数执行完毕后，剩下的模板内容为：
+
+```js
+const template = `<p>Text1</p>+--<p>Text2</p>+`
+```
+
+接着，`parseChildren` 函数继续执行。此时模板的第一个字符为 `<`，并且下一个字符能够匹配正则 `/a-z/i`。于是解析器再次进入 `parseElement` 解析函数的执行阶段，这会消费模板内容 `<p>Text1</p>`。这一步过后，剩下的模板内容为：
+
+```js
+const template = `+--<p>Text2</p>+`
 ```
 
