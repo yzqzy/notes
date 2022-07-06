@@ -52,11 +52,13 @@ function parseChildren(context, ancestors) {
           }
         } else if (source[1] === '/') {
           // 结束标签，这里需要抛出错误
+          console.error('无效的结束标签')
+          continue
         } else if (/[a-z]/i.test(source[1])) {
           // 标签
           node = parseElement(context, ancestors)
         }
-      } else if (source.starsWidth('{{')) {
+      } else if (source.startsWith('{{')) {
         // 解析插值
         node = parseInterpolation(context)
       }
@@ -77,7 +79,18 @@ function parseChildren(context, ancestors) {
   return nodes
 }
 
+function isEnd(context, ancestors) {
+  // 当模板内容解析完毕后，停止
+  if (!context.source) return true
 
+  // 与父级节点栈中所有节点比较
+  for (let i = ancestors.length - 1; i >= 0; --i) {
+    // 只要栈中存在与当前结束标签同名的节点，就停止状态机
+    if (parent && context.source.startsWith(`</${ancestors[i].tag}`)) {
+      return true
+    }
+  }
+}
 
 // const template = `<div>
 //   <p>Text1</>

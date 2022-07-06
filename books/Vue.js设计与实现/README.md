@@ -12633,7 +12633,7 @@ function parseChildren(context, ancestors) {
           // 标签
           node = parseElement(context, ancestors)
         }
-      } else if (source.starsWidth('{{')) {
+      } else if (source.startsWith('{{')) {
         // 解析插值
         node = parseInterpolation(context)
       }
@@ -12795,4 +12795,127 @@ function parseChildren(context, ancestors) {
 <img src="./images/parser09.png" />
 
 此时 “状态机2” 已经停止运行，“状态机1” 继续工作。于是回解析解析模板，直到遇到下一个 `<p>` 标签。这是 "状态机1" 会再次调用 `parseElement` 函数解析标签节点，因此又会执行压栈并开启新的 “状态机3”。
+
+<img src="./images/parser10.png" />
+
+此时 “状态机3” 拥有程序的执行权，它会继续解析模板，直到遇到结束标签 `</p>`。因为这是一个结束标签，并且在父级节点栈中存在与该结束标签同名的标签节点，所以 “状态机3” 会停止运行，并弹出父级节点栈中处于栈顶的节点。
+
+<img src="./images/parser11.png" />
+
+当 “状态机3” 停止运行后，程序的执行权会交还给 “状态机1”。“状态机1” 会继续解析模板，直到遇到最后的 `</div>` 结束标签。这时 “状态机1” 会发现节点栈中存在与结束标签同名的标签节点，于是将该节点弹出父级节点栈，并停止运行。
+
+<img src="./images/parser12.png" />
+
+这时父级节点栈为空，状态机全部停止运行，模板解析完毕。
+
+通过上面的描述，我们能够清晰地认识到，解析器会在何时开启新的状态机，以及状态机会在何时停止。结论是：当解析器遇到开始标签时，会将该标签压入父级节点栈中，同时开启新的状态机。当解析器遇到结束标签，并且父级节点栈中存在与该标签同名的开始标签节点时，会停止当前正在运行的状态机。根据上述规则，我们可以给出 `isEnd` 函数的逻辑。
+
+```js
+function isEnd(context, ancestors) {
+  // 当模板内容解析完毕后，停止
+  if (!context.source) return true
+  // 获取父级标签节点
+  const parent = ancestors[ancestors.length - 1]
+  // 如果遇到结束标签，并且该标签与父级标签节点同名，则停止
+  if (parent && context.source.startsWith(`</${parent.tag}`)) {
+    return true
+  }
+}
+```
+
+上面这段代码展示了状态机的停止时机：
+
+* 第一个停止时是当模板内容被解析完毕时；
+* 第二个停止时机则是在遇到结束标签时，这时解析器会取得父级节点栈栈顶的节点作为父节点，检查该结束标签是否与父节点的标签同名，如果相同，则状态机停止运行。
+
+这里需要注意的是，在第二个停止时机中，我们直接比较结束标签的名称与栈顶节点的标签名称。这么做确实可行，但严格来说也是有问题的。例如下面的模板所示：
+
+```html
+<div><span></div></span>
+```
+
+观察上述模板，它存在一个明显的问题。这段模板有两种解释方式，下图给出了第一种。
+
+<img src="./images/parser13.png" />
+
+这种解释方式的流程如下：
+
+* “状态机1'' 遇到 `<div>` 开始标签，调用 `parseElement` 解析函数，这会开启 ”状态机 2“ 来完成子节点的解析。
+* ”状态机2“ 遇到 `<span>` 开始标签，调用 `parseElement` 解析函数，这回开启 "状态机3" 来完成子节点的解析。
+* "状态机3" 遇到 `</div>` 结束标签。由于此时父级节点栈顶的节点名称是 `span`，并不是 `div`，所以 `状态机3` 不会停止运行。这时，"状态机3" 遇到了不符合预期的状态，因为结束标签 `</div>` 缺少与之对应的开始标签，所以这时 "状态3" 会抛出错误：”无效的结束标签“。
+
+上述流程的思路与我们当前的实现相符，状态机会遭遇不符合预期的状态。`parseChildren` 函数的代码可以体现这一点。
+
+```js
+function parseChildren(context, ancestors) {
+  // 定义 nodes 数组存储子节点，它将作为最终的返回值
+  let nodes = []
+  // 从上下文对象中取得当前状态，包括模式 mode 和模板内容 source
+  const { mode, source } = context
+
+  // 开始 while 循环，只要满足条件就会一直对字符串进行解析
+  while (!isEnd(context, ancestors)) {
+    let node
+    // 只有 DATA 模式和 RCDATA 模式才支持插值节点的解析
+    if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
+      // 只有 DATA 模式才支持标签节点的解析
+      if (mode === TextModes.DATA && source[0] === '<') {
+        if (source[1] === '!') {
+          if (source.starsWidth('<!--')) {
+            // 注释
+            node = parseComment(context)
+          } else if (source.starsWidth('<![CDATA[')) {
+            // CDATA
+            node = parseCDATA(context, ancestors)
+          }
+        } else if (source[1] === '/') {
+          // 结束标签，这里需要抛出错误
+          console.error('无效的结束标签')
+          continue
+        } else if (/[a-z]/i.test(source[1])) {
+          // 标签
+          node = parseElement(context, ancestors)
+        }
+      } else if (source.startsWith('{{')) {
+        // 解析插值
+        node = parseInterpolation(context)
+      }
+    }
+		
+    // ...
+  }
+
+  // 当 while 循环停止后，说明子节点解析完毕，返回子节点
+  return nodes
+}
+```
+
+换句话来说，按照我们当前的实现思路来解析上述例子中的模板，最终得到的错误信息是：“无效的结束标签”。但其实还有另外一个更好的解析方式。观察上例中给出的模板，其实存在一段完整的内容。
+
+<img src="./images/parser14.png" />
+
+从图中可以看到，模板中存在一段完整的内容，我们希望解析器可以正常对其进行解析，这很可能也是符合用户意图的。但实际上，无论是哪一种解析方式，对程序的影响都不大。两者的区别体现在错误处理上。对于第一种解析方式，我们得到的错误信息是：“无效的结束标签”。而对于第二种解析方式，在 “完整的内容” 部分被解析完毕后，解析器就会打印错误信息，“`<span>`标签缺少闭合标签” 。很显然，第二种解析方式更加合理。
+
+为了实现第二种解析方式，我们需要调整 `isEnd` 函数的逻辑。当判断状态机是否应该停止时，我们不应该总是与栈顶的父级节点做比较，而是应该与整个父级节点栈的的所有节点做比较。只要父级节点栈中存在与当前遇到的结束标签同名的节点，就停止状态机。
+
+```js
+function isEnd(context, ancestors) {
+  // 当模板内容解析完毕后，停止
+  if (!context.source) return true
+
+  // 与父级节点栈中所有节点比较
+  for (let i = ancestors.length - 1; i >= 0; --i) {
+    // 只要栈中存在与当前结束标签同名的节点，就停止状态机
+    if (parent && context.source.startsWith(`</${ancestors[i].tag}`)) {
+      return true
+    }
+  }
+}
+```
+
+按照新的思路再次对以下模板进行解析：
+
+```html
+<div><span></div></span>
+```
 
