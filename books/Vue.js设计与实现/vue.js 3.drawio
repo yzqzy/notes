@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2022-07-06T00:13:41.490Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="DVrDXjKJgXueo52Vn1iF" version="20.0.4" type="github" pages="3">
+<mxfile host="app.diagrams.net" modified="2022-07-06T15:00:36.010Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="Nh2g-_hx7O3gM4yFKzXi" version="20.0.4" type="github" pages="3">
   <diagram id="KZGV3ZOp9gYFbGEhSCay" name="编译器">
     <mxGraphModel dx="1230" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -203,7 +203,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="Y152ru0WiAnbQ9088xff" name="解析器">
-    <mxGraphModel dx="703" dy="473" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" math="0" shadow="0">
+    <mxGraphModel dx="848" dy="570" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2336" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -480,20 +480,14 @@
         <mxCell id="Bpy9AcA1ffayrJIlGA5Z-10" value="&amp;lt;div&amp;gt;+--&amp;lt;p&amp;gt;Text1&amp;lt;/p&amp;gt;+--&amp;lt;p&amp;gt;Text2&amp;lt;/p&amp;gt;+&amp;lt;/div&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fontColor=default;labelBackgroundColor=none;strokeColor=default;" vertex="1" parent="1">
           <mxGeometry x="200" y="1725" width="260" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="Bpy9AcA1ffayrJIlGA5Z-12" value="div" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;" vertex="1" parent="1">
-          <mxGeometry x="200" y="1785" width="100" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="Bpy9AcA1ffayrJIlGA5Z-14" value="div" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;" vertex="1" parent="1">
-          <mxGeometry x="320" y="1785" width="100" height="30" as="geometry" />
-        </mxCell>
         <mxCell id="Bpy9AcA1ffayrJIlGA5Z-15" value="模板" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=default;" vertex="1" parent="1">
           <mxGeometry x="110" y="1725" width="50" height="30" as="geometry" />
         </mxCell>
         <mxCell id="Bpy9AcA1ffayrJIlGA5Z-16" value="父级节点栈：ancestors" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=default;" vertex="1" parent="1">
           <mxGeometry x="10" y="1785" width="150" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="Bpy9AcA1ffayrJIlGA5Z-17" value="状态机1运行中" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;" vertex="1" parent="1">
-          <mxGeometry x="200" y="1837.5" width="110" height="35" as="geometry" />
+        <mxCell id="Bpy9AcA1ffayrJIlGA5Z-17" value="状态机1停止" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1837.5" width="260" height="35" as="geometry" />
         </mxCell>
         <mxCell id="Bpy9AcA1ffayrJIlGA5Z-18" value="状态机2停止" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;" vertex="1" parent="1">
           <mxGeometry x="260" y="1890" width="110" height="35" as="geometry" />
@@ -505,7 +499,13 @@
           <mxGeometry x="90" y="1895" width="70" height="30" as="geometry" />
         </mxCell>
         <mxCell id="Bpy9AcA1ffayrJIlGA5Z-22" value="" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.67;dx=20;notch=0;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;direction=south;" vertex="1" parent="1">
-          <mxGeometry x="305" y="1660" width="20" height="50" as="geometry" />
+          <mxGeometry x="430" y="1650" width="20" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Bpy9AcA1ffayrJIlGA5Z-28" value="状态机3停止" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;fontSize=12;fontColor=default;strokeColor=default;" vertex="1" parent="1">
+          <mxGeometry x="350" y="1940" width="110" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="Bpy9AcA1ffayrJIlGA5Z-29" value="状态机2" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=default;" vertex="1" parent="1">
+          <mxGeometry x="87.5" y="1942.5" width="70" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
