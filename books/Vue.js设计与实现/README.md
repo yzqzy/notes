@@ -12620,10 +12620,10 @@ function parseChildren(context, ancestors) {
       // 只有 DATA 模式才支持标签节点的解析
       if (mode === TextModes.DATA && source[0] === '<') {
         if (source[1] === '!') {
-          if (source.starsWidth('<!--')) {
+          if (source.startsWith('<!--')) {
             // 注释
             node = parseComment(context)
-          } else if (source.starsWidth('<![CDATA[')) {
+          } else if (source.startsWith('<![CDATA[')) {
             // CDATA
             node = parseCDATA(context, ancestors)
           }
@@ -12861,10 +12861,10 @@ function parseChildren(context, ancestors) {
       // 只有 DATA 模式才支持标签节点的解析
       if (mode === TextModes.DATA && source[0] === '<') {
         if (source[1] === '!') {
-          if (source.starsWidth('<!--')) {
+          if (source.startsWith('<!--')) {
             // 注释
             node = parseComment(context)
-          } else if (source.starsWidth('<![CDATA[')) {
+          } else if (source.startsWith('<![CDATA[')) {
             // CDATA
             node = parseCDATA(context, ancestors)
           }
@@ -12918,4 +12918,224 @@ function isEnd(context, ancestors) {
 ```html
 <div><span></div></span>
 ```
+
+其流程如下：
+
+* ”状态机1“ 遇到 `<div>` 开始标签，调用 `parseElement` 解析函数，并开启 "状态机2" 解析子节点。
+* "状态机2" 遇到 `<span>` 开始标签，调用 `parseElement` 解析函数，并开启 "状态机3" 解析子节点。
+* ”状态机3“ 遇到 `</div>` 结束标签，由于节点栈中存在名为 `div` 的标签节点，于是 ”状态机3“ 停止了。
+
+在这个过程中，”状态机2“ 在调用 `parseElement` 解析函数时，`parseElement` 函数能够发现 `<span>` 缺少闭合标签，于是会打印错误信息 ”`<span>` 标签缺少闭合标签 “。
+
+```js
+
+function parseElement(context, ancestors) {
+  // 解析开始标签
+  const element = parseTag()
+  if (element.isSelfClosing) return element
+
+  ancestors.push(element)
+  element.children = parseChildren(context, ancestors)
+  ancestors.pop()
+
+  if (context.source.startsWith(`</${element.tag}`)) {
+    parseTag(context, 'end')
+  } else {
+    // 缺少闭合标签
+    console.log(`${element.tag} 标签缺少闭合标签`)
+  }
+
+  return element
+}
+```
+
+#### 解析标签节点
+
+在上一节给出的 `parseElement` 函数的实现中，无论是解析开始标签还是闭合标签，我们都调用了 `parseTag` 函数。同时，我们使用 `parseChildren` 函数来解析开始标签和闭合标签中间的部分。
+
+```js
+function parseElement(context, ancestors) {
+  // 解析开始标签
+  const element = parseTag()
+  if (element.isSelfClosing) return element
+
+  ancestors.push(element)
+  element.children = parseChildren(context, ancestors)
+  ancestors.pop()
+
+  if (context.source.startsWith(`</${element.tag}`)) {
+    parseTag(context, 'end')
+  } else {
+    // 缺少闭合标签
+    console.log(`${element.tag} 标签缺少闭合标签`)
+  }
+
+  return element
+}
+```
+
+标签节点的整个解析过程如图所示：
+
+<img src="./images/parser15.png" />
+
+这里需要注意的是，由于开始标签与结束标签的格式非常类似，所以我们统一使用 `parseTag` 函数处理，并通过该函数的第二个参数来指定具体的处理类型。当第二个参数值为字符串 'end' 时，意外这解析的是结束标签。另外，无论处理的是开始标签还是结束标签，`parseTag` 函数都会消费对应的内容。为了实现对模板内容的消费，我们需要在上下文对象中新增两个工具函数。
+
+```js
+function parse(str) {
+  // 定义上下文对象
+  const context = {
+    // source 是模板内容，用于解析过程中进行消费
+    source: str,
+    // 解析器当前处于文本模式，初始模式为 DATA
+    mode: TextModes.DATA,
+    // advanceBy 函数用来消费指定数量的字符，它接收一个数字作为参数
+    advanceBy(num) {
+      // 根据给定字符数 num，截取位置 num 后的模板内容，并替换模板内容
+      context.source = context.source.slice(num)
+    },
+    // 无论是开始标签还是结束标签，都有可能存在无用的空白字符，例如 <div   >
+    advanceSpaces() {
+      // 匹配空白字符
+      const match = /^[\t\r\n\f]+/.exec(context.source)
+      if (match) {
+        // 调用 advanceBy 函数消费空白字符
+        context.advanceBy(match[0].length)
+      }
+    }
+  }
+
+  // 调用 parseChildren 函数开始解析，它返回解析后得到的子节点
+  // parseChildren 函数接收两个参数
+  // 第一个参数是上下文对象 context
+  // 第二个参数是由父代节点构成的节点栈，初始时栈为空
+  const nodes = parseChildren(context, [])
+
+  // 解析器返回 Root 根节点
+  return {
+    type: 'Root',
+    // 使用 nodes 作为根节点的 children
+    children: nodes
+  }
+}
+```
+
+在上面这段代码中，我们为上下文对象增加了 `advanceBy` 函数和 `advanceSpace` 函数。其中 `advanceBy` 函数用来消费指定数量的字符串。其实现原理很简单，即调用字符串的 `slice` 函数，根据指定位置截取剩余字符串，并使用截取后的结果作为新的模板内容。`advanceSpaces` 函数则用来消费无用的空白字符，因为标签中可能存在空白字符，例如在模板 `<div--->` 中减号（-）代表空白字符。
+
+有了 `advanceBy` 和 `advanceSpaces` 函数后，我们就可以给出 `parseTag` 函数的实现了。
+
+```js
+// 由于 parseTag 既用来处理开始标签，也用来处理结束标签，因为我们设计第二个参数 type
+// 用来代表当前处理的是开始标签还是结束标签，type 的默认值为 'start'，即默认作为开始标签处理
+function parseTag(context, type = 'start') {
+  // 从上下文对象中拿到 advanceBy 函数
+  const { advanceBy, advanceSpaces } = context
+
+  // 处理开始标签和结束标签的正则表达式不同
+  const match = type === 'start'
+    // 匹配开始标签
+    ? /^<([a-z][^\t\r\n\f />]*)/i.exec(context.source)
+    // 匹配结束标签
+    : /^<\/([a-z][^\t\r\n\f />]*)/i.exec(context.source)
+  // 匹配成功后，正则表达式的第一个捕获组的值就是标签名称
+  const tag = match[1]
+  // 消费正则表达式匹配的全部内容，例如 '<div' 这段内容
+  advanceBy(match[0].length)
+  // 消费标签中无用的开白字符
+  advanceSpaces()
+
+  // 在消费匹配的内容后，如果字符串以 '/>' 开头，则说明这是一个自闭合标签
+  const isSelfClosing = context.source.startsWith('/>')
+  // 如果是自闭和标签，则消费 '/>'，否则消费 '>'
+  advanceBy(isSelfClosing ? 2 : 1)
+
+  // 返回标签节点
+  return {
+    type: 'Element',
+    // 标签名称
+    tag,
+    // 标签的属性暂时留空
+    props: [],
+    // 子节点留空
+    children: [],
+    // 是否自闭合
+    isSelfClosing
+  }
+}
+```
+
+上面这段代码有两个关键点。
+
+* 由于 `parseTag` 函数即用来解析开始标签，又用来解析结束标签，因此需要一个参数来标识当前处理的标签类型，即 type。
+* 对于开始标签和结束标签，用于匹配它们的正则表达式只有一点不同：结束标签是以字符串 `</` 开头的。
+
+下图给出了用于匹配开始标签的正则表达式的含义。
+
+<img src="./images/parser16.png" />
+
+下面给出了几个使用图中正则来匹配的开始标签的例子。
+
+* 对于字符串 '`<div>`' ，会匹配出字符串 '`<div`'，剩余 '`>`'。
+* 对于字符串 '`<div/>`' ，会匹配出字符串 '`<div`'，剩余 '`/>`'。
+* 对于字符串 '`<div---->`' ，其中减号(-) 代表空白字符，会匹配出字符串 '`<div`'，剩余 '`---->`'。
+
+```js
+console.log(/^<([a-z][^\t\r\n\f />]*)/i.exec('<div>'))
+// [ '<div', 'div', index: 0, input: '<div>', groups: undefined ]
+console.log(/^<([a-z][^\t\r\n\f />]*)/i.exec('<div/>'))
+// [ '<div', 'div', index: 0, input: '<div/>', groups: undefined ]
+console.log(/^<([a-z][^\t\r\n\f />]*)/i.exec('<div    >'))
+// [ '<div', 'div', index: 0, input: '<div    >', groups: undefined ]
+```
+
+除了正则表达式外，`parseTag` 函数的另外几个关键点如下：
+
+* 在完成正则匹配后，需要调用 `advanceBy` 函数消费由正则匹配的全部内容；
+* 根据上面给出的第三个正则匹配例子可知，由于标签中可能存在无用的空白字符，例如 `<div---->` ，因此我们需要调用 `advanceSpaces` 函数消费空白字符；
+* 在消费由正则匹配的的内容后，需要检查剩余模板内容是否以 `/>` 开头。如果是，则说明当前解析的是一个自闭合标签，这时需要将标签节点的 `isSelfClosing` 属性设置为 true；
+* 最后，判断标签是否自闭合。如果是，则调用 `advanceBy` 函数消费内容 `/>`，否则只需要消费内容 `>` 即可。
+
+在经过上述处理后，`parseTag` 函数会返回一个标签节点。`parseElement` 函数在得到由 `parseTag` 函数产生的标签节点后，需要根据节点的类型完成文本模式的切换。
+
+```js
+function parseElement(context, ancestors) {
+  // 解析开始标签
+  const element = parseTag()
+  if (element.isSelfClosing) return element
+
+  // 切换正确的文本模式
+  if (element.tag === 'textarea' || element.tag === 'title') {
+    // 如果由 parseTag 解析得到的标签是 <textarea> 或 <title>，则切换到 RCDATA 模式
+    context.mode = TextModes.RCDATA
+  } else if (/style|xmp|iframe|noembed|noframes|noscript/.test(element.tag)) {
+    // 如果由 parseTag 解析得到的标签是
+    // <style>、<xmp>、<iframe>、<noembed>、<noframes>、<noscript>
+    // 则切换到 RAWTEXT 模式
+    context.mode = TextModes.RAETEXT
+  } else {
+    // 否则切换到 DATA 模式
+    context.mode = TextModes.DATA
+  }
+
+  ancestors.push(element)
+  element.children = parseChildren(context, ancestors)
+  ancestors.pop()
+
+  if (context.source.startsWith(`</${element.tag}`)) {
+    parseTag(context, 'end')
+  } else {
+    // 缺少闭合标签
+    console.log(`${element.tag} 标签缺少闭合标签`)
+  }
+
+  return element
+}
+```
+
+> `<noembed>` 元素是个废除的和不标准的方式，用于向不支持 `<embed>` ，或者不支持作者希望的 嵌入式内容 的浏览器提供替代（或者 “后备”）内容。这个元素在 HTML 4.01 起废除，以支持 `<object>`。后备内容应该插在 <object> 的开始和结束标签之间。
+
+至此，我们就实现了对标签节点的解析。目前的实现不包括节点属性和指令的解析，后面我们会继续讲解。
+
+#### 解析属性
+
+
 
