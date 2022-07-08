@@ -13137,5 +13137,10 @@ function parseElement(context, ancestors) {
 
 #### 解析属性
 
+上一节中介绍的 `parseTag` 解析函数会消费整个开始标签，这意味着该函数需要有能力处理开始标签中存在属性与指令，例如：
 
+```html
+<div id="foo" v-show="display"></div>
+```
 
+上面这段
