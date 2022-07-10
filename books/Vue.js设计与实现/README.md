@@ -12931,7 +12931,7 @@ function isEnd(context, ancestors) {
 
 function parseElement(context, ancestors) {
   // 解析开始标签
-  const element = parseTag()
+  const element = parseTag(context)
   if (element.isSelfClosing) return element
 
   ancestors.push(element)
@@ -12956,7 +12956,7 @@ function parseElement(context, ancestors) {
 ```js
 function parseElement(context, ancestors) {
   // 解析开始标签
-  const element = parseTag()
+  const element = parseTag(context)
   if (element.isSelfClosing) return element
 
   ancestors.push(element)
@@ -13099,7 +13099,7 @@ console.log(/^<([a-z][^\t\r\n\f />]*)/i.exec('<div    >'))
 ```js
 function parseElement(context, ancestors) {
   // 解析开始标签
-  const element = parseTag()
+  const element = parseTag(context)
   if (element.isSelfClosing) return element
 
   // 切换正确的文本模式
@@ -13139,8 +13139,309 @@ function parseElement(context, ancestors) {
 
 上一节中介绍的 `parseTag` 解析函数会消费整个开始标签，这意味着该函数需要有能力处理开始标签中存在属性与指令，例如：
 
-```html
+```vue
 <div id="foo" v-show="display"></div>
 ```
 
-上面这段
+上面这段模板中的 div 标签存在一个 `id` 属性和一个 `v-show` 属性。为了处理属性和指定，我们需要在 `parseTag` 函数中增加 `parseAttributes` 解析函数。
+
+```js
+// 由于 parseTag 既用来处理开始标签，也用来处理结束标签，因为我们设计第二个参数 type
+// 用来代表当前处理的是开始标签还是结束标签，type 的默认值为 'start'，即默认作为开始标签处理
+function parseTag(context, type = 'start') {
+  // 从上下文对象中拿到 advanceBy 函数
+  const { advanceBy, advanceSpaces } = context
+
+  // 处理开始标签和结束标签的正则表达式不同
+  const match = type === 'start'
+    // 匹配开始标签
+    ? /^<([a-z][^\t\r\n\f />]*)/i.exec(context.source)
+    // 匹配结束标签
+    : /^<\/([a-z][^\t\r\n\f />]*)/i.exec(context.source)
+  // 匹配成功后，正则表达式的第一个捕获组的值就是标签名称
+  const tag = match[1]
+  // 消费正则表达式匹配的全部内容，例如 '<div' 这段内容
+  advanceBy(match[0].length)
+  // 消费标签中无用的开白字符
+  advanceSpaces()
+  // 调用 parseAttributes 函数完成属性与执行的解析，并得到 props 数组
+  // props 数组是由指令节点与属性节点共同组成的数组
+  const props = parseAttributes(context)
+
+  // 在消费匹配的内容后，如果字符串以 '/>' 开头，则说明这是一个自闭合标签
+  const isSelfClosing = context.source.startsWith('/>')
+  // 如果是自闭和标签，则消费 '/>'，否则消费 '>'
+  advanceBy(isSelfClosing ? 2 : 1)
+
+  // 返回标签节点
+  return {
+    type: 'Element',
+    // 标签名称
+    tag,
+    // 标签的属性暂时留空
+    props: [],
+    // 子节点留空
+    children: [],
+    // 是否自闭合
+    isSelfClosing
+  }
+}
+```
+
+我们需要在消费标签的 “开始部分” 和无用的空白字符之后，再调用 `parseAttribute` 函数。举个例子，假设标签的内容如下：
+
+```vue
+<div id="foo" v-show="display" ></div>
+```
+
+标签的 “开始部分” 指的是字符串 `<div`，所以当消耗标签的 “开始部分” 以及无用空白字符后，剩下的内容为：
+
+```js
+id="foo" v-show="display" >
+```
+
+ 上面这段内容才是 `parseAttributes` 函数要处理的内容。由于该函数只用来解析属性和指令，因为它会不断地消费上面这段模板内容，直到遇到标签的 “结束部分” 位置。其中，结束部分指的是字符 `>` 或者字符串 `/>`。
+
+```js
+function parseAttributes(context) {
+  // 用来存储解析过程中产生的属性节点和指定节点
+  const props = []
+
+  // 开始 while 循环，不断地消费模板内容，直至遇到标签的 "结束部分" 为止
+  while (
+    !context.source.startsWith('>') && 
+    !context.source.startsWith('/>')
+  ) {
+    // 解析属性或指令
+  }
+
+  // 将解析结果返回
+  return props
+}
+```
+
+实际上，`parseAttributes` 函数消费模板内容的过程，就是不断地解析属性名称、等于号、属性值的过程。
+
+<img src="./images/parser17.png" />
+
+`parseAttributes` 函数会按照从左到右的顺序不断地消费字符串。该函数的解析过程如下：
+
+首先，解析出第一个属性的名称 id，并消费字符串 'id'。此时升序模板内容为：
+
+```js
+="foo" v-show="display" >
+```
+
+在解析属性名称时，除了要消费属性名称之外，还要消费属性名称后面可能存在的空白字符。比如下面这段模板中，属性名称和等于号之间存在空白字符。
+
+```js
+id  =  "foo" v-show="display" >
+```
+
+但无论如何，在属性名称解析完毕之后，模板剩余内容一定是以等于号开头的，即
+
+```js
+=  "foo" v-show="display" >
+```
+
+如果消费属性名称之后，模板内容不以等于号开头，说明模板内容不合法，我们可以选择性抛出错误。
+
+接着，我们需要消费等于号字符。由于等于号和属性值之间也可能存在空白字符，所以我们也需要消费对应的空白字符。在这一步操作过后，模板的剩余内容如下：
+
+```js
+"foo" v-show="display" >
+```
+
+接下来，到了处理属性值的环节。模板中的属性值存在三种情况。
+
+* 属性值被双引号包裹：`id="foo"` 。
+* 属性值被单引号包裹：`id='foo'`。
+* 属性值没有引号包裹：`id=foo`。
+
+按照上述例子，此时模板的内容一定以双引号（“）开头。因此我们可以通过检查当前模板内容是否以引号开头来确定属性值是否被引用。如果属性值被引号引用，则消费引号。此时模板的剩余内容为：
+
+```js
+foo" v-show="display" >
+```
+
+既然属性值被引号引用，就意味着在剩余模板内容中，下一个引号之前的内容都应该被解析为属性值。在这个例子中，属性值的内容是字符串 `foo`。于是，我们消费属性值及其后面的引号。当前，如果属性值没有被引号引用，那么在剩余模板内容中，下一个空白字符串之前的所有字符都应该作为属性值。
+
+当属性值和引号被消费之后，由于属性值与下一个属性名称之间可能存在空白字符，所以我们还要消费对应的空白字符。在这一步处理过后，剩余模板内容为：
+
+```js
+v-show="display" >
+```
+
+可以看到，经过上述操作之后，第一个属性值就处理完毕了。
+
+此时，模板中还剩下一个指令，我们只需重新执行上述步骤，即可完成 `v-show` 指令的解析。当 `v-show` 指令解析完毕后，将会遇到标签的 "结束部分"，即字符 `>`。这时，`parseAttributes` 函数的 `while` 循环将会停止，完成属性和指令的解析。
+
+下面的 `parseAttributes` 函数给出了上述逻辑的具体实现：
+
+```js
+function parseAttributes(context) {
+  const { advanceBy, advanceSpaces } = context
+  // 用来存储解析过程中产生的属性节点和指定节点
+  const props = []
+
+  // 开始 while 循环，不断地消费模板内容，直至遇到标签的 "结束部分" 为止
+  while (
+    !context.source.startsWith('>') && 
+    !context.source.startsWith('/>')
+  ) {
+    // 解析属性或指令
+    // 该正则用于匹配属性名称
+    const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
+    // 得到属性名称
+    const name = match[0]
+    // 消费属性名称
+    advanceBy(name.length)
+    // 消费属性名称与等于号之间的空白字符
+    advanceSpaces()
+    // 消费等于号
+    advanceBy(1)
+    // 消费等于号与属性值之间的空白字符
+    advanceSpaces()
+
+    // 属性值
+    let value = ''
+
+    // 获取当前模板内容的第一个字符
+    const quote = context.source[0]
+    // 判断属性值是否被引号引用
+    const isQuoted = quote === '"' || quote === "'"
+
+    if (isQuoted) {
+      // 属性值被引号引用，消费引号
+      advanceBy(1)
+      // 获取下一个引号的索引
+      const enQuoteIndex = context.source.indexOf(quote)
+      if (enQuoteIndex > -1) {
+        // 获取下一个引号之前的内容作为属性值
+        value = context.source.slice(0, enQuoteIndex)
+        // 消费属性值
+        advanceBy(value.length)
+        // 消费引号
+        advanceBy(1)
+      } else {
+        // 缺少引号错误
+        console.error('缺少引号')
+      }
+    } else {
+      // 说明属性值没有被引号引用
+      // 下一个空白字符之前的内容全部作为属性值
+      const match = /^[^\t\r\n\f >]+/.exec(context.source)
+      // 获取属性值
+      value = match[0]
+      // 消费属性值
+      advanceBy(value.length)
+    }
+    // 消费属性值后面的空白字符
+    advanceSpaces()
+
+    // 使用属性名称 + 属性值创建一个属性节点，添加到 props 数组中
+    props.push({
+      type: 'Attribute',
+      name,
+      value
+    })
+  }
+
+  // 将解析结果返回
+  return props
+}
+```
+
+在上面这段代码中，有两个重要的正则表达式：
+
+* `/^[^\t\r\n\f />][^\t\r\n\f />=]*/`，用来匹配属性名称；
+* `/^[^\t\r\n\f >]+/`，用来匹配没有使用引号引用的属性值。
+
+我们分别来看下这两个正则表达式是如何工作的。
+
+```js
+/^[^\t\r\n\f />][^\t\r\n\f />=]*/
+=>
+A：/^[^\t\r\n\f />]
+B：[^\t\r\n\f />=]*/
+```
+
+我们可以将这个正则表达式分为 A、B 两个部分来看。
+
+* 部分 A 用于匹配一个位置，这个位置不能是空白字符，也不能是字符 / 或字符 >，并且字符串要以该位置开头。
+* 部分 B 用于匹配 0 个或多个位置，这些位置不能是空白字符，也不能是 /、>、=。这些位置不允许出现等于号（=）字符，这就实现了只匹配等于号之前的内容，即属性名称。
+
+我们再来看第二个正则表达式的匹配原理。
+
+```js
+/^[^\t\r\n\f >]+/
+```
+
+该正则表达式从字符串的开始位置开始匹配，并且会匹配一个或多个非空白字符、非字符 >。换句话说，该正则表达式会一直对字符串进行匹配，直到遇到空白字符或字符 > 为止，这就实现了属性值的提取。
+
+配合 `parseAttributes`  函数，假设给出如下模板：
+
+```vue
+<div id="foo" v-show="display"></div>
+```
+
+解析上面这段模板，将会得到如下 AST：
+
+```js
+const ast = {
+  type: 'Root'm
+  children: [
+  	{
+  		type: 'Element',
+  		tag: 'div',
+  		props: [
+  			{ type: 'Attribute', name: 'id', value: 'foo' },
+        { type: 'Attribute', name: 'v-show', value: 'display' }
+  		]
+		}
+  ]
+}
+```
+
+可以看到，在 div 标签接的 props 中，包含两个类型为 `Attribute` 的节点，这两个点就是 `parseAttributes` 函数的解析结果。
+
+我们可以增加更多在 `Vue.js` 中常见的属性和指令进行测试，如以下模板所示：
+
+```vue
+<div :id="dynamicId" @click="handler" v-on:mousedown="onMouseDown"></div>
+```
+
+上面这段模板经过解析后，得到如下 AST。
+
+```js
+const ast = {
+  type: 'Root',
+  children: [
+    {
+  		type: 'Element',
+  		tag: 'div',
+  		props: [
+  			{ type: 'Attribute', name: ':id', value: 'dynamicId' },
+        { type: 'Attribute', name: '@click', value: 'handler' },
+        { type: 'Attribute', name: 'v-on:mousedown', value: 'onMouseDown' }
+  		]
+		}
+  ]
+}
+```
+
+可以看到，在类型为 `Attribute` 的属性节点中，其 `name` 字段完整地保留着模板中编写的属性名称。我们可以对属性名称做进一步分析，从而得到更具体的信息。例如，属性名称以字符 `@` 开头，认为它是一个 `v-on` 指令绑定。我们甚至可以把 `v-` 开头的属性看作指令绑定，从而为它赋予不同的节点类型。例如：
+
+```js
+// 指令，类型为 Directive
+{ type: 'Directive', name: 'v-on:mousedown', value: 'onMouseDown' }
+{ type: 'Directive', name: '@click', value: 'handler' }
+// 普通属性
+{ type: 'Attribute', name: 'id', value: 'foo' }
+```
+
+不仅如此，为了得到更加具体的信息，我们甚至可以进一步分析指令节点的数据，也可以设计更多语法规则，这完全取决于框架设计者在语法层面的设计，以及为框架赋予的能力。
+
+// TODO
+
+#### 解析文本与解码 HTML 实体

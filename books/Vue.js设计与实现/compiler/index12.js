@@ -115,7 +115,7 @@ const template = `<div>+--<p>Text1</p>+--<p>Text2</p>+</div>`
 
 function parseElement(context, ancestors) {
   // 解析开始标签
-  const element = parseTag()
+  const element = parseTag(context)
   if (element.isSelfClosing) return element
 
   // 切换正确的文本模式
@@ -164,6 +164,9 @@ function parseTag(context, type = 'start') {
   advanceBy(match[0].length)
   // 消费标签中无用的开白字符
   advanceSpaces()
+  // 调用 parseAttributes 函数完成属性与执行的解析，并得到 props 数组
+  // props 数组是由指令节点与属性节点共同组成的数组
+  const props = parseAttributes(context)
 
   // 在消费匹配的内容后，如果字符串以 '/>' 开头，则说明这是一个自闭合标签
   const isSelfClosing = context.source.startsWith('/>')
@@ -184,3 +187,78 @@ function parseTag(context, type = 'start') {
   }
 }
 
+function parseAttributes(context) {
+  const { advanceBy, advanceSpaces } = context
+  // 用来存储解析过程中产生的属性节点和指定节点
+  const props = []
+
+  // 开始 while 循环，不断地消费模板内容，直至遇到标签的 "结束部分" 为止
+  while (
+    !context.source.startsWith('>') && 
+    !context.source.startsWith('/>')
+  ) {
+    // 解析属性或指令
+    // 该正则用于匹配属性名称
+    const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
+    // 得到属性名称
+    const name = match[0]
+    // 消费属性名称
+    advanceBy(name.length)
+    // 消费属性名称与等于号之间的空白字符
+    advanceSpaces()
+    // 消费等于号
+    advanceBy(1)
+    // 消费等于号与属性值之间的空白字符
+    advanceSpaces()
+
+    // 属性值
+    let value = ''
+
+    // 获取当前模板内容的第一个字符
+    const quote = context.source[0]
+    // 判断属性值是否被引号引用
+    const isQuoted = quote === '"' || quote === "'"
+
+    if (isQuoted) {
+      // 属性值被引号引用，消费引号
+      advanceBy(1)
+      // 获取下一个引号的索引
+      const enQuoteIndex = context.source.indexOf(quote)
+      if (enQuoteIndex > -1) {
+        // 获取下一个引号之前的内容作为属性值
+        value = context.source.slice(0, enQuoteIndex)
+        // 消费属性值
+        advanceBy(value.length)
+        // 消费引号
+        advanceBy(1)
+      } else {
+        // 缺少引号错误
+        console.error('缺少引号')
+      }
+    } else {
+      // 说明属性值没有被引号引用
+      // 下一个空白字符之前的内容全部作为属性值
+      const match = /^[^\t\r\n\f >]+/.exec(context.source)
+      // 获取属性值
+      value = match[0]
+      // 消费属性值
+      advanceBy(value.length)
+    }
+    // 消费属性值后面的空白字符
+    advanceSpaces()
+
+    // 使用属性名称 + 属性值创建一个属性节点，添加到 props 数组中
+    props.push({
+      type: 'Attribute',
+      name,
+      value
+    })
+  }
+
+  // 将解析结果返回
+  return props
+}
+
+const ast = parse('<div id="foo" v-show="display"></div>')
+
+console.log(ast)
