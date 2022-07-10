@@ -101,7 +101,7 @@ function isEnd(context, ancestors) {
   // 与父级节点栈中所有节点比较
   for (let i = ancestors.length - 1; i >= 0; --i) {
     // 只要栈中存在与当前结束标签同名的节点，就停止状态机
-    if (parent && context.source.startsWith(`</${ancestors[i].tag}`)) {
+    if (context.source.startsWith(`</${ancestors[i].tag}`)) {
       return true
     }
   }
@@ -162,7 +162,7 @@ function parseTag(context, type = 'start') {
   const tag = match[1]
   // 消费正则表达式匹配的全部内容，例如 '<div' 这段内容
   advanceBy(match[0].length)
-  // 消费标签中无用的开白字符
+  // 消费标签中无用的空白字符
   advanceSpaces()
   // 调用 parseAttributes 函数完成属性与执行的解析，并得到 props 数组
   // props 数组是由指令节点与属性节点共同组成的数组
@@ -179,7 +179,7 @@ function parseTag(context, type = 'start') {
     // 标签名称
     tag,
     // 标签的属性暂时留空
-    props: [],
+    props,
     // 子节点留空
     children: [],
     // 是否自闭合
@@ -199,7 +199,8 @@ function parseAttributes(context) {
   ) {
     // 解析属性或指令
     // 该正则用于匹配属性名称
-    const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
+    const match = /^[^\t\r\n\f/>][^\t\r\n\f/>=]*/.exec(context.source)
+
     // 得到属性名称
     const name = match[0]
     // 消费属性名称
@@ -238,7 +239,7 @@ function parseAttributes(context) {
     } else {
       // 说明属性值没有被引号引用
       // 下一个空白字符之前的内容全部作为属性值
-      const match = /^[^\t\r\n\f >]+/.exec(context.source)
+      const match = /^[^\t\r\n\f>]+/.exec(context.source)
       // 获取属性值
       value = match[0]
       // 消费属性值
@@ -259,6 +260,11 @@ function parseAttributes(context) {
   return props
 }
 
-const ast = parse('<div id="foo" v-show="display"></div>')
+function parseText() {
+
+}
+
+// const ast = parse('<div id="foo" v-show="display"></div>')
+const ast = parse('<div :id="dynamicId" @click="handler" v-on:mousedown="onMouseDown"></div>')
 
 console.log(ast)
