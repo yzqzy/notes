@@ -22,7 +22,7 @@ function parse(str) {
     // 无论是开始标签还是结束标签，都有可能存在无用的空白字符，例如 <div   >
     advanceSpaces() {
       // 匹配空白字符
-      const match = /^[\t\r\n\f]+/.exec(context.source)
+      const match = /^[\t\r\n\f ]+/.exec(context.source)
       if (match) {
         // 调用 advanceBy 函数消费空白字符
         context.advanceBy(match[0].length)
@@ -199,7 +199,7 @@ function parseAttributes(context) {
   ) {
     // 解析属性或指令
     // 该正则用于匹配属性名称
-    const match = /^[^\t\r\n\f/>][^\t\r\n\f/>=]*/.exec(context.source)
+    const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
 
     // 得到属性名称
     const name = match[0]
@@ -239,7 +239,7 @@ function parseAttributes(context) {
     } else {
       // 说明属性值没有被引号引用
       // 下一个空白字符之前的内容全部作为属性值
-      const match = /^[^\t\r\n\f>]+/.exec(context.source)
+      const match = /^[^\t\r\n\f >]+/.exec(context.source)
       // 获取属性值
       value = match[0]
       // 消费属性值

@@ -12996,7 +12996,7 @@ function parse(str) {
     // 无论是开始标签还是结束标签，都有可能存在无用的空白字符，例如 <div   >
     advanceSpaces() {
       // 匹配空白字符
-      const match = /^[\t\r\n\f]+/.exec(context.source)
+      const match = /^[\t\r\n\f ]+/.exec(context.source)
       if (match) {
         // 调用 advanceBy 函数消费空白字符
         context.advanceBy(match[0].length)
@@ -13291,7 +13291,7 @@ function parseAttributes(context) {
   ) {
     // 解析属性或指令
     // 该正则用于匹配属性名称
-    const match = /^[^\t\r\n\f/>][^\t\r\n\f/>=]*/.exec(context.source)
+    const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)
     // 得到属性名称
     const name = match[0]
     // 消费属性名称
@@ -13330,7 +13330,7 @@ function parseAttributes(context) {
     } else {
       // 说明属性值没有被引号引用
       // 下一个空白字符之前的内容全部作为属性值
-      const match = /^[^\t\r\n\f>]+/.exec(context.source)
+      const match = /^[^\t\r\n\f >]+/.exec(context.source)
       // 获取属性值
       value = match[0]
       // 消费属性值
@@ -13354,13 +13354,13 @@ function parseAttributes(context) {
 
 在上面这段代码中，有两个重要的正则表达式：
 
-* `/^[^\t\r\n\f/>][^\t\r\n\f/>=]*/`，用来匹配属性名称；
-* `/^[^\t\r\n\f>]+/`，用来匹配没有使用引号引用的属性值。
+* `/^[^\t\r\n\f />][^\t\r\n\f />=]*/`，用来匹配属性名称；
+* `/^[^\t\r\n\f >]+/`，用来匹配没有使用引号引用的属性值。
 
 我们分别来看下这两个正则表达式是如何工作的。
 
 ```js
-/^[^\t\r\n\f/>][^\t\r\n\f/>=]*/
+/^[^\t\r\n\f />][^\t\r\n\f />=]*/
 =>
 A：/^[^\t\r\n\f />]
 B：[^\t\r\n\f />=]*/
@@ -13374,7 +13374,7 @@ B：[^\t\r\n\f />=]*/
 我们再来看第二个正则表达式的匹配原理。
 
 ```js
-/^[^\t\r\n\f>]+/
+/^[^\t\r\n\f >]+/
 ```
 
 该正则表达式从字符串的开始位置开始匹配，并且会匹配一个或多个非空白字符、非字符 >。换句话说，该正则表达式会一直对字符串进行匹配，直到遇到空白字符或字符 > 为止，这就实现了属性值的提取。
@@ -13442,7 +13442,7 @@ const ast = {
 
 不仅如此，为了得到更加具体的信息，我们甚至可以进一步分析指令节点的数据，也可以设计更多语法规则，这完全取决于框架设计者在语法层面的设计，以及为框架赋予的能力。
 
-
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index12.js)
 
 #### 解析文本与解码 HTML 实体
 
