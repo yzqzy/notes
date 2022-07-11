@@ -92,7 +92,7 @@
   + [数据结构与算法](https://github.com/yw0525/notes/tree/master/alg/algorithm_google) 已完成
   + [算法训练营](https://github.com/yw0525/notes/tree/master/alg/training) 已完成
 * 读书笔记
-  + [Vue.js设计与实现](https://github.com/yw0525/notes/tree/master/notes/Vue.js设计与实现) 更新中... 😁
+  + [Vue.js设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 更新中... 😁
   + [深入浅出Vite](https://github.com/yw0525/notes/tree/master/vite) 更新中... 😁
   + [算法相关](https://www.yuque.com/yyne87/lcqfte) 已完成
   + [网络相关](https://www.yuque.com/yyne87/mw1l9v) 已完成
