@@ -13990,9 +13990,208 @@ function decodeHtml(rawText, asAttr = false) {
 
 > [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index15.js)
 
-#### 解析插值与注释
+#### 解析插值
+
+文本插值是 Vue.js 模板中用来渲染动态数据的常用方法：
+
+```vue
+{{ count }}
+```
+
+默认情况下，插值以字符串 `{{` 开头，并以字符串 `}}`  结尾。我们通常将这个两个特殊的字符串称为定界符。定界符中间的内容可以是任意合法的 JavaScript 表达式，例如：
+
+```vue
+{{ obj.foo }}
+```
+
+或
+
+```vue
+{{ obj.fn() }}
+```
+
+解析器在遇到文本插值的起始定界符 `({{)` 时，会进入文本 "插值状态6"，并调用 `parseInterpolation` 函数来解析插值内容。
+
+<img src="./images/parser18.png" />
 
 
 
+解析器在解析插值时，只需要将文本插值的开始定界符和结束定界符之间的内容提取出来作为 JavaScript 表达式即可。
 
+```js
+function parseInterpolation(context) {
+  // 消费开始定界符
+  context.advanceBy('{{'.length)
+  // 找到结束定界符的位置索引
+  closeIndex = context.source.indexOf('}}')
+  if (closeIndex < 0) {
+    console.error('插值缺少结束定界符')
+  }
+  // 截取开始定界符和结束定界符之间的内容作为插值表达式
+  const content = context.source.slice(0, closeIndex)
+  // 消费表达式的内容
+  context.advanceBy(content.length)
+  // 消费结束定界符
+  context.advanceBy('}}'.length)
+
+  // 返回类型为 Interpolation 的节点，代表插值节点
+  return {
+    type: 'Interpolation',
+    // 插值节点的 content 是一个 Expression 的表达式节点
+    content: {
+      type: 'Expression',
+      // 表达式节点的内容则是经过 HTML 解码后的插值表达式
+      content: decodeHtml(content)
+    }
+  }
+}
+```
+
+配合上面的 `parseInterpolation` 函数，解析如下模板内容：
+
+```js
+const ast = parse(`<div>foo {{ bar }}</div>`)
+```
+
+最终得到如下 AST：
+
+```js
+{
+  type: 'Root',
+  children: [
+    {
+      type: 'Element',
+      tag: 'div',
+      props: [],
+      children: [
+        { type: 'Text', content: 'foo ' },
+        {
+          type: 'Interpolation',
+          content: { type: 'Expression', content: ' bar ' }
+        },
+        { type: 'Text', content: ' baz' }
+      ],
+      isSelfClosing: false
+    }
+  ]
+}
+```
+
+实现上述效果，我们还需要修改 `parseChildren` 的一处代码。我们需要实时获取 source 的值，不然在某些场景下，程序会陷入死循环。比如 `'<div>foo {{ bar }} baz</div>`，当我们消费 `<div>foo ` 后，如果不实时获取 `souce` ，得到的值永远是 `foo {{ bar }}`，就永远不会走到 ` parseInterpolation` 解析插值逻辑。
+
+```diff
+function parseChildren(context, ancestors) {
+  // 定义 nodes 数组存储子节点，它将作为最终的返回值
+  let nodes = []
+  
+- // 从上下文对象中取得当前状态，包括模式 mode 和模板内容 source
+- const { mode, source } = context
+
+  // 开始 while 循环，只要满足条件就会一直对字符串进行解析
+  while (!isEnd(context, ancestors)) {
+    let node
+
++ 	// 从上下文对象中取得当前状态，包括模式 mode 和模板内容 source
++   const { mode, source } = context
+    
+    // 只有 DATA 模式和 RCDATA 模式才支持插值节点的解析
+    if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
+
+      // 只有 DATA 模式才支持标签节点的解析
+      if (mode === TextModes.DATA && source[0] === '<') {
+        if (source[1] === '!') {
+          if (source.startsWith('<!--')) {
+            // 注释
+            node = parseComment(context)
+          } else if (source.startsWith('<![CDATA[')) {
+            // CDATA
+            node = parseCDATA(context, ancestors)
+          }
+        } else if (source[1] === '/') {
+          // 结束标签，这里需要抛出错误
+          console.error('无效的结束标签')
+          continue
+        } else if (/[a-z]/i.test(source[1])) {
+          // 标签
+          node = parseElement(context, ancestors)
+        }
+      } else if (source.startsWith('{{')) {
+        // 解析插值
+        node = parseInterpolation(context)
+      }
+    }
+
+    // node 不存在，说明处理其他模式，即非 DATA 模式且非 RCDATA 模式
+    // 这时一切内容作为文本处理
+    if (!node) {
+      // 解析文本节点
+      node = parseText(context)
+    }
+
+    // 将节点添加到 nodes 数组中
+    nodes.push(node)
+  }
+
+  // 当 while 循环停止后，说明子节点解析完毕，返回子节点
+  return nodes
+}
+```
+
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index16.js)
+
+#### 解析注释
+
+解析注释的思路和解析插值非常相似，如下面的 `parseComment` 函数所示：
+
+```js
+// 解析注释
+function parseComment(context) {
+  // 消费开始定界符
+  context.advanceBy('<!--'.length)
+  // 找到结束定界符的位置索引
+  closeIndex = context.source.indexOf('-->')
+  // 截取注释节点的内容
+  const content = context.source.slice(0, closeIndex)
+  // 消费内容
+  context.advanceBy(content.length)
+  // 消费注释结束部分
+  context.advanceBy('-->'.length)
+
+  // 返回类型为 Comment 的节点
+  return {
+    type: 'Comment',
+    // 插值节点的 content 是一个 Expression 的表达式节点
+    content
+  }
+}
+```
+
+配合 `parseComment` 函数，解析如下模板内容：
+
+```js
+const ast = parse('<div><!-- comments --></div>')
+```
+
+最终得到如下 AST：
+
+```js
+{
+  type: 'Root',
+  children: [
+    {
+      type: 'Element',
+      tag: 'div',
+      props: [],
+      children: [
+        { type: 'Comment', content: ' comments ' }
+      ],
+      isSelfClosing: false
+    }
+  ]
+}
+```
+
+[代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index17.js)
+
+#### 总结
 
