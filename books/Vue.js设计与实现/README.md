@@ -13545,6 +13545,8 @@ const ast = {
 
 这样，我们就实现了对文本节点的解析。解析文本节点本身并不复杂，复杂点在于，我们需要对解析后的文本内容进行 HTML 实体的解码工作，为此，我们有必要先了解什么是 HTML 实体。
 
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index13.js)
+
 ##### 解码命名字符引用
 
 HTML 实体是一段以字符 `&` 开始的文本内容。实体用来描述 HTML 中的保留字符和一些难以通过普通键盘输入的字符，以及一些不可见的字符。例如，在 HTML 中，字符 < 具有特殊含义，如果希望以普通文本的方式显示字符 <，需要通过实体来表达。
@@ -13781,6 +13783,8 @@ function parseText(context) {
 }
 ```
 
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index14.js)
+
 ##### 解码数字字符引用
 
 上一节中，我们使用下面的正则表达式来匹配一个文本引用的开始部分：
@@ -13984,7 +13988,11 @@ function decodeHtml(rawText, asAttr = false) {
 }
 ```
 
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/compiler/index15.js)
+
 #### 解析插值与注释
+
+
 
 
 

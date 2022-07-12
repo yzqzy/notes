@@ -470,4 +470,4 @@ function decodeHtml(rawText, asAttr = false) {
 
 const ast = parse('<a>foo.com?a=1&#0=2</a>')
 
-console.info(ast.children[0].children)
+console.info(ast)
