@@ -288,8 +288,3 @@ function parseText(context) {
 const ast = parse('<div>Text</div>')
 
 console.log(ast)
-
-
-module.exports = {
-  parse
-}

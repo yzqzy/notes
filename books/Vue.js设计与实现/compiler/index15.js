@@ -294,6 +294,36 @@ const namedCharacterReferences = {
   "ltcc;": "⪦"
 }
 
+const CCR_REPLACEMENTS = {
+  0x80: 0x20ac,
+  0x82: 0x201a,
+  0x83: 0x0192,
+  0x84: 0x201e,
+  0x85: 0x2026,
+  0x86: 0x2020,
+  0x87: 0x2021,
+  0x88: 0x02c6,
+  0x89: 0x2030,
+  0x8a: 0x0160,
+  0x8b: 0x2039,
+  0x8c: 0x0152,
+  0x8e: 0x017d,
+  0x91: 0x2018,
+  0x92: 0x2019,
+  0x93: 0x201c,
+  0x94: 0x201d,
+  0x95: 0x2022,
+  0x96: 0x2013,
+  0x97: 0x2014,
+  0x98: 0x02dc,
+  0x99: 0x2122,
+  0x9a: 0x0161,
+  0x9b: 0x203a,
+  0x9c: 0x0153,
+  0x9e: 0x017e,
+  0x9f: 0x0178
+}
+
 // 第一个参数是要被解码的文本内容
 // 第二个参数是一个布尔值，代表文本内容是否作为属性值
 function decodeHtml(rawText, asAttr = false) {
@@ -383,12 +413,61 @@ function decodeHtml(rawText, asAttr = false) {
         decodedText += '&'
         advance(1)
       }
+    } else {
+      // 数字字符引用
+
+      // 判断是以十进制表示还是以十六进制表示
+      const hex = head[0] === '&#x'
+      // 根据不同进制表示法，选用不同的正则
+      const pattern = hex ? /^&#x([0-9a-f]+);?/i : /^&#([0-9]+);?/
+      // 最终，body[1] 的值就是 Unicode 码点
+      const body = pattern.exec(rawText)
+
+      if (body) {
+        // 根据对应的进制，将码点字符串转换为数字
+        let cp = parseInt(body[1], hex ? 16 : 10)
+
+        // 检查码点的合法性
+        if (cp === 0) {
+          // 如果码点值为 0x00，替换为 0xfffd
+          cp = 0xfffd
+        } else if (cp > 0x10ffff) {
+          // 如果码点值超过 Unicode 的最大值，替换为 0xfffd
+          cp = 0xfffd
+        } else if (cp >= 0xd800 && cp <= 0xdfff) {
+          // 如果码点值处于 surrogdate pair 范围内，替换为 0xfffd
+          cp = 0xfffd
+        } else if ((cp >= 0xfdd0 && cp <= 0xfdef) || (cp & 0xfffe) === 0xfffe) {
+          // 如果码点值处于 noncharacter 范围内，则什么都不做，交给平台处理
+          // noop
+        } else if (
+          // 控制字符集的范围是：[0x01, 0x1f] 加上 [0x7f, 0x9f]
+          // 去掉 ASICC 空白符：0x09(TAB)、0x0A(LF)、0x0c(FF)
+          // 0x0D(CR) 虽然也是 ASICC 空白符，但需要包含
+          (cp >= 0x01 && cp <= 0x08) || 
+          cp === 0x0b || 
+          (cp >= 0x0d && cp <= 0x1f) || 
+          (cp >= 0x7f && cp <= 0x9f)
+          ) {
+            // 在 CCR_REPLACEMENTS 表中查找替换码点，如果找不到，则使用原码点
+            cp = CCR_REPLACEMENTS[cp] || cp
+          }
+  
+          // 解码后追加到 decodedText 上
+          decodedText += String.fromCodePoint(cp)
+          // 消费整个数字字符引用的内容
+          advance(body[0].length)
+      } else{
+        // 如果没有匹配，则不进行解码操作，只是把 head[0] 追加到 decodedText 上并消费
+        decodedText += head[0]
+        advance(head[0].length)
+      }
     }
   }
   return decodedText
 }
 
-const ast = parse('<a href="foo.com?a=1&lt=2">foo.com?a=1&lt=2</a>')
 
-console.info(ast)
+const ast = parse('<a>foo.com?a=1&#0=2</a>')
 
+console.info(ast.children[0].children)
