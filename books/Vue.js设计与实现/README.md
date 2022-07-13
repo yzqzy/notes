@@ -14319,5 +14319,266 @@ const vnode = {
 </div>
 ```
 
+在这段模板中，p 标签并不是最外层的直接子节点，而是它的子代节点。因此，最外层的 div 标签对应的 Block 能够将 p 标签收集到其 `dynamicChildren` 数组中，如下面的代码所示：
 
+```js
+const vnode = {
+  tag: 'div',
+  children: [
+		{
+      tag: 'div',
+      children: [
+        { tag: 'p', children: ctx.bar, patchFlag: PatchFlags.TEXT } // 动态节点
+      ] 
+    },
+  ],
+  dynamicChildren: [
+    // Block 可以收集所有动态子代节点
+    { tag: 'p', children: ctx.bar, patchFlag: PatchFlags.TEXT }
+  ]
+}
+```
+
+有了 Block 这个概念后，渲染器的更新操作将会以 Block 为维度。也就是说，当渲染器在更新一个 Block 时，回忽略虚拟节点的 `children` 数组，而是直接就找到该虚拟节点的 `dynamicChildren` 数组，并只更新该数组中的动态节点。这样，在更新时就实现了跳过静态内容，只更新静态内容。同时，由于动态节点中存在对应的补丁标志，所以在更新动态节点的时候，也能够做到靶向更新。例如，当一个动态节点的 `patchFlag` 值为数字 1 时，我们知道它只存在动态的文本节点，所以只需要更新它的文本内容即可。
+
+既然 Block 的好处这么多，那么什么情况下需要将一个普通的虚拟节点变成 `Block` 节点呢？实际上，当我们在编写模板代码的时候，所有模板的根结点都会是一个 Block 节点，如下面的代码所示：
+
+```vue
+<template>
+	<!-- 这个 div 标签是一个 Block -->
+	<div>
+    <!-- 这个 p 标签不是 Block，因为它不是根节点 -->
+    <p>{{ bar }}</p>
+  </div>
+	<!-- 这个 h1 标签是一个 Block -->
+	<h1>
+    <!-- 这个 span 标签不是 Block，因为它不是根节点 -->
+    <span :id="dynamicId"></span>
+  </h1>
+</template>
+```
+
+实际上，除了模板中的根节点需要作为 Block 角色之外，任何带有 `v-for`、`v-if/v-else-if/v-else` 等指令的节点都需要作为 Block 节点。
+
+##### 收集动态节点
+
+在编译器生成的渲染函数代码中，并不会直接包含用来描述虚拟节点的数据结构，而是包含用来创建虚拟 DOM 节点的辅助函数。
+
+```js
+render() {
+  return createVNode('div', { id: 'foo' }, [
+    createVnode('p', null, 'text')
+  ])
+}
+```
+
+其中 `createVNode` 函数就是用来创建虚拟 DOM 节点的辅助函数，它的基本实现类似于：
+
+```js
+function createVNode(tag, props, children) {
+  const key = props && props.key
+  props && delete props.key
+  
+  return {
+  	tag,
+    props,
+    children,
+    key
+  }
+}
+```
+
+可以看到，`createVNode` 函数的返回值是一个虚拟 DOM 节点。在 `createVNode` 函数内部，通常还对 props 和 children 做一些额外的处理工作。
+
+编译器在优化阶段提取的关键信息会影响最终生成的代码，具体体现在用于创建虚拟 DOM 节点的辅助函数上。假设我们有如下模板：
+
+```vue
+<div id="foo">
+  <p class="bar">{{ text }} </p>
+</div>
+```
+
+编译器在对这段模板进行编译优化后，会生成带有**补丁标志（patch flag）** 的渲染函数，如下所示：
+
+```js
+render() {
+  return createVNode('div', { id: 'foo' }, [
+    // PatchFlags.TEXT 就是补丁标志
+    createVnode('p', { class: 'bar' }, 'text', PatchFlags.TEXT)
+  ]) 
+}
+```
+
+在上面这段代码中，用于创建 p 标签的 `createVNode` 函数调用存在的第四个参数，即 `PatchFlags.TEXT`。这个参数就是所谓的补丁标志，它代表当前虚拟 DOM 节点是一个动态节点，并且动态因素是：具有动态的文本子节点。这样就实现了对动态节点的标记。
+
+下一步我们要思考的是如何将根节点变成一个 `Block`，以及如何将动态子代节点收集到该 `Block` 的 `dynamicChildren` 数组中。这里有一个重要的事实，即在渲染函数内，对 `createVNode` 函数的调用时层层的嵌套结构，并且该函数的执行顺序时 “内层先执行，外层后执行”。
+
+当外层 `createVNode` 函数执行时，内层的 `createVNode` 函数已经执行完毕了。因此，为了让外层 `Block` 节点能够收集到内层动态节点，就需要一个栈结构的数据来临时存储内容的动态节点。
+
+```js
+// 动态节点栈
+const dynamicChildrenStack = []
+// 当前动态节点集合
+let currentDynamicChildren = null
+// openBlock 用来创建一个新的动态节点集合，并将该集合压入栈中
+function openBlock() {
+  dynamicChildrenStack.push({currentDynamicChildren = []})
+}
+// closeBlock 用来将通过 openBlock 创建的动态节点集合从栈中弹出
+function closeBlock() {
+  currentDynamicChildren = dynamicChildrenStack.pop()
+}
+```
+
+接着，我们还需要调整 `createVNode` 函数，如下面的代码所示：
+
+```js
+function createVNode(tag, props, children, flags) {
+  const key = props && props.key
+  props && delete props.key
+  
+  const vnode = {
+  	tag,
+    props,
+    children,
+    key,
+    patchFlags: flags
+  }
+
+  if (typeof flags !== 'undefined' && currentDynamicChildren) {
+    // 动态节点，将其添加到当前动态集合中
+    currentDynamicChildren.push(vnode)
+  }
+
+  return vnode
+}
+```
+
+在 `createVNode` 函数内部，检测节点是否存在补丁标志。如果存在，则说明该节点是动态节点，于是将其添加到当前动态集合 `currentDynamicChildren` 中。
+
+最后，我们需要重新设计渲染函数的执行方式。
+
+```js
+function createBlock(tag, props, children) {
+  // block 本质上也是一个 vnode
+  const block - createVNode(tag, props, children)
+  // 将当前动态节点集合作为 block.dynamicChildren
+  block.dynamicChildren = currentDynamicChildren
+
+  // 关闭 block
+  closeBlock()
+  // 返回 block
+  return block
+}
+
+render() {
+  // 1. 使用 createBlock 代替 createVNode 来创建 Block
+  // 2. 每当调用 createBlock 之前，先调用 openBlock
+  return (openBlock(), createBlock('div', null, [
+    createVNode('p', { class: 'foo' }, null, 1),
+    createVNode('p', { class: 'bar' }, null)
+  ]))
+}
+```
+
+观察渲染函数内的代码可以发下吗，我们利用逗号运算符的性质来保证渲染函数的返回仍然是 `VNode` 对象。这里的关键点是 `createBlock` 函数，任何应该作为 `Block` 角色的虚拟节点，都应该使用该函数来完成虚拟节点的创建。由于 `createVNode` 函数和 `createBlock` 函数的执行顺序是从内向外，所以当 `createBlock` 函数执行时，内层的所有 `createVNode` 函数都已经执行完毕了。这时，`currentDynamicChildren` 数组中所存储的就是属于当前 `Block` 的所有动态子代节点。因此，我们只需要将 `currentDynamicChildren` 数组作为 `block.dynamicChildren` 属性的值即可。这样，我们就完成了动态节点的收集。
+
+##### 渲染器的运行时支持
+
+现在，我们已经有了动态节点集合 `vnode.dynamicChildren` ，以及附着其上的补丁标志。基于这两点，即可在渲染器中实现靶向更新。
+
+回顾一下传统的节点更新方式，如下面的 `patchElement` 函数所示。
+
+```js
+function patchElement(n1, n2) {
+  const el = n2.el = n1.el
+  const oldProps = n1.props
+  const newProps = n2.props
+  
+  for (const key in newProps) {
+    if (newProps[key] !== oldProps[key]) {
+      patchProps(el, key, oldProps[key], newProps[key])
+    }
+  }
+  for (const key in oldProps) {
+    if (!(key in newProps)) {
+      patchProps(el, key, oldProps[key], null)
+    }
+  }
+
+  patchChildren(n1, n2, el)
+}
+```
+
+由上面的代码可知，浏览器在更新标签节点时，使用 `patchChildren` 函数来更新标签的子节点。但该函数会使用传统虚拟 DOM 的 Diff 算法进行更新，这样做效率比较低。有了 `dynamicChildren` 之后，我们可以直接对比动态节点。
+
+```js
+function patchElement(n1, n2) {
+  const el = n2.el = n1.el
+  const oldProps = n1.props
+  const newProps = n2.props
+
+  // 省略部分代码
+
+  if (n2.dynamicChildren) {
+    // 调用 patchBlockChildren 函数，只会更新动态节点
+    patchBlockChildren(n1, n2)
+  } else {
+    patchChildren(n1, n2, el)
+  }
+}
+
+function patchBlockChildren(n1, n2) {
+  // 只更新动态节点即可
+  for (let i = 0; i < n2.dynamicChildren.length; i++) {
+    patchElement(n1.dynamicChildrenp[i], n2.dynamicChildren[i])
+  }
+}
+```
+
+在修改后的 `patchElement` 函数中，我们优先检测虚拟 DOM 是否存在动态节点集合，即 `dynamicChildren` 数组。如果存在，则直接调用 `patchBlockChildren` 函数完成更新。这样，渲染器只会更新动态节点，而跳过所有静态节点。
+
+动态节点集合能够使渲染器在执行更新时跳过静态节点，但对于单个动态节点的更新来说，由于它存在对应的补丁标志，因此我们可以针对性地完成靶向更新。
+
+```js
+function patchElement(n1, n2) {
+  const el = n2.el = n1.el
+  const oldProps = n1.props
+  const newProps = n2.props
+
+  if (n2.patchFlags) {
+    // 靶向更新
+    if (n2.patchFlags === 2) {
+      // 只需要更新 class
+    } else if (n2.patchFlags === 4) {
+      // 只需要更新 style
+    } else if (...) {
+      // ...
+    }
+  } else {
+    // 全量更新
+    for (const key in newProps) {
+      if (newProps[key] !== oldProps[key]) {
+        patchProps(el, key, oldProps[key], newProps[key])
+      }
+    }
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        patchProps(el, key, oldProps[key], null)
+      }
+    }
+  }
+
+  if (n2.dynamicChildren) {
+    // 调用 patchBlockChildren 函数，只会更新动态节点
+    patchBlockChildren(n1, n2)
+  } else {
+    patchChildren(n1, n2, el)
+  }
+}
+```
+
+可以看到，在 `patchElement` 函数内，我们通过检测补丁标志实现了 `props` 的靶向更新。这样就避免了全量的 `props` 更新，从而最大化地提升性能。
+
+#### Block 树
 
