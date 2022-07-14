@@ -14582,3 +14582,89 @@ function patchElement(n1, n2) {
 
 #### Block 树
 
+在上一节中，我们约定了组件模板的根节点必须作为 Block 角色。这样，从根节点开始，所有动态子代节点都会被收集到根节点的 `dynamicChildren` 数组中。但是，如果只有根节点是 Block 角色，是不会形成 Block 树的。既然会形成 Block 树，那就意味着除了根节点之外，还会有其他特殊节点充当 Block 角色。实际上，带有结构化指令的节点，如带有 `v-if`、`v-for` 指令的节点，都应该作为 Block 角色。
+
+##### 带有 v-if 指令的节点
+
+首先，我们来看下这段模板：
+
+```vue
+<div>
+  <section v-if="foo">
+  	<p>{{ a }}</p>
+  </section>
+  <div v-else>
+    <p>{{ a }}</p>
+  </div>
+</div>
+```
+
+假设只有最外层的 div 标签会作为 Block 角色。那么，无论变量 foo 的值是 true 还是 false，block 收集到的动态节点都是不变的。
+
+```js
+const block = {
+  tag: 'div',
+  dynamicChildren: [
+    { tag: 'p', children: ctx.a, patchFlags: 1 }
+  ]
+}
+```
+
+这意味着，在 Diff 阶段不会做任何更新。但是我们也看到了，在上面的模板中，带有 v-if 指令的是 `<section>` 标签，而带有 `v-else` 指令的是 `<div>` 标签。很明显，更新前后的标签不同，如果不做任何更新，将产生严重的 bug。不仅如此，下面的模板也会出现同样的问题。
+
+```vue
+<div>
+  <section v-if="foo">
+  	<p>{{ a }}</p>
+  </section>
+  <section v-else>
+    <div>
+      <p>{{ a }}</p>
+    </div>
+  </section>
+</div>
+```
+
+在上面这段模板中，即使带有 `v-if` 指令的标签与带有 `v-else` 指令的标签都是 `<section>` 标签，但由于两个分支的虚拟 DOM 树的结构不同，仍然会导致更新失败。
+
+上述问题的根本原因在于，`dynamiChildren` 数组中收集的动态节点是忽略虚拟 DOM 树层级的。换句话来说，结构化指令会导致更新前后模板的结构发生变化，即模板结构不稳定。那么，如何让虚拟 DOM 树的结构变稳定呢？其实很简单，只需要让带有 `v-if/v-else-if/v-else` 等结构化的节点也作为 Block 角色即可。
+
+以下面的模板为例：
+
+```vue
+<div>
+  <section v-if="foo">
+  	<p>{{ a }}</p>
+  </section>
+  <section v-else>
+    <div>
+      <p>{{ a }}</p>
+    </div>
+  </section>
+</div>
+```
+
+如果上面这段模板中的两个 `<section>` 标签都作为 Block 角色，那么将构成一棵 Block 树：
+
+```js
+Block(div)
+	-	Block(Section v-if)
+	- Block(Section v-else)
+```
+
+父级 Block 除了会收集动态子代节点之外，也会收集子 Block。因此，两个 Block(section) 将作为父级 Block(div) 的动态节点被收集到父级 Block(div) 的 `dynamicChildren` 数组中，如下面的代码所示：
+
+```js
+const block = {
+  tag: 'div',
+  dynamicChildren: [
+    /* Block(Section v-if) or Block(Section v-else) */
+    { tag: 'section', children: { key: 0 /* key 值会根据不同的 Block 而发生变化 */ }, dynamicChildren: [...]  }
+  ]
+}
+```
+
+这样，当 v-if 条件为真时，父级 Block 的 `dynamicChildren` 数组中包含的是 Block(section v-if)，当 v-if 条件为假时，父级 Block 的 `dynamicChildren` 数组中包含的将是 Block(section v-else)。在 Diff 过程中，渲染器能够根据 Block 的 key 值区分处更新前后的两个 Block 是不同的，并使用新的 Block 替换旧的 Block。这样就解决了 DOM 结构不稳定引起的更新问题。
+
+##### 带有 v-for 指令的节点
+
