@@ -14884,5 +14884,148 @@ function render(ctx) {
 </div>
 ```
 
+假设上面的模板中包含大量连续纯静态的标签节点，当采用静态提升优化策略时，其编译后的代码如下：
+
+```js
+const hoist1 = createVNode('p', null, null, PatchFlags.HOISTED)
+const hoist2 = createVNode('p', null, null, PatchFlags.HOISTED)
+// ...
+const hoist20 = createVNode('p', null, null, PatchFlags.HOISTED)
+
+function render() {
+  return (openBlock(), crateBlock('div', null, [
+    hoist1,
+    hoist2,
+    // ...
+    hoist20
+  ]))
+}
+```
+
+预字符串化能够将这些静态节点序列化为字符串，并生成一个 Static 类型的 VNode：
+
+```js
+const hoistStatic = createStaticVNode('<p></p><p></p>...<p></p>')
+
+function render() {
+  return (openBlock(), crateBlock('div', null, [
+ 		hoistStatic
+  ]))
+}
+```
+
+这么做有几个很明显的优势。
+
+* 大块的静态内容可以通过 `innerHTML` 进行设置，在性能上具有一定优势；
+* 减少创建虚拟节点产生的性能开销；
+* 减少内存占用。
+
+#### 缓存内联事件处理函数
+
+提到优化，就不得不对内联事件处理函数的缓存。缓存内联事件处理函数可以避免不必要的更新。假设模板内容如下：
+
+```vue
+<Comp @change="a + b" />
+```
+
+上面这段模板展示的是一个绑定了 change 事件的组件，并且为 change 事件绑定的事件处理程序是一个内联语句。对于这样的模板，编译器会为其创建一个内联事件处理函数，如下面的代码所示：
+
+```js
+function render(ctx) {
+  return h(Comp, {
+    // 内联事件处理函数
+    onChange: () => (ctx.a + ctx.b)
+  })
+}
+```
+
+很显然，每次重新渲染时（即 render 函数重新执行时），都会为 Comp 组件创建一个全新的 props 对象。同时，props 对象中 `onChange` 属性的值也会是全新的函数。这会导致渲染器对 Comp 组件进行更新，造成额外的性能开销。为了避免这类无用的更新，我们需要对内联事件处理函数进行缓存，如下面的代码所示：
+
+```js
+function render(ctx, cache) {
+  return h(Comp, {
+    // 将内联事件处理函数缓存到 cache 数组中
+    onChange: cache[0] || (cache[0] = ($event) => (ctx.a + ctx.b))
+  })
+}
+```
+
+渲染函数的第二个参数是一个数组 `cache`，该数组来自组件实例，我们可以把内联事件处理函数添加到 `cache` 数组中。这样，当渲染函书重新执行并创建新的虚拟 DOM 树时，会优先读取缓存中的事件处理函数。这样，无论执行多少次渲染函数，props 对象中 `onChange` 属性的值始终不变，于是就不会触发 Comp 组件更新了。
+
+#### v-one
+
+Vue.js 3 不仅会缓存内联事件处理函数，配置 v-once 还可以实现对虚拟 DOM 的缓存。Vue.js 2 也支持 v-once 指令，当编译器遇到 `v-once`　指令时，会利用我们之前介绍的 cache 数组来缓存渲染函数的全部或部分执行结果，如下面的模板所示：
+
+```vue
+<section>
+	<div v-onece>{{ foo }}</div>
+</section>
+```
+
+在上面这段模板中，div 标签存在动态绑定的文本内容。但是它被 v-once 指令标记，所以这段模板会被编译为：
+
+```js
+function render(ctx, cache) {
+  return (openBlock(), crateBlock('div', null, [
+    cache[1] || (cache[1] = createVNode('div', null, ctx.foo, 1))
+  ]))
+}
+```
+
+从编译结果可以看到，该 div 标签对应的虚拟节点被缓存到了 cache 数组中。既然虚拟节点已经被缓存了，那么后续更新导致渲染函数重新执行时，会优先读取缓存的内容，而不会重新创建虚拟节点。同时，由于虚拟节点被缓存，意味着更新前后的虚拟节点不会发生变化，因此就不需要这些被缓存的虚拟节点参与 Diff 操作了。所以在实际编译后的代码中经常出现下面这段内容：
+
+```js
+function render(ctx, cache) {
+  return (openBlock(), crateBlock('div', null, [
+    cache[1] || (
+    	setBlockTracking(-1), // 阻止这段 vnode 被 Block 收集
+      cache[1] = h('div', null, ctx.foo, 1),
+      setBlockTracking(1), // 恢复
+      cache[1] // 表达式的值
+    )
+  ]))
+}
+```
+
+注意上面这段代码中的 `setBlockTracking(-1)` 函数调用，它用来暂停动态节点的收集。因为，使用 v-once 包裹的动态节点不会被父级 Block 收集。因此，被 v-once 包裹的动态节点在组件更新时，也不应参与 Diff 操作。
+
+v-once 指令通常用于不会发生改变的动态绑定中，例如绑定一个常量：
+
+```vue
+<div>{{ SOME_CONSTANT }}</div>
+```
+
+为了提升性能，我们可以使用 v-once 来标记这段内容：
+
+```vue
+<div v-once>{{ SOME_CONSTANT }}</div>
+```
+
+这样，在组件更新时就会跳过这段内容的更新，从而提升性能。
+
+实际上，v-once 指令能够从两个方面提升性能。
+
+* 避免组件更新时重新创建 DOM 带来的性能开销。因为虚拟 DOM 被缓存，所以更新时无需重新创建；
+* 避免无用的 Diff 开销。这是因为被 v-once 标记的虚拟 DOM 树会被父级 Block 节点收集。
+
+#### 总结
+
+本篇文章，我们主要讨论了 Vue.js 3 在编译优化方面所做的努力。编译优化指的是通过编译的手段提取关键信息，并以此指导生成最优代码的过程。具体来说，Vue.js 3 的编译器会充分分析模板，提取关键信息并将其附着到对应的虚拟节点上。在运行阶段，渲染器会通过这些关键信息执行 “快捷路径”，从而提升性能。
+
+编译优化的核心在于，区分动态节点与静态节点。Vue.js 3 会为动态节点打上补丁标志，即 `patchFlag` 。同时，vue.js 3 还提出 Block 的概念，一个 Block 本质上也是一个虚拟节点，但与普通虚拟节点相比，会多出一个 `dynamicChildren` 数组，该数组用来收集所有动态子代节点。
+
+> 利用 `createVNode` 函数和 `crateBlock` 函数的层层嵌套调用的特点，即以 "由内向外" 的方式执行。配合一个用来临时存储动态节点的节点栈，即可完成动态子代节点的收集。
+
+由于 Block 会收集所有动态子代节点，所以对动态节点的对比操作是忽略 DOM 层级结构的。这会带来额外的问题，即 `v-if`、`v-for` 等结构化指令会影响 DOM 层级结构，使之不稳定。这会间接导致基于 Block 树的比对算法失效。解决方式很简单，只需要带有 `v-if`、`v-for` 等指令的节点也作为 Block 角色即可。
+
+处理 Block 树以及补丁标志外，Vue.js 3 在编译优化方面还做了其他努力，具体如下：
+
+* 静态提升：能够减少更新时创建虚拟 DOM 带啦的性能开销和内存占用。
+* 预字符串化：在静态提升的基础上，对静态节点进行字符串化。这样做能够减少创建虚拟节点产生的性能开销以及内存占用。
+* 缓存内联事件处理函数：避免造成不必要的组件更新。
+* v-once 指令：缓存全部或部分虚拟节点，能够避免组件更新时重新创建虚拟 DOM 带来的性能开销，也可以避免无用的 Diff 操作。
+
+### 六、服务端渲染
+
 
 
