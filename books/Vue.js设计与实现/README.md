@@ -14668,3 +14668,221 @@ const block = {
 
 ##### 带有 v-for 指令的节点
 
+不仅带有 v-if 指令的节点会让虚拟 DOM 树的结构不稳定，带有 v-for 指令的节点也会让虚拟 DOM 树变得不稳定，而后者的情况会稍微复杂一些。以下面的模板为例：
+
+```vue
+<div>
+  <p v-for="item in list">{{ item }}</p>
+  <i>{{ foo }}</i>
+  <i>{{ bar }}</i>
+</div>
+```
+
+假设 list 是一个数组，在更新过程中，list 数组的值由 `[1, 2]` 变为 `[1]`。按照之前的思路，即只有节点会作为 Block 角色，那么，上面的模板中，只有最外层的 `<div>` 标签会作为 Block。所以，这段模板在更新前后对应的 Block 树是：
+
+```js
+// 更新前
+const prevBlock = {
+  tag: 'div',
+  dynamicChildren: [
+    { tag: 'p', children: 1, patchFlags: 1 },
+    { tag: 'p', children: 2, patchFlags: 1 },
+    { tag: 'i', children: ctx.foo, patchFlags: 1 }
+    { tag: 'i', children: ctx.bar, patchFlags: 1 }
+  ]
+}
+
+// 更新后
+const prevBlock = {
+  tag: 'div',
+  dynamicChildren: [
+    { tag: 'p', children: 1, patchFlags: 1 },
+    { tag: 'i', children: ctx.foo, patchFlags: 1 }
+    { tag: 'i', children: ctx.bar, patchFlags: 1 }
+  ]
+}
+```
+
+观察上面这段代码，更新前的 Block 树（`prevBlock`）中有四个动态节点，而更新后的 Block 树（`nextBlock`）中只有三个动态节点。这时要如何进行 `Diff` 操作呢？你可能会说，使用更新前后的两个 `dynamicChildren` 数组内的节点进行传统 `DIff` 不就可以吗？这么做渲染是不对的，因为传统 Diff 的一个非常重要的前置条件是：进行 Diff 操作的节点必须是同层级节点。但是 `dynamicChildren` 数组内的节点未必是同层级的，这一点我们之前也提到过。
+
+实际上，解决方法也很简单，我们只需要让带有 v-for 指令的标签也作为 Block 角色即可。这样就能保证虚拟 DOM 树具有稳定的结构，即无论 v-for 在运行时怎样变化，这棵 Block 树看上去都是一样的。
+
+```js
+const block = {
+  tag: 'div',
+  dynamicChildren: [
+    // 这是一个 Block，它有 dynamicChildren
+    { tag: Fragment, dynamicChildren: [/* v-for 的节点 */] },
+    { tag: 'i', children: ctx.foo, patchFlags: 1 }
+    { tag: 'i', children: ctx.bar, patchFlags: 1 }
+  ]
+}
+```
+
+由于 v-for 指令渲染的是一个片段，所以我们需要使用类型为 `Fragment` 的节点来表达 v-for 指令的渲染结果，并作为 Block 角色。
+
+##### Fragment 的稳定性
+
+上一节中，我们使用了一个 `Fragment` 来表达 v-for 循环产生的虚拟节点，并让其充当 Block 的角色来解决 v-for 指令导致的虚拟 DOM 树结构不稳定的问题。但是，我们需要仔细研究这个 `Fragment` 节点本身。
+
+给出下面这段模板：
+
+```vue
+<p v-for="item in list">{{ item }}</p>
+```
+
+当 list 数组是由 `[1, 2]` 变成 `[1]` 时，Fragment 节点在更新前后对应的内容分别是：
+
+```js
+// 更新前
+const prevBlock = {
+	tag: Fragment,
+  dynamicChildren: [
+    { tag: 'p', children: item, patchFlags: 1 }
+  	{ tag: 'p', children: item, patchFlags: 1 }
+  ]
+}
+
+// 更新后
+const prevBlock = {
+	tag: Fragment,
+  dynamicChildren: [
+    { tag: 'p', children: item, patchFlags: 1 }
+  ]
+}
+```
+
+我们发现，Fragment 本身收集的动态节点仍然面临结构不稳定的情况。所谓结构不稳定，从结果上看，指的是更新前后一个 block 的 `dynamicChildren` 数组中收集的动态节点的数量或顺序不一致。这种不一致会导致我们无法直接进行靶向更新。对于这种情况，没有更好的解决办法，我们只能放弃根据 `dynamicChildren` 数组中的动态节点进行靶向更新的思路，回退到传统虚拟 DOM 的 Diff 手段，即直接使用 Fragment 的 children 而非 `dynamicChildren` 来进行 Diff 操作。
+
+但需要注意的是，Fragment 的子节点（children）仍然可以是由 Block 组成的数组，例如：
+
+```js
+const block = {
+  tag: Fragment,
+  children: [
+    { tag: 'p', children: item, dynamicChildren: [/*...*/], patchFlags: 1 }
+  	{ tag: 'p', children: item, dynamicChildren: [/*...*/], patchFlags: 1 }
+  ]
+}
+```
+
+这样，当 Fragment 的子节点进行更新时，就可以恢复优化模式。
+
+既然有不稳定的 Fragment，那就有稳定的 Fragment。那什么样的 Fragment 是稳定的呢？有以下几种情况。
+
+**1. v-for 指令的表达式是常量：**
+
+```vue
+<p v-for="n in 10"></p>
+<!-- 或者 -->
+<p v-for="s in 'abc'"></p>
+```
+
+由于表达式 10 和 `'abc'` 是常量，所以无论怎么更新，上面两个 Fragment 都不会变化，因为这两个 Fragment 是稳定的。对于稳定的 Fragment，我们不需要回退到传统 Diff 操作，这在性能上会有一定的优势。
+
+**2. 模板有多个根节点**
+
+Vue.js 3 不再限制组件的模板必须有且仅有一个根节点。当模板中存在多个根节点时，我们需要使用 Fragment 来描述它。
+
+```vue
+<template>
+	<div></div>
+	<p></p>
+	<i></i>
+</template>
+```
+
+同时，用于描述具有多个根节点的模板的 Fragment 也是稳定的。
+
+#### 静态提升
+
+理解了 Block 树之后，我们再来看其他方面的优化，其中之一就是静态提升。它能减少更新时创建虚拟 DOM 带来的性能开销和内存占用。
+
+假设我们有如下模板：
+
+```vue
+<div>
+  <p>static text</p>
+  <p>{{ title }}</p>
+</div>
+```
+
+在没有静态提升的情况下，它对应的渲染函数是：
+
+```js
+function render() {
+  return (openBlock(), crateBlock('div', null, [
+    createVNode('p', null, 'static text'),
+    createVNode('p', null, ctx.title, 1)
+  ]))
+}
+```
+
+可以看到，在这段虚拟 DOM 的描述中存在两个 p 标签，一个是纯静态的，而另一个拥有动态文本。当响应式数据 title 的值发生变化时，整个渲染函数会重新执行，并产生新的虚拟 DOM 树。这个过程有一个很明显的问题，即纯静态的虚拟节点在更新时也会被重新创建一次。很显然，这是没有必要的，所以我们需要想办法避免由此带来的性能开销。而解决方案就是所谓的 “静态提升”，即把纯静态的节点提升到渲染之外，如下面的代码所示：
+
+```js
+// 把静态节点提升到渲染函数之外
+const hoist = crateVNode('p', null, 'text')
+
+function render() {
+  return (openBlock(), crateBlock('div', null, [
+    hoist, // 静态节点引用
+    createVNode('p', null, ctx.title, 1)
+  ]))
+}
+```
+
+可以看到，当把纯静态的节点提升到渲染函数之外后，在渲染函数内只会持有对静态节点的引用。当响应式数据变化，并使得渲染函数重新执行时，并不会重新创建静态的虚拟节点，从而避免了额外的性能开销。
+
+需要强调的是，静态提升是以树为单位的。以下面的模板为例：
+
+```vue
+<div>
+  <section>
+  	<p>
+      <span>abc</span>
+    </p>
+  </section>
+</div>
+```
+
+在上面这段模板中，除了根节点的 div 标签会作为 Block 角色而不可被提升之外，整个 `<section>` 元素及其子代节点都会被提升。如果我们把上面模板中的静态字符串 `abc` 换成动态绑定的 `{{ abc }}`，那么整棵树都不会被提升。
+
+虽然包括动态绑定的节点本身不会被提升，但是该动态节点上仍然可能存在纯静态的属性，如下面的模板所示：
+
+```vue
+<div>
+  <p foo="bar" a=b>{{ text }}</p>
+</div>
+```
+
+在上面这段模板中，p 标签存在动态绑定的文本内容，因此整个节点都不会被静态提升。但该节点的所有 props 都是静态的，因此在最终生成渲染函数时，我们可以将纯静态的 props 提升到渲染函数之外。
+
+```js
+// 静态提升的 props 对象
+const hoistProp = { foo: 'bar', a: 'b' }
+
+function render(ctx) {
+  return (openBlock(), crateBlock('div', null, [
+    createVNode('p', hoistProp, ctx.title)
+  ]))
+}
+```
+
+这样做同样可以减少创建虚拟 DOM 产生的开销以及内存占用。
+
+#### 预字符串化
+
+基于静态提升，我们还可以进一步采用预字符串的优化手段。预字符串化是基于静态提升的一种优化策略。静态提升的虚拟节点或虚拟节点树本身是静态的，那么，能否将其预字符串化呢？如下面的模板所示：
+
+```vue
+<div>
+  <p></p>
+  <p></p>
+  <!-- ... 20 个 p 标签 -->
+  <p></p>
+</div>
+```
+
+
+
