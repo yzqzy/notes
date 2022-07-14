@@ -327,4 +327,4 @@ console.log(d.toNumber()) // 16100
 
 [0.1 + 0.2 == 0.3 ?](https://www.yuque.com/yyne87/bpfdka/hxih5y#oGJyB)
 
-[float 和 double 偏移量](https://zhidao.baidu.com/question/1644364071497328980.html是
+[float 和 double 偏移量](https://zhidao.baidu.com/question/1644364071497328980.html)
