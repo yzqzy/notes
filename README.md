@@ -101,5 +101,5 @@
   + [透视HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
   + [Vue源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
   * [Vue.js设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 更新中... 😁
+  + [深入浅出Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
   * [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 更新中... 😁
-  
