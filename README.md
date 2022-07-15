@@ -1,5 +1,4 @@
 喜欢新事物，关注前端动态，对新的技术有追求，喜欢 Coding。 <br />
-这是我的前端学习笔记，目前仍在持续更新中，用于知识总结和技术分享。
 
 * ECMAScript
   + [ECMA-262](https://www.ecma-international.org/publications-and-standards/standards/ecma-262/) 
