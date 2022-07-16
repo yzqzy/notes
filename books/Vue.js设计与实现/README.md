@@ -15410,8 +15410,208 @@ function escapeHtml(string) {
 
 原理很简单，只需要在给定字符串中查找需要转义的字符，然后将其替换为对应的 HTML 实体即可。
 
-> 
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/ssr/index01.js)
 
 ##### 将组件渲染为 HTML 字符串
 
-我们已经讨论了如何将普通标签类型的虚拟节点渲染为 HTML 字符串。
+我们已经讨论了如何将普通标签类型的虚拟节点渲染为 HTML 字符串。本节，我们将在此基础上，讨论如何将组件类型的虚拟节点渲染为 HTML 字符串。
+
+假设我们有如下组件，以及用来描述组件的虚拟节点：
+
+```js
+const MyComponent = {
+  setup() {
+    return () => {
+      // 该组件渲染一个 div 标签
+      return {
+        type: 'div',
+        children: 'hello'
+      }
+    }
+  }
+}
+
+// 用来描述组件的 VNode 对象
+const CompVNode = {
+  type: MyComponent
+}
+```
+
+我们将实现 `renderComponentVNode` 函数，并用它把组件类型的虚拟节点渲染为 HTML 字符串：
+
+```js
+const html = renderComponentVNode(CompVNode)
+console.log(html) // <div>hello</div>
+```
+
+实际上，把组件渲染为 HTML 字符串与把普通标签节点渲染为 HTML 字符串并没有本质区别。我们知道，组件的渲染函数用来描述组件要渲染的内容，它的返回值是虚拟 DOM。所以，我们只需要执行组件的渲染函数取得对应的虚拟 DOM，再将该虚拟 DOM 渲染为 HTML 字符串，并作为 `renderComponentVNode` 函数的返回值即可。
+
+```js
+function renderComponentVNode(vnode) {
+  // 获取 setup 组件选项
+  let { type: { setup } } = vnode
+  // 执行 setup 函数得到渲染函数 render
+  const render = setup()
+  // 执行渲染函数得到 subTree，即组件要渲染的内容
+  const subTree = render()
+  // 调用 renderElementVNode 完成渲染，并返回结果
+  return renderElementVNode(subTree)
+}
+
+const html = renderComponentVNode(CompVNode)
+console.log(html) // <div>hello</div>
+```
+
+上面这段代码的逻辑非常简单，它仅仅展示了渲染组件的最基本原理，但仍然存在很多问题。
+
+* `subTree` 本身可能是任意类型的虚拟节点，包括组件类型。因此，我们不能直接使用 `renderElementVNode` 来渲染它。
+* 执行 setup 函数是，也应该提供 `setupContext` 对象。执行渲染函数 render 时，也应该将其 this 指向 `renderContext` 对象。在组件在初始化和渲染时，需要初始化 data，需要得到 setup 函数的执行结果，并检查 setup 函数的返回值是函数还是 `setupState` 等。
+
+对于第一个问题，我们可以通过封装通用函数来解决，如下面 `renderVNode` 函数的代码所示：
+
+```js
+function renderVNode(vnode) {
+  const type = typeof vnode.type
+
+  if (type === 'string') {
+    return renderElementVNode(vnode)
+  } else if (type === 'object' || type === 'function') {
+    return renderComponentVNode(vnode)
+  } else if (vnode.type === Text) {
+    // 处理文本
+  } else if (vnode.type === Fragment) {
+    // 处理片段
+  } else {
+    // 其他 VNode 类型
+  }
+}
+```
+
+有了 `renderVNode` 后，我们就可以在 `renderComponentVNode` 中使用它来渲染 `subTree` 。
+
+```js
+function renderComponentVNode(vnode) {
+  // 获取 setup 组件选项
+  let { type: { setup } } = vnode
+  // 执行 setup 函数得到渲染函数 render
+  const render = setup()
+  // 执行渲染函数得到 subTree，即组件要渲染的内容
+  const subTree = render()
+  // 调用 renderVNode 完成渲染，并返回结果
+  return renderVNode(subTree)
+}
+```
+
+第二个问题涉及组件的初始化流程。下图是组件在客户端渲染时的整体流程。
+
+<img src="./images/component_lifecycle.png" />
+
+在进行服务端渲染时，组件的初始化流程与客户端渲染时组件的初始化流程基本一致，但存在两个重要的区别：
+
+* 服务端渲染的是应用的当前快照，不存在数据变更后重新渲染的情况。因此，所有数据在服务器都无须是响应式的。利用这一点，我们可以减少服务端渲染过程中创建响应式对象的开销。
+* 服务端渲染只需要获取组件要渲染的 `subTree` 即可，无须调用渲染器完成真实 DOM 的创建。因此，在服务端渲染时，可以忽略 “设置 render effect 完成渲染这一步”。
+
+<img src="./images/component_lifecycle02.png" />
+
+可以看到，只需要对客户端初始化组件的逻辑稍作调整，即可实现组件在服务端的渲染。另外，由于组件在服务端渲染时，不需要渲染真实 DOM 元素，所以无须创建并执行 `render effect`。这意味着，组件的 `beforeMount` 以及  `mounted` 钩子不会被触发。而且，由于服务端渲染不存在数据变更后的重新渲染逻辑，所以 `beforeUpdate` 和 `updated` 钩子也不会在服务端执行。
+
+```js
+function renderComponentVNode(vnode) {
+  const isFUnctional = typeof vnode.type === 'function'
+  let componentOptions = vnode.type
+
+  if (isFUnctional) {
+    componentOptions = {
+      render: vnode.type,
+      props: vnode.type.props
+    }
+  }
+
+  let { render, data, setup, beforeCreate, created, props: propsOption } = componentOptions
+
+  beforeCreate && beforeCreate()
+
+  // 无须使用 reactive() 创建 data 的响应式版本
+  const state = data ? data() : null
+  const [props, attrs] = resolveProps(propsOption, vnode.props)
+
+  const slots = vnode.children || {}
+
+  const instance = {
+    state,
+    props, // props 无须 shallowReactive
+    isMounted: false,
+    subTree: null,
+    slots,
+    mounted: [],
+    keepAliveCtx: null
+  }
+
+  function emit(event, ...payload) {
+    const eventName = `on${ event[0].toUpperCase() + event.slice(1) }`
+    const handler = instance.props[eventName]
+    if (handler) {
+      handler(...payload)
+    } else {
+      console.error('事件不存在')
+    }
+  }
+
+  // setup
+  let setupState = null
+  if (setup) {
+    const setupContext = { attrs, emit, slots }
+    const prevInstance = setCurrentInstance(instance)
+    const setupResult = setup(shallowReadonly(instance.props), setupContext)
+    setCurrentInstance(prevInstance)
+    if (typeof setupResult === 'function') {
+      if (render) console.error('setup 函数返回渲染函数，render 选项被忽略')
+    } else {
+      setupState = setupContext
+    }
+  }
+
+  vnode.component = instance
+
+  const renderContext = new Proxy(instance, {
+    get (t, k, r) {
+      const { state, props, slots } = t
+
+      if (k === '$slots') return slots
+
+      if (state && k in state) {
+        return state[k]
+      } else if (k in props) {
+        return props[k]
+      } else if (setupState && k in setupState) {
+        return setupState[k]
+      } else {
+        console.error('不存在')
+      }
+    },
+    set(t, k, v, r) {
+      const { state, props } = t
+      if (state && k in state) {
+        return state[k]
+      } else if (k in props) {
+        return props[k]
+      } else if (setupState && k in setupState) {
+        return setupState[k]
+      } else {
+        console.error('不存在')
+      }
+    }
+  })
+
+  created && created.call(renderContext)
+
+  const subTree = render.call(renderContext, renderContext)
+
+  return renderVNode(subTree)
+}
+```
+
+观察上面的代码可以发现，该实现与客户端渲染的逻辑基本一致。唯一的区别在于，在服务端渲染时，无需使用 `reactive` 函数为 data 数据创建响应式版本，并且 props 数据也无需是浅响应式的。
+
+##### 客户端激活的原理
+

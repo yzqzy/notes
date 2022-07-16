@@ -145,3 +145,6 @@ function escapeHtml(string) {
 
 console.log(renderElementVNode(ElementVNode)) // <div id="foo"><p>hello</p></div>
 
+module.exports = {
+  renderElementVNode
+}
