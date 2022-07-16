@@ -15094,3 +15094,324 @@ SSR 和 CSR 各有优缺点。SSR 对 SEO 更加友好，而 CSR 对 SEO 不太�
 
 ##### 将虚拟 DOM 渲染为字符串
 
+既然 “同构” 指的是，同样的代码既能在服务端运行，也能在客户端运行。本小节我们就来讨论如何在服务端将虚拟 DOM 渲染为 HTML 字符串。
+
+给出如下虚拟节点对象，它用来描述一个普通的 div 标签。
+
+```js
+const ElementVNode = {
+  type: 'div',
+  props: {
+    id: 'foo'
+  },
+  children: [
+    { type: 'p', children: 'hello' }
+  ]
+}
+```
+
+为了将虚拟节点 `ElementVNode` 渲染为字符串，我们需要实现 `renderElementVNode` 函数。该函数接收用来描述普通标签的虚拟节点作为参数，并返回渲染后的 HTML 字符串。
+
+```js
+function renderElementVNode(vode) {
+  // 返回渲染后的结果，即 HTML 字符串
+}
+```
+
+在不考虑任何边界条件的情况下，实现 `renderElementVNode` 非常简单。
+
+```js
+// 返回渲染后的结果，即 HTML 字符串
+function renderElementVNode(vnode) {
+  // 取出标签名称 tag 和标签属性 props，以及标签的子节点
+  const { type: tag, props, children } = vnode
+  // 开始标签的头部
+  let ret = `<${ tag }`
+  // 处理标签属性
+  if (props) {
+    for (const k in props) {
+      ret += ` ${ k }="${ props[k] }"`
+    }
+  }
+  // 开始标签的闭合
+  ret += '>'
+
+  // 处理子节点
+  // 如果子节点的类型是字符串，则是文本内容，直接拼接
+  if (typeof children === 'string') {
+    ret += children
+  } else if (Array.isArray(children)) {
+    // 如果子节点的类型是数组，则递归地调用 renderElementVNode 完成渲染
+    children.forEach(child => {
+      ret += renderElementVNode(child)
+    })
+  }
+
+
+  // 结束标签
+  ret += `</${ tag }>`
+
+  // 返回拼接好的字符串
+  return ret
+}
+```
+
+接着，我们可以调用 `renderElementVNode` 函数完成对 `ElementVNode` 的渲染：
+
+```js
+console.log(renderElementVNode(ElementVNode)) // <div id="foo"><p>hello</p></div>
+```
+
+可以看到，输出结果是我们所期望的 HTML 字符串。实际上，将一个普通标签类型的虚拟节点渲染为 HTML 字符串，本质上是字符串的拼接。不过，上面给出的 `renderElementVNode` 函数的实现仅仅用来展示将虚拟 DOM 渲染为 HTML 字符串的核心原理，并不满足生产要求，因为它存在以下几点缺陷。
+
+* `renderElementVNode` 函数在渲染标签类型的虚拟节点时，还需要考虑该节点是否是自闭合标签。
+* 对于属性（props）的处理会比较复杂，要考虑属性名称是否合法，还要对属性值进行 HTML 转义。
+* 子节点的类型多种多样，可能是任意类型的虚拟节点，如 `Fragment`、组件、函数式组件、文本等，这些都需要处理。
+* 标签的文本子节点也需要进行 HTML 转义。
+
+上述这些问题都属于边界条件，接下来我们逐个处理。首先处理自闭合标签，它的术语叫做 `void element`，它的完整列表如下：
+
+```js
+const VOID_TAGS = 'area,base,br,col,embed,hr,img,input,link,meta,param,source,track,wbr'
+```
+
+可以看 WHATWG 的规范中查看完整的 void element。
+
+对于 void element，由于它无须闭合标签，所以为此类标签生成 HTML 字符串时，无须为其生成对应的闭合标签，如下面的代码所示：
+
+```js
+const VOID_TAGS = 'area,base,br,col,embed,hr,img,input,link,meta,param,source,track,wbr'
+
+// 返回渲染后的结果，即 HTML 字符串
+function renderElementVNode(vnode) {
+  // 取出标签名称 tag 和标签属性 props，以及标签的子节点
+  const { type: tag, props, children } = vnode
+  // 判断是否是 void element
+  const isVoidElement = VOID_TAGS.split(',').includes(tag)
+
+  // 开始标签的头部
+  let ret = `<${ tag }`
+
+  // 处理标签属性
+  if (props) {
+    for (const k in props) {
+      ret += ` ${ k }="${ props[k] }"`
+    }
+  }
+
+  // 开始标签的闭合，如果时 void element，则自闭合
+  ret += isVoidElement ? '/>' : '>'
+  // 如果是 void element，则直接返回结果，无须处理 children，因为 void element 没有 children
+  if (isVoidElement) return ret
+
+  // 处理子节点
+  // 如果子节点的类型是字符串，则是文本内容，直接拼接
+  if (typeof children === 'string') {
+    ret += children
+  } else if (Array.isArray(children)) {
+    // 如果子节点的类型是数组，则递归地调用 renderElementVNode 完成渲染
+    children.forEach(child => {
+      ret += renderElementVNode(child)
+    })
+  }
+
+  // 结束标签
+  ret += `</${ tag }>`
+
+  // 返回拼接好的字符串
+  return ret
+}
+```
+
+在上面这段代码中，我们增加了对 void element 的处理。需要注意的一点是，由于自闭合标签没有子节点，所以可以跳过对 children 的处理。
+
+接下来，我们需要更加严谨地处理 HTML 属性。处理属性需要考虑多个方面，首先是对 boolean attribute 的处理。所谓 boolean attribute，并不是说这类属性的值是布尔类型，而是指，如果这类指令存在，则代表 true，否则代表 false。例如 `<input />` 标签的 `checked` 属性和 `disabled` 属性。
+
+```html
+<!-- 选中的 checkbox -->
+<input type="checkbox" checked />
+<!-- 未选中的 checkbox -->
+<input type="checkbox" />
+```
+
+从上面这段 HTML 代码示例中可以看出，当渲染 boolean attribute 时，通常无须渲染它的属性值。
+
+关于属性，另外一点需要考虑的是安全问题。WHATWG 规范的 13.1.2.3 节中明确定义了属性名称的组成。
+
+属性名称必须有一个或多个非以下字符组成。
+
+* 控制字符集（control character）的码点范围是：`[0x01, 0x1f]` 和 `[0x7f, 0x9f]`。
+* U+0020（SPACE）、U+0022（”）、U+0027（‘）、U+003E（>）、U+002F（/）以及 U+002D（=）。
+* nocharacters，这里的 nocharacters 代表 Unicode 永久保留的码点，这些码点在 Unicode 内部使用，它的取值范围是：`[0xFDD0, 0xFDEF]`，还包括：`0xFFFE`、`0xFFFF`、`0x1FFFE`、`0x1FFFF`、`0x2FFFE`、`0x3FFFE`、`0x3FFFF`、`0x4FFFE`、`0x4FFFF`、`0x5FFFE`、`0x5FFFF`、`0x6FFFE`、`0x6FFFF`、`0x7FFFE`、`0x7FFFF`、`0x8FFFE`、`0x8FFFF`、`0x9FFFE`、`0x9FFFF`、`0x10FFFE`、`0x10FFFF`、`0xAFFFE`、`0xAFFFF`、`0xBFFFE`、`0xBFFFF`、`0xCFFFE`、`0xCFFFF`、`0xDFFFE`、`0xDFFFF`、`0xEFFFE`、`0xEFFFF`、`0xFFFFE`、`0xFFFFF`。
+
+考虑到 Vue.js 的模板编译器在编译过程中已经对 nocharacters 以及控制字符集做了处理，所以我们只需要小范围处理即可，任何不满足上述条件的属性名称都是不安全且不合法的。
+
+另外，在虚拟节点中的 props 对象中，通常会包含仅用于组件运行时逻辑的相同属性。例如，key 属性仅用于虚拟 DOM 的 Diff 算法，ref 属性仅用于实现 template ref 的功能等。在进行服务端渲染时，应该忽略这些属性。初次之外，服务端渲染无须考虑事件绑定。因此，也应该忽略 props 对象中的事件处理函数。
+
+更加严谨的属性处理方案如下：
+
+```js
+// 返回渲染后的结果，即 HTML 字符串
+function renderElementVNode(vnode) {
+  // 取出标签名称 tag 和标签属性 props，以及标签的子节点
+  const { type: tag, props, children } = vnode
+  // 判断是否是 void element
+  const isVoidElement = VOID_TAGS.split(',').includes(tag)
+
+  // 开始标签的头部
+  let ret = `<${ tag }`
+
+  // 处理标签属性
+  if (props) {
+    // 调用 renderAttrs 函数进行严禁处理
+    ret += renderAttrs(props)
+  }
+
+  // 开始标签的闭合，如果时 void element，则自闭合
+  ret += isVoidElement ? '/>' : '>'
+
+  // 如果是 void element，则直接返回结果，无须处理 children，因为 void element 没有 children
+  if (isVoidElement) return ret
+
+  // 处理子节点
+  // 如果子节点的类型是字符串，则是文本内容，直接拼接
+  if (typeof children === 'string') {
+    ret += children
+  } else if (Array.isArray(children)) {
+    // 如果子节点的类型是数组，则递归地调用 renderElementVNode 完成渲染
+    children.forEach(child => {
+      ret += renderElementVNode(child)
+    })
+  }
+
+  // 结束标签
+  ret += `</${ tag }>`
+
+  // 返回拼接好的字符串
+  return ret
+}
+```
+
+可以看到，在 `renderElementVNode` 函数内，我们调用了 `renderAttrs` 函数来实现对 props 的处理。`renderAttrs` 属性的具体实现如下：
+
+```js
+// 应该忽略的属性
+const shouldIgnoreProp = ['key', 'ref']
+
+function renderAttrs(props) {
+  let ret = ''
+  for (const key in props) {
+    if (
+      // 检测属性名称，如果是事件或应该被忽略的属性，则忽略它
+      shouldIgnoreProp.includes(key) || 
+      /^on[^a-z]/.test(key)
+    ) {
+      continue
+    }
+    const value = props[key]
+    // 调用 renderDynamicAttr 完成属性的渲染
+    ret += renderDynamicAttr(key, value)
+  }
+  return ret
+}
+```
+
+`renderDynamicAttr` 函数的实现如下：
+
+```js
+// 用来判断属性是否是 boolean attribute
+const isBooleanAttr = (key) =>
+  (
+    `itemscope,allowfullscreen,formnovalidate,ismap,nomodule,novalidate,readonly,` + 
+    `async,autofocus,autoplay,controls,default,defer,disabled,hidden,` + 
+    `loop,open,required,reversed,scoped,seamless,` + 
+    `checked,muted,multiple,selected`  
+  ).split(',').includes(key)
+
+// 用来判断属性名称是否合法且安全
+const isSSRSafeAttriName = (key) => !(/[>/="'\u0009\u000a\u000c\u0020]/.test(key))
+
+function renderDynamicAttr(key, value) {
+  if (isBooleanAttr(key)) {
+    // 对于 boolean attribute，如果值为 false，则什么都不需要渲染，否则只需要渲染 key
+    return value === false ? '' : ` ${ key }`
+  } else if (isSSRSafeAttriName(key)) {
+    // 对于其他安全的属性，执行完整的渲染
+    // 注意：对于属性值，我们需要对它执行 HTML 转义操作
+    return value === '' ? ` ${ key }` : ` ${ key }="${ escapeHtml(value) }"`
+  } else {
+    // 跳过不安全的属性，并打印警告信息
+    console.warn(
+      `[@vue/server-renderer] Skipped rendering unsafe attribute name: ${ key }`
+    )
+    return ``
+  }
+}
+```
+
+这样我们就实现了对普通元素类型的虚拟节点的渲染。实际上，在 Vue.js 中，由于 class 和 style 这两个属性可以使用多种合法的数据结构来表示，例如 class 的值可以是字符串、对象、数组，所以理论上我们还需要考虑这些情况。不过原理都是相同的，对于使用不同数据结构表示的 class 或 style，我们只需要将不同类型的数据结构序列化字符串表示即可。
+
+另外，观察上面代码中的 `renderDynamicAttr` 函数的实现能够发现，在处理属性值时，我们调用了 `escapeHtml`　对其进行转义处理，这对于防御 XSS 攻击至关重要。HTML 转义指的是将特殊字符转换为对应的 HTML 实体。其转换规则很简单。
+
+* 如果该字符串作为普通内容被拼接，则应该对以下字符进行转义。
+  * 将字符 & 转义为实体 `&amp;` 。
+  * 将字符 < 转义为实体 `&lt;`。
+  * 将字符 > 转义为实体 `&gt;`。
+* 如果该字符作为属性值被拼接，那么除了上述三个字符应该被转义之外，还应该转义下面讲个字符。
+  * 将字符 " 转义为实体 `&quot;`。
+  * 将字符 ' 转义为实体 `&#39;`。
+
+具体实现如下：
+
+```js
+const escapeRE = /["'&<>]/
+function escapeHtml(string) {
+  const str = '' + string
+  const match = escapeRE.exec(str)
+
+  if (!match) return str
+
+  let html = ''
+  let escaped
+  let index
+  let lastIndex
+  for (index = match.index; index < str.length; index++) {
+    switch (str.charCodeAt(index)) {
+      case 43: // "
+        escaped = '&quot;'
+        break
+      case 38: // &
+        escaped = '&amp;'
+        break
+      case 39: // '
+        escaped = '&#39;'
+        break
+      case 60: // <
+        escaped = '&lt;'
+        break
+      case 62:
+        escaped = '&gt;'
+        break
+      default:
+        continue
+    }
+
+    if (lastIndex !== index) {
+      html += str.substring(lastIndex, index)
+    }
+
+    lastIndex = index + 1
+    html += escaped
+  }
+
+  return lastIndex != index ? html + str.substring(lastIndex, index) : html
+}
+```
+
+原理很简单，只需要在给定字符串中查找需要转义的字符，然后将其替换为对应的 HTML 实体即可。
+
+> 
+
+##### 将组件渲染为 HTML 字符串
+
+我们已经讨论了如何将普通标签类型的虚拟节点渲染为 HTML 字符串。
