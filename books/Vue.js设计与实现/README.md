@@ -15639,6 +15639,413 @@ render.hydrate(vnode, container)
 实际上，我们可以用代码模拟从服务器渲染到客户端激活的整个过程。
 
 ```js
+// html 代表服务端渲染的字符串
+const html = renderComponentVNode(compVNode)
 
+// 假设客户端已经拿到了由服务端渲染的字符串
+// 获取挂载点
+const container = document.querySelector('#app')
+// 设置挂载点的 innerHTML，模拟由服务端渲染的内容
+container.innerHTML = html
+
+// 接着调用 hydrate 函数完成激活
+render.hydrate(compVNode, container)
 ```
+
+其中 `CompVNode` 的代码如下：
+
+```js
+const MyComponent = {
+  name: 'App',
+  steup() {
+    const str = ref('foo')
+
+    return () => {
+      return {
+        type: 'div',
+        children: [
+          {
+            type: 'span',
+            children: str.value,
+            props: {
+              onClick: () => {
+                str.value = 'bar'
+              }
+            }
+          },
+          {
+            type: 'span', children: 'baz'
+          }
+        ]
+      }
+    }
+  }
+}
+
+const CompVNode = {
+  type: MyComponent
+}
+```
+
+接下来，我们着手实现 `renderer.hydrate` 函数。与 `renderer.render` 函数一样，`render.hydrate` 函数也是渲染器的一部分，因此它也会作为 `createRenderer` 函数的返回值。
+
+```js
+function createRenderer(options) {
+  function hydrate(node, vnode) {
+    // ...
+  }
+
+  return {
+    render,
+    hydrate
+  }
+}
+```
+
+这样，我们就可以通过 `render.hydrate` 函数来完成客户端激活了。在具体实现之前，我们先来看一下页面中已经存在的真实 DOM 元素与虚拟 DOM 对象之间的关系。
+
+<img src="./images/ssr02.png" />
+
+真实 DOM 元素与虚拟 DOM 对象都是树形结构，并且节点之间存在一一对应的关系。因此，我们可以认为它们是 “同构” 的。而客户端激活的原理就是基于这一事实，递归地在真实 DOM 元素与虚拟 DOM 节点之间建立关系。另外，在虚拟 DOM 中并不存在于容器元素（挂载点）对应的节点。因此，在激活的时候，应该从容器元素的第一个子节点开始。
+
+```js
+function hydrate(vnode, container) {
+  // 从容器的第一个子节点开始
+  hydrateNode(container.firstChild, vnode)
+}
+```
+
+其中，`hydrateNode` 函数接收两个参数，分别是真实 DOM 元素和虚拟 DOM 元素。`hydrateNode` 函数的具体实现如下：
+
+```js
+function hydrateNode(node, vnode) {
+  const { type } = vnode;
+
+  // 1. 让 vnode.el 引用真实 DOM
+  vnode.el = node
+
+  // 2. 检查虚拟 DOM 的类型，如果是组件，调用 mountComponent 函数完成激活
+  if (typeof type === 'object') {
+    mountComponent(vnode, container, null)
+  } else if (typeof type === 'string') {
+    // 3. 检查真实 DOM 的类型与虚拟 DOM 的类型是否匹配
+    if (node.nodeType !== 1) {
+      console.error('mismatch')
+      console.error('服务端渲染的真实 DOM 节点是：', node)
+      console.error('客户端渲染的真实 DOM 节点是：', vnode)
+    } else {
+      // 4. 如果是普通元素，调用 hydrateElement 完成激活
+      hydrateElement(node, vnode)
+    }
+  }
+
+  // 5. hydrateNode 函数需要返回当前节点的下一个兄弟节点，以便继续进行后续的激活操作
+  return node.nextSibling
+}
+```
+
+`hydrateNode` 函数的关键点比较多。首先，需要在真实 DOM 元素与虚拟 DOM 元素之间建立联系，即 `vnode.el = node`。这样，才能保证后续更新操作正常进行。其次，我们需要检测虚拟 DOM 的类型，并据此判断应该执行怎样的激活操作。在上面的的代码中，我们展示了对组件和普通元素类型的虚拟节点的处理。可以看到，在激活普通元素类型的节点时，我们需要检查真实 DOM 元素的类型与虚拟 DOM 的类型是否相同，如果不同，则需要打印 `mismatch` 错误，即客户端渲染的节点与服务端渲染的节点不匹配。同时，为了能够让用户快速定位问题，保证开发体验，我们最好将客户端渲染的虚拟节点与服务端渲染的真实 DOM 节点都打印出来，供用户参考。对于组件类型节点的激活操作，可以直接通过 `mountComponent` 函数来完成。对于普通元素的激活操作，可以通过 `hydrateElement` 函数来完成。最后，`hydrateNode` 函数需要返回当前激活节点的下一个兄弟节点，以便进行后续的激活操作。`hydrateNode` 函数的返回值非常重要，它的用途体现在 `hydrateElement` 函数内。
+
+```js
+// 激活普通元素类型的节点
+function hydrateElement(el, vnode) {
+  // 1. 为 DOM 元素添加事件
+  if (vnode.props) {
+    for (const key in vnode.props) {
+      // 只有事件类型的 props 需要处理
+      if (/^on/.test(key)) {
+        patchProps(el, key, null, vnode.props[key])
+      }
+    }
+  }
+  // 递归激活子节点
+  if (Array.isArray(vnode.children)) {
+    // 从第一个子节点开始
+    let nextNode = el.firstChild
+    const len = vnode.children.length
+    for (let i = 0; i < len; i++) {
+      // 激活子节点，注意，每当激活一个子节点，hydrateNode 函数都会返回当前子节点的下一个兄弟节点
+      nextNode = hydrateNode(nextNode, vnode.children[i])
+    }
+  }
+}
+```
+
+`hydrateElement` 函数有两个关键点：
+
+* 因为服务端渲染是忽略事件的，浏览器只是渲染静态 HTML，所以激活 DOM 元素的操作之一就是为其添加事件处理程序。
+* 递归地激活当前元素的子节点，从第一个子节点 `el.firstChild` 开始，递归地调用 `hydrateNode` 函数完成激活。`hydrateNode` 函数会返回当前节点的下一个兄弟节点，利用这个特点即可完成所有子节点的处理。
+
+对于组件的激活，我们还需要针对性地处理 `mountComponent` 函数。由于服务端渲染的页面中已经存在真实 DOM 元素，所以当调用 `mountElement` 函数进行组件挂载时，无须再次创建真实 DOM 元素。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // ...
+
+  instance.update = effect(() => {
+    const subTree = render.call(renderContext, renderContext)
+    if (!subTree.isMounted) {
+      beforeMount && beforeMount.call(renderContext)
+      // 如果 vnode.el 存在，则意味着要执行激活
+      if (vnode.el) {
+        // 直接调用 hydrateNode 完成激活
+        hydrateNode(vnode.el, subTree)
+      } else {
+        // 正常挂载
+        patch(null, subTree, container, anchor)
+      }
+      instance.isMounted = true
+      mounted && mounted.call(renderContext)
+      instance.mounted && instance.mounted.forEach(hook => hook.call(renderContext))
+    } else {
+      beforeUpdate && beforeUpdate.call(renderContext)
+      patch(instance.subTree, subTree, container, anchor)
+      updated && updated.call(renderContext)
+    }
+    instance.subTree = subTree
+  }, {
+    schedular: queueJob
+  })
+}
+```
+
+可以看到，唯一需要调整的地方就是组件的渲染副作用，即 render effect。`hydrateNode` 函数可以在真实 DOM 与虚拟 DOM 之间建立联系，即 `vnode.el = node`。所以，让渲染副作用执行挂载操作时，我们优先检查虚拟节点的 `vnode.el` 属性是否已经存在，如果存在，则意味着无需进行全新挂载，只需要进行激活操作即可，否则按照之前的逻辑进行全新的挂载。最后一个关键点子啊与，组件的激活操作需要在真实 DOM 与 `subTree` 之间进行。
+
+#### 编写同构代码
+
+“同构” 一词指的是一份代码既能在服务端运行，又可以在客户端运行。因此，在编写组件代码时，应该额外注意因代码运行环境的不同所导致的差异。
+
+##### 组件的生命周期
+
+我们知道，当组件的代码在服务端余运行时，由于不会对组件进行真正的挂载操作，即不会把虚拟 DOM 渲染为真实 DOM 元素，所以组件的 `beforeMount` 与 `mounted` 这两个钩子函数不会执行。又因为服务端渲染的是应用的快照，所以不存在数据变化后的重新渲染，因此，组件的 `beforeUpdate` 与 `updated` 这两个钩子函数也不会执行。另外，在服务端渲染时，也不会发生组件被卸载的情况，所以组件的 `beforeUnmount` 与 `unmounted` 这两个钩子函数也不会执行。实际上，只有 `beforeCreate` 与 `created` 这两个钩子函数会在服务端执行，所以当你编写组件代码时需要额外注意。
+
+下面是一段常见的问题代码：
+
+```vue
+<script>
+export default {
+  created() {
+    this.timer = setInterval(() => {
+      // 做一些事情
+    }, 1000)
+  },
+  beforeUnmount() {
+    // 清除定时器
+    clearInterval(this.timer)
+  }
+}
+</script>
+```
+
+观察上面这段代码，我们在 `created` 钩子函数中设置了一个定时器，并尝试在组件被卸载之前将其清除。如果在客户端运行这段代码，并不会产生任何问题，但如果在服务端运行，则会造成内存泄漏。因为 `beforeUnmount` 钩子函数不会在服务端运行，所以这个定时器永远不会被清除。
+
+实际上，在 `created` 钩子函数中设置定时器对于服务器渲染没有任意意义。因为服务端渲染的是应用程序的快照，所谓快照，指的是在当前数据状态下页面应该呈现的内容。所以，在定时器被触发，修改数据状态之前，应用程序的快照已经渲染完毕了。所以我们说，在服务端渲染时，定时器内的代码没有任意意义。遇到这类问题，通常有两种解决方案：
+
+* 方案一：将创建定时器的代码移动到 `mounted` 钩子中，即只在客户端执行定时器；
+* 方案二：使用环境变量包裹这段代码，让其不再服务端运行。
+
+方案一很好理解，方案二需要依赖项目的环境变量。例如，在通过 webpack 或 vite 等构建工具搭建的同构项目中，通常带有这种环境变量。以 Vite 为例，我们可以使用 `import.meta.env.SSR` 来判断当前代码的运行环境。
+
+```vue
+<script>
+export default {
+  created() {
+    // 非服务端渲染时执行
+    if (!import.meta.env.SSR) {
+      this.timer = setInterval(() => {
+        // 做一些事情
+      }, 1000)
+    }
+  },
+  beforeUnmount() {
+    // 清除定时器
+    clearInterval(this.timer)
+  }
+}
+</script>
+```
+
+可以看到，我们通过 `import.meta.env.SSR` 来使代码只在特定环境中运行。实际上，构建工具会分别为客户端和服务端输出两个独立的包。构建工具在为客户端打包资源的时候，会在资源中排除被 `import.meta.env.SSR` 包裹的代码。换句话来说，上面的代码中被 `!import.meta.env.SSR` 包裹的代码只会在客户端包中存在。
+
+##### 使用跨平台的 API
+
+编写通过代码的另一个关键点时使用跨平台的 API。由于组件的代码既运行于浏览器，又运行于服务器，所以在编写代码的时候要避免使用平台特有的 API。例如，仅在浏览器环境中才存在的 `window`、`document` 等对象。当你不得不使用这些平台特有 API 时，你可以使用诸如 `import.meta.env.SSR` 这样的环境变量来做代码守卫。
+
+```vue
+<script>
+if (!import.meta.env.SSR) {
+  // 浏览器特有平台 API
+  window.xxx
+}
+ 
+export default {
+  // ...
+}
+</script>
+```
+
+类似地，Node.js 中特有的 API 也无法在浏览器中运行。因此，为了减轻开发时的心智负担，我们可以选择跨平台的第三方库。例如，使用 `Axios` 作为网络请求库。
+
+##### 只在某一端引入模块
+
+通常情况下，我们自己编写的组件代码是可控的，这时我们可以使用跨平台的 API 来保证代码 ’"同构"。然而，第三方模块的带么非常不可控。假设我们有如下组件：
+
+```vue
+<script>
+import storage from './storage.js'
+export default {
+  // ...
+} 
+</script>
+```
+
+上面这段组件代码本身没有问题，但它以来了 `./storage.js` 模块。如果模块中存在非同构代码，就会发生错误。假设 `./storage.js` 模块的代码如下：
+
+```js
+// storage.js
+export const storagee = window.localStorage
+```
+
+可以看到，`./storage.js` 模块中依赖了浏览器环境特有的 API，即 `window.localStorage` 。因此，当运行服务端渲染时就会发生错误。对于这个问题，有两种解决方案，方案一是修改第三方模块的代码，加入 `import.meta.env.SSR` 来做代码守卫，但是这样虽然能够解决问题，但是大多数情况下我们并不能这么做。因此，更多时候，我们会采用 **条件引入** 的方式来解决问题。
+
+```vue
+<script>
+let stroage
+
+// 非 SSR 才引入 stroage.js 模块
+if (!import.meta.env.SSR) {
+	import storage from './storage.js'  
+} else {
+  stroage = import('./stroage-server.js')
+}
+
+export default {
+  // ...
+} 
+</script>
+```
+
+##### 避免交叉请求引起状态污染
+
+编写同构代码时，额外需要注意的是，避免交查请求引起的状态污染。在服务端渲染时，我们会为每一个请求创建一个全新的应用实例。
+
+```js
+import { createSSRApp } from 'vue'
+import { renderTOString } from '@vue/server-renderer'
+import App from 'App.vue'
+
+// 每个请求到来，都会执行一次 render 函数
+async function render(url, mainfest) {
+  // 为当前请求创建应用实例
+  const app = createSSRApp(App)
+  
+  const ctx = {}
+  const html = await renderToString(app, ctx)
+  
+  return html
+}
+```
+
+可以看到，每次调用 render 函数进行服务端渲染时，都会为当前请求调用 `createSSRApp` 函数来创建一个新的应用实例。这是为了避免不同请求共有一个应用实例导致状态污染。
+
+除了要为每一个请求创建独立的应用实例之外，状态污染的情况还可能发生在单个组件的代码中：
+
+```vue
+<script>
+// 模块级别的全局变量
+let count = 0
+
+export default {
+  create() {
+    count++
+  }
+}
+</script>
+```
+
+如果上面这段组件的代码在浏览器中运行，不会产生任何问题，因为浏览器与用户是一对一的关系，每个浏览器都是独立的。但如果这个段代码在服务器中运行，情况会有所不同，因为服务器与用户是一对多的关系。当用户 A 发送请求到服务器时，服务器会执行上面这段组件代码，执行 `count++`。接着，用户 B 也发送请求到服务器，服务器再次执行上面这段组件的代码，此时的 `count` 已经因用户 A 的请求自增了一次，因此对于用户 B 而言，已经被用户 A 的请求所影响，于是就是造成请求间的交查污染。所以，在编写组件代码时，需要额外注意组件中出现的全局变量。
+
+##### ClientOnly 组件
+
+最后，我们再来介绍一个对编写同构代码非常有帮助的组件，即 `<ClientOnly>` 组件。在日常开发中，我们经常会使用第三方模块，但是它们不一定对 SSR 友好，例如：
+
+```vue
+<template>
+	<SsrIncompatibleComp />
+</template>
+```
+
+假设 `<SsrIncompatibleComp />` 是一个不兼容 SSR 的第三方组件，我们没有办法修改它的源代码。
+
+这时，我们就可以实现一个 `<ClientOnly>` 组件，该组件可以让模板的一部分内容仅在客户端渲染，如下面这段模板所示：
+
+```vue
+<template>
+	<ClientOnly>
+  	<SsrIncompatibleComp />
+  </ClientOnly>
+</template>
+```
+
+可以看到，我们使用 `<ClientOnly>` 组件包裹不兼容 SSR 的 `<SsrIncompatibleComp>` 组件。这样，在服务端渲染时就会忽略该组件，且该组件仅会在客户端被渲染。那么，`<ClientOnly>` 组件是如何做到这一点的呢？这其实是利用了 CSR 和 SSR 的差异。
+
+```js
+import { ref, onMounted, defineComponent } from 'vue'
+
+export const ClientOnly = defineComponent({
+  setup(_, { slots }) {
+    // 标记变量，仅在客户端渲染时为 true
+    const show = ref(false)
+    // onMounted 钩子只会在客户端执行
+    onMounted(() => {
+      show.value = true
+    })
+    // 在服务端什么都不渲染，在客户端才会渲染 <ClientOnly> 组件的插槽内容
+    return () => (show.value && slots.default ? slots.default() : nll)
+  }
+})
+```
+
+可以看到，整体实现非常简单。其原理是利用了 `onMounted` 钩子只会在客户端执行的特性。我们创建一个标记变量 show，初始值为 false，并且仅在客户端渲染时将其设置为 true。这意味着，在服务端渲染的时候，`<ClientOnly>` 组件的插槽内容不会被渲染。而在客户端渲染时，只有等到 `mounted` 钩子触发后才会渲染 `<ClientOnly>` 组件的插槽内容。这样就实现了被 `<ClientOnly>` 组件包裹的内容仅会在客户端被渲染。
+
+另外，`<ClientOnly>` 组件并不会导致客户端激活失败。因为在客户端激活的时候，`mounted` 钩子还没有触发，所以服务端与客户端渲染的内容一致，即什么都不渲染。等到激活完成，且 `mounted` 钩子触发执行之后，才会在客户端将 `<ClientOnly>` 组件的插槽内容渲染出来。
+
+#### 总结
+
+在本篇文章中，我们讨论了 CSR、SSR 和同构渲染的工作机制，以及它们各自的优缺点。
+
+|                | SSR  | CSR    |
+| -------------- | ---- | ------ |
+| SEO            | 友好 | 不友好 |
+| 白屏问题       | 无   | 有     |
+| 占用服务器资源 | 多   | 少     |
+| 用户体验       | 差   | 好     |
+
+当我们为应用程序选择渲染架构时，需要结合软件的需求及场景，选择适合的渲染方案。
+
+接着，我们讨论了 Vue.js 是如何把虚拟节点渲染为字符串的。以普通标签节点为例，在将其渲染为字符串时，要考虑以下内容。
+
+* 自闭合标签的处理。对于自闭合标签，无须为其渲染闭合标签部分，也无需处理其子节点。
+* 属性名称的合法性，以及属性值的转义。
+* 文本子节点的转义。
+
+然后，我们讨论了如何将组件渲染为 HTML 字符串。在服务端渲染组件与渲染普通标签没有本质区别。我们只需要通过执行组件的 `render` 函数，得到该组件所渲染的 `subTree` 并将其渲染为 HTML 字符串即可。另外，在渲染组件时，需要考虑以下几点：
+
+* 服务端渲染不存在数据变更后的重新渲染，所以无须调用 reactive 函数对 data 等数据进行包装，也无须使用 shallowReactive 函数对 props 数据进行包装。正因如此，我们也无需调用 `beforeUpdate` 和 `updated` 钩子。
+* 服务端渲染时，由于不需要渲染真实 DOM 元素，所以无须调用组件的 `beforeMount` 和 `mounted` 钩子。
+
+之后，我们讨论了客户端激活的原理。在同构渲染过程中，组件的代码会分别在服务端和客户端各执行一次。在服务端，组件会被渲染为静态的 HTML 字符串，并发送给浏览器。浏览器则会渲染由服务端返回的静态 HTML 内容，并下载打包在静态资源中的组件代码。当下载完毕后，浏览器回解析并执行该组件代码。当组件代码在客户端执行时，由于页面中已经存在对应的 DOM 元素，所以渲染器并不会执行创建 DOM 元素的逻辑，而是会执行激活操作。激活操作可以总结为两个步骤。
+
+* 在虚拟节点与真实 DOM 元素之间建立联系，即 `vnode.el = el` 。这样才能保证后续更新程序正确运行。
+* 为 DOM 元素添加事件绑定。
+
+最后，我们讨论了如何编写同构的组件代码。由于组件代码既运行于服务端，也运行于客户端，所以让我们编写组件代码时要额外注意。具体可以总结为以下几点。
+
+* 注意组件的生命周期。`beforeUpdate`、`updated`、`beforeMount`、`mounted`、`beforeUnmount`、`unmounted` 等生命周期钩子函数不会在服务端执行。
+* 使用跨平台的 API。由于组件的代码既要在浏览器中运行，也要在服务器中运行，所以编写组件代码时，要额外注意代码的跨平台性。通常我们在选择第三方库的时候，会选择支持跨平台的库，例如使用 `Axios` 作为网络请求库。
+* 特定端的实现。无论在客户端还是服务端，都应该保证功能的一致性。例如，组件需要读取 cookie 信息。在客户端，我们可以通过 `document.cookie` 来实现读取；而在服务端，则需要根据请求头来实现读取。所以，很多功能模块需要我们为客户端和服务端分别实现。
+* 避免交查请求引起的状态污染。状态污染既可以应用级的，也可以模块级的。对于应用，我们应该为每一个请求创建一个独立的应用实例。对于模块，我们应该避免使用模块级的全局变量。这是因为在不做特殊处理的情况下，多个请求会共有模块级的全部变量，造成请求间的交叉污染。
+* 仅在客户端渲染组件中的部分内容。这需要我们自行封装 `<ClientOnly>` 组件，被该组键包裹的内容仅在客户端才会被渲染。
+
+
 
