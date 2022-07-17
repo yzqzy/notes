@@ -362,7 +362,7 @@ addAll 函数的执行上下文创建好之后，便进入函数代码的执行�
 
 <img src="./images/call_stack05.png" />
 
-紧接着 addAll 执行最后一个相加操作后并返回，addAll 的执行上下文也会从栈顶弹出，此时调用栈中就只剩下全局上下文。
+紧接着 `addAll` 执行最后一个相加操作后并返回，`addAll` 的执行上下文也会从栈顶弹出，此时调用栈中就只剩下全局上下文。
 
 <img src="./images/call_stack02.png" />
 
