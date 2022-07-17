@@ -10715,6 +10715,160 @@ function getSequence(arr: number[]): number[] {
 
 ## 四、组件化
 
+### 组件的实现原理
+
+我们已经讲解过了浏览器的基本原理与实现。渲染器主要负责将虚拟 DOM 渲染为真实 DOM，我们只需要使用虚拟 DOM 来描述最终呈现的内容即可。但当我们编写比较复杂的页面时，用来描述页面结构的虚拟 DOM 的代码量会变的越多越多，或者说页面模板会变得越来越大。这时，我们就需要组件化的能力。有了组件，我们就可以将一个大页面拆分为多个部分，每一个部分都可以作为单独的组件，这些组件共同组成完善的页面。组件化的实现同样需要渲染器的支持。
+
+#### 渲染组件
+
+从用户的角度来看，一个有状态组件就是一个选项对象。
+
+```js
+const MyComponent = {
+  name: 'MyComponent',
+  data() {
+    return { foo: 1 }
+  }
+}
+```
+
+但是，如果从渲染器的内部实现来看，一个组件则是一个特殊类型的虚拟  DOM 节点。例如，为了描述普通标签，我们使用虚拟节点的 `vnode.type` 属性来存储标签名称，如下面的代码所示：
+
+```js
+const vnode = {
+  type: 'div',
+  // ...
+}
+```
+
+为了描述片段，我们让虚拟节点的 `vnode.type` 属性的值为 Fragment，例如：
+
+```js
+const vnode = {
+  type: Fragment,
+  // ...
+}
+```
+
+为了描述文本，我们让虚拟节点的 `vnode.type` 属性的值为 Text。
+
+```js
+const vnode = {
+  type: Text,
+  // ...
+}
+```
+
+渲染器的 patch 函数证明了上述内容：
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+    // 作为普通元素处理
+  } else if (type === Text) {
+    // 作为文本节点处理
+  } else if (type === Fragment) {
+    // 作为片段处理
+  }
+}
+```
+
+可以看到，渲染器会使用虚拟节点的 type 属性来区分其类型。对于不同类型的节点，需要采用不同的处理方式来完成挂载和更新。
+
+实际上，对于组件来说也是一样的。为了使用虚拟节点来描述组件，我们可以用虚拟节点的 `vnode.type` 属性来存储组件的选项对象。
+
+```js
+const vnode = {
+  type: MyComponent,
+  // ...
+}
+```
+
+为了让渲染器能够处理组件类型的虚拟节点，我们还需要在 `patch` 函数中对组件类型的节点进行处理。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+    // 作为普通元素处理
+  } else if (type === Text) {
+    // 作为文本节点处理
+  } else if (type === Fragment) {
+    // 作为片段处理
+  } else if (typeof type === 'object') {
+    // vnode.type 的值是选项对象，作为组件处理
+    if (!n1) {
+      // 挂载组件
+      mountComponent(n2, container, anchor)
+    } else {
+      // 更新组件
+      patchComponent(n1, n2, anchor)
+    }
+  }
+}
+```
+
+在上面这段代码中，我们新增了一个 else if 分支，用来处理虚拟节点的 `vnode.type` 属性值为对象的情况，即将该虚拟节点作为组件的描述来看待，并调用 `mountElement` 和 `patchComponent` 函数来完成组件的挂载和更新。
+
+渲染器有能力处理组件后，我们需要设计组件在用户层面的接口。这包括：用户应该如何编写组件？组件的选项对象必须是哪些内容？以及组件拥有哪些能力？等等。实际上，组件本身就是对页面内容的封装，它用来描述页面内容的一部分。因此，一个组件必须包含一个渲染函数，即 `render` 函数，并且渲染函数的返回值应该是虚拟 DOM。换句话来说，组件的渲染函数就是用来描述组件所渲染内容的接口，如下面的代码所示：
+
+```js
+const MyComponent = {
+  // 组件名称
+  name: 'MyComponent',
+  // 组件的渲染函数，返回值必须为虚拟 DOM
+  render() {
+    return {
+      type: 'div',
+      children: '我是文本内容'
+    }
+  }
+}
+```
+
+这个一个最简单的组件示例。有了基本的组件结构后，渲染器就可以完成组件的渲染。
+
+```js
+// 用来描述组件的 VNode 对象，type 属性值为组件的选项对象
+const CompVNode = {
+  type: MyComponent
+}
+// 调用渲染器渲染组件
+renderer.render(CompVNode, document.querySelector('#app'))
+```
+
+浏览器真正完成组件渲染任务的是 `mountComponent` 函数，其具体实现如下：
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const { render } = componentOptions
+  // 执行渲染函数，获取组件要渲染的内容，即 render 函数返回的虚拟 DOM
+  const subTree = render()
+  // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
+  patch(null, subTree, container, anchor)
+}
+```
+
+这样，我们就实现了最基本的组件化方案。
+
+#### 组件状态与自更新
+
 
 
 ## 五、编译器
@@ -12416,7 +12570,7 @@ function compiler(template) {
 compiler('<div><p>Vue</p><p>Template</p></div>')
 ```
 
-最重得到的代码字符串如下：
+最终得到的代码字符串如下：
 
 ```js
 function render () {
