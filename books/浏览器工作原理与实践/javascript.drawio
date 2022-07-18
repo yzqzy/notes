@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2022-07-17T14:45:17.785Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="LWkWpLsiMnb8M3-5oS0z" version="20.1.1" type="github" pages="2">
+<mxfile host="app.diagrams.net" modified="2022-07-18T10:31:03.259Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="VHASzVliinNK9nHhjt1q" version="20.1.1" type="github" pages="2">
   <diagram id="8fyNTl2rTRf6AflnJb4E" name="context">
-    <mxGraphModel dx="1230" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -229,7 +229,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="nqCVDDr2Yua_GqFaWKrL" name="call stack">
-    <mxGraphModel dx="1025" dy="689" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -269,74 +269,326 @@
         <mxCell id="R5CqVk5u4-TaSwrtuB0c-24" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/png,iVBORw0KGgoAAAANSUhEUgAAAJsAAABUCAYAAACV30XtAAAFl0lEQVR4nO3cQUhbdxwH8G/KRh8MBmPIw5U12lyEQdV1mB6GQRhMjJSgBwPCjNhL6lYqOOoUSijoIhRmuzkvE3UgxIMiXSLeiu6yCFYNO/RiNS2de0h3EJEno7pDno3R6JKn/pKY7wfeIfmb50/48v//83y/Z9nd3d0FkYALmS6A8gfDRmIYNhLDsJEYho3EMGwkhmEjMQwbiWHYSAzDRmIYNhLDsJGYd07y4Y3NLej6Nnb4v3xKgcXsXR8bm1vYefMGysV3YbFYTrsuOodML6O6vs2gUVpMh21nd5dBo7TwCwKJYdhIDMNGYhg2EsOwkRiGjcQwbCSGYSMxDBuJyYKwheFXFPjnMl0HnbUsCFs2iKDvdjsmtKPGalFoHH1L0rWdHye6xSjXrU+34+rUM+NVCfoP/YSGie5O/FkziLVqFdBCuNldi76WIO6UytZ6HuT3zFb+LdYeBbHW5YUz2fjSBFo1J7zVauy16sT3NSXoDYawLlnnOZGRsIV7FChK7HCPrWSiBABAgaoeOz7/NASol3F5/2cKbYD2Ai/OtrRzSXwZDfcocNz3YUbvgB2ANuaGFYAv5TOs44+v7Xg2lXy0cOI5viw7lVJjPvoYBYfeXEZUA64dn1U6QDhsYTy5D7hGmmE33lEb2uBrmkzjHAW4/tNzXD+L8uhMyS6jr1awCKCsOIemhL9eJtmf2WDNoT8hW8jObJeKcfIVTm4ZvfapE1iI7c/2ltL1tWVArUrYx1FqhJfRIhTVA56HATSPuqFCQ6DRAR/S2bMJLqOldehXWzAwXYdfjEsf3009w92WB0n2cfR/THdX/b3+Dz54/z0TnwzDrziMcLkwvNyGVZsDmNXRUWGmErM0THS3oDXZhVzVi0iX0whUBH23O9FrDN3lNTbTMhA2ylf5fVGXRDFsJIZhIzEMG4lh2EgMw0ZiGDYSw7CRGIaNxDBsJIZhIzF5HLZYC6Gy72A74dnK47DZ0aHr0HUd+vIwXJkuJxVLA29bCnOxrTCPw5YabcwNpTGApC2looWEcHNwGf1dwVhHWIsTvYO5FTiGLUfMTw0gVP4V6vZuRy/1IlgO9D6NZLSudAiHLf6ohcR2vsPzhjbm3refciPwKmEUgcbE/Vbi7JPkkQ5zfiiKH+FUS53zQ1EUWJsmgXEPrEfWkmFJeySyU0ZmNl+lgh9sUei6jujI4d2SNuaGtakMM8aeKjoCeGzxoIR7rPB8MhPbb+0do26cag9KRUe8vvphRN/+rgDcl1I/zevHtzB85Ury48eFlM8T64f4Nf6ICC2EgQXkVA9rRh6/4BqJItAQi4baEEAgYTSMoaZJ+GYD8Xa/z11wwYMncx2wVwBFNhfQ5ID/C+lbydP34Y2f4blxCicq9SJS046r3bVoBQDVi2BNCUJHNP5ko4yE7dhWPqPdb7JSOdQEs9c0pTYEoDcYS3ElEOtlSG/GyUUF1Q+wVh1/PT80kFOdXtn3YBmj3a8shQYYe6cOvdNYdm1u4JjAaSuLwCk0Eqbr9eNb+O3OdPLBtnF4vik3eeYIfl8AnDWf5UynV/aFDXZU3QMclX5UGY9oSKQhPAfYKw7OjmUoPhC0xRUNqFCBOX9so28ibGpxGTC+itVRmNoTntoyesD8UCd64USwOne6pbMwbLEZK2pzw6ooCe/7jNlu5aEVjvH9Iy4ML+8Pph0dsz4olVYoTQDuzUCfhbHkpqmiGcP1VjiU+KLuE287hPG4rgGE9l6rXkQeOXNmVgPYykeCeFGXxDBsJIZhIzEMG4lh2EgMw0ZiGDYSw7CRGIaNxDBsJIZhIzGmw3bBYoHJf6tSnjIdNkW5CH37XwaOUmb6rg8A2Njcgq5vY4eBoxScKGxE6eAXBBLDsJEYho3EMGwkhmEjMQwbiWHYSAzDRmL+A50Uxfbc8cTNAAAAAElFTkSuQmCC;" parent="1" vertex="1">
           <mxGeometry x="100" y="440" width="155" height="84" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-1" value="" style="swimlane;startSize=0;strokeColor=default;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-1" value="" style="swimlane;startSize=0;strokeColor=default;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="360" y="680" width="330" height="340" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-2" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-2" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="20" y="245" width="290" height="85" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-3" value="全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-3" value="全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="115" y="240" width="90" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-4" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-4" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="30" y="270" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-5" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-5" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="170" y="270" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-6" value="调用栈（call stack）" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-6" value="调用栈（call stack）" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="200" width="130" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-7" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-7" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="20" y="145" width="290" height="85" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-8" value="showName 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-8" value="showName 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="97.5" y="140" width="152.5" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-9" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-9" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="30" y="170" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-10" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="CvmeRyoTDE0ITqHL47vY-1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-10" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="CvmeRyoTDE0ITqHL47vY-1" vertex="1">
           <mxGeometry x="170" y="170" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-12" value="&amp;nbsp; myname = &#39;heora&#39;&lt;br&gt;&amp;nbsp; showname = function() {}" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-12" value="&amp;nbsp; myname = &#39;heora&#39;&lt;br&gt;&amp;nbsp; showname = function() {}" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="160" y="960" width="160" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="CvmeRyoTDE0ITqHL47vY-13" value="&amp;nbsp; myname = undefined" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="CvmeRyoTDE0ITqHL47vY-13" value="&amp;nbsp; myname = undefined" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="160" y="860" width="130" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-1" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-1" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="360" y="1125" width="290" height="85" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-2" value="varTest 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-2" value="varTest 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="437.5" y="1120" width="152.5" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-3" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-3" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="1" vertex="1">
           <mxGeometry x="370" y="1150" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-4" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-4" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="1" vertex="1">
           <mxGeometry x="510" y="1150" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-5" value="&amp;nbsp; x= undefined" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-5" value="&amp;nbsp; x= undefined" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="240" y="1160" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-6" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-6" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="360" y="1315" width="290" height="85" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-7" value="foo 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-7" value="foo 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="437.5" y="1310" width="152.5" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-8" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-8" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" parent="1" vertex="1">
           <mxGeometry x="370" y="1340" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-9" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-9" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" parent="1" vertex="1">
           <mxGeometry x="510" y="1340" width="130" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-10" value="&amp;nbsp; a = 1&lt;br&gt;&amp;nbsp; c = 4" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-10" value="&amp;nbsp; a = 1&lt;br&gt;&amp;nbsp; c = 4" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="220" y="1345" width="100" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="_IoDCMMyS7w1k3SS8dNN-11" value="&amp;nbsp; b = 2" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="_IoDCMMyS7w1k3SS8dNN-11" value="&amp;nbsp; b = 2" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="690" y="1345" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-13" value="" style="swimlane;startSize=0;strokeColor=default;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1480" width="330" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-14" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="20" y="245" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-15" value="全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="115" y="240" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-16" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="30" y="270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-17" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="170" y="270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-18" value="调用栈（call stack）" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="200" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-19" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="20" y="145" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-20" value="foo 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="97.5" y="140" width="152.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-21" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="30" y="170" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-22" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="170" y="170" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-28" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="20" y="45" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-29" value="bar 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="97.5" y="40" width="152.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-30" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="30" y="70" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-31" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-13">
+          <mxGeometry x="170" y="70" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-32" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="OuIu8OEXVMJyn6C-uSje-13" source="OuIu8OEXVMJyn6C-uSje-30" target="OuIu8OEXVMJyn6C-uSje-16">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="330" as="sourcePoint" />
+            <mxPoint x="320" y="280" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-120" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-33" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="OuIu8OEXVMJyn6C-uSje-13" source="OuIu8OEXVMJyn6C-uSje-21" target="OuIu8OEXVMJyn6C-uSje-16">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="330" as="sourcePoint" />
+            <mxPoint x="320" y="280" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-90" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-23" value="&amp;nbsp; myName = &#39;heora&#39;" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="90" y="1760" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-24" value="&amp;nbsp; myName = &#39;yueluo&#39;" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="90" y="1660" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-36" value="指向全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="240" y="1530" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-37" value="指向全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="270" y="1635" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-38" value="&amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; let coung = 1&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; function main() {&lt;br&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;br&gt;&lt;br&gt;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="359" y="1920" width="261" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-39" value="&amp;nbsp; let count = 2&lt;br&gt;&amp;nbsp; function bar() {&lt;br&gt;&amp;nbsp;&amp;nbsp;&lt;br&gt;&amp;nbsp;&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&amp;nbsp;}" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="390" y="1989" width="200" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-40" value="&amp;nbsp; let count = 3&lt;br&gt;&amp;nbsp; funtion foo() {&lt;br&gt;&lt;br&gt;&lt;br&gt;&amp;nbsp; }" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="400" y="2025.5" width="110" height="84.5" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-41" value="&amp;nbsp;let count = 4" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="410" y="2064" width="80" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-42" value="全局作用域&amp;nbsp;&lt;br&gt;count&lt;br&gt;main" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#d6b656;fillColor=#fff2cc;" vertex="1" parent="1">
+          <mxGeometry x="180" y="2040" width="120" height="47" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-43" value="main 函数作用域&amp;nbsp;&lt;br&gt;count&lt;br&gt;bar" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="1">
+          <mxGeometry x="301" y="2190" width="99" height="47" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-44" value="bar 函数作用域&amp;nbsp;&lt;br&gt;count&lt;br&gt;foo" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="1">
+          <mxGeometry x="410" y="2190" width="100" height="47" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-45" value="foo 函数作用域&amp;nbsp;&lt;br&gt;count" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#666666;fillColor=#f5f5f5;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2190" width="100" height="47" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-46" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" edge="1" parent="1" source="OuIu8OEXVMJyn6C-uSje-45" target="OuIu8OEXVMJyn6C-uSje-42">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="630" y="2190" as="sourcePoint" />
+            <mxPoint x="680" y="2140" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="310" y="2214" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-47" value="" style="swimlane;startSize=0;strokeColor=default;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="1480" width="330" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-48" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="20" y="245" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-49" value="全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="115" y="240" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-50" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="30" y="270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-51" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="170" y="270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-52" value="调用栈（call stack）" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="200" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-53" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="20" y="145" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-54" value="foo 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="97.5" y="140" width="152.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-55" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="30" y="170" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-56" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="170" y="170" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-57" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="20" y="45" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-58" value="bar 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="97.5" y="40" width="152.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-59" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="30" y="70" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-60" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-47">
+          <mxGeometry x="170" y="70" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-61" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="OuIu8OEXVMJyn6C-uSje-47" source="OuIu8OEXVMJyn6C-uSje-59" target="OuIu8OEXVMJyn6C-uSje-50">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="330" as="sourcePoint" />
+            <mxPoint x="320" y="280" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-120" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-62" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="OuIu8OEXVMJyn6C-uSje-47" source="OuIu8OEXVMJyn6C-uSje-55" target="OuIu8OEXVMJyn6C-uSje-50">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="270" y="330" as="sourcePoint" />
+            <mxPoint x="320" y="280" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-90" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-63" value="&amp;nbsp; myName = &#39;月落&#39;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1760" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-64" value="&amp;nbsp; myName = &#39;yueluo&#39;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1660" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-65" value="指向全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="950" y="1530" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-66" value="指向全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="980" y="1635" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-67" value="&amp;nbsp; test = 2" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1680" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-68" value="&amp;nbsp; test = 3" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1650" width="70" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-69" value="&amp;nbsp; myAge = 10&lt;br&gt;&amp;nbsp; test = 1" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1750" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-70" value="&amp;nbsp; myName = &#39;&#39;chrome browser&#39;" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1530" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-71" value="&amp;nbsp; test1 = 100" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1570" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-72" value="&amp;nbsp; myName = &#39;heora&#39;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1550" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-73" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=#B20000;fillColor=#e51400;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1590" y="1535" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-74" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=#B20000;fillColor=#e51400;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1496" y="1575" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-75" value="3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=#B20000;fillColor=#e51400;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="915" y="1560" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-76" value="4" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=#B20000;fillColor=#e51400;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="1766" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-77" value="5" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeColor=#B20000;fillColor=#e51400;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="910" y="1770" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-79" value="" style="swimlane;startSize=0;strokeColor=default;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="960" y="1920" width="330" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-80" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="20" y="245" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-81" value="全局执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="115" y="240" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-82" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="30" y="270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-83" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="170" y="270" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-84" value="调用栈（call stack）" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="200" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-85" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.rect;fillColor2=none;strokeWidth=1;size=20;indent=5;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="20" y="145" width="290" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-86" value="foo 函数执行上下文" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="97.5" y="140" width="152.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-87" value="变量环境&lt;br&gt;Variable Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="30" y="170" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-88" value="词法环境&lt;br&gt;Lexical Environment" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;" vertex="1" parent="OuIu8OEXVMJyn6C-uSje-79">
+          <mxGeometry x="170" y="170" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-96" value="&amp;nbsp; test1 = 1" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="2120" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-97" value="&amp;nbsp; test2 = 2" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="2090" width="70" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-102" value="&amp;nbsp; bar = undefined" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="795" y="2198.5" width="120" height="38.5" as="geometry" />
+        </mxCell>
+        <mxCell id="OuIu8OEXVMJyn6C-uSje-103" value="&amp;nbsp; myName = &#39;heora&#39;&lt;br&gt;&amp;nbsp; innerBar = {}" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="795" y="2089" width="120" height="50" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
