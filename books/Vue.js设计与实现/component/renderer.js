@@ -276,6 +276,9 @@ function createRenderer(options) {
     const componentOptions = vnode.type
     // 获取组件的渲染函数 render
     const { render } = componentOptions
+
+    // const state = react
+
     // 执行渲染函数，获取组件要渲染的内容，即 render 函数返回的虚拟 DOM
     const subTree = render()
     // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree

@@ -1,11 +1,16 @@
 const MyComponent = {
-  // 组件名称
   name: 'MyComponent',
-  // 组件的渲染函数，返回值必须为虚拟 DOM
+  // 用 data 函数定义组件自身状态
+  data() {
+    return {
+      foo: 'hello world'
+    }
+  },
   render() {
+    // 渲染函数中使用组件状态
     return {
       type: 'div',
-      children: '我是文本内容'
+      children: `foo 的值是：${ this.foo }`
     }
   }
 }

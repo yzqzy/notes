@@ -10869,6 +10869,35 @@ function mountComponent(vnode, container, anchor) {
 
 #### 组件状态与自更新
 
+接下来，我们尝试为组件设计自身的状态，如下面的代码所示：
+
+```js
+const MyComponent = {
+  name: 'MyComponent',
+  // 用 data 函数定义组件自身状态
+  data() {
+    return {
+      foo: 'hello world'
+    }
+  },
+  render() {
+    // 渲染函数中使用组件状态
+    return {
+      type: 'div',
+      children: `foo 的值是：${ this.foo }`
+    }
+  }
+}
+```
+
+在上面这段代码中，我们约定用户必须使用 data 函数来定义组件自身的状态，同时可以在渲染函数中通过 this 访问由 data 函数返回的状态数据。
+
+下面的代码实现了组件自身状态的初始化：
+
+```js
+function 
+```
+
 
 
 ## 五、编译器
