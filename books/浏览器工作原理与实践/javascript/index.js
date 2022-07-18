@@ -113,8 +113,65 @@
 // foo()
 
 
-let myname= 'heora'
-{
-  console.log(myname) 
-  let myname= 'yueluo'
+// let myname= 'heora'
+// {
+//   console.log(myname) 
+//   let myname= 'yueluo'
+// }
+
+
+// function bar() {
+//   console.log(myName)
+// }
+// function foo() {
+//   var myName = 'heora'
+//   bar()
+// }
+// var myName = 'yueluo'
+// foo()
+
+
+// function bar() {
+//   var myName = 'heora'
+//   let test1 = 100
+//   if (1) {
+//     let myName = 'chrome browser'
+//     console.log(test)
+//   }
+// }
+// function foo() {
+//   var myName = 'yueluo'
+//   let test = 2
+//   {
+//     let test = 3
+//     bar()
+//   }
+// }
+// var myName = '月落'
+// let myAge = 10
+// let test = 1
+// foo()
+
+
+function foo() {
+  let myName = 'heora'
+  let test1 = 1
+  let test2 = 2
+  var innerBar = {
+    getName: function() {
+      console.log(test1)
+      return myName
+    },
+    setName: function(newName) {
+      myName = newName
+    }
+  }
+  return innerBar
 }
+var bar = foo()
+bar.setName('yueluo')
+bar.getName()
+console.log(bar.getName())
+
+
+
