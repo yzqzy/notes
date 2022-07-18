@@ -637,3 +637,154 @@ ReferenceError: Cannot access 'myname' before initialization
 
 ### 作用域链和闭包
 
+我们已经知道什么是作用域，以及 ES6 是如何通过变量环境和词法环境同时支持变量提升和块级作用域，在最后我们也提到了如何通过词法环境和变量环境来查找变量，这其中就涉及作用域链的概念。
+
+今天我们就来聊一聊什么是作用域链，并通过作用域链再来讲讲什么是闭包。
+
+首先我们来看下面这段代码。
+
+```js
+function bar() {
+  console.log(myName)
+}
+function foo() {
+  var myName = 'heora'
+  bar()
+}
+var myName = 'yueluo'
+foo()
+```
+
+你觉得这段代码中的 `bar` 函数和 `foo` 函数打印出来的内容是什么？让我们分析一下这两段代码的执行流程。
+
+当代码执行到 bar 函数内部是，其调用栈状态如下所示。
+
+<img src="./images/call_stack15.png" />
+
+从图中可以看到，全局执行上下文和 `foo` 函数的执行上下文都包含变量 `myName` ，那么 bar 函数里面 `myName` 的值到底该选哪个呢？
+
+也许你的第一反应是按照调用栈的顺序来查找变量，查找方式如下：
+
+* 先查找栈顶是否存在 `myName` 变量，如果没有，接着往下查找 `foo` 函数中的变量；
+* 在 `foo` 函数中可以找到 `myName` 变量，这时候就要使用 `foo` 函数中的 `myName`。
+
+如果按照这种思路来查找变量， 那么最终打印结果应该是 `heora`。但实际并非如此，上述代码实际会打印 `yueluo`。要想解析清楚这个问题，那么你就需要搞清楚作用域链。
+
+#### 作用域链
+
+关于作用域链，很多人会感到费解，如如果你理解了调用栈、执行上下文、词法环境、变量环境等概念，那么你理解起来作用域链会更加容易。
+
+其实在每个执行上下文的变量环境中，都包含一个外部引用，用来指向外部的执行上下文，我们把这个外部引用称为 **outer**。
+
+当一段代码使用一个变量时，JavaScript 引擎首先会在 "当前的执行上下文" 中查找该变量。比如上面这段代码在查找 `myName` 变量时，如果在当前的变量环境中没有查找到，那么 JavaScript 引擎会继续在 `outer` 所指向的执行上下文中查找。
+
+<img src="./images/call_stack16.png" />
+
+从图中可以看出，`bar` 函数和 `foo` 函数的 outer 都是指向全局上下文的，这也就意味着如果在 `bar` 函数或者 `foo` 函数中使用外部变量，那么 JavaScript 引擎回去全局执行上下文中查找。我们把这个查找的链条就叫做作用域链。
+
+现在你知道变量是通过作用域链来查找的，不过还有一个疑问没有解开，`foo` 函数调用的 `bar` 函数，那为什么 `bar` 函数的外部引用是全局执行上下文，而不是 `foo` 函数的执行上下文？
+
+要回答这个问题，你还需要知道什么是 **词法作用域**。在 JavaScript 执行过程中，其作用域链是由词法作用域决定的。
+
+#### 词法作用域
+
+**词法作用域就是指作用域是由代码中函数声明的位置来决定的，所以词法作用域是静态的作用域，通过它就能预测代码在执行过程中如何查找标识符。**
+
+<img src="./images/call_stack17.png" />
+
+从图中可以看出，词法作用域是根据代码的位置来决定的，其中 `main` 函数包含了 `bar` 函数，`bar` 函数包括了 `foo` 函数，因为 JavaScript 作用域链是由词法作用域决定的，所以整个语法的词法作用域链顺序是：`foo` 函数作用域 - `bar` 函数作用域 - `main` 函数作用域 - 全局作用域。
+
+了解词法作用域以及 JavaScript 中的作用域链，我们再回头看这个问题。
+
+```js
+function bar() {
+  console.log(myName)
+}
+function foo() {
+  var myName = 'heora'
+  bar()
+}
+var myName = 'yueluo'
+foo()
+```
+
+在这段代码中。`foo` 和 `bar` 的上级作用域都是全局作用域，所以如果 `foo` 或者 `bar` 函数使用了一个它们没有定义的变量，它们就会到全局作用域中去查找。也也就是说，**词法作用域是代码编译阶段就决定好的，与函数调用无关。**
+
+#### 块级作用域中的变量查找
+
+前面我们通过全局作用域和函数作用域分析了作用域链，接下来我们再来看看块级作用域中变量是如何查找的。
+
+在编写代码的时候，如果你使用了一个在当前作用域中不存在的变量，这时 JavaScript 引擎就需要按照作用域链在其他作用域中查找该变量，如果你不了解该过程，很大概率会写出不稳定的代码。
+
+我们先来看下面这段代码。
+
+```js
+function bar() {
+  var myName = 'heora'
+  let test1 = 100
+  if (1) {
+    let myName = 'chrome browser'
+    console.log(test)
+  }
+}
+function foo() {
+  var myName = 'yueluo'
+  let test = 2
+  {
+    let test = 3
+    bar()
+  }
+}
+var myName = '月落'
+let myAge = 10
+let test = 1
+foo()
+```
+
+你可以自己分析下这段代码的执行流程，看看是否分析出来执行结果。
+
+要想得出其执行结果，我们还是需要站在作用域链和词法环境的角度来分析其执行过程。
+
+ES6 是支持块级作用域的，当执行到代码块时，如果代码块中有 let 或者 const 声明的变量，那么变量就会存放到函数的词法环境中。对于上面这段代码，当执行到 bar 函数内部的 if 语句块时，其调用栈的情况如图所示：
+
+<img src="./images/call_stack18.png" />
+
+执行到 bar 函数的 if 语句块内，需要打印出变量 test，那么就需要查找到 test 变量的值，其查找过程已经在图中使用序号标出。
+
+下面就来解释一下这个过程。首先是在 bar 函数的执行上下文中查找，但因为 bar 函数的执行上下文中没有定义 test 变量，所以根据词法作用域的规则，下一次就在 bar 函数的外部作用域中查找，也就是全局作用域。
+
+#### 闭包
+
+了解了作用域链，接着我们就可以来聊聊闭包了。理解了变量环境、词法环境和作用域链等概念，接下来再理解什么是闭包就容易多了。
+
+这里你可以结合下面这段代码来理解什么闭包。
+
+```js
+function foo() {
+  let myName = 'heora'
+  let test1 = 1
+  let test2 = 2
+  var innerBar = {
+    getName: function() {
+      console.log(test1)
+      return myName
+    },
+    setName: function(newName) {
+      myName = newName
+    }
+  }
+  return innerBar
+}
+var bar = foo()
+bar.setName('yueluo')
+bar.getName()
+console.log(bar.getName())
+```
+
+首先我们看看执行到 `foo` 函数内部的 `return innerBar` 这行代码时调用栈的情况，
+
+<img src="./images/call_stack19.png" />
+
+从上面的代码中可以看出，`innerBar` 是一个对象，包含了 `getName` 和 `setName` 的两个方法。你可以看到，这两个方法都是在 `foo` 函数内部定义的，并且这两个方法内部都使用了 `myName` 和 `test1` 变量。
+
+根据词法作用域的规则，
