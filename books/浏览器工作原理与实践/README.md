@@ -834,3 +834,249 @@ console.log(bar.getName())
 * 最后，又基于作用域链和词法环境介绍了什么是闭包。
 
 ### this
+
+我们已经讲了词法作用域、作用域链以及闭包。首先，我们来看一段代码：
+
+```js
+var bar = {
+  myName:"www.yueluo.club",
+  printName: function () {
+    console.log(myName)
+  }    
+}
+function foo() {
+  let myName = "heora"
+  return bar.printName
+}
+let myName = "yueluo"
+let _printName = foo()
+_printName()
+bar.printName()
+```
+
+在 `printName` 函数里面使用的变量 `myName`  是属于全局作用域下面的，所以最终打印出来的值都是 `yueluo` 。这是因为 JavaScript 语言的作用域链是由词法作用域决定的，而词法作用域是由代码结构来确定的。
+
+如果我们想在 `bar.printName` 中使用对象中的属性，我们可以通过 `this` 来访问。
+
+```js
+var bar = {
+  myName:"www.yueluo.club",
+  printName: function () {
+    console.log(this.myName)
+  }    
+}
+```
+
+接下来我们就展开介绍 this，不过在讲解之前，希望你可以区分清除 **作用域链** 和 **this** 是两套不同的系统，它们之间基本没有太多联系。
+
+#### this 是什么
+
+关于 this，我们还是需要从上下文说起。在之前几篇文章中，我们提到执行上下文中包含了变量环境、词法环境、外部环境(outer)，但其实还存在一个 this 没有提及。
+
+<img src="./images/context01.png" />
+
+从图中可以看出，this 是和执行上下文绑定的，也就是说每个执行上下文都有一个 this。执行上下文主要分为三种：全局执行上下文、函数执行上下文和 `eval` 执行上下文，所以对应的 this 也只有三种：全局执行上下文中的 this、函数中的 this 和 `eval` 中的 this。
+
+关于更多 this 内容可以查看 [这篇文章](https://segmentfault.com/a/1190000009048715)。
+
+我们使用 `eval` 的场景并不多，使用 `eval` 存在很大的风险，不推荐使用。
+
+> [MDN evel()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval)
+
+接下来我们重点讲解 **全局执行上下文中的 this** 和 **函数执行上下文中的 this**。
+
+#### 全局执行上下文的 this
+
+首先我们来看看全部执行上下文中的 this 是什么。
+
+你可以在控制台输入 `console.log(this)`  来打印出全局执行上下文中的 this，最终输出的是 `window` 对象。所以我们可以得出这样一个结论：全局执行上下文中的 this 是指向 window 对象的。这也是 this 和作用域链的唯一交点，作用域链的最底端包含了 window 对象，全局执行上下文中的 this 也是指向 window 对象。
+
+#### 函数执行上下文的 this
+
+现在你已经知道全局对象中的 this 是指向 window 对象，那么接下来，我们就来重点分析函数执行上下文中的 this。
+
+```js
+function foo() {
+  console.log(this)
+}
+foo()
+```
+
+我们在 `foo` 函数中打印 `this` 值，执行这段代码，打印出来的也是 window 对象，这说明在默认情况下调用一个函数，其执行上下文中的 this 也是指向 window 对象的。我们还可以通过其他方法设置执行上下文中的 this 值。
+
+##### 通过函数的 call 方法设置
+
+你可以通过函数的 `call` 方法来设置函数执行上下文的 this 指向，比如下面这段代码，我们就没有直接调用 `foo` 函数，而是调用了 `foo` 的 `call` 方法，并把 `bar` 对象作为 `call` 方法的参数。
+
+```js
+let bar = {
+  myName: 'heora',
+  test1: 1
+}
+function foo() {
+  this.myName = 'yueluo'
+}
+foo.call(bar)
+console.log(bar) // { myName: 'yueluo', test1: 1 }
+console.log(myName) // ReferenceError: myName is not defined
+```
+
+指定这段代码，观察输出结果，你就能发现 `foo` 函数内部的 this 已经指向 `bar` 对象，通过打印 `bar` 对象，可以看出 `bar` 的 `myName` 属性已经由 `heora` 变为 `yueluo` ，同时在全局执行上下文中打印 `myName` ，JavaScript 引擎会提示该变量未定义。
+
+除了 **call** 方法之外，还可以使用 **bind** 和 **apply** 方法来设置函数执行上下文中的 this。它们在使用上存在一些区别，你可以自行搜索去学习它们的使用方法。
+
+##### 通过对象调用方法设置
+
+要改变函数执行上下文的 this 指向，除了通过函数的 `call` 方法来实现外，还可以通过对象调用的方式。
+
+```js
+var myObj = {
+  name: 'heora',
+  showThis: function() {
+    console.log(this)
+  }
+}
+myObj.showThis()
+```
+
+在这段代码中，我们定义了一个 `myObj` 对象，该对象是由一个 `name` 属性和一个 `showThis` 方法组成的，然后再通过 `myObj` 对象来调用 `showThis` 方法。执行这段代码，你可以看到，最终输出的 `this` 值是指向 `myObj` 的。
+
+所以，我们可以得出这样一个结论：**使用对象来调用其内部的一个方法，该方法的 this 指向对象本身。**
+
+其实，你也可以认为 JavaScript 引擎在执行 `myObject.showThis()` 时，将其转换为：
+
+```js
+myObj.showThis.call(myObj)
+```
+
+接下来，我们稍微改变下调用方式，将 `showThis` 赋给一个全局对象，然后再调用该对象。
+
+```js
+var myObj = {
+  name: 'heora',
+  showThis: function() {
+    this.name = 'yueluo'
+    console.log(this)
+  }
+}
+var foo = myObj.showThis
+foo()
+```
+
+执行这段代码，你会发现 this 又指向全局 window 对象。
+
+所以通过以上两个例子的对比，你可以得出下面这样两个结论：
+
+* 全局环境下中调用一个函数，函数内部的 this 指向是全局变量 window；
+* 通过一个对象来调用其内部的一个方法，该方法的执行上下文中的 this 指向对象本身。
+
+##### 通过构造函数设置
+
+你可以像这样设置构造函数中的 this。
+
+```js
+function CreateObj() {
+  this.name = 'heora'
+}
+var myObj = new CreateObj()
+```
+
+在这段代码中，我们使用 new 创建对象 `myObj` ，那你知道此时的构造函数中的 this 指向谁？
+
+当执行到 `new CreateObj()` 的时候，JavaScript 引擎做了以下四件事：
+
+* 创建一个空的简单 JavaScript 对象（即`{}`）；
+* 为步骤 1 新创建的对象添加属性 `__proto__`，将该属性链接至构造函数的原型对象 ；
+* 将步骤 1 新创建的对象作为 `this` 的上下文 ；
+* 如果该函数没有返回对象，则返回 `this`。
+
+关于 new 的具体细节你可以参考 [这篇文章](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/new)。
+
+#### this 的设计缺陷及应对方案
+
+> this 的缺陷并不是浏览器实现机制导致的，而是浏览器按照标准来实现的。
+> 其实浏览器说我可以实现得更好，但是标准摆在这儿，大家都只认标准！
+
+##### 嵌套 this 不会从外层函数继承
+
+```js
+var myObj = {
+  name : "heora", 
+  showThis: function() {
+    console.log(this)
+    function bar() {
+      console.log(this)
+    }
+    bar()
+  }
+}
+myObj.showThis()
+```
+
+我们在这段代码的 `showThis` 方法里添加了一个 bar 方法，然后接着在 `showThis` 函数中调用了 `bar` 函数。
+当执行这段代码，你会发现函数 `bar` 中的 this 指向的是全局 window 对象，而函数 `showThis` 中的 this 指向的是 `myObj` 对象。
+
+这就是 JavaScript 中非常容易让人迷惑的地方之一，也是很多问题的源头。你可以通过一个小技巧来解决这个问题，比如在 `showThis` 函数中，声明一个变量 `self` 用来保存 this，然后在 `bar` 函数中使用 `self` 。
+
+```js
+var myObj = {
+  name : "heora", 
+  showThis: function() {
+    console.log(this)
+    var that = this
+    function bar() {
+      console.log(that)
+      that.name = 'yueluo'
+    }
+    bar()
+  }
+}
+myObj.showThis()
+console.log(myObj.name)
+```
+
+执行这段代码，你可以看到它输出了我们想要的结果，最终 `myObj` 中的 `name` 属性值变成了 "`yueluo`"。这种做法的本质是把 this 体系转换为作用域的体系。
+
+其实，你也可以使用 ES6 箭头函数来解决这个问题。
+
+```js
+var myObj = {
+  name : "heora", 
+  showThis: function() {
+    console.log(this)
+    var bar = () => {
+      this.name = 'yueluo'
+      console.log(this)
+    }
+    bar()
+  }
+}
+myObj.showThis()
+console.log(myObj.name)
+```
+
+执行这段代码，你会发现它也输出了我们想要的结果，也就是箭头函数 bar 里面的 this 是指向 `myObj` 对象的。这是因为 ES6 的箭头函数并不会创建自己的执行上下文，所以箭头函数的 this 取决于它的外部函数。
+
+通过上面的讲解，你应该已经知道 this 没有作用域的限制，这点和变量不同，所以嵌套函数不会从调用它的函数中继承 this，这样会造成很多不符合直觉的代码。要想解决这个问题，有两种思路：
+
+* 第一种是缓存一个 that 变量，利用变量的作用域机制传递给嵌套函数；
+* 第二种是利用箭头函数没有自己的执行上下文的特性，所以当我们使用 this 时，它会继承调用函数中的 this。
+
+##### 普通函数中的 this 默认指向 window
+
+在默认情况下调用一个函数，其执行上下文中的 this 是默认指向全局 window 的。
+
+其实这个设计也算是一种缺陷，因为在实际工作中，我们并不希望函数执行上下文的 this 默认指向全部对象，因为这样会打破数据的边界，造成一些误操作。如果要让函数执行上下文中的 this 指向某个对象，最好的方式是通过 call 方法来显式调用。
+
+这个问题可以通过设置 JavaScript 的 “[严格模式](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Strict_mode)” 来解决。在 [严格模式](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Strict_mode) 下，默认执行一个函数，其函数的执行上下文中的 this 值是 undefined。
+
+#### 总结
+
+使用 this 时，为了避坑，我们要谨记以下三点：
+
+* 当函数作为对象的方法调用时，函数的 this 就是该对象；
+* 当函数被正常调用时，严格模式下，this 值是 undefined，非严格模式下 this 指向是全局对象 window；
+* 嵌套函数的 this 不会继承外层函数的 this 值。
+
+我们还提到了箭头函数，因为箭头函数没有自己的执行上下文，所以箭头函数的 this 就是它外层函数的 this。
+

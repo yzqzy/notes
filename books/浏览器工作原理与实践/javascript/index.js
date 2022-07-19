@@ -153,25 +153,113 @@
 // foo()
 
 
-function foo() {
-  let myName = 'heora'
-  let test1 = 1
-  let test2 = 2
-  var innerBar = {
-    getName: function() {
-      console.log(test1)
-      return myName
-    },
-    setName: function(newName) {
-      myName = newName
+// function foo() {
+//   let myName = 'heora'
+//   let test1 = 1
+//   let test2 = 2
+//   var innerBar = {
+//     getName: function() {
+//       console.log(test1)
+//       return myName
+//     },
+//     setName: function(newName) {
+//       myName = newName
+//     }
+//   }
+//   return innerBar
+// }
+// var bar = foo()
+// bar.setName('yueluo')
+// bar.getName()
+// console.log(bar.getName())
+
+
+// var bar = {
+//   myName:"www.yueluo.club",
+//   printName: function () {
+//     console.log(myName)
+//   }    
+// }
+// function foo() {
+//   let myName = "heora"
+//   return bar.printName
+// }
+// let myName = "yueluo"
+// let _printName = foo()
+// _printName()
+// bar.printName()
+
+
+// var bar = {
+//   myName:"www.yueluo.club",
+//   printName: function () {
+//     console.log(this.myName)
+//   }    
+// }
+// function foo() {
+//   let myName = "heora"
+//   return bar.printName
+// }
+// let myName = "yueluo"
+// let _printName = foo()
+// _printName()
+// bar.printName()
+
+
+// function foo() {
+//   console.log(this)
+// }
+// foo()
+
+
+// let bar = {
+//   myName: 'heora',
+//   test1: 1
+// }
+// function foo() {
+//   this.myName = 'yueluo'
+// }
+// foo.call(bar)
+// console.log(bar) // { myName: 'yueluo', test1: 1 }
+// console.log(myName) // ReferenceError: myName is not defined
+
+
+// var myObj = {
+//   name: 'heora',
+//   showThis: function() {
+//     console.log(this)
+//   }
+// }
+// myObj.showThis()
+
+
+// var myObj = {
+//   name: 'heora',
+//   showThis: function() {
+//     this.name = 'yueluo'
+//     console.log(this)
+//   }
+// }
+// var foo = myObj.showThis
+// foo()
+
+
+// function CreateObj() {
+//   this.name = 'heora'
+// }
+// var myObj = new CreateObj()
+
+
+var myObj = {
+  name : "heora", 
+  showThis: function() {
+    console.log(this)
+    var bar = () => {
+      this.name = 'yueluo'
+      console.log(this)
     }
+    bar()
   }
-  return innerBar
 }
-var bar = foo()
-bar.setName('yueluo')
-bar.getName()
-console.log(bar.getName())
-
-
-
+myObj.showThis()
+console.log(myObj.name)
