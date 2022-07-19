@@ -11002,7 +11002,353 @@ function mountComponent(vnode, container, anchor) {
 
 这样，当响应式数据发生变化时，副作用函数不会立即同步执行，而是会被 `queueJob` 函数调度，最后在一个微任务中执行。
 
-不过，上面这段代码仍存在缺陷。我们在 effect 函数内调用 patch 函数完成渲染时，第一个参数总是 null。
+不过，上面这段代码仍存在缺陷。我们在 effect 函数内调用 patch 函数完成渲染时，第一个参数总是 null。这意味着，每次更新发生时都会进行全新的挂载，而不会打补丁，这是不正确的。正确的做法是：每次更新时，都拿新的 `subTree` 与上一次组件所渲染的 `subTree` 进行打补丁。为此，我们需要实现组件实例，用它维护整个生命周期的状态，这样渲染器才能够在正确地的时机执行合适的操作。
+
+#### 组件实例与组件的生命周期
+
+组件本质上就是一个状态集合，它维护着组件运行过程中的所有信息，例如注册到组件的生命周期，组件渲染的子树（`subTree`）、组件是否已经被挂载、组件自身的状态（data）等等。为了解决上一小节中关于组件更新的问题，我们需要引入组件实例的概念，以及与之相关的状态信息。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const { render, data } = componentOptions
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data())
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+  }
+
+  // 将组件实例设置到 vnode 上，用于后续更新
+  vnode.component = instance
+  
+  // 将组件的 render 函数包装到 effect 内
+  effect(() => {
+    // 调用 render 函数时，将其 this 设置为 state，
+    // 从而 render 函数内部可以通过 this 访问组件自身状态数据
+    const subTree = render.call(state, state)
+
+    // 检查组件是否已经被挂载
+    if (!instance.isMounted) {
+      // 初次挂载，调用 patch 函数第一个参数传递 null
+      patch(null, subTree, container, anchor)
+      // 将组件示例的 isMounted 属性设置为 true
+      instance.isMounted = true
+    } else {
+      // 当 isMounted 为 true 时，说明组件已经被挂载，只需要完成自更新即可
+      // 所以在调用 patch 函数时，第一个参数为组件上一次渲染的子树
+      // 使用新的子树与上一次渲染的子树进行打补丁操作
+      patch(instance.subTree, subTree, container, anchor)
+    }
+
+    // 更新组件实例的子树
+    instance.subTree = subTree
+  }, {
+    // 指定该副作用函数的调度器为 queueJob 即可
+    scheduler: queueJob
+  })
+}
+```
+
+在上面这段代码中，我们使用一个对象来表示组件实例，该对象有三个属性：
+
+* state：组件自身的状态数据，即 data。
+* `isMounted`：一个布尔值，用来表示组件是否被挂载。
+* `subTree`：存储组件的渲染函数返回的虚拟 DOM，即组件子树（`subTree`）。
+
+实际上，我们可以在需要的时候，任意地在组件实例 `instance` 上添加需要的属性。但需要注意的是，我们应该尽可能保持组件实例清凉，以减少内存占用。
+
+在上面的实现中，组件实例的 `instance.isMounted` 属性可以用来区分组件的挂载和更新。因此，我们可以在合适的时机调用组件对应的生命周期钩子。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const {
+    render, data,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data())
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+  }
+
+  // 将组件实例设置到 vnode 上，用于后续更新
+  vnode.component = instance
+
+  // 调用 created 钩子
+  created && created.call(state)
+  
+  // 将组件的 render 函数包装到 effect 内
+  effect(() => {
+    // 调用 render 函数时，将其 this 设置为 state，
+    // 从而 render 函数内部可以通过 this 访问组件自身状态数据
+    const subTree = render.call(state, state)
+
+    // 检查组件是否已经被挂载
+    if (!instance.isMounted) {
+      // 调用 beforeMount 钩子
+      beforeMount && beforeCreate.call(state)
+
+      // 初次挂载，调用 patch 函数第一个参数传递 null
+      patch(null, subTree, container, anchor)
+      // 将组件示例的 isMounted 属性设置为 true
+      instance.isMounted = true
+
+      // 调用 mounted 钩子
+      mounted && mounted.call(state)
+    } else {
+      // 调用 beforeUpdate 钩子
+      beforeUpdate && beforeUpdate.call(state)
+
+      // 当 isMounted 为 true 时，说明组件已经被挂载，只需要完成自更新即可
+      // 所以在调用 patch 函数时，第一个参数为组件上一次渲染的子树
+      // 使用新的子树与上一次渲染的子树进行打补丁操作
+      patch(instance.subTree, subTree, container, anchor)
+
+      // 调用 updated 钩子
+      updated && updated.call(state)
+    }
+
+    // 更新组件实例的子树
+    instance.subTree = subTree
+  }, {
+    // 指定该副作用函数的调度器为 queueJob 即可
+    scheduler: queueJob
+  })
+}
+```
+
+这上面这段代码中，我们首先从组件的选项对象中取得注册到组件上的生命周期函数，然后在合适的时机调用它们，这其实就是组件生命周期的实现原理。实际上，由于可能存在多个同样的组件生命周期钩子，例如来自 `mixins` 中的生命周期函数，因此我们通常需要将组件生命周期钩子序列化为一个数组，但核心原理不变。
+
+#### props 与组件的被动更新
+
+在虚拟 DOM 层面，组件的 props 与普通 HTML 标签的属性差别不大。假设我们有如下模板：
+
+```vue
+<MyComponent title="A Big Title" :other="val" />
+```
+
+这段模板对应的虚拟 DOM 是：
+
+```js
+const vnode = {
+  type: MyComponent,
+  props: {
+    title: 'A Big Title',
+    other: this.val
+  }
+}
+```
+
+可以看到，模板与虚拟 DOM 几乎是 “同构” 的。另外，在编写组件时，我们需要显式地指定组件会接收哪些 props 数据。
+
+```js
+const MyComponent = {
+  name: 'MyComponent',
+  // 组件接收名为 title 的 props，并且该 props 的类型为 string
+  props: {
+    title: String
+  },
+  render() {
+    return {
+      type: 'div',
+      // 访问 props 数据
+      children: `count is: ${ this.title }`
+    }
+  }
+}
+```
+
+所以，对于一个组件来说，有两部分关于 props 的内容我们需要关心：
+
+* 为组件传递的 props 数据，即组件的 `vnode.props` 对象；
+* 组件选项对象中定义的 props 选项，即 `MyComponent.props` 对象。
+
+我们需要结合这两个选项来解析出组件在渲染时需要用到的 props 数据。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const {
+    render, data, props: propsOption,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data ? data() : {})
+  // 调用 resolveProps 函数解析出最终的 props 数据与 attrs 数据
+  const [props, attrs] = resolveProps(propsOption, vnode.props)
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+  }
+
+  // 将组件实例设置到 vnode 上，用于后续更新
+  vnode.component = instance
+
+  // 调用 created 钩子
+  created && created.call(state)
+  
+	// ...
+}
+```
+
+```js
+// 解析组件 props 和 attrs 数据
+function resolveProps(options, propsData) {
+  const props = {}
+  const attrs = {}
+
+  // 遍历组件传递的 props 数据
+  for (const key in propsData) {
+    if (key in options) {
+      // 如果为组件传递的 props 数据在组件自身的 props 选项中有定义，
+      // 则视为合法的 props
+      props[key] = propsData[key]
+    } else {
+      // 否则将其视为 atts
+      attrs[key] = propsData[key]
+    }
+  }
+
+  // 最后返回 props 和 attrs 数据
+  return [props, attrs]
+}
+```
+
+在上面这段代码中，我们将组件选项中定义的 `MyComponent.props` 对象和为组件传递的 `vnode.props` 对象相结合，最终解析出组件在渲染时需要使用的 `props` 和 `attrs` 数据。这里需要注意两点：
+
+* 在 vue.js 3 中，没有定义在 `MyComponent.props` 选项中的 `props` 数据将存储到 `attrs` 对象中。
+* 上述实现中没有包含默认值、类型校验等内容处理。实际上，这些内容也都是围绕 `MyComponent.props` 以及 `vnode.props` 这两个对象展开的，实现起来并不复杂。
+
+处理完 props 数据后，我们再来讨论关于 props 数据变化的问题。props 本质上是父组件的数据，当 props 发生变化时，会触发父组件渲染。假设父组件的模板如下：
+
+```vue
+<template>
+	<MyComponent :title="title" />
+</template>
+```
+
+其中，响应式数据 title 的初始值为字符串 “A Big Title”，因此首次渲染时，父组件的虚拟 DOM 为：
+
+```js
+// 父组件要渲染的内容
+const vnode = {
+  type: MyComponent,
+  props: {
+    title: 'A Big Title'
+  }
+}
+```
+
+当响应式数据 title 发生变化时，父组件的渲染函数会重新执行。假设 title 的值变为字符串 "A Small Title" ，那么新产生的虚拟 DOM 为：
+
+```js
+// 父组件要渲染的内容
+const vnode = {
+  type: MyComponent,
+  props: {
+    title: 'A Small Title'
+  }
+}
+```
+
+接着，父组件会进行自更新。在更新过程中，渲染器发现父组件的 `subTree` 包含组件类型的虚拟节点，所以会调用 `patchComponent` 函数完成子组件的更新。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+    // ...
+  } else if (type === Text) {
+    // ...
+  } else if (type === Fragment) {
+    // ...
+  } else if (typeof type === 'object') {
+    // vnode.type 的值是选项对象，作为组件处理
+    if (!n1) {
+      // 挂载组件
+      mountComponent(n2, container, anchor)
+    } else {
+      // 更新组件
+      patchComponent(n1, n2, anchor)
+    }
+  }
+}
+```
+
+其中，`patchComponent` 函数用来完成子组件的更新。我们把父组件自更新所引起的子组件更新叫做子组件的被动更新。当子组件发生被动更新时，我们需要做的是：
+
+* 检查子组件是否真的需要更新，因为子组件的 props 可能是不变的；
+* 如果需要更新，则更新子组件的 props、slots 等内容。
+
+`patchComponent` 函数的具体实现如下：
+
+```js
+function patchComponent(n1, n2, anchor) {
+  // 获取组件实例，即 n1.component，同时让新的组件虚拟节点 n2.component 也指向组件实例
+  const instance = (n2.component = n1.component)
+  // 获取当前的 props 数据
+  const { props } = instance
+  // 调用 hasPropsChanged 检测子组件传递的 props 是否发生变化，如果没有变化，则不需要更新
+  if (hasPropsChanged(n1.props, n2.props)) {
+    // 调用 resolveProps 函数重新获取 props 数据
+    const [nextProps] = resolveProps(n2.type.props, n2.props)
+    // 更新 props
+    for (const k in nextProps) {
+      props[k] = nextProps[k]
+    }
+    // 删除不存在的 props
+    for (const k in props) {
+      if (!(k in nextProps)) delete props[k]
+    }
+  }
+}
+```
+
+```js
+```
+
+
 
 ## 五、编译器
 
