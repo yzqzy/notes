@@ -10895,10 +10895,114 @@ const MyComponent = {
 下面的代码实现了组件自身状态的初始化：
 
 ```js
-function 
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const { render, data } = componentOptions
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data())
+  // 调用 render 函数时，将其 this 设置为 state，
+  // 从而 render 函数内部可以通过 this 访问组件自身状态数据
+  const subTree = render.call(state, state)
+  // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
+  patch(null, subTree, container, anchor)
+}
 ```
 
+如上面的代码所示，实现组件自身状态的初始化需要两个步骤：
 
+* 通过组件的选项对象取得 data 函数并执行，然后调用 `reactive` 函数将 data 函数返回的状态包装为响应式数据；
+* 调用 `render` 函数时，将其 this 的指向设置为响应式数据 `state`，同时将 `state` 作为 `render` 函数的第一个参数传递。
+
+经过上述两步工作后，我们就实现了对组件自身状态的支持，以及在渲染函数内访问组件自身状态的能力。
+
+当组件自身状态发生变化时，我们需要有能力触发组件更新，即组件的自更新。为此，我们需要将整个渲染任务包装到一个 `effect` 中。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const { render, data } = componentOptions
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data())
+  
+  // 将组件的 render 函数包装到 effect 内
+  effect(() => {
+    // 调用 render 函数时，将其 this 设置为 state，
+    // 从而 render 函数内部可以通过 this 访问组件自身状态数据
+    const subTree = render.call(state, state)
+    // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
+    patch(null, subTree, container, anchor)
+  })
+}
+```
+
+这样，一旦组件自身的响应式数据发生变化，组件就会自动重新执行渲染函数，从而完成更新。但是，由于 `effect` 的执行是同步的，因此当响应式数据发生变化时，与之关联的副作用函数会同步执行。换句话来说，如果多次修改响应式数据的值，将会导致渲染函数执行多次，这实际上是没有必要的。因此，我们需要设计一个机制，使得无论对响应式数据进行多少次修改，副作用函数都只会重新执行一次。为此，我们需要实现一个调度器，当副作用函数重新执行多次时，我们不会立即执行它，而是将它缓冲到一个微任务队列中，等到执行栈清空后，再将它从微任务队列中取出并执行。有了缓存机制，我们就有机会对任务进行去重，从而避免多次执行副作用函数带来的性能开销。
+
+```js
+// 缓存任务队列，用一个 Set 数据结构来表示，可以自动对任务进行去重
+const queue = new Set()
+// 一个标志，代表是否正在刷新任务队列
+let isFlushing = false
+// 创建一个立即 resolve 的 Promise 示例
+const p = Promise.resolve()
+
+// 调度器的主要函数，用来将一个任务添加到缓冲队列中，并开始刷新队列
+function queueJob(job) {
+  // 将 job 添加到任务队列 queue 中
+  queue.add(job)
+  // 如果还没有开始刷新队列
+  if (!isFlushing) {
+    // 将该标志设置为 true 避免重复刷新
+    isFlushing = true
+    // 微任务队列中刷新缓冲队列
+    p.then(() => {
+      try {
+        // 执行任务队列中的任务
+        queue.forEach(job => job())
+      } catch (error) {
+        // 重置状态
+        isFlushing = false
+        queue.length = 0
+      }
+    })
+  }
+}
+```
+
+上面是调度器的最小实现，本质上利用了微任务的异步执行机制，实现对副作用函数的缓冲。其中 `queueJob` 函数是调度器最主要的函数，用来将一个任务或副作用函数添加到缓冲队列中，并开始刷新队列。有了 `queueJob` 函数之后，我们就可以在创建渲染副作用函数时使用它。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const { render, data } = componentOptions
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data())
+  
+  // 将组件的 render 函数包装到 effect 内
+  effect(() => {
+    // 调用 render 函数时，将其 this 设置为 state，
+    // 从而 render 函数内部可以通过 this 访问组件自身状态数据
+    const subTree = render.call(state, state)
+    // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
+    patch(null, subTree, container, anchor)
+  }, {
+    // 指定该副作用函数的调度器为 queueJob 即可
+    scheduler: queueJob
+  })
+}
+```
+
+这样，当响应式数据发生变化时，副作用函数不会立即同步执行，而是会被 `queueJob` 函数调度，最后在一个微任务中执行。
+
+不过，上面这段代码仍存在缺陷。我们在 effect 函数内调用 patch 函数完成渲染时，第一个参数总是 null。
 
 ## 五、编译器
 

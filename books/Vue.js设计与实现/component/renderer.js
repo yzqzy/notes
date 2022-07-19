@@ -1,3 +1,34 @@
+const { reactive, effect } = VueReactivity;
+
+// 缓存任务队列，用一个 Set 数据结构来表示，可以自动对任务进行去重
+const queue = new Set()
+// 一个标志，代表是否正在刷新任务队列
+let isFlushing = false
+// 创建一个立即 resolve 的 Promise 示例
+const p = Promise.resolve()
+
+// 调度器的主要函数，用来将一个任务添加到缓冲队列中，并开始刷新队列
+function queueJob(job) {
+  // 将 job 添加到任务队列 queue 中
+  queue.add(job)
+  // 如果还没有开始刷新队列
+  if (!isFlushing) {
+    // 将该标志设置为 true 避免重复刷新
+    isFlushing = true
+    // 微任务队列中刷新缓冲队列
+    p.then(() => {
+      try {
+        // 执行任务队列中的任务
+        queue.forEach(job => job())
+      } catch (error) {
+        // 重置状态
+        isFlushing = false
+        queue.length = 0
+      }
+    })
+  }
+}
+
 function createRenderer(options) {
   const {
     createElement,
@@ -275,14 +306,22 @@ function createRenderer(options) {
     // 通过 vnode 获取组件的选项对象，即 vnode.type
     const componentOptions = vnode.type
     // 获取组件的渲染函数 render
-    const { render } = componentOptions
+    const { render, data } = componentOptions
 
-    // const state = react
-
-    // 执行渲染函数，获取组件要渲染的内容，即 render 函数返回的虚拟 DOM
-    const subTree = render()
-    // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
-    patch(null, subTree, container, anchor)
+    // 调用 data 函数得到原始数据
+    const state = reactive(data())
+    
+    // 将组件的 render 函数包装到 effect 内
+    effect(() => {
+      // 调用 render 函数时，将其 this 设置为 state，
+      // 从而 render 函数内部可以通过 this 访问组件自身状态数据
+      const subTree = render.call(state, state)
+      // 最后调用 patch 函数来挂载组件所描述的内容，即 subTree
+      patch(null, subTree, container, anchor)
+    }, {
+      // 指定该副作用函数的调度器为 queueJob 即可
+      scheduler: queueJob
+    })
   }
 
   function render(vnode, container) {
