@@ -250,16 +250,55 @@
 // var myObj = new CreateObj()
 
 
-var myObj = {
-  name : "heora", 
-  showThis: function() {
-    console.log(this)
-    var bar = () => {
-      this.name = 'yueluo'
-      console.log(this)
+// var myObj = {
+//   name : "heora", 
+//   showThis: function() {
+//     console.log(this)
+//     var bar = () => {
+//       this.name = 'yueluo'
+//       console.log(this)
+//     }
+//     bar()
+//   }
+// }
+// myObj.showThis()
+// console.log(myObj.name)
+
+
+// function foo() {
+//   var a = 1
+//   var b = a
+//   a = 2
+//   console.log(a)
+//   console.log(b)
+// }
+// foo()
+// function foo() {
+//   var a = { name: 'heora' }
+//   var b = a
+//   a.name = 'yueluo'
+//   console.log(a)
+//   console.log(b)
+// }
+// foo()
+
+
+function foo() {
+  var myName = "heora"
+  var test1 = 1
+  var test2 = 2
+  var innerBar = { 
+    setName:function(newName){
+      myName = newName
+    },
+    getName:function(){
+      console.log(test1)
+      return myName
     }
-    bar()
   }
+  return innerBar
 }
-myObj.showThis()
-console.log(myObj.name)
+var bar = foo()
+bar.setName("yueluo")
+bar.getName()
+console.log(bar.getName())
