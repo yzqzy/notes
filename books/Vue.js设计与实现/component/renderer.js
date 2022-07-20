@@ -1,4 +1,4 @@
-const { reactive, effect, shallowReactive } = VueReactivity;
+const { reactive, effect, shallowReactive, shallowReadonly } = VueReactivity;
 
 // 缓存任务队列，用一个 Set 数据结构来表示，可以自动对任务进行去重
 const queue = new Set()
@@ -306,8 +306,8 @@ function createRenderer(options) {
     // 通过 vnode 获取组件的选项对象，即 vnode.type
     const componentOptions = vnode.type
     // 获取组件的渲染函数 render
-    const {
-      render, data, props: propsOption,
+    let {
+      render, data, props: propsOption, setup,
       beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
     } = componentOptions
 
@@ -331,6 +331,23 @@ function createRenderer(options) {
       subTree: null
     }
 
+    // setupContext
+    const setupContext = { attrs }
+    // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
+    // 将 setupContext 作为第二个参数传递
+    const setupResult = setup(shallowReadonly(instance.props), setupContext)
+    // setupState 用来存储由 setup 返回的数据
+    let setupState = null
+    // 如果 setup 函数的返回值是函数，则将其作为渲染函数
+    if (typeof setupResult === 'function') {
+      if (render) console.error('setup 函数返回渲染函数，render 选项将被忽略')
+      // 将 setupResult 作为渲染函数
+      render = setupResult
+    } else {
+      // 如果 setup 的返回值不是函数，则作为数据状态赋值给 setupState
+      setupState = setupResult
+    }
+
     // 将组件实例设置到 vnode 上，用于后续更新
     vnode.component = instance
 
@@ -345,6 +362,9 @@ function createRenderer(options) {
         } else if (k in props) {
           // 如果组件自身没有数据，尝试从 props 中读取
           return props[k]
+        } else if (setupState && k in setupState) {
+          // 渲染上下文需要增加对 setupState 的支持
+          return setupState[k]
         } else {
           console.error('不存在')
         }
@@ -355,6 +375,8 @@ function createRenderer(options) {
           state[k] = v
         } else if (k in props) {
           props[k] = v
+        } else if (setupState && k in setupState) {
+          setupState[k] = v
         } else {
           console.error('不存在')
         }

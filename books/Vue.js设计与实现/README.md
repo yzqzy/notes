@@ -11466,7 +11466,7 @@ const Comp = {
 cosnt Comp = {
   setup() {
     const count = ref(0)
-    // 但会一个对象，对线中的数据会暴露到渲染函数中
+    // 但会一个对象，对象中的数据会暴露到渲染函数中
   },
   render() {
     // 通过 this 可以访问 setup 暴露出的响应式数据
@@ -11493,6 +11493,109 @@ const Comp = {
   }
 }
 ```
+
+从上面的代码可以看出，我们可以通过 setup 函数的第一个参数取得外部为组件传递的 props 数据对象。同时，setup 函数还接收第二个参数 `setupContext` 对象，其中保存着与组件接口相关的数据和方法：
+
+* `slots`：组件接收到的插槽；
+* `emit`：一个函数，用来发射自定义事件；
+* `attrs`：当为组件传递 props 时，那些没有显式声明为 props 的属性会存储到 `attrs` 对象中；
+* `expose`：一个函数，用来显式地对外暴露组件数据。
+
+通常情况下，不建议将 setup 与 Vue.js 2 中其他组件选项混用。例如 `data`、`watch`、`methods` 等选项，我们称之为 "传统" 组件选项。在 Vue.js 3 的场景下，更加提供组合式 API，setup 函数就是为组合式 API 而生的。混用组合式 API 的 setup 选项与 ”传统“ 组件选项并不是明智的选择，因为这样会带来语义和理解上的负担。
+
+接下来，我们就围绕上述这些能力尝试实现 `setup` 组件选项。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    // ....
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+
+	// ...
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+    subTree: null
+  }
+
+  // setupContext
+  const setupContext = { attrs }
+  // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
+  // 将 setupContext 作为第二个参数传递
+  const setupResult = setup(shallowReadonly(instance.props), setupContext)
+  // setupState 用来存储由 setup 返回的数据
+  let setupState = null
+  // 如果 setup 函数的返回值是函数，则将其作为渲染函数
+  if (typeof setupResult === 'function') {
+    if (render) console.error('setup 函数返回渲染函数，render 选项将被忽略')
+    // 将 setupResult 作为渲染函数
+    render = setupResult
+  } else {
+    // 如果 setup 的返回值不是函数，则作为数据状态赋值给 setupState
+    setupState = setupResult
+  }
+
+  // 将组件实例设置到 vnode 上，用于后续更新
+  vnode.component = instance
+
+  // 创建渲染上下文对象，本质上是组件实例的代理
+  const renderContext = new Proxy(instance, {
+    get(t, k, r) {
+      // 取得组件自身状态与 props 数据
+      const { state, props } = t
+      if (state && k in state) {
+        // 尝试读取自身状态数据
+        return state[k]
+      } else if (k in props) {
+        // 如果组件自身没有数据，尝试从 props 中读取
+        return props[k]
+      } else if (setupState && k in setupState) {
+        // 渲染上下文需要增加对 setupState 的支持
+        return setupState[k]
+      } else {
+        console.error('不存在')
+      }
+    },
+    set(t, k, v, r) {
+      const { state, props } = t
+      if (state && k in state) {
+        state[k] = v
+      } else if (k in props) {
+        props[k] = v
+      } else if (setupState && k in setupState) {
+        setupState[k] = v
+      } else {
+        console.error('不存在')
+      }
+    }
+  })
+
+  // 调用 created 钩子
+  created && created.call(renderContext)
+  
+ 	// ...
+}
+```
+
+上面是 setup 函数的最小实现，有以下几点需要注意：
+
+* `setupContext` 是一个对象，包含 `attrs`、`emit`、`slots` 等内容。
+* 我们通过检测 setup 函数的返回值类型来决定应该如何处理它。如果它的返回值为函数，则直接将其作为组件的渲染函数。这里需要注意的是，为了避免产生歧义，我们需要检查组件选项中是否已经存在 render 函数，如果泡在，则需要打印警告信息。
+* 渲染上下文 `renderContext` 应该正确地处理 `setupState`，因为 `setup` 函数返回的数据状态也应该暴露到渲染环境。
 
 
 
