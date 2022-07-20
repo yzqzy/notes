@@ -328,24 +328,50 @@ function createRenderer(options) {
       // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
       isMounted: false,
       // 组件所渲染的内容，即子树（subTree）
+      subTree: null
     }
 
     // 将组件实例设置到 vnode 上，用于后续更新
     vnode.component = instance
 
+    // 创建渲染上下文对象，本质上是组件实例的代理
+    const renderContext = new Proxy(instance, {
+      get(t, k, r) {
+        // 取得组件自身状态与 props 数据
+        const { state, props } = t
+        if (state && k in state) {
+          // 尝试读取自身状态数据
+          return state[k]
+        } else if (k in props) {
+          // 如果组件自身没有数据，尝试从 props 中读取
+          return props[k]
+        } else {
+          console.error('不存在')
+        }
+      },
+      set(t, k, v, r) {
+        const { state, props } = t
+        if (state && k in state) {
+          state[k] = v
+        } else if (k in props) {
+          props[k] = v
+        } else {
+          console.error('不存在')
+        }
+      }
+    })
+
     // 调用 created 钩子
-    created && created.call(state)
+    created && created.call(renderContext)
     
     // 将组件的 render 函数包装到 effect 内
     effect(() => {
-      // 调用 render 函数时，将其 this 设置为 state，
-      // 从而 render 函数内部可以通过 this 访问组件自身状态数据
-      const subTree = render.call(state, state)
+      const subTree = render.call(renderContext, renderContext)
 
       // 检查组件是否已经被挂载
       if (!instance.isMounted) {
         // 调用 beforeMount 钩子
-        beforeMount && beforeCreate.call(state)
+        beforeMount && beforeCreate.call(renderContext)
 
         // 初次挂载，调用 patch 函数第一个参数传递 null
         patch(null, subTree, container, anchor)
@@ -353,10 +379,10 @@ function createRenderer(options) {
         instance.isMounted = true
 
         // 调用 mounted 钩子
-        mounted && mounted.call(state)
+        mounted && mounted.call(renderContext)
       } else {
         // 调用 beforeUpdate 钩子
-        beforeUpdate && beforeUpdate.call(state)
+        beforeUpdate && beforeUpdate.call(renderContext)
 
         // 当 isMounted 为 true 时，说明组件已经被挂载，只需要完成自更新即可
         // 所以在调用 patch 函数时，第一个参数为组件上一次渲染的子树
@@ -364,7 +390,7 @@ function createRenderer(options) {
         patch(instance.subTree, subTree, container, anchor)
 
         // 调用 updated 钩子
-        updated && updated.call(state)
+        updated && updated.call(renderContext)
       }
 
       // 更新组件实例的子树
@@ -380,6 +406,7 @@ function createRenderer(options) {
     const instance = (n2.component = n1.component)
     // 获取当前的 props 数据
     const { props } = instance
+
     // 调用 hasPropsChanged 检测子组件传递的 props 是否发生变化，如果没有变化，则不需要更新
     if (hasPropsChanged(n1.props, n2.props)) {
       // 调用 resolveProps 函数重新获取 props 数据
@@ -392,6 +419,8 @@ function createRenderer(options) {
       for (const k in props) {
         if (!(k in nextProps)) delete props[k]
       }
+
+      // TODO：update 逻辑
     }
   }
 
@@ -438,7 +467,16 @@ function resolveProps(options, propsData) {
 
 function hasPropsChanged(prevProps, nextProps) {
   const nextKeys = Object.keys(nextProps)
-  // TODO
+  // 如果新旧 props 的数量变了，说明有变化
+  if (nextKeys.length !== Object.keys(prevProps).length) {
+    return true
+  }
+  for (let i = 0; i < nextKeys.length; i++) {
+    const key = nextKeys[i]
+    // 有不相等的 props，则说明有变化
+    if (nextProps[key] !== prevProps[key]) return true
+  }
+  return false
 }
 
 // https://en.wikipedia.org/wiki/Longest_increasing_subsequence

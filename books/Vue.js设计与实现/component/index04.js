@@ -23,3 +23,15 @@ const node = {
 
 // 调用渲染器渲染组件
 renderer.render(node, document.querySelector('#app'))
+
+const newNode = {
+  type: MyComponent,
+  props: {
+    title: 'A Small Title',
+    other: this.val
+  }
+}
+
+setTimeout(() => {
+  renderer.render(newNode, document.querySelector('#app'))
+}, 1000)

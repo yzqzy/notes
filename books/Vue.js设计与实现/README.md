@@ -11329,6 +11329,7 @@ function patchComponent(n1, n2, anchor) {
   const instance = (n2.component = n1.component)
   // 获取当前的 props 数据
   const { props } = instance
+
   // 调用 hasPropsChanged 检测子组件传递的 props 是否发生变化，如果没有变化，则不需要更新
   if (hasPropsChanged(n1.props, n2.props)) {
     // 调用 resolveProps 函数重新获取 props 数据
@@ -11341,11 +11342,156 @@ function patchComponent(n1, n2, anchor) {
     for (const k in props) {
       if (!(k in nextProps)) delete props[k]
     }
+
+    // TODO：update 逻辑
   }
 }
 ```
 
 ```js
+function hasPropsChanged(prevProps, nextProps) {
+  const nextKeys = Object.keys(nextProps)
+  // 如果新旧 props 的数量变了，说明有变化
+  if (nextKeys.length !== Object.keys(prevProps).length) {
+    return true
+  }
+  for (let i = 0; i < nextKeys.length; i++) {
+    const key = nextKeys[i]
+    // 有不相等的 props，则说明有变化
+    if (nextProps[key] !== prevProps[key]) return true
+  }
+  return false
+}
+```
+
+上面是组件被动更新的最小实现，有两点需要注意：
+
+* 需要将组件实例添加到新的组件 `vnode` 对象上，即 `n2.component = n1.component`，否则下次更新时将无法取得组件实例；
+* `instance.props` 对象本身是浅响应的。因此，在更新组件的 props 时，只需要设置 `intsance.props` 对象即可触发组件重新渲染。
+
+在上面的代码中，我们没有处理 `attrs` 与 `slots` 的更新。`attrs` 的更新本质上与更新 `props` 的原理相似。实际上，要完善地实现 Vue.js 中的 props 机制，需要编写大量边界代码。但本质上来说，其原理都是根据组件的 props 选项定义以及为组件传递的 props 数据来处理的。
+
+由于 props 数据与组件自身的状态数据都需要暴露到渲染函数中，并使得渲染函数能够通过 this 访问它们，因此我们需要封装一个渲染上下文对象。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  const {
+    render, data, props: propsOption,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+
+	// ...
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+    subTree: null
+  }
+
+  // 将组件实例设置到 vnode 上，用于后续更新
+  vnode.component = instance
+
+  // 创建渲染上下文对象，本质上是组件实例的代理
+  const renderContext = new Proxy(instance, {
+    get(t, k, r) {
+      // 取得组件自身状态与 props 数据
+      const { state, props } = t
+      if (state && k in state) {
+        // 尝试读取自身状态数据
+        return state[k]
+      } else if (k in props) {
+        // 如果组件自身没有数据，尝试从 props 中读取
+        return props[k]
+      } else {
+        console.error('不存在')
+      }
+    },
+    set(t, k, v, r) {
+      const { state, props } = t
+      if (state && k in state) {
+        state[k] = v
+      } else if (k in props) {
+        props[k] = v
+      } else {
+        console.error('不存在')
+      }
+    }
+  })
+
+  // 调用 created 钩子
+  created && created.call(state)
+  
+	// ...
+}
+```
+
+在上面这段代码中，我们为组件实例创建了一个代理对象，该对象即渲染上下文对象。它的意义在于拦截数据状态的读取和设置操作，每当在渲染函数或生命周期钩子中通过 this 来读取数据时，都会优先从组件的自身状态中读取，如果组件本身没有对应的数据，则再从 props 数据中读取。最后我们将渲染上下文作为渲染函数以及声明周期钩子的 this 值即可。
+
+实际上，除了组件自身的数据以及 props 数据之外，完整的组件还包含 `methods`、`computed` 等选项中定义的数据和方法，这些内容都应该在渲染上下文对象中处理。
+
+#### setup 函数的作用与实现
+
+组件的 setup 函数是 Vue.js 3 新增的组件选项，它有别于 Vue.js 2 中存在的其他组件选项。这是因为 setup 函数主要用于配合组合式 API，为用户提供一个地方，用于建立组合逻辑、创建响应式数据、创建通用函数、注册声明周期钩子等能力。在组件的整个生命周期中，`setup` 函数只会在被挂载时执行一次，它的返回值可以有两种情况。
+
+**1. 返回一个函数，该函数将作为组件的 render 函数：**
+
+```js
+const Comp = {
+  setup() {
+    // setup 函数可以返回一个函数，该函数将作为组件的渲染函数
+    return () => {
+      return { type: 'div', children: 'hello' }
+    }
+  }
+}
+```
+
+这种方式常用于组件不是以模板来表达其渲染内容的情况。如果组件以模板来表达其渲染内容，那么 setup 函数不可以再返回函数，否则会与模板编译生成的渲染函数产生冲突。
+
+**2. 返回一个对象，该对象中包含的数据将暴露给模板使用：**
+
+```js
+cosnt Comp = {
+  setup() {
+    const count = ref(0)
+    // 但会一个对象，对线中的数据会暴露到渲染函数中
+  },
+  render() {
+    // 通过 this 可以访问 setup 暴露出的响应式数据
+    return { type: 'div', children: `count is：${ this.count }` }
+  }
+}
+```
+
+可以看到，setup 函数暴露的数据可以在渲染函数中通过 this 来访问。
+
+另外，setup 函数接收两个参数。第一个参数是是 props 数据对象，第二个参数也是一个对象，通常称为 `setupContext`。
+
+```js
+const Comp = {
+  props: {
+    foo: String
+  },
+  setup(props, setupContext) {
+    // 访问传入的 props 数据
+    props.foo 
+    // setupContext 中包含与组件接口相关的重要数据
+    const { slots, emit, attrs, expose } = setupContext
+    // ...
+  }
+}
 ```
 
 
