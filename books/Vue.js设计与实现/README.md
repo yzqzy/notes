@@ -11597,6 +11597,131 @@ function mountComponent(vnode, container, anchor) {
 * 我们通过检测 setup 函数的返回值类型来决定应该如何处理它。如果它的返回值为函数，则直接将其作为组件的渲染函数。这里需要注意的是，为了避免产生歧义，我们需要检查组件选项中是否已经存在 render 函数，如果泡在，则需要打印警告信息。
 * 渲染上下文 `renderContext` 应该正确地处理 `setupState`，因为 `setup` 函数返回的数据状态也应该暴露到渲染环境。
 
+> [代码实现](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component/index05.js)
+
+#### 组件事件与 emit 的实现
+
+emit 用来发射组件的自定义事件，如下面的代码所示：
+
+```js
+const MyComponent = {
+  name: 'MyComponent',
+  setup(props, { emit }) {
+    // 发生 change 事件，并传递给事件处理函数两个参数
+    emit('change', 1, 2)
+
+    return () => {
+      return { type: 'div', children: 'hello world' }
+    }
+  }
+}
+```
+
+当使用该组件时，我们可以监听由 emit 函数发射的自定义事件：
+
+```vue
+<MyComponent @change="handler" />
+```
+
+上面这段模板对应的虚拟 DOM 为：
+
+```js
+const CompVNode = {
+  type: MyComponent,
+  props: {
+    onChange: handler
+  }
+}
+```
+
+可以看到，自定义事件 change 被编译为名为 `onChange` 的属性，并存储在 `props` 数据对象中，这实际上是一种约定。作为框架设计者，也可以按照自己期望的方式来设计事件的编译结果。
+
+在具体的实现上，发生自定义事件的本质就是根据事件名称去 props 数据对象中寻找对应的事件处理函数并执行。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data ? data() : {})
+  // 调用 resolveProps 函数解析出最终的 props 数据与 attrs 数据
+  const [props, attrs] = resolveProps(propsOption, vnode.props)
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+    subTree: null
+  }
+
+  // 定义 emit 函数，它接收两个参数
+  // event：事件名称
+  // payload：传递给事件处理函数的参数
+  function emit(event, ...payload) {
+    // 根据约定对事件名称进行处理
+    const eventName = `on${ event[0].toUpperCase() + event.slice(1) }`
+    // 根据处理后的事件名称去 props 中寻找对应的事件处理函数
+    const handler = instance.props[eventName]
+
+    if (handler) {
+      // 调用事件处理函数并传递参数
+      handler(...payload)
+    } else {
+      console.error('事件不存在')
+    }
+  }
+
+  // ...
+}
+```
+
+整体实现并不复杂，只需要实现一个 emit 函数并将其添加到 `setupContext` 对象中，这样用户就可以通过 `setupContext` 取得 emit 函数。另外，当 emit 函数被调用时，我们会根据约定对事件名称进行转换，以便能够在 props 数据对象中找到对应的事件处理函数。最后，调用事件处理函数并透传参数即可。
+
+这里有一点需要额外注意，我们在实现 `resolveProps` 函数时提到，任何没有显式声明为 props 的属性都会存储到 `attrs` 中。换句话来说，任何事件类型的 props，即 `onXxx` 这类的属性，都不会出现在 props 中。这会导致我们无法根据事件名称在 `instance.props` 中找到对应的事件处理函数。为了解决这个问题，我们需要在解析 props 数据的时候对事件类型的 props 做特殊处理。
+
+```js
+// 解析组件 props 和 attrs 数据
+function resolveProps(options = {}, propsData) {
+  const props = {}
+  const attrs = {}
+
+  // 遍历组件传递的 props 数据
+  for (const key in propsData) {
+    if (key in options || key.startsWith('on')) {
+      // 如果为组件传递的 props 数据在组件自身的 props 选项中有定义，
+      // 则视为合法的 props
+      props[key] = propsData[key]
+    } else {
+      // 否则将其视为 atts
+      attrs[key] = propsData[key]
+    }
+  }
+
+  // 最后返回 props 和 attrs 数据
+  return [props, attrs]
+}
+```
+
+处理方式很简单，通过检测 `propsData` 的 key 值来判断它是否以字符串 'on' 开头，如果是，则认为该属性是组件的自定义事件。这时。即使组件没有显式地将其声明为 props，我们特将它添加到最终解析的 props 数据中，而不是添加到 `attrs` 对象中。
+
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component/index06.js)
+
+#### 插槽的工作原理与实现
+
 
 
 ## 五、编译器
