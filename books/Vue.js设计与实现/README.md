@@ -11722,6 +11722,81 @@ function resolveProps(options = {}, propsData) {
 
 #### 插槽的工作原理与实现
 
+顾名思义，组件的插槽指组件会预留一个槽位，该槽位具体要渲染的内容由用户插入，如下面给出的 `MyComponent` 组件的模板所示：
+
+```vue
+<template>
+	<header><slot name="header" /></header>
+	<div>
+    <slot name="body" />
+  </div>
+  <footer><slot name="footer" /></footer>
+</template>
+```
+
+当在父组件使用 `<MyComponet>` 组件时，可以根据插槽的名字来插入自定义的内容。
+
+ ```vue
+ <MyComponent>
+ 	<template #header>
+ 		<h1>我是标题</h1>
+   </template>
+   <template #body>
+ 		<section>我是内容</section>
+   </template>
+   <template #footer>
+   	<p>我是注脚</p>
+   </template>
+ </MyComponent>
+ ```
+
+上面这段父组件的模板会被编译为如下渲染函数：
+
+```js
+// 父组件的渲染函数
+function render() {
+  return {
+    type: MyComponent,
+    // 组件的 children 会被编译成一个对象
+    children: {
+      header() {
+        return { type: 'h1', children: '我是标题' }
+      },
+      body() {
+        return { type: 'section', children: '我是内容' }
+      },
+      footer() {
+    	  return { type: 'p', children: '我是注脚' }
+      }
+    }
+  }
+}
+```
+
+可以看到，组件模板中的插槽内容会被编译为插槽函数，而插槽函数的返回值就是具体的插槽内容。组件 `MyComponent` 的模板则会被编译为如下渲染函数：
+
+```js
+// MyComponent 组件模板的编译结果
+function render() {
+  return [
+    {
+      type: 'header',
+      children: [this.$slots.header()]
+    },
+    {
+      type: 'div',
+      children: [this.$slots.body()]
+    },
+    {
+      type: 'footer',
+      children: [this.$slots.footer()]
+    }
+  ]
+}
+```
+
+可以看到，渲染插槽内容的过程，就是调用插槽函数并渲染由其返回的内容的过程。这与 React 中 render props 的概念非常相似。
+
 
 
 ## 五、编译器
