@@ -11797,6 +11797,154 @@ function render() {
 
 可以看到，渲染插槽内容的过程，就是调用插槽函数并渲染由其返回的内容的过程。这与 React 中 render props 的概念非常相似。
 
+在运行时的实现上，插槽则依赖于 `setupContext` 中的 `slots` 对象。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+	
+  // ...
+
+  // 使用编译好的 vnode.children 对象作为 slots 对象即可
+  const slots = vnode.children || {}
+
+  // setupContext
+  const setupContext = { attrs, emit, slots }
+  
+	// ...
+}
+
+```
+
+可以看到，最基本的 slots 的实现非常简单。只需要将编译好的 `vnode.children` 作为 slots 对象，最后将 slots 对象添加到 `setupContext` 对象中。为了在 render 函数内和生命周期钩子函数内通过 `this.$slots` 来访问插槽内容，我们还需要在 `renderContext` 中特殊处理 `$slots` 属性。
+
+```js
+
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+
+  // 调用 data 函数得到原始数据
+  const state = reactive(data ? data() : {})
+  // 调用 resolveProps 函数解析出最终的 props 数据与 attrs 数据
+  const [props, attrs] = resolveProps(propsOption, vnode.props)
+  // 使用编译好的 vnode.children 对象作为 slots 对象即可
+  const slots = vnode.children || {}
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+    subTree: null,
+    // 将插槽添加到组件实例上
+    slots
+  }
+		
+  // ...
+  
+  // setupContext
+  const setupContext = { attrs, emit, slots }
+	
+  // ...
+
+  // 创建渲染上下文对象，本质上是组件实例的代理
+  const renderContext = new Proxy(instance, {
+    get(t, k, r) {
+      // 取得组件自身状态与 props 数据
+      const { state, props, slots } = t
+
+      if (k === '$slots') return slots;
+
+			// ...
+    },
+    set(t, k, v, r) {
+  		// ...
+    }
+  })
+	
+  // ...
+}
+```
+
+我们对渲染上下文 `renderContext` 代理对象的 get 拦截函数做了特殊处理，当读取的键是 `$slots` 时，直接返回组件实例上的 slots 对象，这样用户就可以通过 `this.$slots` 来访问插槽内容了。
+
+因为编译后组件模板的 render 函数返回一个数组，我们需要对此进行处理：
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+	
+  // ...
+  
+  // 将组件的 render 函数包装到 effect 内
+  effect(() => {
+    const subTree = render.call(renderContext, renderContext)
+
+    // 检查组件是否已经被挂载
+    if (!instance.isMounted) {
+      // 调用 beforeMount 钩子
+      beforeMount && beforeCreate.call(renderContext)
+
+      if (Array.isArray(subTree)) {
+        // 如果组件返回的数组，循环挂载
+        subTree.forEach(tree => {
+          patch(null, tree, container, anchor)
+        })
+      } else {
+        // 初次挂载，调用 patch 函数第一个参数传递 null
+        patch(null, subTree, container, anchor)
+      }
+
+      // 将组件示例的 isMounted 属性设置为 true
+      instance.isMounted = true
+
+      // 调用 mounted 钩子
+      mounted && mounted.call(renderContext)
+    } else {
+     	// ...
+    }
+
+    // 更新组件实例的子树
+    instance.subTree = subTree
+  }, {
+    // 指定该副作用函数的调度器为 queueJob 即可
+    scheduler: queueJob
+  })
+}
+```
+
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component/index07.js)
+
+#### 注册声明周期
+
 
 
 ## 五、编译器

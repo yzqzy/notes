@@ -267,7 +267,7 @@ function createRenderer(options) {
     }
   
     const { type } = n2
-  
+
     if (typeof type === 'string') {
       if (!n1) {
         mountElement(n2, container, anchor)
@@ -318,6 +318,8 @@ function createRenderer(options) {
     const state = reactive(data ? data() : {})
     // 调用 resolveProps 函数解析出最终的 props 数据与 attrs 数据
     const [props, attrs] = resolveProps(propsOption, vnode.props)
+    // 使用编译好的 vnode.children 对象作为 slots 对象即可
+    const slots = vnode.children || {}
 
     // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
     const instance = {
@@ -328,7 +330,9 @@ function createRenderer(options) {
       // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
       isMounted: false,
       // 组件所渲染的内容，即子树（subTree）
-      subTree: null
+      subTree: null,
+      // 将插槽添加到组件实例上
+      slots
     }
 
     // 定义 emit 函数，它接收两个参数
@@ -349,7 +353,7 @@ function createRenderer(options) {
     }
 
     // setupContext
-    const setupContext = { attrs, emit }
+    const setupContext = { attrs, emit, slots }
     
     // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
     // 将 setupContext 作为第二个参数传递
@@ -373,7 +377,10 @@ function createRenderer(options) {
     const renderContext = new Proxy(instance, {
       get(t, k, r) {
         // 取得组件自身状态与 props 数据
-        const { state, props } = t
+        const { state, props, slots } = t
+
+        if (k === '$slots') return slots;
+
         if (state && k in state) {
           // 尝试读取自身状态数据
           return state[k]
@@ -413,8 +420,16 @@ function createRenderer(options) {
         // 调用 beforeMount 钩子
         beforeMount && beforeCreate.call(renderContext)
 
-        // 初次挂载，调用 patch 函数第一个参数传递 null
-        patch(null, subTree, container, anchor)
+        if (Array.isArray(subTree)) {
+          // 如果组件返回的数组，循环挂载
+          subTree.forEach(tree => {
+            patch(null, tree, container, anchor)
+          })
+        } else {
+          // 初次挂载，调用 patch 函数第一个参数传递 null
+          patch(null, subTree, container, anchor)
+        }
+
         // 将组件示例的 isMounted 属性设置为 true
         instance.isMounted = true
 
