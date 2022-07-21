@@ -11914,7 +11914,7 @@ function mountComponent(vnode, container, anchor) {
       beforeMount && beforeCreate.call(renderContext)
 
       if (Array.isArray(subTree)) {
-        // 如果组件返回的数组，循环挂载
+        // 如果组件 render 函数返回的是数组，循环挂载
         subTree.forEach(tree => {
           patch(null, tree, container, anchor)
         })
@@ -11944,6 +11944,181 @@ function mountComponent(vnode, container, anchor) {
 > [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component/index07.js)
 
 #### 注册声明周期
+
+在 Vue.js 中，有一部分组合式 API 是用来注册生命周期钩子函数的，例如 `onMounted`、`onUpdated` 等。
+
+```js
+const MyComponent = {
+  setup() {
+    onMounted(() => {
+      console.log('mounted 1')
+    })
+
+    onMounted(() => {
+      console.log('mounted 2')
+    })
+  }
+}
+```
+
+在 setup 函数中调用 `onMounted` 函数即可注册 `mounted` 生命周期钩子函数，并且可以通过多次调用 `onMounted` 函数来注册多个钩子函数，这些函数会在组件被挂在之后再执行。这里的问题在于，在 A 组件的 setup 函数中调用 `onMounted` 函数会将该钩子函数注册到 A 组件上；而在 B 组件的 setup 函数中调用 `onMounted` 函数会将钩子函数注册到 B 组件上，这是如何实现的呢？
+
+实际上，我们需要维护一个变量 `currentInstance`，用它来存储当前组件实例，每当初始化并执行组件的 setup 函数之前，先将 `currentInstance` 设置为当前组件实例，再执行组件的 setup 函数时，我们就可以通过 `currentInstance` 来获取当前正在被初始化的组件实例，从而将那些与 `onMounted` 函数注册的钩子函数与组件实例相关联。
+
+接下来我们着手实现。首先需要设计一个当前实例的维护方法。
+
+```js
+// 全局变量，存在当前正在被初始化的组件实例
+let currentInstance = null
+// 该方法接收组件实例作为参数，并将该组件实例设置为 currentInstance
+function setCurrentInstance(instance) {
+  currentInstance = instance
+}
+```
+
+有了 `currentInstance` 变量，以及用来设置该变量的 `setCurrentInstance` 函数之后，我们就可以着手修改 `mounteComponent` 函数了。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+	
+  // ...
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+    subTree: null,
+    // 将插槽添加到组件实例上
+    slots,
+    // 组件实例中添加 mounted 数组，用来存储通过 onMounted 函数注册的生命周期钩子函数
+    mounted: []
+  }
+	
+  // ...
+
+  // setupContext
+  const setupContext = { attrs, emit, slots }
+
+  // 调用 setup 函数之前，设置当前组件实例
+  setCurrentInstance(instance)
+  
+  // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
+  // 将 setupContext 作为第二个参数传递
+  const setupResult = setup(shallowReadonly(instance.props), setupContext)
+
+  // 在 setup 函数执行完毕之后，重置当前组件实例
+  setCurrentInstance(null)
+	
+  // ...
+}
+
+```
+
+上面这段代码以 `onMounted` 函数为例进行说明。为了存储由 `onMounted` 函数注册的生命周期钩子，我们需要在组件实例对象上添加 `instance.mounted` 数组。之所以 `instance.mounted` 的数据类型是数组，是因为在 `setup` 函数中，可以多次调用 `onMounted` 函数来注册不同的生命周期函数，这些生命周期函数都存储在 `instance.mounted` 数组中。
+
+现在，组件实例的维护已经搞定了。接下来考虑 `onMounted` 函数本身的实现。
+
+```js
+function onMounted(fn) {
+  if (currentInstance) {
+    // 将生命周期函数添加到 instance.mounted 数组中
+    currentInstance.mounted.push(fn)
+  } else {
+    console.error('onMounted 函数只能在 setup 中调用')
+  }
+}
+```
+
+可以看到，整体实现非常简单直观。只需要通过 `currentInstance` 取得当前组件实例，并将生命周期钩子函数添加到当前实例对象的 `instance.mounted` 数组中即可。另外，如果当前实例不存在，则说明用户没有在 setup 函数内调用 `onMounted` 函数，这时错误的用法，因此我们应该抛出错误及其原因。
+
+最后一步需要做的是，在合适的时机调用这些注册在 `instance.mounted` 数组中的生命周期钩子函数。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+
+  // 调用 beforeCrate 钩子
+  beforeCreate && beforeCreate()
+	
+  // ...
+  
+  // 将组件的 render 函数包装到 effect 内
+  effect(() => {
+    const subTree = render.call(renderContext, renderContext)
+
+    // 检查组件是否已经被挂载
+    if (!instance.isMounted) {
+      // 调用 beforeMount 钩子
+      beforeMount && beforeCreate.call(renderContext)
+
+      // 遍历 instance.mounted 数组并逐个执行即可
+      if (Array.isArray(instance.mounted)) {
+        instance.mounted.forEach(hook => hook.call(renderContext))
+      }
+
+     	// ...
+
+      // 将组件示例的 isMounted 属性设置为 true
+      instance.isMounted = true
+
+      // 调用 mounted 钩子
+      mounted && mounted.call(renderContext)
+    } else {
+    	// ...
+    }
+
+    // 更新组件实例的子树
+    instance.subTree = subTree
+  }, {
+    // 指定该副作用函数的调度器为 queueJob 即可
+    scheduler: queueJob
+  })
+}
+```
+
+可以看到，我们只需要在合适的时机遍历 `instance.mounted` 数组，并逐个执行该数组内的生命周期钩子函数即可。
+
+对于除 mounted 以外的生命周期钩子函数，其原理同上。
+
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component/index08.js)
+
+#### 总结
+
+本篇文章中，我们首先讨论了如何使用虚拟节点来描述组件。使用虚拟节点的 `vnode.type` 属性来存储组件对象，渲染器根据虚拟节点的该属性的类型来判断它是都是组件。如果是组件，则渲染器会使用 `mountComponent` 和 `patchComponent` 来完成组件的挂载和更新。
+
+接着，我们讨论了组件的自更新。我们知道，在组件挂载阶段，会为组件创建一个用于渲染其内容的副作用函数。该副作用函数会与组件自身的响应式数据建立响应联系。当组件自身的响应式数据发生变化时，会触发渲染副作用函数重新执行，即重新渲染。但由于默认情况下重新渲染是同步执行的，这导致无法对任务去重，因此我们在创建渲染副作用函数时，指定了自定义的调度器。该调度器的作用是：当组件自身的响应式数据发生变化时，将渲染副作用函数缓存到微任务队列中。有了缓冲队列，我们即可实现对渲染任务去重，从而避免无用的重新渲染所导致的额外性能开销。
+
+然后，我们介绍了组件实例。它本质上是一个对象，包含了组件运行过程中的状态，例如组件是否挂载、组件自身的响应式数据，以及组件所渲染的内容（即 `subTree`）等。有了组件实例后，在渲染副作用函数内，我们就可以根据组件实例上的状态标识，来决定应该进行全新的挂载，还是打补丁。
+
+我们还讨论了组件的 props 与组件的被动更新。副作用自更新所引起的子组件更新叫做子组件的被动更新。我们还介绍了渲染上下（`renderContext`），它实际上是组件实例的代理对象。在渲染函数内访问组件实例所暴露的数据都是通过该代理对象实现的。
+
+之后，我们讨论了 setup 函数。该函数是为了组合式 API 而生的，所以我们要避免将其与 Vue.js 2 中的 “传统” 组件选项混合使用。setup 函数的返回值可以是两种类型，如果返回函数，则将该函数作为组件的渲染函数；如果返回数据对象，则将该对象暴露到渲染上下文中。
+
+emit 函数包含在 `setupContext` 对象中，可以通过 `emit` 函数发射组件的自定义事件。通过 `v-on` 指令为组件绑定的事件经过编译后，会以 `onXxx` 的形式存储到 props 对象中。当 emit 函数执行时，会在 props 对象中寻找对应的事件处理函数执行它。
+
+随后，我们讨论了组件的插槽。它借鉴了 `Web Component` 中 `<slot>` 标签的概念。插槽内容会被编译为插槽函数，插槽函数的返回值就是向槽位填充的内容。`<slot>` 标签则会被编译为插槽函数的调用，通过指定对应的插槽函数，得到外部向槽位填充的内容（即虚拟 DOM），最后将内容渲染到槽位中。
+
+最后，我们讨论了 `onMounted` 等用于注册声明周期钩子函数的方法的实现。通过 `onMounted` 注册的声明周期函数会被注册到当前组件实例的 `instance.mounted` 数组中。为了维护当前正在初始化的组件实例，我们定义了全局变量 `currentInstance`，以及用来设置该变量的 `setCurrentInstance` 函数。
+
+### 异步组件与函数式组件
 
 
 

@@ -29,6 +29,14 @@ function queueJob(job) {
   }
 }
 
+
+// 全局变量，存在当前正在被初始化的组件实例
+let currentInstance = null
+// 该方法接收组件实例作为参数，并将该组件实例设置为 currentInstance
+function setCurrentInstance(instance) {
+  currentInstance = instance
+}
+
 function createRenderer(options) {
   const {
     createElement,
@@ -332,7 +340,9 @@ function createRenderer(options) {
       // 组件所渲染的内容，即子树（subTree）
       subTree: null,
       // 将插槽添加到组件实例上
-      slots
+      slots,
+      // 组件实例中添加 mounted 数组，用来存储通过 onMounted 函数注册的生命周期钩子函数
+      mounted: []
     }
 
     // 定义 emit 函数，它接收两个参数
@@ -354,10 +364,17 @@ function createRenderer(options) {
 
     // setupContext
     const setupContext = { attrs, emit, slots }
+
+    // 调用 setup 函数之前，设置当前组件实例
+    setCurrentInstance(instance)
     
     // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
     // 将 setupContext 作为第二个参数传递
     const setupResult = setup(shallowReadonly(instance.props), setupContext)
+
+    // 在 setup 函数执行完毕之后，重置当前组件实例
+    setCurrentInstance(null)
+
     // setupState 用来存储由 setup 返回的数据
     let setupState = null
     // 如果 setup 函数的返回值是函数，则将其作为渲染函数
@@ -420,8 +437,13 @@ function createRenderer(options) {
         // 调用 beforeMount 钩子
         beforeMount && beforeCreate.call(renderContext)
 
+        // 遍历 instance.mounted 数组并逐个执行即可
+        if (Array.isArray(instance.mounted)) {
+          instance.mounted.forEach(hook => hook.call(renderContext))
+        }
+
         if (Array.isArray(subTree)) {
-          // 如果组件返回的数组，循环挂载
+          // 如果组件 render 函数返回的是数组，循环挂载
           subTree.forEach(tree => {
             patch(null, tree, container, anchor)
           })
@@ -518,6 +540,15 @@ function resolveProps(options = {}, propsData) {
 
   // 最后返回 props 和 attrs 数据
   return [props, attrs]
+}
+
+function onMounted(fn) {
+  if (currentInstance) {
+    // 将生命周期函数添加到 instance.mounted 数组中
+    currentInstance.mounted.push(fn)
+  } else {
+    console.error('onMounted 函数只能在 setup 中调用')
+  }
 }
 
 function hasPropsChanged(prevProps, nextProps) {
