@@ -283,22 +283,24 @@
 // foo()
 
 
-function foo() {
-  var myName = "heora"
-  var test1 = 1
-  var test2 = 2
-  var innerBar = { 
-    setName:function(newName){
-      myName = newName
-    },
-    getName:function(){
-      console.log(test1)
-      return myName
-    }
-  }
-  return innerBar
-}
-var bar = foo()
-bar.setName("yueluo")
-bar.getName()
-console.log(bar.getName())
+// function foo() {
+//   var myName = "heora"
+//   var test1 = 1
+//   var test2 = 2
+//   var innerBar = { 
+//     setName:function(newName){
+//       myName = newName
+//     },
+//     getName:function(){
+//       console.log(test1)
+//       return myName
+//     }
+//   }
+//   return innerBar
+// }
+// var bar = foo()
+// bar.setName("yueluo")
+// bar.getName()
+// console.log(bar.getName())
+
+
