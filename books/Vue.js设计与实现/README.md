@@ -12413,8 +12413,6 @@ function defineAsyncComponent(options) {
 
 观察上面的代码，我们对之前的实现做了一些调整，首先，为加载器添加 catch 语句来捕获所有加载错误。接着，当加载超时后，我们会创建一个新的错误对象，并将其赋值给 `error.value` 变脸。在组件渲染时，只要 `error.value` 值存在，且用户配置了 `errorComponent` 组件，就直接渲染 `errorComponent` 组件并将 `error.value` 的值作为该组件的 props 传递。这样，用户就可以在自己的 Error 组件上，通过定义名称 error 的 props 来接收错误对象，从而实现细粒度的控制。
 
-> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component_async/index01.js)
-
 ##### 延迟与 Loading 组件
 
 异步加载组件受网络影响比较大，加载过程可能很慢，也可能很快。这时我们就会很自然地想到，对于第一种情况，我们能否通过展示 Loading 组件来提供更好的用户体验。这样，用户就不会有 “卡死” 的感觉了。这时一个好想法，但展示 Loading 组件的时机是一个需要仔细考虑的问题。通常，我们会从加载开始的那一刻起就展示 Loading 组件。但在组件状况良好的情况下，异步组件的加载速度会非常快，这会导致 Loading 组件刚完成渲染就立即进入卸载阶段，于是出现闪烁的情况。对于用户来说这是非常不好的体验。体验，我们需要为 Loading 组件设置一个延迟展示的时间。例如，当超过 200 ms 没有完成加载，才展示 Loading 组件。这样，对于在 200 ms 内能够完成加载的情况来说，就避免了闪烁问题的出现。
