@@ -11943,7 +11943,7 @@ function mountComponent(vnode, container, anchor) {
 
 > [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component/index07.js)
 
-#### 注册声明周期
+#### 注册生命周期
 
 在 Vue.js 中，有一部分组合式 API 是用来注册生命周期钩子函数的，例如 `onMounted`、`onUpdated` 等。
 
@@ -12119,6 +12119,331 @@ emit 函数包含在 `setupContext` 对象中，可以通过 `emit` 函数发射
 最后，我们讨论了 `onMounted` 等用于注册声明周期钩子函数的方法的实现。通过 `onMounted` 注册的声明周期函数会被注册到当前组件实例的 `instance.mounted` 数组中。为了维护当前正在初始化的组件实例，我们定义了全局变量 `currentInstance`，以及用来设置该变量的 `setCurrentInstance` 函数。
 
 ### 异步组件与函数式组件
+
+我们已经详细讨论了组件的基本含义与实现。本章，我们将继续讨论组件的两个重要概念，即异步组件和函数式组件。在异步组件中，“异步” 二字指的是，以异步的方式加载并渲染一个组件。这在代码分割、服务端下发组件等场景中尤为重要。而函数式组件允许使用一个普通函数定义组件，并使用该函数的返回值作为组件要渲染的内容。函数式组件的特点是：无状态、编写简单且直观。在 Vue.js 2 中，相比有状态组件来说，函数式组件具有明显的性能优势。但在 Vue.js 3 中，函数式组件与有状态组件的性能差距不大，都很好。正如 Vue.js RFC 的原文所述：“在 Vue.js 3 中使用函数式组件，主要是因为它的简单性，而不是因为它的性能好”。
+
+#### 异步组件要解决的问题
+
+从根本上来说，异步组件的实现不需要任何框架层面的支持，用户完全可以自行实现。渲染 `App` 组件到页面的示例如下：
+
+```js
+import App from 'App.vue'
+createApp(App).mount('#app')
+```
+
+上面这段代码所展示的就是同步渲染。我们可以轻易地将其修改为异步渲染，如下面的代码所示：
+
+```js
+const loader = () => import('App.vue')
+loader().then(App => {
+  createApp(App).mount('#app')
+})
+```
+
+这里我们使用动态导入语句 `import()` 来加载组件，它会返回一个 Promise 实例。组件加载成功后，会调用 `createApp` 函数完成挂载，这样就实现了以异步的方式来渲染页面。
+
+上面的例子实现了整个页面的异步渲染。通常一个页面会有多个组件构成，每个组件负责渲染页面的一部分。那么，如果只想异步渲染部分页面，要怎么办呢？这时，只需要有能力异步加载某一个组件就可以了。假设下面的代码是 `App.vue` 组件的代码。
+
+```vue
+<template>
+	<CompA />
+	<component :is="asyncComp" />
+</template>
+
+<script>
+import { shallowRef } from 'vue'
+import CompA from 'CompA.vue'
+ 
+export default {
+  components: { CompA },
+  setup() {
+    const asyncComp = shallowRef(null)
+    
+    // 异步加载 Comp 组件
+    import('CompB.vue').then(CompB => asyncComp.value = CompB)
+    
+    return {
+      asyncComp
+    }
+  }
+}
+</script>
+```
+
+从这段代码的模板中可以看出，页面是由 `<CompA />` 组件和动态组件 `<component>` 构成。其中，`CompA` 组件是同步渲染的，而动态组件绑定了 `asyncComp` 变量。继续看脚本块，我们通过动态导入语句 `import()` 来异步加载 `CompB` 组件，当加载成功后，将 `asyncComp` 变量的值设置为 `CompB`。这样就实现了 `CompB` 组件的异步加载和渲染。
+
+不过，虽然用户可以自行实现组件的异步加载和渲染，但整体实现还是比较复杂的，因为一个完善的异步组件的实现，所涉及的内容要比上面的例子负责的多。通常在异步加载组件时，我们还要考虑以下几个方面。
+
+* 如果组件加载失败或加载超时，是否要渲染 Error 组件？
+* 组件在加载时，是否要展示占位的内容？例如渲染一个 Loading 组件。
+* 组件加载的速度可能很快，也可能很慢，是否要设置一个延迟展示 Loading 组件的时间？如果组件在 200 ms 内没有加载成功才展示 Loading 组件，这样可以避免由组件加载过快所导致的闪烁。
+* 组件加载时候后，是否需要重试？
+
+为了替用户更好地解决上述问题，我们需要在框架层面为异步组件提供更好的封装支持，与之对应的能力如下：
+
+* 允许用户指定加载出错时要渲染的组件。
+* 允许用户指定 Loading 组件，以及展示该组件的延迟时间。
+* 允许用户设置加载组件的超时时长。
+* 组件加载失败时，为用户提供重试的能力。
+
+以上这些内容就是异步组件真正要解决的问题。
+
+#### 异步组件的实现原理
+
+##### 封装 defineAsyncComponent
+
+异步组件本质上是通过封装手段来实现友好的用户接口，从而降低用户层面的使用复杂度，如下面的用户代码所示：
+
+```vue
+<template>
+	<AsynComp />
+</template>
+
+<script>
+export default {
+  components: {
+    // 使用 definedAsyncComponent 定义一个异步组件，它接收一个加载器作为参数
+    AsyncComp: defineAsyncComponent(() => import('CompA'))
+  }
+}
+</script>
+```
+
+在上面这段代码中，我们使用 `defineAsyncComponent` 来定义异步组件，并直接使用 components 组件选项来注册它。这样，在模板中就可以像使用普通组件一样使用异步组件了。可以看到，使用 `defineAsyncComponent` 函数定义异步组件的方式，比我们自己实现的异步组件方式要简单直接得多。
+
+`defineAsyncComponent` 是一个高阶组件，它最基本的实现如下：
+
+```js
+// defineAsyncComponent 函数用于定义一个异步组件，接收一个异步组件加载器作为参数
+function defineAsyncComponent(loader) {
+  // 一个变量，用来存储异步加载的组件
+  let InnerComp = null
+  // 返回一个包装组件
+  return {
+    async: 'AsyncComponentWrapper',
+    setup() {
+      // 异步组件是否加载成功
+      const loaded = ref(false)
+      // 执行加载器函数，返回一个 Promise 实例
+      // 加载成功后，将加载成功的组件赋值给 InnerComp，并将 loaded 标记为 true，代表加载成功
+      loader().then(c => {
+        InnerComp = c
+        loaded.value = true
+      })
+      return () => {
+        // 如果异步组件加载成功，则渲染该组件，否则渲染一个占位内容
+        return loaded.value ? { type: InnerComp } : { type: Text, children: '' }
+      }      
+    }
+  }
+}
+```
+
+这里有以下几个关键点：
+
+* `defineAsyncComponent` 函数本质上是一个高阶组件，它的返回值是一个包装组件。
+* 包装组件会根据加载器的状态来决定渲染什么内容。如果加载器成功创建了组件，则渲染被加载的组件，否则只会渲染一个占位内容。
+* 通常占位内容是一个注释节点。组件没有被加载成功后，页面中会渲染一个注释节点来占位。这里我们使用了一个空文本节点来占位。
+
+##### 超时与 Error 组件
+
+异步组件通常是以网路请求的形式进行加载。前端发送一个 HTTP 请求，请求下载组件的 JavaScript 资源，或者从服务器直接获取组件数据。既然存在网络请求，那么必然要考虑网络较慢的情况，尤其是在弱网环境下，加载一个组件可能要需要很长时间。因此，我们需要为用户提供指定超时时长的能力，当加载组件的时间超过指定时长后，会触发超时错误。这时如果用户配置了 Error 组件，则会渲染组件。
+
+首先，我们来设计用户接口。为了让用户能够指定超时时长，`defineAsyncComponent` 函数需要接收一个配置对象作为参数：
+
+```js
+const AsyncComp = defineAsyncComponent({
+  loader: () => import('CompA.vue'),
+  timeout: 2000, // 超时时长，其单位为 ms
+  errorComponent: MyErrorComp // 指定出错时要渲染的组件
+})
+```
+
+* loader：指定异步组件的加载器
+* timeout：单位为 ms，指定超时时长
+* `errorComponent`：指定一个 Error 组件，发生错误时会渲染它
+
+设计好用户接口之后，我们就可以给出具体实现了：
+
+```js
+// defineAsyncComponent 函数用于定义一个异步组件，接收一个异步组件加载器作为参数
+function defineAsyncComponent(options) {
+  // options 既可以是配置项，也可以是加载器
+  if (typeof options === 'function') {
+    // 如果是 options 是加载器，将其格式化配置项形式
+    options = {
+      loader: options
+    }
+  }
+
+  const { loader } = options
+
+  // 一个变量，用来存储异步加载的组件
+  let InnerComp = null
+
+  // 返回一个包装组件
+  return {
+    async: 'AsyncComponentWrapper',
+    setup() {
+      // 异步组件是否加载成功
+      const loaded = ref(false)
+      // 代表是否超时，默认为 false
+      const timeout = ref(false)
+
+      // 执行加载器函数，返回一个 Promise 实例
+      // 加载成功后，将加载成功的组件赋值给 InnerComp，并将 loaded 标记为 true，代表加载成功
+      loader().then(c => {
+        InnerComp = c
+        loaded.value = true
+      })
+
+      let timer = null
+      if (options.timeout) {
+        // 如果指定超时时长，开启一个定时器
+        timer = setTimeout(() => {
+          // 超时后将 timeout 设置为 true
+          timeout.value = true
+        }, options.timeout)
+      }
+      // 包装组件被卸载时清除定时器
+      onUnmounted(() => clearTimeout(timer))
+
+      // 占位内容
+      const placeholder = { type: Text, children: '' }
+
+      return () => {
+        if (loaded.value) {
+          // 如果异步组件加载成功，渲染该组件
+          return { type: InnerComp }
+        } else if (timeout.value) {
+          // 如果加载超时，并且用户指定 Error 组件，则渲染该组件
+          return options.errorComponent ? { type: options.errorComponent } : placeholder
+        }
+        // 渲染一个占位内容
+        return { type: Text, children: '' }
+      }      
+    }
+  }
+}
+```
+
+整体实现并不复杂，关键点如下：
+
+* 需要一个标志变量来标识异步组件的加载是否已经超时，即 `timeout.value`。
+* 开始加载组件的同时，开启一个定时器进行计时。当加载超时后，将 `timeout.value` 的值设置为 true，代表加载已经超时。这里需要注意的是，当包装组件被卸载时，需要清除定时器。
+* 包装组件根据 loaded 变量的值以及 timeout 变量的值来决定具体的渲染内容。如果异步组件加载成功，则渲染被加载的组件；如果异步组件加载超时，并且用户指定 Error 组件，则渲染 Error 组件。
+
+这样，我们就实现了对加载超时的兼容，以及对 Error 组件的支持。除此之外，我们希望有更加完善的机制来处理异步组件加载过程中发生的错误，超时只是错误的原因之一。基于此，我们还希望为用户提供以下能力。
+
+* 当错误发生时，把错误对象作为 Error 组件的 props 传递过去，以便用户后续能自行进行更细粒度的处理。
+* 除了超时之外，有能力处理其他原因导致的加载错误，例如网络失败等。
+
+为了实现这两个目标，我们需要对代码做一些调整。
+
+```js
+// defineAsyncComponent 函数用于定义一个异步组件，接收一个异步组件加载器作为参数
+function defineAsyncComponent(options) {
+  // options 既可以是配置项，也可以是加载器
+  if (typeof options === 'function') {
+    // 如果是 options 是加载器，将其格式化配置项形式
+    options = {
+      loader: options
+    }
+  }
+
+  const { loader } = options
+
+  // 一个变量，用来存储异步加载的组件
+  let InnerComp = null
+
+  // 返回一个包装组件
+  return {
+    async: 'AsyncComponentWrapper',
+    setup() {
+      // 异步组件是否加载成功
+      const loaded = ref(false)
+      // 代表是否超时，默认为 false
+      const timeout = ref(false)
+      // 定义 error，当错误发生时，用来存储错误对象
+      const error = shallowRef(null)
+
+      // 执行加载器函数，返回一个 Promise 实例
+      // 加载成功后，将加载成功的组件赋值给 InnerComp，并将 loaded 标记为 true，代表加载成功
+      loader()
+        .then(c => {
+          InnerComp = c
+          loaded.value = true
+        })
+        // 添加 catch 语句来捕获加载过程中的错误
+        .catch(err => error.value = err)
+
+      let timer = null
+      if (options.timeout) {
+        // 如果指定超时时长，开启一个定时器
+        timer = setTimeout(() => {
+          // 超时后创建一个错误对象，并赋值给 error.value
+          const err = new Error(`Async component timed out after ${ options.timeout }ms.`)
+          err.value = err
+          // 超时后将 timeout 设置为 true
+          timeout.value = true
+        }, options.timeout)
+      }
+      // 包装组件被卸载时清除定时器
+      onUnmounted(() => clearTimeout(timer))
+
+      // 占位内容
+      const placeholder = { type: Text, children: '' }
+
+      return () => {
+        if (loaded.value) {
+          // 如果异步组件加载成功，渲染该组件
+          return { type: InnerComp }
+        } else if (timeout.value && options.errorComponent) {
+          // 如果加载超时，并且用户指定 Error 组件，则渲染该组件
+          // 同时将 error 作为 props 传递
+          return { type: options.errorComponent, props: { error: error.value } }
+        }
+        // 渲染一个占位内容
+        return { type: Text, children: '' }
+      }      
+    }
+  }
+}
+```
+
+观察上面的代码，我们对之前的实现做了一些调整，首先，为加载器添加 catch 语句来捕获所有加载错误。接着，当加载超时后，我们会创建一个新的错误对象，并将其赋值给 `error.value` 变脸。在组件渲染时，只要 `error.value` 值存在，且用户配置了 `errorComponent` 组件，就直接渲染 `errorComponent` 组件并将 `error.value` 的值作为该组件的 props 传递。这样，用户就可以在自己的 Error 组件上，通过定义名称 error 的 props 来接收错误对象，从而实现细粒度的控制。
+
+> 
+
+##### 延迟与 Loading 组件
+
+异步加载组件受网络影响比较大，加载过程可能很慢，也可能很快。这时我们就会很自然地想到，对于第一种情况，我们能否通过展示 Loading 组件来提供更好的用户体验。这样，用户就不会有 “卡死” 的感觉了。这时一个好想法，但展示 Loading 组件的时机是一个需要仔细考虑的问题。通常，我们会从加载开始的那一刻起就展示 Loading 组件。但在组件状况良好的情况下，异步组件的加载速度会非常快，这会导致 Loading 组件刚完成渲染就立即进入卸载阶段，于是出现闪烁的情况。对于用户来说这是非常不好的体验。体验，我们需要为 Loading 组件设置一个延迟展示的时间。例如，当超过 200 ms 没有完成加载，才展示 Loading 组件。这样，对于在 200 ms 内能够完成加载的情况来说，就避免了闪烁问题的出现。
+
+不过，我们首先要考虑的仍然是用户接口的设计，如下面的代码所示：
+
+```js
+const AsyncComp = defineAsyncComponent({
+  loader: () => import('CompA.vue'),
+  // 延迟 200 ms 展示 Loading 组件
+  delay: 200,
+  // Loading 组件
+  loadingComponent: [
+    setup() {
+      return () => {
+        return { type: 'h2', children: 'Loading...' }
+      }
+    }
+  ]
+})
+```
+
+* delay，用于指定延迟展示的 Loading 组件的时长
+* `loadingComponent`：类似于 `errorComponent` 选项，用来配置 Loading 组件。
+
+用户接口设计完成后，我们就可以着手实现了。
+
+```js
+```
 
 
 
