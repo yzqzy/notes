@@ -261,10 +261,6 @@ function createRenderer(options) {
     if (vnode.type === Fragment) {
       vnode.children.forEach(c => unmount(c))
       return
-    } else if (typeof vnode.type === 'object') {
-      // 对于组件卸载，本质上是要卸载组件所渲染的内容，即 subTree
-      unmount(vnode.component.subTree)
-      return
     }
     const parent = vnode.el.parentNode
     if (parent) {
@@ -302,7 +298,12 @@ function createRenderer(options) {
       } else {
         patchChildren(n1, n2, container)
       }
-    } else if (typeof type === 'object') {
+    } else if (
+      // 有状态组件
+      typeof type === 'object' || 
+      // 函数式组件
+      typeof type === 'function'
+    ) {
       // vnode.type 的值是选项对象，作为组件处理
       if (!n1) {
         // 挂载组件
@@ -315,8 +316,20 @@ function createRenderer(options) {
   }
 
   function mountComponent(vnode, container, anchor) {
+    // 检查是否是函数式组件
+    const isFunctional = typeof vnode.type === 'function'
+
     // 通过 vnode 获取组件的选项对象，即 vnode.type
-    const componentOptions = vnode.type
+    let componentOptions = vnode.type
+
+    if (isFunctional) {
+      // 如果是函数式组件，则将 vnode.type 作为渲染函数，将 vnode.type.props 作为 props 选项定义即可
+      componentOptions = {
+        render: vnode.type,
+        props: vnode.type.props
+      }
+    }
+
     // 获取组件的渲染函数 render
     let {
       render, data, props: propsOption, setup,
@@ -374,7 +387,7 @@ function createRenderer(options) {
     
     // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
     // 将 setupContext 作为第二个参数传递
-    const setupResult = setup(shallowReadonly(instance.props), setupContext)
+    const setupResult = setup && setup(shallowReadonly(instance.props), setupContext)
 
     // 在 setup 函数执行完毕之后，重置当前组件实例
     setCurrentInstance(null)

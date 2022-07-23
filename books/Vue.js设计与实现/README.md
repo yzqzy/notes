@@ -12564,6 +12564,284 @@ function unmount(vnode) {
 
 ##### 重试机制
 
+重试指的是当加载出错时，有能力重新发起加载组件的请求。在加载组件的过程中，发生错误的情况非常常见。尤其是在网络不稳定的情况下。因此，提供开箱即用的重试机制，会提升用户的开发体验。
+
+异步组件加载失败后的重试机制，与请求服务端接口失败后的重试机制一样。所以，我们先来讨论接口请求失败后的重试机制是如何实现的。为此，我们需要封装一个 fetch 函数，用来模拟接口请求：
+
+```js
+function fetch() {
+  return new Promise((resolve, reject) => {
+    // 请求会在 1 秒后失败
+    setTimeout(() => {
+      reject('err')
+    }, 1000)
+  })
+}
+```
+
+假设调用 fetch 函数会发送 HTTP 请求，并且该请求会在 1 秒后失败。为了实现失败后的重试，我们需要封装一个 load 函数，如下面的代码所示：
+
+```js
+// load 函数接收一个 onError 函数
+function load(onError) {
+  // 请求接口，得到 Promise 实例
+  const p = fetch()
+  // 捕获错误
+  return p.catch(err => {
+    // 当错误发生时，返回一个新的 Promise 实例，并调用 onError 回调
+    // 同时将 retry 函数作为 onError 回调的参数
+    return new Promise((reoslve, reject) => {
+      // retry 函数，用来执行重试的函数，执行该函数会重新调用 load 函数并发送请求
+      const retry = () => resolve(load(onError))
+      const fail = () => reject(err)
+      onError(retry, fail)
+    })
+  })
+}
+```
+
+load 函数内部调用了 fetch 函数来发送请求，并得到一个 Promise 实例。接着，添加 catch 语句块来捕获该实例的错误。当捕获到错误时，我们有两种选择：要么抛出错误，要么返回一个新的 Promise 实例，并把该实例的 resolve 和 reject 方法暴露给用户，让用户来决定下一步应该怎么做。这里，我们将新的 Promise 实例的 resolve 和 reject 分别封装为 retry 函数和 fail 函数，并将它们作为 `onError` 回调函数的参数。这样，用户就可以在错误发生时主动选择重试或直接抛出错误。下面的代码展示了用户是如何进行重试加载的。
+
+```js
+// 调用 load 函数加载资源
+load(
+  // onError 回调
+  (retry) => {
+    // 失败后重试
+    retry()
+  }
+).then(res => {
+  // 成功
+  console.log(res)
+})
+```
+
+基于这个原理，我们可以很容易地将它整合到异步组件的加载流程中。具体实现如下：
+
+```js
+// defineAsyncComponent 函数用于定义一个异步组件，接收一个异步组件加载器作为参数
+function defineAsyncComponent(options) {
+  // options 既可以是配置项，也可以是加载器
+  if (typeof options === 'function') {
+    // 如果是 options 是加载器，将其格式化配置项形式
+    options = {
+      loader: options
+    }
+  }
+
+  const { loader } = options
+
+  // 一个变量，用来存储异步加载的组件
+  let InnerComp = null
+
+  // 记录重试次数
+  let retries = 0
+  // 封装 load 函数用来加载异步组件
+  function load() {
+    return loader()
+      // 捕获加载器的错误
+      .catch((error) => {
+        // 如果用户指定了 onError 回调，则将控制权交给用户
+        if (options.onError) {
+          // 返回一个新的 Promise 实例
+          return new Promise((resolve, reject) => {
+            // 重试
+            const retry = () => {
+              resolve(load())
+              retries++
+            }
+            // 失败
+            const fail = () => reject(err)
+            // 作为 onError 回调函数的参数，让用户决定如何处理
+            options.onError(retry, fail, retries)
+          })
+        } else {  
+          throw error
+        }
+      })
+  }
+
+  // 返回一个包装组件
+  return {
+    async: 'AsyncComponentWrapper',
+    setup() {
+      // 异步组件是否加载成功
+      const loaded = ref(false)
+      // 定义 error，当错误发生时，用来存储错误对象
+      const error = shallowRef(null)
+      // 代表是否超时，默认为 false
+      const timeout = ref(false)
+      // 代表是否正在加载，默认为 false
+      const loading = ref(false)
+        
+      let loadingTimer = null
+      // 如果配置项中存在 delay，则开启一个定时器计时
+      if (options.delay) {
+        loadingTimer = setTimeout(() => {
+          loading.value = true
+        }, options.delay)
+      } else {
+        // 如果配置项中没有 delay，则直接标记为加载中
+        loaded.value = true
+      }
+
+      // 执行加载器函数，返回一个 Promise 实例
+      // 加载成功后，将加载成功的组件赋值给 InnerComp，并将 loaded 标记为 true，代表加载成功
+      // loader()
+      //   .then(c => {
+      //     InnerComp = c
+      //     loaded.value = true
+      //   })
+      //   // 添加 catch 语句来捕获加载过程中的错误
+      //   .catch(err => error.value = err)
+      //   // 加载完毕后，无论成功与否都要清除延迟定时器
+      //   .finally(() => {
+      //     loaded.value = false
+      //     clearTimeout(loadingTimer)
+      //   })
+      // 调用 load 函数加载组件
+      load()
+        .then(c => {
+          InnerComp = c
+          loaded.value = true
+        })
+        // 添加 catch 语句来捕获加载过程中的错误
+        .catch(err => error.value = err)
+        // 加载完毕后，无论成功与否都要清除延迟定时器
+        .finally(() => {
+          loaded.value = false
+          clearTimeout(loadingTimer)
+        })
+      
+      // ...
+    }
+  }
+}
+```
+
+如上面的代码及注释所示，其整体思路与普通接口请求的重试机制类似。
+
+#### 函数式组件
+
+函数式组件的实现相对容易。一个函数式组件本质上就是一个普通函数，该函数的返回值是虚拟 DOM。之前我们提到过：“在 Vue.js 3 中使用函数式组件，主要是因为它的简单性，而不是因为它的性能好”。这是因为在 Vue.js 3 中，即使是有状态组件，其初始化性能消耗也非常小。
+
+在用户接口层面，一个函数式组件就是一个返回虚拟 DOM 的函数。
+
+```js
+function MyFuncComp(props) {
+  return { type: 'h1', children: props.title }
+}
+```
+
+函数式组件没有自身状态，但它仍然可以接收由外部传入的 props。为了给函数式组件定义 props，我们需要在组件函数上添加静态的 props 属性。
+
+```js
+function MyFuncComp(props) {
+  return { type: 'h1', children: props.title }
+}
+
+// 定义 props
+MyFuncComp.props = {
+  title: String
+}
+```
+
+在有状态组件的基础上，实现函数式组件将变得很容易，因为挂载组件的逻辑可以复用 `mountComponent` 函数。为此，我们只需要在 patch 函数内支持函数类型的 `vnode.type` 。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+		// ...
+  } else if (type === Text) {
+		// ...
+  } else if (type === Fragment) {
+		// ...
+  } else if (
+    // 有状态组件
+    typeof type === 'object' || 
+    // 函数式组件
+    typeof type === 'function'
+  ) {
+    // vnode.type 的值是选项对象，作为组件处理
+    if (!n1) {
+      // 挂载组件
+      mountComponent(n2, container, anchor)
+    } else {
+      // 更新组件
+      patchComponent(n1, n2, anchor)
+    }
+  }
+}
+```
+
+在 patch 函数内部，通过检测 `vnode.type` 的类型来判断组件类型：
+
+* 如果 `vnode.type` 是一个对象，则它是一个有状态组件，并且 `vnode.type` 是组件选项对象；
+* 如果 `vnode.type` 是一个函数，则它是一个函数式组件。
+
+无论有状态组件，还是函数式组件，我们都可以通过 `mountComponent` 函数来完成挂载，也都可以通过 `patchComponent` 函数来完成更新。
+
+下面是修改后的 `mountComponent` 函数，它支持挂载函数式组件。
+
+```js
+function mountComponent(vnode, container, anchor) {
+  // 检查是否是函数式组件
+  const isFunctional = typeof vnode.type === 'function'
+
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  let componentOptions = vnode.type
+
+  if (isFunctional) {
+    // 如果是函数式组件，则将 vnode.type 作为渲染函数，将 vnode.type.props 作为 props 选项定义即可
+    componentOptions = {
+      render: vnode.type,
+      props: vnode.type.props
+    }
+  }
+
+  // ...
+  
+  // setupContext
+  const setupContext = { attrs, emit, slots }
+
+  // 调用 setup 函数之前，设置当前组件实例
+  setCurrentInstance(instance)
+  
+  // 调用 setup 函数，将只读版本的 props 作为第一个参数传递，避免用户意外地修改 props 的值
+  // 将 setupContext 作为第二个参数传递
+  const setupResult = setup && setup(shallowReadonly(instance.props), setupContext)
+
+  // 在 setup 函数执行完毕之后，重置当前组件实例
+  setCurrentInstance(null)
+
+  // setupState 用来存储由 setup 返回的数据
+  let setupState = null
+  // 如果 setup 函数的返回值是函数，则将其作为渲染函数
+  if (typeof setupResult === 'function') {
+    if (render) console.error('setup 函数返回渲染函数，render 选项将被忽略')
+    // 将 setupResult 作为渲染函数
+    render = setupResult
+  } else {
+    // 如果 setup 的返回值不是函数，则作为数据状态赋值给 setupState
+    setupState = setupResult
+  }
+
+  // 将组件实例设置到 vnode 上，用于后续更新
+  vnode.component = instance
+	
+  // ...
+}
+```
+
+可以看到，实现对函数式组件的兼容非常简单。首先，在 `mountComponent` 函数内检查组件的类型，如果是函数式组件，则直接将组件函数作为组件选项对象的 render 选项，并将组件函数的静态 props 属性作为组件的 props 选项即可，其他逻辑保持不变。当然，出于更加严谨的考虑，我们需要通过 `isFunctional` 变量选择性地执行初始化逻辑，因为对于函数式组件来说，它无需初始化 data 以及生命周期钩子。从这一点可以看出，函数式组件的初始化性能消耗小于有状态组件。
+
 
 
 ## 五、编译器
