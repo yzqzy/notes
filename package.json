@@ -9,7 +9,10 @@
   },
   "scripts": {
     "cz": "git add ./ &&　git cz",
-    "postcz": "git push"
+    "postcz": "git push",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs"
   },
   "repository": {
     "type": "git",
@@ -24,15 +27,13 @@
   "homepage": "https://github.com/yw0525/notes#readme",
   "devDependencies": {
     "commitizen": "^4.2.4",
-    "cz-conventional-changelog": "^3.3.0"
+    "cz-conventional-changelog": "^3.3.0",
+    "vitepress": "^1.0.0-alpha.4"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "dependencies": {
-    "create-react-app": "^5.0.1",
-    "global": "^4.4.0"
-  }
+  "dependencies": {}
 }
