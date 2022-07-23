@@ -12413,7 +12413,7 @@ function defineAsyncComponent(options) {
 
 观察上面的代码，我们对之前的实现做了一些调整，首先，为加载器添加 catch 语句来捕获所有加载错误。接着，当加载超时后，我们会创建一个新的错误对象，并将其赋值给 `error.value` 变脸。在组件渲染时，只要 `error.value` 值存在，且用户配置了 `errorComponent` 组件，就直接渲染 `errorComponent` 组件并将 `error.value` 的值作为该组件的 props 传递。这样，用户就可以在自己的 Error 组件上，通过定义名称 error 的 props 来接收错误对象，从而实现细粒度的控制。
 
-> 
+> [代码地址](https://github.com/yw0525/notes/blob/master/books/Vue.js%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/component_async/index01.js)
 
 ##### 延迟与 Loading 组件
 
@@ -12443,7 +12443,126 @@ const AsyncComp = defineAsyncComponent({
 用户接口设计完成后，我们就可以着手实现了。
 
 ```js
+// defineAsyncComponent 函数用于定义一个异步组件，接收一个异步组件加载器作为参数
+function defineAsyncComponent(options) {
+  // options 既可以是配置项，也可以是加载器
+  if (typeof options === 'function') {
+    // 如果是 options 是加载器，将其格式化配置项形式
+    options = {
+      loader: options
+    }
+  }
+
+  const { loader } = options
+
+  // 一个变量，用来存储异步加载的组件
+  let InnerComp = null
+
+  // 返回一个包装组件
+  return {
+    async: 'AsyncComponentWrapper',
+    setup() {
+      // 异步组件是否加载成功
+      const loaded = ref(false)
+      // 定义 error，当错误发生时，用来存储错误对象
+      const error = shallowRef(null)
+      // 代表是否超时，默认为 false
+      const timeout = ref(false)
+      // 代表是否正在加载，默认为 false
+      const loading = ref(false)
+        
+      let loadingTimer = null
+      // 如果配置项中存在 delay，则开启一个定时器计时
+      if (options.delay) {
+        loadingTimer = setTimeout(() => {
+          loading.value = true
+        }, options.delay)
+      } else {
+        // 如果配置项中没有 delay，则直接标记为加载中
+        loaded.value = true
+      }
+
+      // 执行加载器函数，返回一个 Promise 实例
+      // 加载成功后，将加载成功的组件赋值给 InnerComp，并将 loaded 标记为 true，代表加载成功
+      loader()
+        .then(c => {
+          InnerComp = c
+          loaded.value = true
+        })
+        // 添加 catch 语句来捕获加载过程中的错误
+        .catch(err => error.value = err)
+        // 加载完毕后，无论成功与否都要清除延迟定时器
+        .finally(() => {
+          loaded.value = false
+          clearTimeout(loadingTimer)
+        })
+
+      let timer = null
+      if (options.timeout) {
+        // 如果指定超时时长，开启一个定时器
+        timer = setTimeout(() => {
+          // 超时后创建一个错误对象，并赋值给 error.value
+          const err = new Error(`Async component timed out after ${ options.timeout }ms.`)
+          err.value = err
+          // 超时后将 timeout 设置为 true
+          timeout.value = true
+        }, options.timeout)
+      }
+      // 包装组件被卸载时清除定时器
+      onUnmounted(() => clearTimeout(timer))
+
+      // 占位内容
+      const placeholder = { type: Text, children: '' }
+
+      return () => {
+        if (loaded.value) {
+          // 如果异步组件加载成功，渲染该组件
+          return { type: InnerComp }
+        } else if (timeout.value && options.errorComponent) {
+          // 如果加载超时，并且用户指定 Error 组件，则渲染该组件
+          // 同时将 error 作为 props 传递
+          return { type: options.errorComponent, props: { error: error.value } }
+        } else if (loaded.value && options.loadingComponent) {
+          // 如果异步组件正在加载，并且用户指定了 Loading 组件，则渲染 Loading 组件
+          return { type: options.loadingComponent }
+        }
+        // 渲染一个占位内容
+        return { type: Text, children: '' }
+      }      
+    }
+  }
+}
 ```
+
+整体实现思路类似于超时时长与 Error 组件，有以下几个关键点：
+
+* 需要一个标记变量 loading 来代表组件是否正在加载；
+* 如果用户指定了延迟时间，则开启延迟定时器。定时器到时后，再将 `loading.value` 的值设置为 true；
+* 无论组件加载成功与否，都要清除延迟定时器，否则会出现组件已经加载成功，但仍然展示 Loading 组件的问题；
+* 在渲染函数中，如果组件正在加载，并且用户指定了 Loading 组件，则渲染该 Loading 组件。
+
+另外有一点需要注意，在异步组件加载成功后，会卸载 Loading 组件并渲染异步加载的组件。为了支持 Loading 组件的加载，我们需要修改 unmount 函数。
+
+```,js
+function unmount(vnode) {
+  if (vnode.type === Fragment) {
+    vnode.children.forEach(c => unmount(c))
+    return
+  } else if (typeof vnode.type === 'object') {
+    // 对于组件卸载，本质上是要卸载组件所渲染的内容，即 subTree
+    unmount(vnode.component.subTree)
+    return
+  }
+  const parent = vnode.el.parentNode
+  if (parent) {
+    parent.removeChild(vnode.el)
+  }
+}
+```
+
+对于组件的卸载，本质上是要卸载组件所渲染的内容，即 `subTree`。所以在上面的代码中，我们通过组件实例的 `vnode.component` 属性得到组件实例，再递归地调用 `unmount` 函数完成 `vnode.component.subTree` 的卸载。
+
+##### 重试机制
 
 
 
