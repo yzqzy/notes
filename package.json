@@ -10,6 +10,7 @@
   "scripts": {
     "cz": "git add ./ &&　git cz",
     "postcz": "git push",
+    "predocs": "npx ts-node ./build/compiler.ts",
     "docs": "vitepress dev docs"
   },
   "repository": {

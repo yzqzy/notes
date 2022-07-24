@@ -122,6 +122,7 @@ const genrateSidebarConfig = (sideber: Sidebar) => {
       child && child.text === 'README.md'
     ) {
       _sidebar.link = child.link
+      child.text = _sidebar.text
       return;
     }
     
