@@ -17,7 +17,7 @@ jobs:
       - run: yarn install --frozen-lockfile
 
       - name: Pre Build
-        run: yarn compiler
+        run: yarn compile
 
       - name: Build
         run: yarn docs:build
