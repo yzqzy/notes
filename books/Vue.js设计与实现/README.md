@@ -13219,6 +13219,281 @@ Vue.js 当前所采用的修剪策略叫做 “最新一次访问（LRU 缓存�
 
 我们还可以换一种切换组件的方式。
 
+* 初始渲染 `Comp1` 并缓存它。此时，缓存队列为：`[Comp1]`，并且最新一次访问（或渲染）的组件是 `Comp1`。
+* 切换到 `Comp2` 并缓存它。此时缓存队列为：`[Comp1, Comp2]`，并且最新一次访问（或渲染）的组件是 `Comp2`。
+* 在切换回 `Comp1`，由于 `Comp1` 已经在缓存队列中，所以不需要修剪缓存，只需要激活组件即可，但要将最后一次渲染的组件设置为 `Comp1`。
+* 切换到 `Comp3`，此时缓存容量已满，需要修剪。由于 `Comp1` 是最新一次渲染的，它不会被修剪掉。最后被修剪掉的是 `Comp2`。于是，现在的缓存队列是：`[Comp1, Comp3]`，并且最新一次渲染的组件变成了 `Comp3`。
+
+可以看到，在不同的模拟策略下，最终的缓存结果会有所不同。“最新一次访问” 的缓存策略的核心在于，需要把当前访问（或渲染）的组件作为最新一次渲染的组件，并且该组件在缓存修剪过程中始终是安全的。
+
+实现 Vue.js 内建的缓存策略并不难。我们的关注点在于，缓存策略是否可以改变？甚至允许用户自定义缓存策略？实际上，在 Vue.js 官方的 RFCs 中已经有相关提议。该提议允许用户实现自定义的缓存策略，在用户接口层面，则体现在 KeepAlive 组件新增了 cache 接口，允许用户指定缓存实例。
+
+```vue
+<KeepAlive :cache="cache">
+	<Comp />
+</KeepAlive>
+```
+
+缓存实例需要满足固定的格式，一个基本的缓存实例的实现如下：
+
+```typescript
+const _cache = new Map()
+const cache: KeepAliveCache = {
+  get(key) {
+    _cache.get(key)
+  },
+  set(key, value) {
+    _cache.set(key, value)
+  },
+  delete(key) {
+    _cache.delete(key)
+  },
+  forEach(fn) {
+    _cache.forEach(fn)
+  }
+}
+```
+
+在 KeepAlive 组件的内部实现中，如果用户提供了自定义的缓存实例，则直接使用该缓存实例来管理缓存。从本质上来说，这等价于将缓存的管理权限从 KeepAlive 组件转交给用户了。
+
+#### Teleport 组件的实现原理
+
+##### Teleport 组件要解决的问题
+
+Teleport 组件是 Vue.js 3 新增的一个内建组件，我们首先讨论它要解决的问题是什么。通常情况下，在将虚拟 DOM 渲染为真实 DOM 时，最终渲染出来的真实 DOM 的层级结构与虚拟 DOM 的层级结构一致。以下面的模板为例：
+
+```vue
+<template>
+	<div id="box" style="z-index: -1;">
+    <Overlay />
+  </div>
+</template>
+```
+
+在这段模板中，`<Overlay>` 组件的内容会被渲染到 id 为 box 的 div 标签下。然而，有时这并不是我们所期望的。假设 `<Overlay>` 组件是一个 “蒙层” 组件，该组件会渲染一个 “蒙层”，并要求 “蒙层” 能够遮挡页面上的任何元素。但问题是，如果 `<Overlay>`  组件的内容无法跨越 DOM 层级渲染，就无法实现这个目标。还是拿上面这段模板来说，id 为 box 的 div 标签拥有一段内联样式：`z-index: -1`， 这会导致即使我们将 `<Overlay>` 组件所渲染内容的 `z-index` 值设置为无穷大，也无法实现遮挡功能。
+
+通常，我们在面对上述长江，会选择直接在 `<body>` 标签下渲染 “蒙层” 内容。在 Vue.js 2 中我们只能通过原生 DOM API 来手动搬运 DOM 元素实现需求。这么做的缺点在于，手动操作 DOM 元素会使得元素的渲染与 Vue.js 的渲染机制脱节，并导致各种可预见或不可预见的问题。考虑到该需求确实非常常见，用户也对此抱有迫切的期待，于是 Vue.js 3 内建了 `Teleport` 组件。该组件可以将指定内容渲染到特定容器中，而不受 DOM 层级的限制。
+
+我们先来看看 Teleport 组件是如何解决这个问题的。以下是基于 Teleport 组件实现的 `<Overlay>` 组件的模板。
+
+```vue
+<template>
+	<Teleport to="body">
+  	<div class="overlay"></div>
+  </Teleport>
+</template>
+
+<style scoped>
+  .overlay {
+    z-index: 9999;
+  }
+</style>
+```
+
+可以看到，`<Overlay>` 组件要渲染的内容都包含在 `Teleport` 组件内，即作为 `Teleport` 组件的插槽。通过为 `Teleport` 组件指定渲染目标 body，即 to 属性的值，该组件就会直接把它的插槽内容渲染到 body 下，而不会按照模板的 DOM 层级来渲染，于是就实现了跨 DOM 层级的渲染。最终，`<Overlay>` 组件的 `z-index` 值也会按预期工作，并遮挡页面中的所有内容。
+
+##### 实现 Teleport 组件
+
+与 KeepAlive 组件一样，Teleport 组件也需要渲染器的底层支持。首先我们要将 `Teleport` 组件的渲染逻辑从渲染器中分离出来，这么做有两点好处：
+
+* 可以避免渲染器代码 “膨胀”；
+* 当用户没有使用 `Teleport` 组件时，由于 `Teleport` 的渲染逻辑被分离，因此可以利用 `Tree-Shaking` 机制在最终的 bundle 中删除 `Teleport` 相关的diamagnetic，使得最终构建包的体积变小。
+
+为了完成逻辑分离的操作，我们需要修改 patch 函数。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+ 		// ...
+  } else if (type === Text) {
+		// ...
+  } else if (type === Fragment) {
+		// ...
+  } else if (typeof type === 'object' && type.__isTeleport) {
+    // 组件选项中如果存在 __isiTeleport 标识，则它是 Teleport 组件
+    // 调用 Teleport 组件选项中的 process 函数将控制权交接出去
+    // 传递给 process 函数的第五个参数是渲染器的一些内部方法
+    type.process(n1, n2, container, anchor, {
+      patch,
+      patchChildren,
+      unmount,
+      move(vnode, container, anchor) {
+        insert(vnode.component ? vnode.component.subTree.el : vnode.el, container, anchor)
+      }
+    })
+  } else if (typeof type === 'object' || typeof type === 'function') {
+    // ...
+  }
+}
+```
+
+可以看到，我们通过组件选项的 `__isTeleport` 标识来判断该组件是否是 `Teleport` 组件。如果是，则直接调用组件选项中定义的 `process` 函数将渲染控制权完全交接出去，这样就实现了渲染逻辑的分离。
+
+Teleport 组件的定义如下：
+
+```js
+const Teleport = {
+  __isTeleport: tree,
+  process(n1, n2, container, anchor) {
+    // 处理渲染逻辑
+  }
+}
+```
+
+可以看到，Teleport 组件并非普通组件，它有特殊的选项 `__isTeleport` 和 `process`。
+
+接下来我们设计虚拟 DOM 的结构。假设用户编写的模板如下：
+
+```vue
+<Teleport to="body">
+	<h1>Title</h1>
+  <p>content</p>
+</Teleport>
+```
+
+那么它应该被编译为怎么的虚拟 DOM 呢？虽然在用户看来 `Teleport` 是一个内建组件，但实际上，`Teleport` 是否拥有组件的性质是由框架本身决定的。通常，一个组件的子节点会被编译为插槽内容，不过对于 `Teleport` 组件来说，直接将其子节点编译为一个数组即可。
+
+```js
+function render() {
+  return {
+    type: Teleport,
+    // 普通 children 的形式代表被 Teleport 的内容
+    children: [
+      { type: 'h1', children: 'Title' },
+      { type: 'p', children: 'content' }
+    ]
+  }
+}
+```
+
+设计好虚拟 DOM 的结构后，我们就可以着手实现 Teleport 组件了。首先，我们来完成 Teleport 组件的挂载动作。
+
+```js
+const Teleport = {
+  __isTeleport: tree,
+  process(n1, n2, container, anchor, internals) {
+    // 通过 internals 参数取得渲染器的内部方法
+    const { patch } = internals
+    // 如果旧 VNode n1 不存在，则是全新的挂载，否则执行更新
+    if (!n1) {
+      // 挂载
+      // 获取容器，即挂载点
+      const target = typeof n2.props.to === 'string' 
+        ? document.querySelector(n2.props.to)
+        : n2.props.to
+      // 将 n2.children 渲染到指定挂载点即可
+      n2.children.forEach(c => patch(null, c, target, anchor))
+    } else {
+      // 更新
+    }
+  }
+}
+```
+
+可以看到，即使 `Teleport` 渲染逻辑被单独分离分出，它的渲染思路仍然与渲染器本身的渲染思路保持一致。通过判断旧的虚拟节点（`n1`）是否存在，来决定执行挂载还是执行更新。如果要执行挂载，则需要根据 `props.to` 属性的值来取得真正的挂载点。最后，遍历 `Teleport` 组件的 children 属性，并逐一调用 patch 函数完成子节点的挂载。
+
+更新的处理更加简单，如下面的代码所示：
+
+```js
+const Teleport = {
+  __isTeleport: tree,
+  process(n1, n2, container, anchor, internals) {
+    // 通过 internals 参数取得渲染器的内部方法
+    const { patch, patchChildren } = internals
+    // 如果旧 VNode n1 不存在，则是全新的挂载，否则执行更新
+    if (!n1) {
+      // 挂载
+			// ...
+    } else {
+      // 更新
+      patchChildren(n1, n2, container)
+    }
+  }
+}
+```
+
+只需要调用 `patchChildren` 函数来完成更新操作即可。不过有一点需要额外注意，更新操作可能是由于 `Teleport` 组件的 to 属性值的变化引起的，因此，在更新时我们应该考虑这种情况。
+
+```js
+const Teleport = {
+  __isTeleport: tree,
+  process(n1, n2, container, anchor, internals) {
+    // 通过 internals 参数取得渲染器的内部方法
+    const { patch, patchChildren } = internals
+    // 如果旧 VNode n1 不存在，则是全新的挂载，否则执行更新
+    if (!n1) {
+      // 挂载
+      // 获取容器，即挂载点
+      const target = typeof n2.props.to === 'string' 
+        ? document.querySelector(n2.props.to)
+        : n2.props.to
+      // 将 n2.children 渲染到指定挂载点即可
+      n2.children.forEach(c => patch(null, c, target, anchor))
+    } else {
+      // 更新
+      patchChildren(n1, n2, container)
+      // 如果新旧 to 参数的值不同，则需要对内容进行移动
+      if (n2.props.to !== n1.props.to) {
+        // 获取新的容器
+        const newTarget = typeof n2.props.to === 'string' 
+          ? document.querySelector(n2.props.to)
+          : n2.props.to
+        // 移动到新的容器
+        n2.children.forEach(c => move(c, newTarget))
+      }
+    }
+  }
+}
+```
+
+用来执行移动操作的 move 函数的实现如下：
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+ 		// ...
+  } else if (type === Text) {
+		// ...
+  } else if (type === Fragment) {
+ 		// ...
+  } else if (typeof type === 'object' && type.__isTeleport) {
+		// ...
+  } else if (typeof type === 'object' || typeof type === 'function') {
+    // vnode.type 的值是选项对象，作为组件处理
+    if (!n1) {
+      if (n2.keptAlive) {
+        // 如果该组件已经被 KeptAlive，则不会重新挂载，而是调用 _activate 激活组件
+        n2.keepAliveInstance._activate(n2, container, anchor)
+      } else {
+        // 挂载组件
+        mountComponent(n2, container, anchor)
+      }
+    } else {
+      // 更新组件
+      patchComponent(n1, n2, anchor)
+    }
+  }
+}
+```
+
+在上面的代码中，我们只考虑了移动组件和普通元素。我们知道，虚拟节点的类型有很多种，例如文本类型（Text）、片段类型（Fragment）等。一个完善的实现应该考虑所有这些虚拟节点的类型。
+
+#### Transition 组件的实现原理
+
 
 
 ## 五、编译器
