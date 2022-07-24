@@ -12541,7 +12541,7 @@ function defineAsyncComponent(options) {
 
 另外有一点需要注意，在异步组件加载成功后，会卸载 Loading 组件并渲染异步加载的组件。为了支持 Loading 组件的加载，我们需要修改 unmount 函数。
 
-```,js
+```js
 function unmount(vnode) {
   if (vnode.type === Fragment) {
     vnode.children.forEach(c => unmount(c))
@@ -12862,6 +12862,362 @@ function mountComponent(vnode, container, anchor) {
 最后，我们讨论了函数式组件。它本质上一个函数，其内部实现逻辑可以复用有状态组件的实现逻辑。为了给函数式组件定义 props，我们允许开发者在函数式组件的主函数上添加静态的 props 属性。处于更加严谨的考虑，函数式组件没有自身状态，也没有生命周期的概念。所以，在初始化函数式组件时，需要选择性地复用有状态组件的初始化逻辑。
 
 ### 内建组件和模块
+
+前几篇文章，我们讨论了 Vue.js 是如何基于渲染器实现组件化能力的。本篇文章我们将继续讨论 Vue.js 中几个非常重要的内建组件和模块，例如 `KeeyAlive` 组件、`Teleport` 组件、`Transition` 组件等，它们都需要渲染器级别的底层支持。另外，这些内建组件所带来的能力，对开发者而言非常重要且使用，理解它们的工作原理有助于我们正确地使用它们。
+
+#### KeepAlive 组件的实现原理
+
+##### 组件的激活与失活
+
+KeepAlive 一词借鉴于 HTTP 协议。在 HTTP 协议中，KeepAlive 又称 HTTP 持久连接（HTTP persistent connection），其作用是允许多个请求或响应共用一个 TCP 连接。在没有 KeepAlive 的情况下，一个 HTTP 连接会在每次请求/响应结束后关闭，当下一次请求发生时，会建立一个新的 HTTP 连接。频繁地销毁、创建 HTTP 链接会带来额外的性能开销，KeepAlive 就是为了解决这个问题而生的。
+
+HTTP 中的 KeepAlive 可以避免连接频繁地销毁/创建，与 HTTP 中的 KeepAlive 类似，Vue.js 内建的 KeepAlive 组件可以避免一个组件被频繁地销毁/重建。假设我们的页面中有一组 `<Tab>` 组件，如下面的代码所示：
+
+```vue
+<template>
+  <Tab v-if="currentTab === 1">...</Tab>
+  <Tab v-if="currentTab === 2">...</Tab>
+  <Tab v-if="currentTab === 3">...</Tab>
+</template>
+```
+
+可以看到，根据变量 `currentTab` 值的不同，会渲染不同的 `<Tab>` 组件。用用户频繁地切换 Tab 时，会导致不停地卸载并重建对应的 `<Tab>` 组件。为了避免因此产生的性能开销，可以使用 `KeepAlive` 组件来解决这个问题。
+
+```vue
+<template>
+  <KeepAlive>
+    <Tab v-if="currentTab === 1">...</Tab>
+    <Tab v-if="currentTab === 2">...</Tab>
+    <Tab v-if="currentTab === 3">...</Tab>
+  </KeepAlive>
+</template>
+```
+
+这样，无论用户怎么切换 `<Tab>` 组件，都不会发生频繁地创建和销毁，因而会极大地优化对用户操作的响应，尤其是在大组件场景下，优势会更加明显。那么，KeepAlive 组件的实现原理是怎样的呢？其实 KeepAlive 组件的本质是缓存管理，再加上特殊的挂载/卸载逻辑。
+
+首先，KeepAlive 组件的实现需要渲染器层面的支持。这是因为被 KeepAlive 的组件在卸载时，并不是真正卸载，否则就无法维持组件的当前状态。正确的做法是，将被 KeepAlive 的组件从原容器搬运到另一个隐藏的容器中，实现 “假卸载”。当被搬运到隐藏容器中的组件需要再次被 “挂载” 时，我们也不能执行真正的挂载逻辑，而是应该把该组件从隐藏容器中再搬运到原容器中。这个过程对应组件的生命周期分别是 `activated` 和 `deactivated`。
+
+一个最基本的 KeepAlive 组件实现起来并不复杂，如下面的代码所示：
+
+```js
+const KeepAlive = {
+  // KeepAlive 组件独有的属性，用作标识
+  _isKeepAlive: true,
+  setup(props, { slots }) {
+    // 创建一个缓存对象
+    // key：vnode.type
+    // value：vnode
+    const cache = new Map()
+    // 当前 KeepAlive 组件的实例
+    const instance = curentInstance
+    // 对于 KeepAlive 组件来说，它的实例上存在特殊的 KeepAliveCtx 对象，该对象由渲染器注入
+    // 该对象会暴露渲染器的一些内部方法，其中 move 函数用来将一段 DOM 移动到另一个容器中
+    const { move, createElement } = instance.KeepAliveCtx
+
+    // 创建隐藏容器
+    const storageContainer = createElement('div')
+
+    // KeepAlive 组件的实例上会被添加两个内部函数，分别是 _deActivate 和 _activate
+    // 这两个函数会在渲染器中调用
+    instance._deActivate = (vnode) => {
+      move(vnode, storageContainer)
+    }
+    instance._activate = (vnode, container, anchor) => {
+      move(vnode, container, anchor)
+    }
+
+    return () => {
+      // KeepAlive 的默认插槽就是要被 KeepAlive 的组件
+      let rawVNode = slots.default()
+      // 如果不是组件，直接渲染即可，因为非组件的虚拟节点无法被 KeepAlive
+      if (typeof rawVNode.type !== 'object') {
+        return rawVNode
+      }
+
+      // 挂载时先获取缓存的组件 vnode
+      const cachedVNode = cache.get(rawVNode.type)
+
+      if (cachedVNode) {
+        // 如果有缓存的内容，则说明不应该执行挂载，而应该执行激活
+        // 继承组件实例
+        rawVNode.component = cachedVNode.component
+        // 在 vnode 上添加 keptAlive 属性，标记为 true，避免渲染器重新挂载它
+        rawVNode.KeptAlive = true
+      } else {
+        // 如果没有缓存，则将其添加到缓存中，这样下次激活组件就不会执行新的挂载操作了
+        cache.set(rawVNode.type, rawVNode)
+      }
+
+      // 在组件 vnode 上添加 shouldKeepAlive 属性，并标记为 true，避免渲染器将组件卸载
+      rawVNode.shouldKeepAlive = true
+      // 将 keepAlive 组件的实例也添加到 vnode 上，以便在渲染器中访问
+      rawVNode.KeepAliveInstance = instance
+
+      // 渲染组件 vnode
+      return rawVNode
+    }
+  }
+}
+```
+
+从上面的实现中可以看到，与普通组件的一个较大的区别在于，KeepAlive 组件与渲染器的结合非常深。首先，KeepAlive 组件本身并不会渲染额外的内容，它的渲染函数最终只返回需要被 KeepAlive 的组件，我们把这个需要被 KeepAlive 的组件称为 “内部组件”。KeepAlive 会对 “内部组件” 进行操作，主要是在 “内部组件” 的 vnode 对象上添加一些标记属性，以便渲染器能够据此执行特定的逻辑。这些标记属性包括如下几个：
+
+* `shouldKeepAlive`：改属性会被添加到 "内部组件" 的 vnode 对象上，这样当渲染器卸载 “内部组件” 时，可以通过检查该属性得知 “内部组件” 需要被 KeepAlive。于是，渲染器就不会真的卸载 “内部组件“，而是会调用 `_deActivate` 函数完成搬运工作。
+
+  ```js
+  function unmount(vnode) {
+    if (vnode.type === Fragment) {
+      vnode.children.forEach(c => unmount(c))
+      return
+    } else if (typeof vnode.type === 'object') {
+      if (vnode.shouldKeepAlive) {
+        // 对于需要被 KeepAlive 的组件，不应该真正卸载它，而是调用该组件的父组件
+        // 即 KeepAlive 组件的 _deActivate 函数使其失活
+        vnode.keepAliveInstance._deActivate(vnode)
+      } else {
+        // 对于组件卸载，本质上是要卸载组件所渲染的内容，即 subTree
+        unmount(vnode.component.subTree)
+      }
+      return
+    }
+    const parent = vnode.el.parentNode
+    if (parent) {
+      parent.removeChild(vnode.el)
+    }
+  }
+  ```
+
+  可以看到，unmount 函数在卸载组件时，会检测组件是否应该被 `KeepAlive`，从而执行不同的操作。
+
+* `KeepAliveInstance`：”内部组件“ 的 vnode 对象会持有 KeepAlive 组件实例，在 unmount 函数中会通过 `KeepAliveInstance` 来访问 `_deActivate` 函数。
+
+* `KeptAlive`：”内部组件“ 如果已经被缓存，则还会为其添加一个 `keptAlive` 标记。这样当 ”内部组件“ 需要重新渲染时，渲染器并不会重新挂载它，而是会将其激活，如下面 patch 函数的代码所示：
+
+  ```js
+  function patch(n1, n2, container, anchor) {
+    if (n1 && n1.type !== n2.type) {
+      unmount(n1)
+      n1 = null
+    }
+  
+    const { type } = n2
+  
+    if (typeof type === 'string') {
+    	// ...
+    } else if (type === Text) {
+    	// ...
+    } else if (type === Fragment) {
+    	// ...
+    } else if (typeof type === 'object' || typeof type === 'function') {
+      // vnode.type 的值是选项对象，作为组件处理
+      if (!n1) {
+        if (n2.keptAlive) {
+          // 如果该组件已经被 KeptAlive，则不会重新挂载，而是调用 _activate 激活组件
+          n2.keepAliveInstance._activate(n2, container, anchor)
+        } else {
+          // 挂载组件
+          mountComponent(n2, container, anchor)
+        }
+      } else {
+        // 更新组件
+        patchComponent(n1, n2, anchor)
+      }
+    }
+  }
+  
+  ```
+
+可以看到，如果组件的 vnode 对象中存在 `KeptAlive` 标识，渲染器不会重新挂载它，而是会通过 `keepAliveInstance._activate` 函数来激活它。
+
+我们再来看一下用于激活组件和失活组件的两个函数：
+
+```js
+// 对于 KeepAlive 组件来说，它的实例上存在特殊的 KeepAliveCtx 对象，该对象由渲染器注入
+// 该对象会暴露渲染器的一些内部方法，其中 move 函数用来将一段 DOM 移动到另一个容器中
+const { move, createElement } = instance.KeepAliveCtx
+
+// 创建隐藏容器
+const storageContainer = createElement('div')
+
+// KeepAlive 组件的实例上会被添加两个内部函数，分别是 _deActivate 和 _activate
+// 这两个函数会在渲染器中调用
+instance._deActivate = (vnode) => {
+  move(vnode, storageContainer)
+}
+instance._activate = (vnode, container, anchor) => {
+  move(vnode, container, anchor)
+}
+```
+
+可以看到，失活的本质就是将组件所渲染的内容移动到隐藏容器中，激活的本质是将组件所渲染的内容从隐藏容器中搬运回原来的容器。另外，上面这段代码所涉及的 move 函数是由渲染器注入的。
+
+```js
+
+function mountComponent(vnode, container, anchor) {
+  // 通过 vnode 获取组件的选项对象，即 vnode.type
+  const componentOptions = vnode.type
+  // 获取组件的渲染函数 render
+  let {
+    render, data, props: propsOption, setup,
+    beforeCreate, created, beforeMount, mounted, beforeUpdate, updated
+  } = componentOptions
+	
+  // ...
+
+  // 定义组件实例，一个组件实例本质上就是一个对象，它包含与组件有关的状态信息
+  const instance = {
+    // 组件自身的状态数据，即 data
+    state,
+    // 将解析出的 props 数据包装为 shallowReative 并定义到组件实例上
+    props: shallowReactive(props),
+    // 一个布尔值，用来表示组件是否已经被挂载，初始值为 false
+    isMounted: false,
+    // 组件所渲染的内容，即子树（subTree）
+    subTree: null,
+    // 将插槽添加到组件实例上
+    slots,
+    // 组件实例中添加 mounted 数组，用来存储通过 onMounted 函数注册的生命周期钩子函数
+    mounted: [],
+    // 只有 KeepAlive 组件的实例下会有 keepAliveCtx 属性
+    keepAliveCtx: null
+  }
+
+  // 检查当前要挂载的组件是否是 KeepAlive 组件
+  const isKeepAlive = vnode.type._isKeepAlive
+  if (isKeepAlive) {
+    // 在 KeepAlive 组件实例上添加 KeepAliveCtx 对象
+    instance.keepAliveCtx = [
+      // 用来移动 vnode
+      move(vnode, container, anchor) {
+        // 本质上是将组件渲染的内容移动到指定容器中，隐藏在容器中
+        insert(vnode.component.subTree.el, container, anchor)
+      },
+      createElement
+    ]
+  }
+	
+	// ...
+}
+```
+
+至此，一个最基本的 KeepAlive 组件就完成了。
+
+##### include 和 exclude
+
+在默认情况下，KeepAlive 组件会对所有 ”内部组件“ 进行缓存。但有时候用户期望只缓存特定组件。为了使用户能够自定义缓存规则，我们需要让 KeepAlive 组件支持两个 props，分别是 include 和 exclude。其中，include 用来显式地配置应该被缓存的组件，exclude 用来显式地配置不应该被缓存的组件。
+
+KeepAlive 组件的 props 定义如下：
+
+```js
+const KeepAlive = {
+  // KeepAlive 组件独有的属性，用作标识
+  _isKeepAlive: true,
+  // 定义 include 和 exclude
+  props: {
+    include: RegExp,
+    exclude: RegExp
+  },
+  setup(props, { slots }) {
+		// ...
+  }
+}
+```
+
+为了简化问题，我们只允许为 include 和 exclude 设置正则类型的值。在 KeepAlive 组件被挂载时，它会根据 “内部组件” 的名称（name 选项）进行匹配。
+
+```js
+const KeepAlive = {
+  // KeepAlive 组件独有的属性，用作标识
+  _isKeepAlive: true,
+  // 定义 include 和 exclude
+  props: {
+    include: RegExp,
+    exclude: RegExp
+  },
+  setup(props, { slots }) {
+    // ...
+
+    return () => {
+      // KeepAlive 的默认插槽就是要被 KeepAlive 的组件
+      let rawVNode = slots.default()
+      // 如果不是组件，直接渲染即可，因为非组件的虚拟节点无法被 KeepAlive
+      if (typeof rawVNode.type !== 'object') {
+        return rawVNode
+      }
+
+      // 获取 “内部组件” 的 name
+      const name = rawVNode.type.name
+
+      if (
+        name &&
+        (
+          // 如果 name 无法被 include 匹配
+          (props.include && !props.include.test(name)) || 
+          // 或者被 exclude 匹配
+          (props.exclude && props.exclude.test(name))
+        )
+      ) {
+        // 直接渲染 “内部组件”，不需要进行缓存操作
+        return rawVNode
+      }
+
+    	// ...
+    }
+  }
+}
+```
+
+可以看到，我们根据用户指定的 include 和 exclude 正则，对 “内部组件” 的名称进行匹配，并根据匹配结果判断是否要对 “内部组件” 进行缓存。在此基础上，我们可以任意扩充匹配能力。例如，可以将 include 和 exclude 设计成多种类型值，允许用户指定字符串或者函数从而提供更加灵活的机制。另外，在做匹配时，也可以不限于 “内部组件” 的名称，甚至可以让用户自行指定匹配要素。但无论如何，原理都是不变的。
+
+##### 缓存管理
+
+在之前的实现中，我们使用一个 Map 对象来实现对组件的缓存。
+
+```js
+const cache = new Map()
+```
+
+该 Map 对象的键是组件选项对象，即 `vnode.type` 属性的值，该 Map 对象的值是用于描述组件的 `vnode` 对象。由于用于描述组件的 vnode 对象存在对组件实例的引用（即 `vnode.component`）属性，所以缓存用户描述组件的 vnode 对象，就等价于缓存组件实例。
+
+回顾一下目前 KeepAlive 组件中关于缓存的实现：
+
+```js
+// 挂载时先获取缓存的组件 vnode
+const cachedVNode = cache.get(rawVNode.type)
+if (cachedVNode) {
+  // 如果有缓存的内容，则说明不应该执行挂载，而应该执行激活
+  // 继承组件实例
+  rawVNode.component = cachedVNode.component
+  // 在 vnode 上添加 keptAlive 属性，标记为 true，避免渲染器重新挂载它
+  rawVNode.keptAlive = true
+} else {
+  // 如果没有缓存，则将其添加到缓存中，这样下次激活组件就不会执行新的挂载操作了
+  cache.set(rawVNode.type, rawVNode)
+}
+```
+
+缓存的处理逻辑可以总结为：
+
+* 如果缓存存在，则继承组件实例，并将用于描述组件的 vnode 对象标记为 keptAlive，这样渲染器就不会重新创建新的组件实例；
+* 如果缓存不存在，则设置缓存。
+
+这里的问题在于，当缓存不存在的时候，总是会设置新的缓存。这会导致缓存不断增加，极端情况下会占用大量缓存。为了解决这个问题，我们必须设置一个缓存阈值，当缓存数量超过指定阈值时对缓存进行修剪。但是这样又会引出另一个问题：我们应该对缓存如何修剪？应该采用怎样的策略修剪？
+
+Vue.js 当前所采用的修剪策略叫做 “最新一次访问（LRU 缓存淘汰策略）”。首先，你需要为缓存设置最大容量，也就是通过 KeepAlive 组件的 max 属性来设置。
+
+```vue
+<KeepAlive :max="2">
+	<component :is="dynamicComp" />
+</KeepAlive>
+```
+
+在上面这段代码中，我们设置缓存的容量为 2。假设我们有三那个组件 `Comp1`、`Comp2`、`Comp3`，并且它们都会缓存。然后，我们模拟一下组件切换过程中缓存的变化。
+
+* 初始渲染 `Comp1` 并缓存它。此时缓存队列为：`[Comp1]`，并且最新一次访问（或渲染）的组件是 `Comp1`。
+* 切换到 `Comp2` 并缓存它。此时缓存队列为：`[Comp1, Comp2]`，并且最新一次访问（或渲染）的组件是 `Comp2`。
+* 切换到 `Comp3`，此时缓存容量已满，需要修剪。因为当前最新一次访问（或渲染）的组件是 `Comp2`，所以它不会被修剪。因此被修剪的将会是 `Comp1`。当缓存修建完毕后，将会出现空余的缓存空间用来存储 `Comp3`。所以，现在的缓存队列是：`[Comp2, Comp3]`，并且最新一次渲染的组件变成 `Comp3`。
+
+我们还可以换一种切换组件的方式。
 
 
 
