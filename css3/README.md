@@ -17,17 +17,15 @@ html、css 不属于编程语言的范畴。CSS也具有函数，如rgba()。
 
 ### 2. CSS的数据类型
 
-```js
-<image>
-<number>
-<string>
-<url>
-<angle>
-```
+* `<image>`
+* `<number>`
+* `<string>`
+* `<url>`
+* `<angle>`
 
-例如\<angle\>：
+例如`<angle>`：
 
-​	<angle\>数据类型由<number>和下列单位组成。数字与单位之间没有空格，数字为0时，单位可以省略。
+​	`<angle>` 数据类型由 `<number>`和下列单位组成。数字与单位之间没有空格，数字为0时，单位可以省略。
 
 ​	单位：deg（°）、grad（百分度）、rad（弧度）、trun（圆数）
 
@@ -442,7 +440,7 @@ div:not(table) a {
 
     ```html
     <input type="radio" checked />
-
+    
     <input type="checkbox" id="read" checked />
     <label for="read">阅读</label>
     <input type="checkbox" id="tourist" />
@@ -496,7 +494,7 @@ div:not(table) a {
     <input type="checkbox" id="checkbox" />
     <label for="checkbox">这是input1</label>
   </div>
-
+  
   <div>
     <input type="checkbox" id="radio" />
     <label for="radio">这是input1</label>
@@ -1487,7 +1485,7 @@ ttf、otf 字体格式
 ## 六、column多列布局、gradient - 文字与颜色模块
 
 ### 1. 补充部分：text-overflow
-    
+
 ellipsis | clip（默认值）
 
 其他属性不常用，兼容性不好。
@@ -1513,7 +1511,7 @@ ellipsis | clip（默认值）
 ```
 
 ### 2. 多列布局 columns
-    
+
 多列布局不是布局方式，是文字的多列布局。是文字的一种排列方式。
     
 columns: 宽度(column-width) 列数(column-count);
@@ -1524,7 +1522,7 @@ columns: 宽度(column-width) 列数(column-count);
 　<p>新冠肺炎疫情发生以来，习近平主席始终坚持人民至上理念，在统筹做好本国疫情防控和经济社会发展工作的同时，频繁与多个国家领导人及国际组织负责人保持电话、书信、视频会议为主渠道的“云外交”沟通，处处体现着习近平主席以人民为中心的发展思想。</p>
 </div>
 ```
-      
+
 #### 2.1 column
 
 ```css
@@ -1559,13 +1557,13 @@ columns: 宽度(column-width) 列数(column-count);
   font-size: 16px;
 }
 ```
-    
+
 通过更改默认字体大小的方式来修改默认制表符的大小，也就是列与列之间的宽度。
 这种方式也存在问题，如果盒子中增加标题，字体为0.
 可以通过修改column-gap属性，来修改制表符大小。
 
 #### 2.2 column-gap
-      
+
 gap：间歇 缺口。
 
 ```css
@@ -1605,9 +1603,9 @@ none | hidden |
   column-rule: 1px dotted #000;
 }
 ```
-    
+
 #### 2.4 column-span
-    
+
 none（默认值 元素横跨一列） | all（元素横跨所有列）
     
 column-span: none | all;
@@ -1625,9 +1623,9 @@ column-span: all;
 元素横跨所有列。
     
 ### 3. gradient、渐变
-    
+
 #### 3.1 颜色相关
-    
+
 ```css
 rgb：rgb(123, 123, 123)
 rgba：rgba(123, 123, .5)
@@ -1645,14 +1643,14 @@ s saturation 饱和度 0-100% 百分比
 ```css    
 hsla: hsla(120, 70%, 12%, .5)
 ```
-    
+
 ```css
 background-color: rgba(255, 255, 255, .8);
 background-color: hsl(120, 70%, 12%);
 ```
-    
+
 #### 3.2 渐变
-    
+
 渐变方式有两种，线性渐变和径向渐变。
     
 渐变是一个image方式的值，本质上是一张图片。
@@ -1669,7 +1667,8 @@ background-color: hsl(120, 70%, 12%);
   ```css
   background-image: ([shape at position], color [percent], color [percent]);
   ```
-          
+  
+
 渐变都兼容IE10，IE9及IE9以下都不兼容。以线性渐变为例。
     
 ```css
@@ -1691,9 +1690,9 @@ background-image: -o-linear-gradient([derection], color, color));
   background-image: linear-gradient(red, green);
 }
 ```
-    
+
 ##### 3.2.1 线性渐变
-    
+
 ```css
 background-image: linear-gradient(red 0, green 100%);
 background-image: linear-gradient(red 50, green 100%);
@@ -1709,7 +1708,7 @@ background-image: linear-gradient(to top left, red 0, green 100%);
 background-image: linear-gradient(to bottom left, red 0, green 100%);
 background-image: linear-gradient(to bottom right, red 0, green 100%);
 ```
-    
+
 也可以根据角度设置方向。
     
 ```css
@@ -1741,9 +1740,9 @@ background-image: radial-gradient(ellipse 100px 50px at center, red 0, green 100
 background-image: radial-gradient(ellipse at center, red 0, green 100%);
 background-image: radial-gradient(ellipse 200px 100px at center, red 0, green 100%);
 ```
-    
+
 案例
-  
+
 ```css
 background-image: radial-gradient(ellipse at center, red 10%, gold 30%, orange 50%, blue 100%);
 ```
@@ -1753,9 +1752,9 @@ background-image: radial-gradient(ellipse at center, red 10%, gold 30%, orange 5
 ```html
 <div class="box"></div>
 ```
-    
+
 ### 1. repeating-linear-gradient
-    
+
 重复的线性渐变。
     
 ```css
@@ -1789,9 +1788,9 @@ background-image: repeating-linear-gradient(to bottom left, red, green 10%, blue
 background-image: repeating-linear-gradient(to bottom left, red, yellow 10%,green 10%, blue 20%);
 /* 百分比是可以被重写的，需要指定区段，0-10%是一段，10-20是一段。 */
 ```
-    
+
 ### 2. repeating-radial-gradient
-    
+
 重复的径向渐变。
     
 ```css
@@ -1813,7 +1812,7 @@ background-image: repeating-radial-gradient(circle 100px at 0 0, red, green 10%,
 ```css
 background-image: repeating-radial-gradient(ellipse 200px 100px at center, red, green 10%, yellow 10%, blue 20%);
 ```
-    
+
 * 案例 Button
 
 ## 八、hsl、opacity与rgba、overflow-x、resize - 盒模型与FLEX模块
@@ -1823,7 +1822,7 @@ background-image: repeating-radial-gradient(ellipse 200px 100px at center, red, 
 渐变生成的网站：http://www.colorzilla.com/gradient-editor/
     
 ### 1. hsl
-      
+
 hsl(hue, saturation, lightness)
 
 * h hue 色调  -360-360 色相环
@@ -1833,21 +1832,22 @@ hsl(hue, saturation, lightness)
 ```css
 background-color: hsl(60, 50%, 50%);
 ```
-    
+
 * 0/360 - 红色（赤色）red
 * 60 - 橙黄 yellow
 * 120 - 绿色 green
 * 180 - 青色 cyan
 * 240 - 蓝色 blue
 * 300 - 紫色（洋红）magenta
-    
+  
+
 速记
     
 1. 赤橙黄绿青蓝紫
 2. young guys can be messy Rascals. 
-    
+   
 ### 2. opacity与rgba
-    
+
 为什么存在opacity，要使用rgba?
     
 opacity会作用在整个元素上，从而使元素上的内容都起到透明的效果。
@@ -1860,18 +1860,18 @@ opacity会作用在整个元素上，从而使元素上的内容都起到透明�
 盒模型包括 content area、padding area、border area、margin area。
     
 #### 3.1 盒模型存在层级关系
-      
+
 ![盒模型](https://gitee.com/heora/review/blob/master/css3/images/css_div3.jpg)
 
 #### 3.2 盒模型存在两种
-      
+
 W3C标准盒模型、IE6混杂模式的盒模型
     
 * W3C标准盒模型：
 
   - 盒子所占空间宽度 = border area + padding area + content area
   - 盒子宽度 = content area
- 
+
 * IE盒模型：  
 
   - 盒子所占空间宽度 = border area + padding area + content area
@@ -1887,14 +1887,14 @@ padding内收、边框内收的方式 => border-box
 ![盒模型对比](https://gitee.com/heora/review/blob/master/css3/images/css-box.png)
     
 #### 3.3 传统的布局方式，就是利用盒子模型来实现的
-    
+
 1. 不规则布局，
 2. 两栏布局、三栏布局
 
 利用margin、padding、position、box-sizing等属性实现布局。
     
 ### 4. overflow-x/overflow-y
-    
+
 visible | hidden | scroll | auto
     
 ```css
@@ -1904,14 +1904,14 @@ overflow: hidden; // 溢出隐藏
 ```css
 overflow-x: scroll; // 水平方向溢出部分 滚动
 ```
-    
+
 定义scroll属性时，内容区域没有超出，也会存在滚动条。
 overflow-x，overflow-x，只要定义其中一个值，另一个的值也发生变化，由visible变为auto。
     
 overflow不是一个复合值，不可以这样定义 'overflow: scroll auto;'。
     
 ### 5. resize
-    
+
 both（默认值） | none | horizontal | vertical
 
 * both 两边都可以拉伸
@@ -1970,11 +1970,12 @@ div.text {
 只有当overflow不等于默认值时，resize才会生效。
     
 #### 5.2 resize的使用场景
-    
+
 * 块级元素
 * table 单元格
 * 内联块元素
-    
+  
+
 前提，overflow不等于默认值。
 
 ## 九、传统布局缺陷、弹性盒子、 flexContainer - 盒模型与FLEX模块

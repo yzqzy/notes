@@ -382,7 +382,7 @@ if (__DEV__) {
 }
 ```
 
-```JS
+```js
 // -bundler.js
 
 if ((process.env.NODE_ENV !== 'production')) {
@@ -1755,7 +1755,7 @@ effect(() => {
 
 如果在 effect 注册的副作用函数内存在一个自增操作，该操作会引起栈溢出。
 
-```e
+```js
 obj.foo => obj.foo + 1
 ```
 
@@ -12541,7 +12541,7 @@ function defineAsyncComponent(options) {
 
 另外有一点需要注意，在异步组件加载成功后，会卸载 Loading 组件并渲染异步加载的组件。为了支持 Loading 组件的加载，我们需要修改 unmount 函数。
 
-```,js
+```js
 function unmount(vnode) {
   if (vnode.type === Fragment) {
     vnode.children.forEach(c => unmount(c))
@@ -12934,7 +12934,7 @@ const ast = [
           type: 'Element',
           tag: 'h1',
           props: [
-            // v-if 指令界定啊
+            // v-if 指令界定符
             {
               type: 'Directive', // 类型为 Directive 代表指令
               name: 'if', // 指令名称为 if，不带有前缀 v0
