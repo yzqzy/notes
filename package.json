@@ -10,9 +10,7 @@
   "scripts": {
     "cz": "git add ./ &&　git cz",
     "postcz": "git push",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:serve": "vitepress serve docs"
+    "docs": "vitepress dev docs"
   },
   "repository": {
     "type": "git",

@@ -3,3 +3,8 @@ node_modules/
 
 # Wakatime
 *.wakatime*
+
+# .vitepress
+# docs
+docs
+!docs/.vitepress

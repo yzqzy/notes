@@ -4,49 +4,74 @@ import path from 'path'
 const entry = process.cwd()
 const output = path.resolve(entry, 'docs')
 
-const cleanDocs = () => {
-  
-}
-
 interface MdNode {
   name: string;
   path: string;
+  mark: boolean;
   parent?: MdNode,
   children?: MdNode[]
 }
 
-const isMarkdown = (path: string) => path.includes('README.md')
-const isValid = (dir: string) => !['.git', '.vscode', 'node_modules', 'build'].some(_ => dir.includes(_))
+const cleanDocs = () => {
+  // TODO
+}
 
-const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
+const buildModule = (entry: string): MdNode => {
+  let ans: MdNode 
+  
+  const cache: MdNode[] = []
 
-const getModules = (entry: string, parent?: MdNode): MdNode => {
-  const module: MdNode = {
-    name: getFileName(entry),
-    path: entry,
-    parent,
-    children: []
+  const isMarkdown = (path: string) => path.includes('README.md')
+  const isValid = (dir: string) => !['.git', '.vscode', 'node_modules', 'build', 'docs'].some(_ => dir.includes(_))
+
+  const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
+
+  const getModules = (entry: string, parent?: MdNode) => {
+    const module: MdNode = {
+      name: getFileName(entry),
+      path: entry,
+      mark: false,
+      parent,
+      children: []
+    }
+      
+    const dirs = fs.readdirSync(entry)
+  
+    dirs.forEach(dir => {
+      const _entry = path.resolve(entry, dir)
+      const stat = fs.statSync(_entry)
+  
+      if (stat.isDirectory() && isValid(_entry)) {
+        module.children?.push(getModules(_entry, module))
+        return
+      }
+      
+      if(isMarkdown(_entry)) {
+        module.mark = true
+        module.children?.push({
+          name: dir,
+          mark: false,
+          path: _entry
+        })
+        return
+      }
+      
+      cache.push(module)
+    })
+
+    return module
   }
-    
-  const dirs = fs.readdirSync(entry)
 
-  dirs.forEach(dir => {
-    const _entry = path.resolve(entry, dir)
-    const stat = fs.statSync(_entry)
+  ans = getModules(entry)
 
-    if (stat.isDirectory() && isValid(_entry)) {
-      module.children?.push(getModules(_entry, module))
-    } else if (isMarkdown(_entry)) {
-      module.children?.push({
-        name: dir,
-        path: _entry
-      })
-    } else {
-      // TODO
+  cache.forEach(m => {
+    while (m && m.parent && !m.mark) {
+      m.parent.children = m.parent.children?.filter((item) => item.path != m.path)
+      m = m.parent
     }
   })
-
-  return module
+  
+  return ans
 }
 
 interface Sidebar {
@@ -56,40 +81,68 @@ interface Sidebar {
 }
 
 const generateDocs = (module: MdNode) => {
-  let sidebar = {
+  const sidebar: Sidebar = {
     text: module.name
   }
 
+  const currentDir = module.path.replace(entry, output)
+
   if (Array.isArray(module.children)) {
-    console.log(module.path.replace(entry, output))
+    if (!fs.existsSync(currentDir)) {
+      fs.mkdirSync(currentDir)
+    }
 
-    // fs.mkdirSync(module.path.replace(entry, output))
+    const items = module.children.map(generateDocs)
 
-    sidebar = Object.assign(sidebar, {
-      items: module.children.map(generateDocs)
-    })
+    if (items.length) {
+      sidebar.items = items
+    }
   } else {
-    sidebar = Object.assign(sidebar, {
-      link: module.path.replace(entry, '').replace('\\', '/')
-    })
+    fs.copyFileSync(module.path, currentDir.replace(/README.md/, 'index.md'))
+    sidebar.link = module.path
+      .replace(entry, '')
+      .replace(/\\/g, '/')
+      .replace(/README.md/, 'index.md')
   }
 
   return sidebar
 }
 
-const genrateSidebarConfig = (node: Sidebar) => {
-  
+const genrateSidebarConfig = (sideber: Sidebar) => {
+  let config = sideber.items
+
+  // remove root 
+  config = config?.filter(node => node.text !== 'README.md')
+
+  const clear = (_sidebar: Sidebar) => {
+    const child = _sidebar.items && _sidebar.items[0]
+
+    if (
+      _sidebar.items?.length == 1 &&
+      child && child.text === 'README.md'
+    ) {
+      _sidebar.link = child.link
+      return;
+    }
+    
+    _sidebar.items?.forEach(clear)
+  }
+
+  clear(sideber)
+
+  fs.writeFileSync(
+    path.resolve(output, '.vitepress/sidebar.json'),
+    JSON.stringify(config)
+  )
 }
 
 const buildEntry = (entry: string) => {
   cleanDocs()
 
-  const modules = getModules(entry)
+  const modules = buildModule(entry)
   const sidebar = generateDocs(modules)
 
-  // console.log(sidebar)
-
-  // genrateSidebarConfig(sidebar)
+  genrateSidebarConfig(sidebar)
 }
 
 
