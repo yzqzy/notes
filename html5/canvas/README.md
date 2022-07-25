@@ -136,7 +136,7 @@ ctx.lineTo(50, 20);
 ctx.stroke();
 ```
 
-<div align="left"><img src="images/arcTo.png" /><div>
+<img src="./images/arcTo.png" />
 
 ### 贝塞尔曲线
 

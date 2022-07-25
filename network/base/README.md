@@ -1182,7 +1182,7 @@ xhr.responseXML 返回类型为XML
 <iframe src="index2.html" id="iframe"></iframe>  
 ```
 
-```j
+```js
 var iframe = document.getElementById('ifrrame');
 
 iframe.onload = function () {

@@ -1234,7 +1234,7 @@ module.exports  = 'lazy load';
 
 index.js
 
-```is
+```js
 const oBtn = document.getElementById('J-btn');
 
 oBtn.addEventListener('click', function () {

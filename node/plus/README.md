@@ -676,7 +676,7 @@ ndoe-gyp list
 
 binding.gyp
 
-```c++
+```js
 {
 	'targets': [{
 		'target_name': 'test',
@@ -687,7 +687,7 @@ binding.gyp
 
 index.cc
 
-```c++
+```js
 #include <node.h>
 
 namespace demo {
