@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Native Transition Effect</title>
+  <style type="text/css">
+    .box {
+      width: 100px;
+      height: 100px;
+      background-color: orange;
+    }
+    
+    .enter-from {
+      transform: translate(200px);
+    }
+    .enter-to {
+      transform: translateX(0);
+    }
+    .enter-active {
+      transition: transform 1s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+
+  <script>
+    // 创建 class 为 box 的 DOM 元素
+    const el = document.createElement('div')
+    el.classList.add('box')
+
+    // 在 DOM 元素被添加到页面之前，讲初始化状态和运动过程定义在元素上
+    el.classList.add('enter-from') // 初始状态
+    el.classList.add('enter-active') // 运动过程
+
+    // 将元素添加到页面
+    document.body.appendChild(el)
+
+    // 切换元素的状态
+    requestAnimationFrame(() => {
+      el.classList.remove('enter-from')
+      el.classList.add('enter-to')
+
+      // 监听 transitionend 时间完成
+      el.addEventListener('transitionend', () => {
+        el.classList.remove('enter-to')
+        el.classList.remove('enter-active')
+      })
+    }) 
+  </script>
+  
+</body>
+</html>

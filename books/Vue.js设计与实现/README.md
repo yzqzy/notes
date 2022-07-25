@@ -13494,9 +13494,156 @@ function patch(n1, n2, container, anchor) {
 
 #### Transition 组件的实现原理
 
+通过对 KeepAlive 组件和 Teleport 组件的讲解，我们能够意识到，Vue.js 内建的组件通常与渲染器的核心逻辑结合的非常紧密。本节将要讨论的 Transition 组件也不例外，甚至它与渲染器结合更加紧密。
+
+实际上，Transition 组件的实现要比想象中简单的多，它的核心原理是：
+
+* 当 DOM 元素被挂载时，将动效附加到该 DOM 元素上；
+* 当 DOM 元素被卸载时，不要理解卸载 DOM 元素，而是等到附加到该 DOM 元素伤的动效执行完成之后再卸载它。
+
+当然，规则上主要遵循上述两个要素，但具体实现要考虑的边界情况还有很多。不过，我们只需要了解它的核心原理即可，具体细节可以在基本实现的基础上按需添加或完善。
+
+##### 原生 DOM 的过渡
+
+为了更好地理解 Transition 组件的实现原理，我们有必要先讨论如何为原生 DOM 创建过渡动效。过渡效果本质上是一个 DOM 元素在两种状态间的切换，浏览器会根据过渡效果自行完成 DOM 元素的过渡。这里的过渡效果指的是持续时长、运动曲线、要过渡的属性等。
+
+我们从一个例子开始。假设我们有一个 div 元素，宽高各 `100px`，如下面的代码所示：
+
+```html
+<div class="box"></div>
+```
+
+接着，为其添加对应的 CSS 样式：
+
+```css
+.box {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+```
+
+现在，假设我们要为元素添加一个进场动效。我们可以这样描述该动效：从距离左边 `200px` 的位置在 1 秒内运动到距离左边 `0px` 的位置。在这句描述中，初始状态是 “距离左边 `200px`” ，因此我们可以用下面的样式描述初始状态。
+
+```css
+.enter-from {
+  transform: translate(200px);
+}
+```
+
+ 而结束状态是 "距离左边 `0px`"，也就是初始位置，可以用下面的 CSS 代码来描述：
+
+```css
+.enter-to {
+  transform: translateX(0);
+}
+```
+
+初始状态和结束状态都已经描述完毕。最后，我们还要描述运动过程，例如持续时长、运动曲线等。对此，我们可以用以下 CSS 代码来描述。
+
+```css
+.enter-active {
+  transition: transform 1s ease-in-out;
+}
+```
+
+这里我们指定了运动的属性是 `transform`，持续时长为 `1s`，并且运动曲线是 `ease-in-out`。
+
+定义好运动的初始状态、结束状态以及运动过程之后，接下来我们就可以为 DOM 元素添加进场动效了。
+
+```js
+// 创建 class 为 box 的 DOM 元素
+const el = document.createElement('div')
+el.classList.add('box')
+
+// 在 DOM 元素被添加到页面之前，讲初始化状态和运动过程定义在元素上
+el.classList.add('enter-from') // 初始状态
+el.classList,add('enter-active') // 运动过程
+
+// 将元素添加到页面
+document.body.appendChild(el)
+```
+
+上面这段代码主要做了三件事：
+
+* 创建 DOM 元素；
+* 将过渡的初始状态和运动过程定义到元素上，即把 `enter-from`、`enter-active` 这两个类添加到元素伤；
+* 将元素添加到页面中，即挂载。
+
+经过这三个步骤之后，元素的初始化状态会生效，页面渲染的时候会将 DOM 元素以初始状态所定义的样式进行展示。接下来我们需要切换元素的状态，使得元素开始运动。那么，应该怎么做呢？理论上，我们只需要将 `enter-from` 类从 DOM 元素上移除，并将 `enter-to` 这个类添加到 DOM 元素上即可，如下面的代码所示：
+
+```js
+// 创建 class 为 box 的 DOM 元素
+const el = document.createElement('div')
+el.classList.add('box')
+
+// 在 DOM 元素被添加到页面之前，讲初始化状态和运动过程定义在元素上
+el.classList.add('enter-from') // 初始状态
+el.classList.add('enter-active') // 运动过程
+
+// 将元素添加到页面
+document.body.appendChild(el)
+
+// 切换元素的状态
+el.classList.remove('enter-from')
+el.classList.add('enter-to')
+```
+
+然而，上面这段代码无法按预期执行。这是因为浏览器会在当前帧绘制 DOM 元素，最终结果是，浏览器将 `enter-to` 这个类所具有的样式绘制出来，而不会绘制 `enter-from` 类所具有的样式。为了解决这个问题，我们需要在下一帧执行状态切换，如下面的代码所示。
+
+```js
+// 创建 class 为 box 的 DOM 元素
+const el = document.createElement('div')
+el.classList.add('box')
+
+// 在 DOM 元素被添加到页面之前，讲初始化状态和运动过程定义在元素上
+el.classList.add('enter-from') // 初始状态
+el.classList.add('enter-active') // 运动过程
+
+// 将元素添加到页面
+document.body.appendChild(el)
+
+// 切换元素的状态
+requestAnimationFrame(() => {
+  el.classList.remove('enter-from')
+  el.classList.add('enter-to')
+}) 
+```
+
+现在你会发现进场动效能够正常显示了。
+
+最后我们需要做的是，当过渡完成后，将 `enter-from` 和 `enter-active` 这两个类从 DOM 元素移除，如下面的代码所示：
+
+```js
+// 创建 class 为 box 的 DOM 元素
+const el = document.createElement('div')
+el.classList.add('box')
+
+// 在 DOM 元素被添加到页面之前，讲初始化状态和运动过程定义在元素上
+el.classList.add('enter-from') // 初始状态
+el.classList.add('enter-active') // 运动过程
+
+// 将元素添加到页面
+document.body.appendChild(el)
+
+// 切换元素的状态
+requestAnimationFrame(() => {
+  el.classList.remove('enter-from')
+  el.classList.add('enter-to')
+
+  // 监听 transitionend 时间完成
+  el.addEventListener('transitionend', () => {
+    el.classList.remove('enter-to')
+    el.classList.remove('enter-active')
+  })
+}) 
+```
+
+通过监听元素的 `transitionend` 事件来完成收尾工作。实际上，我们可以对上述 DOM 元素添加进场过渡的过程进行抽象。
 
 
-## 五、编译器
+
+##  五、编译器
 
 ### 编译器核心技术概览
 
