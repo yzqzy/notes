@@ -22,7 +22,8 @@ const buildModule = (entry: string): MdNode => {
   const cache: MdNode[] = []
 
   const isMarkdown = (path: string) => path.includes('README.md')
-  const isValid = (dir: string) => !['.git', '.vscode', 'node_modules', 'build', 'docs'].some(_ => dir.includes(_))
+  const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs', 'books']
+  const isValid = (dir: string) => !validFiles.some(_ => dir.includes(_))
 
   const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
 
@@ -87,10 +88,30 @@ const generateDocs = (module: MdNode) => {
 
   const currentDir = module.path.replace(entry, output)
 
+  const copyImgs = () => {
+    const dir = path.resolve(module.path, 'images')
+    const destDir = dir.replace(entry, output)
+
+    if (fs.existsSync(dir)) {
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir)
+      }
+
+      const files = fs.readdirSync(dir)
+      files.forEach(file => {
+        const readStream = fs.createReadStream(`${dir}/${file}`)
+        const writeStream = fs.createWriteStream(`${destDir}/${file}`)
+        readStream.pipe(writeStream)
+      })
+    }
+  }
+
   if (Array.isArray(module.children)) {
     if (!fs.existsSync(currentDir)) {
       fs.mkdirSync(currentDir)
     }
+
+    copyImgs()
 
     const items = module.children.map(generateDocs)
 
