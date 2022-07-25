@@ -13631,7 +13631,7 @@ requestAnimationFrame(() => {
   el.classList.remove('enter-from')
   el.classList.add('enter-to')
 
-  // 监听 transitionend 时间完成
+  // 监听 transitionend 事件完成
   el.addEventListener('transitionend', () => {
     el.classList.remove('enter-to')
     el.classList.remove('enter-active')
@@ -13641,9 +13641,307 @@ requestAnimationFrame(() => {
 
 通过监听元素的 `transitionend` 事件来完成收尾工作。实际上，我们可以对上述 DOM 元素添加进场过渡的过程进行抽象。
 
+<img src="./images/transition01.png" />
 
+从创建 DOM 元素完成后，到把 DOM 元素添加到 body 前，整个过程可以视作 `beforeEnter` 阶段。在把 DOM 元素添加到 body 之后，则可以视作 enter 阶段。在不同的阶段执行不同的操作，即可完成整个进场过渡的实现。
 
-##  五、编译器
+* `beforeEnter` 阶段：添加 `enter-from` 和 `enter-active` 类。
+* `enter` 阶段：在下一帧中移除 `enter-from` 类，添加 `enter-to`。
+* 进场动效结束：移除 `enter-to` 和 `enter-active` 类。
+
+理解了进场过渡的实现原理后，接下来我们讨论 DOM 元素的离场过渡效果。与进场过渡效果一样，我们需要定义离场过渡的初始状态、结束状态以及过渡过程。
+
+```css
+.leave-from {
+  transform: translateX(0);
+}
+.leave-to {
+  transform: translateX(200px);
+}
+.leave-active {
+  transition: transform 2s ease-out;
+}
+```
+
+可以看到，离场过渡的初始状态与结束状态正好对应进场过渡的结束状态与初始状态。
+
+离场动效一般发生在 DOM 元素被卸载的时候。
+
+```js
+// 卸载元素
+el.addEventListener('click', () => {
+  el.parentNode.removeChild(el)
+})
+```
+
+当点击元素时，该元素会被移除，这样就实现了卸载。如果仅仅这样做，元素根本没有执行过渡的机会。因此，一个很自然的思路就产生了：当元素被卸载时，不要将其立即卸载，而是等待过渡效果结束后再卸载它。为了实现这个目标，我们需要把用于卸载 DOM 元素的代码封装到一个函数中，该函数会等待过渡结束后被调用，如下面的代码所示：
+
+```js
+el.addEventListener('click', () => {
+  // 将卸载动作封装到 performRemove 函数中
+  const performRemove = () => el.parentNode.removeChild(el)
+})
+```
+
+在上面这段代码中，我们将卸载动作封装到 `performRemove` 函数中，这个函数会等待过渡效果结束后再执行。
+
+具体的离场动效的实现如下：
+
+```js
+el.addEventListener('click', () => {
+  // 将卸载动作封装到 performRemove 函数中
+  const performRemove = () => el.parentNode.removeChild(el)
+
+  // 设置初始状态：添加 leave-from 和 leave-active 类
+  el.classList.add('leave-from')
+  el.classList.add('leave-active')
+
+  // 强制 reflow：使初始状态生效
+  document.body.offsetHeight
+
+  // 在下一帧切换状态
+  requestAnimationFrame(() => {
+    // 切换到结束状态
+    el.classList.remove('leave-from')
+    el.classList.add('leave-to')
+  })
+
+  // 监听 transitionend 事件做收尾工作
+  el.addEventListener('transitionend', () => {
+    el.classList.remove('leave-to')
+    el.classList.remove('leave-active')
+    // 当过渡完成后，调用 performRemove 函数将 DOM 元素移除
+    performRemove()
+  })
+})
+```
+
+从上面这段代码中可以看到，离场过渡的处理与进场过渡的处理方式非常相似，即首先设置初始状态，然后在下一帧中切换为结束状态，从而使得过渡失效。需要注意的是，当离场过渡完成之后，需要执行 `performRemove` 函数来真正地将 DOM 元素卸载。
+
+##### 实现 Transition 组件
+
+Transition 组件的实现原理与原生 DOM 的过渡原理一样。只不过，Transition 组件是基于虚拟 DOM 实现的。我们在为 DOM 元素创建进场动效和离场动效时能注意到，整个过渡过程可以抽象为几个阶段，这些阶段可以抽象为特定的回调函数。例如 `beforeEnter`、`enter`、`leave` 等。实际上，基于虚拟 DOM 的实现也需要将 DOM 元素的生命周期分割为这样几个阶段，并在特定阶段执行对应的回调函数。
+
+为了实现 Transition 组件，我们需要先设计它在虚拟 DOM 层面的表现形式。假设组件的模板内容如下：
+
+```vue
+<template>
+	<Transition>
+  	<div>我是需要过渡的元素</div>
+  </Transition>
+</template>
+```
+
+我们可以将这段模板被编译后的虚拟 DOM 设计为：
+
+```js
+function render() {
+  return {
+    type: Transtion,
+    children: {
+      default() {
+        return { type: 'div', children: '我是需要过渡的元素' }
+      }
+    }
+  }
+}
+```
+
+可以看到，Transition 组件的子节点被编译为默认插槽，这与普通组件的行为一致。虚拟 DOM 层面的表示已经设计完了，接下来，我们着手实现 `Transition` 组件，如下面的代码所示：
+
+```js
+const Transtion = {
+  name: 'Transition',
+  setup(props, { slots }) {
+    return () => {
+      // 通过默认插槽获取需要过渡的元素
+      const innerVNode = slots.default()
+
+      // 在过渡元素的 VNode 对象上添加 transition 相应的钩子函数
+      innerVNode.transtion = {
+        beforEnter(el) {
+          // 
+        },
+        enter(el) {
+          // 
+        },
+        leave(el, performRemove) {
+          // 
+        }
+      }
+
+      // 返回需要过渡的元素
+      return innerVNode
+    }
+  }
+}
+```
+
+观察上面的代码，可以发现几点重要信息：
+
+* Transition 组件本身不会渲染任何额外内容，它只是通过默认插槽读取过渡元素，并渲染需要过渡的元素；
+* Transition 组件的作用，就是在过渡元素的虚拟节点上添加 transition 相关的钩子函数。
+
+可以看到，经过 Transition 组件的包装后，内部需要过渡的虚拟节点会被添加一个 `vnode.transition` 对象。这个对象下存在一些与 DOM 元素过渡相关的钩子函数，例如 `beforeEnter`、`enter`、`leave` 等。这些钩子函数与我们之前介绍的钩子函数相同，渲染器在渲染需要过渡的虚拟节点时，会在合适的时机调用附加到该虚拟节点上的过渡相关的生命周期钩子函数，具体体现在 `mountElement` 函数以及 `unmount` 函数中。
+
+```js
+function mountElement(vnode, container, anchor) {
+  const el = vnode.el = createElement(vnode.type)
+  
+  if (typeof vnode.children === 'string') {
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    vnode.children.forEach(child => {
+      patch(null, child, el)
+    })
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+      patchProps(el, key, null, vnode.props[key])
+    }
+  }
+
+  // 判断一个 VNode 是否需要过渡
+  const needTransition = vnode.transtion
+  if (needTransition) {
+    // 调用 transition.beforeEnter 钩子，并将 DOM 元素作为参数传递
+    vnode.transtion.beforEnter(el)
+  }
+
+  insert(el, container, anchor)
+
+  if (needTransition) {
+    // 调用 transition.enter 钩子，并将 DOM 元素作为参数传递
+    vnode.transtion.enter(el)
+  }
+}
+```
+
+上面这段代码是修改后的 `mountElement` 函数，我们为它增加了 `transition` 钩子的处理。可以看到，在挂载 DOM 元素之前，会调用 `transition.beforeEnter` 钩子；在挂载元素之后，会调用 `transition.enter` 钩子，并且这两个钩子函数都接收需要过渡的 DOM 元素对象作为第一个参数。除了挂载之外，卸载元素我们也应该调用 `transition.leave` 钩子函数，如下面的代码所示：
+
+```js
+function unmount(vnode) {
+  // 判断 vnode 是否需要过渡处理
+  const needTransition = vnode.transtion
+
+  if (vnode.type === Fragment) {
+    vnode.children.forEach(c => unmount(c))
+    return
+  } else if (typeof vnode.type === 'object') {
+    if (vnode.shouldKeepAlive) {
+      // 对于需要被 KeepAlive 的组件，不应该真正卸载它，而是调用该组件的父组件
+      // 即 KeepAlive 组件的 _deActivate 函数使其失活
+      vnode.keepAliveInstance._deActivate(vnode)
+    } else {
+      // 对于组件卸载，本质上是要卸载组件所渲染的内容，即 subTree
+      unmount(vnode.component.subTree)
+    }
+    return
+  }
+
+  const parent = vnode.el.parentNode
+
+  if (parent) {
+    // 将卸载动作封装到 performRemove 函数中
+    const performRemove = () => parent.removeChild(vnode.el)
+
+    if (needTransition) {
+      // 如果需要过渡处理，则调用 transition.leave 钩子，
+      // 同时将 DOM 元素和 performRemove 函数作为参数传递
+      vnode.transtion.leave(vnode.el, performRemove)
+    } else {
+      // 如果不需要过渡处理，直接执行卸载操作
+      performRemove()
+    }
+  }
+}
+```
+
+上面这段代码是修改后的 unmount 函数的实现，我们同样为其增加了关于过渡的处理。首先，需要将卸载动作封装到 `performRemove` 函数内。如果 DOM 元素需要过渡处理，那么就需要等待过渡结束后再执行 `performRemove` 函数完成卸载，否则直接调用该函数完成卸载即可。
+
+有了 `mountElement` 函数和 `unmount` 函数的支持后，我们就可以轻松地实现一个最基本的 Transition 组件了。
+
+```js
+const Transtion = {
+  name: 'Transition',
+  setup(props, { slots }) {
+    return () => {
+      // 通过默认插槽获取需要过渡的元素
+      const innerVNode = slots.default()
+
+      // 在过渡元素的 VNode 对象上添加 transition 相应的钩子函数
+      innerVNode.transtion = {
+        beforEnter(el) {
+          // 设置处理状态：添加 enter-from 和 enter-active 类
+          el.classList.add('enter-from')
+          el.classList.add('enter-active')
+        },
+        enter(el) {
+          // 下一帧切换到结束状态
+          nextFrame(() => {
+            // 移除 enter-from 类，添加 enter-to 类
+            el.classList.remove('enter-from')
+            el.classList.add('enter-to')
+            // 监听 transitionend 事件完成
+            el.addEventListener('transitionend', () => {
+              el.classList.remove('enter-to')
+              el.classList.remove('enter-active')
+            })
+          })
+        },
+        leave(el, performRemove) {
+          // 设置离场过渡的初始状态：添加 leve-from 和 leave-active 类
+          el.classList.add('leave-from')
+          el.classList.add('leave-active')
+          // 强制 reflow：使初始状态生效
+          document.body.offsetHeight
+          // 在下一帧切换状态
+          nextFrame(() => {
+            // 移除 leave-from 类，添加 leave-to 类
+            el.classList.remove('leave-from')
+            el.classList.add('leave-to')
+
+            // 监听 transitionend 事件做收尾工作
+              el.addEventListener('transitionend', () => {
+                el.classList.remove('leave-to')
+                el.classList.remove('leave-active')
+                // 当过渡完成后，调用 performRemove 函数将 DOM 元素移除
+                performRemove()
+              })
+          })
+        }
+      }
+
+      // 返回需要过渡的元素
+      return innerVNode
+    }
+  }
+}
+```
+
+在上面这段代码中，我们补全了 `vnode.transition` 中各个钩子函数的具体实现。可以看到，其实现思路和我们之前讨论的原生 DOM 过渡的思路一样。
+
+在上面的实现中，我们硬编码了过渡状态的类名，例如 `enter-from`、`enter-to` 等。实际上，我们可以轻松地通过 props 来实现允许用户自定义类型的能力，从而实现一个更加灵活的 `Transition` 组件。另外，我们也没有实现 “模式” 的概念，即先进后出（in-out）或后进先出（out-in）。实际上，模式的概念只是增加了对节点过渡时机的控制，原理上与将卸载动作封装到 `performRemove` 函数中一样，只需要在具体的时机以回调的形式将控制权交接出去即可。
+
+#### 总结
+
+本篇文章中，我们介绍了 Vue.js 内建的三个组件，即 KeepAlive 组件、Teleport 组件和 Transition 组件。它们共同的特点是，与渲染器的集合非常紧密，因此需要框架提供底层的实现与支持。
+
+KeepAlive 组件的作用类似于 HTTP 的持久连接。它可以避免组件实例不断地被销毁和重建。KeepAlive 组件的基本实现并不复杂。当被 KeepAlive 的组件 “卸载” 时，渲染器不会真的将其卸载掉，而是会将该组件搬运到一个隐藏容器中，从而使得组件可以维持当前状态。当被 KeepAlive 的组件 “挂载” 时，渲染器也不会真的挂载它，而是将它从隐藏容器搬运到原容器。
+
+我们讨论了 KeepAlive 的其他能力，如匹配策略和缓存策略。include 和 exclude 这两个选项用来指定哪些组件需要被 KeepAlive，哪些组件不需要被 KeepAlive。默认情况下，include 的 exclude 会匹配组件的 name 选项。但是在具体实现中，我们可以扩展匹配能力。对于缓存策略，Vue.js 默认采用 “最新一次访问”。为了让用户能自行实现缓存策略，我们还介绍了正在讨论中的提案。
+
+接着，我们讨论了 Teleport 组件所要解决的问题和它的实现原理。Teleport 组件可以跨越 DOM 层级完成渲染，这在很多场景下非常有用。在实现 Teleport 时，我们将 Teleport 组件的渲染逻辑从渲染器中分离出来，这样做有两点好处：
+
+* 可以避免渲染器逻辑代码 “膨胀”；
+* 可以利用 Tree-Shaking 机制在最终的 bundle 中删除 Teleport 相关的代码，使得最终构建包的体积变小。
+
+Teleport 组件是一个特殊的组件。与普通组件相比，它的组件选项非常特殊，例如 `__isTeleport` 选项和 `process` 选项等。这是因为 Teleport 本质上是渲染器逻辑的合理抽象，它完全可以视为渲染器的一部分存在。
+
+最后，我们讨论了 `Transition` 组件的原理与实现。我们从原生 DOM 过渡开始，讲解了如何使用 JavaScript 为 DOM 元素添加进场动销和离场动效。在此过程中，我们将实现动效的过程分为多个阶段，即 `beforeEneter`、`enter`、`leave` 等。Transition 组件的实现原理与原生 DOM 添加过渡效果的原理类似，我们将过渡相关的钩子函数定义到虚拟节点 `vnode.transition` 对象中。渲染器在执行挂载和卸载操作时，会优先检查该虚拟节点是否需要进行过渡，如果需要，则会在合适的时机执行 `vnode.transition` 对象中定义的过渡相关钩子函数。
+
+## 五、编译器
 
 ### 编译器核心技术概览
 
