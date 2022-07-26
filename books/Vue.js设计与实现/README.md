@@ -8734,9 +8734,328 @@ const vnode = {
 我们知道，`vnode.type` 属性能够代表一个 vnode 的类型。如果 `vnode.type` 的值是字符串类型，则代表它描述的是普通标签，并且该值就代表标签的名称。但注释节点与文本节点不同普通标签节点，它们不具有标签名称，所以我们需要人为创造一些唯一的标识，并将其作为注释节点和文本节点的 type 属性值，如下面的代码所示：
 
 ```js
+// 文本节点的 type 标识
+const Text = Symbol()
+const newVNode = {
+  type: Text,
+  children: '我是文本内容'
+}
+
+// 注释节点的 type 标识
+const Comment = Symbol()
+const newVNode = {
+  type: Comment,
+  children: '我是注释内容'
+}
 ```
 
+可以看到，我们分别为文本节点和注释节点创建了 symbol 类型的值，并将其作为 `vnode.type` 属性的值。这样就能够用 vnode 来描述文本节点和注释节点了。由于文本节点和注释节点只关心文本内容，所以我们用 `vnode.children` 来存储它们对应的文本内容。
 
+有了用于描述文本节点和注释节点的 vnode 对象后，我们就可以使用渲染器来渲染它们了。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+    if (!n1) {
+      mountElement(n2, container, anchor)
+    } else {
+      patchElement(n1, n2)
+    }
+  } else if (type === Text) {
+    // 如果新的 vnode 的类型是 Text，则说明该 vnode 描述的是文本节点
+    if (!n1) {
+      // 如果没有旧节点，进行挂载
+      // 使用 createTextMode 创建文本节点
+      const el = n2.el = document.createTextNode(n2.children)
+      // 将文本节点插入到容器中
+      insert(el, container)
+    } else {
+      // 如果旧 vnode 存在，只需要使用新文本节点的文本内容更新旧文本节点即可
+      const el = n2.el = n1.el
+      if (n2.children !== n1.children) {
+        el.nodeValue = n2.children
+      }
+    }
+  }
+}
+```
+
+观察上面这段代码，我们增加了一个判断条件，即判断表达式 `type === Text` 是否成立，如果成立，则说明要处理的节点是文本节点。接着，还需要判断旧的虚拟节点（`n1`）是否存在，如果不存在，则直接挂载新的虚拟节点（`n2`）。这里我们使用 `createTextNode` 函数来创建文本节点，并将它插入到容器元素中。如果旧的虚拟节点（`n1`）存在，则需要更新文本内容，这里我们使用文本节点的 `nodeValue` 属性完成文本内容的更新。
+
+另外，从上面的代码中我们还能注意到，`patch` 函数依赖浏览器平台特有的 API，即 `createTextNode` 和 `el.nodeValue`。为了保证渲染器核心的平台能力，我们需要将这两个操作 DOM 的 API 封装到渲染器的选项中。
+
+```js
+const renderer = createRenderer({
+  createElement(tag) {
+    // ...
+  },
+  setElementText(el, text) {
+    // ...
+  },
+  insert(el, parent, anchor = null) {
+    // ...
+  },
+  createText(text) {
+    return document.createTextNode(text)
+  },
+  setText(el, text) {
+    el.nodeValue = text
+  },
+  patchProps(el, key, prevValue, nextValue) {
+    // ...
+  }
+})
+```
+
+在上面这段代码中，我们在调用 `createRenderer` 函数创建渲染器时，传递的选项参数中封装了 `createText` 函数和 `setText` 函数。这两个函数分别用来创建文本节点和设置文本节点的内容。我们可以用这两个函数替换渲染器核心代码中所依赖的浏览器特有的 API。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+    if (!n1) {
+      mountElement(n2, container, anchor)
+    } else {
+      patchElement(n1, n2)
+    }
+  } else if (type === Text) {
+    // 如果新的 vnode 的类型是 Text，则说明该 vnode 描述的是文本节点
+    if (!n1) {
+      // 如果没有旧节点，进行挂载
+      // 使用 createTextMode 创建文本节点
+      const el = n2.el = createText(n2.children)
+      // 将文本节点插入到容器中
+      insert(el, container)
+    } else {
+      // 如果旧 vnode 存在，只需要使用新文本节点的文本内容更新旧文本节点即可
+      const el = n2.el = n1.el
+      if (n2.children !== n1.children) {
+        setText(el, n2.children)
+      }
+    }
+  }
+}
+```
+
+注释节点的处理方式与文本节点的处理方式类似。不同的是，我们需要使用 `document.createComment` 函数创建注释节点元素。
+
+#### Fragment
+
+Fragment（片段）是 Vue.js 3 新增的一个 vnode 类型。在具体讨论 Fragment 的实现之前，我们有必要要先了解为什么需要 Fragment。请思考这样的场景，假设我们要封装一组组件列表：
+
+```vue
+<List>
+	<Items />
+</List>
+```
+
+整体由两个组件构成，即 `<List>` 组件和 `<Items>` 组件。其中 `<List>` 组件会渲染一个 `<ul>` 标签作为包裹层：
+
+```vue
+<!-- List.vue -->
+<template>
+	<ul>
+    <slot />
+  </ul>
+</template>
+```
+
+而 `<Items>` 组件负责渲染一组 `<li>` 列表：
+
+```vue
+<!-- Items.vue -->
+<template>
+	<li>1</li>
+	<li>2</li>
+	<li>3</li>
+</template>
+```
+
+这在 Vue.js 中是无法实现的。在 Vue.js 中，组件的模板不允许存在多个根节点。这意味着，一个 `<Items>` 组件最多只能渲染一个 `<li>` 标签。
+
+```vue
+<!-- Item.vue -->
+<template>
+	<li>1</li>
+</template>
+```
+
+因此在 Vue.js 中，我们通常需要配置 `v-for` 指令来达到目的：
+
+```vue
+<List>
+	<Items v-for="item in list" />
+</List>
+```
+
+类似的组合还有 `<select>` 标签与 `<option>` 标签。
+
+而 Vue.js 3 支持多根节点模板，所以不存在上述问题，那么，Vue.js 3 是如何用 vnode 来描述多根节点模板的呢？答案是，使用 Fragment，如下面的代码所示：
+
+```js
+const Fragment = Symbol()
+const vnode = {
+  type: Fragment,
+  children: [
+    { type: 'li', children: 'text 1' },
+    { type: 'li', children: 'text 2' },
+    { type: 'li', children: 'text 3' },
+  ]
+}
+```
+
+与文本节点和注释节点类似，片段也没有所谓的标签名称，因此我们也需要为片段创建唯一标识，即 Fragment。对于 Fragment 类型的 vnode 来说，它的 children 存储的内容就是模板中所有根节点。有了 Fragment 后，我们就可以用它来描述 `Items.vue` 组件的模板了：
+
+```vue
+<!-- Items.vue -->
+<template>
+	<li>1</li>
+	<li>2</li>
+	<li>3</li>
+</template>
+```
+
+这段模板对应的虚拟节点是：
+
+```js
+const vnode = {
+  type: 'Fragment',
+  children: [
+    { type: 'li', children: '1' },
+    { type: 'li', children: '2' },
+    { type: 'li', children: '3' }
+  ]
+}
+```
+
+类似地，对于如下模板：
+
+```vue
+<List>
+	<Items />
+</List>
+```
+
+我们可以利用下面这个虚拟节点来描述它：
+
+```js
+const vnode = {
+  type: 'ul',
+  children: [
+    {
+      type: 'Fragment',
+      children: [
+        { type: 'li', children: '1' },
+        { type: 'li', children: '2' },
+        { type: 'li', children: '3' }
+      ]
+    }
+  ]
+}
+```
+
+可以看到，`vnode.children` 数组包含一个类型为 `Fragment` 的虚拟节点。
+
+当渲染器 `Fragment` 类型的虚拟节点时，由于 Fragment 本身并不会渲染任何内容，所以渲染器只会渲染 `Fragment` 的子节点。
+
+```js
+function patch(n1, n2, container, anchor) {
+  if (n1 && n1.type !== n2.type) {
+    unmount(n1)
+    n1 = null
+  }
+
+  const { type } = n2
+
+  if (typeof type === 'string') {
+		// ...
+  } else if (type === Text) {
+    // 如果新的 vnode 的类型是 Text，则说明该 vnode 描述的是文本节点
+    if (!n1) {
+    	// ...
+    } else {
+  		// ...
+    }
+  } else if (type === Fragment) {
+    // 处理 Fragment 类型的 vnode
+    if (!n1) {
+      // 如果旧 vnode 不存在，则只需要将 Fragment 的 children 逐个挂载即可
+      n2.children.forEach(c => patch(null, c, container))
+    } else {
+      // 如果旧 vnode 存在，则只需要更新 Fragment 的 children 即可
+      patchChildren(n1, n2, container)
+    }
+  }
+}
+```
+
+观察上面这段代码，我们在 `patch` 函数中增加了对 `Fragment` 类型虚拟节点的处理。渲染 `Fragment` 的逻辑比想象中要简单的多，因为从本质上来说，渲染 `Fragment` 与渲染普通元素的区别在于，`Fragment` 本身并不渲染任何内容，所以只需要处理它的子节点即可。
+
+但仍然需要注意一点，`unmount` 函数也需要支持 `Fragment` 类型的虚拟节点的卸载，如下面 `unmount` 函数的代码所示：
+
+```js
+function unmount(vnode) {
+  // 卸载时，如果卸载的 vnode 类型为 Fragment，则需要卸载其 children
+  if (vnode.type === Fragment) {
+    vnode.children.forEach(c => unmount(c))
+    return
+  }
+  const parent = vnode.el.parentNode
+  if (parent) {
+    parent.removeChild(vnode.el)
+  }
+}
+```
+
+当卸载 `Fragment` 类型的虚拟节点时，由于 `Fragment` 本身并不会渲染任何真实 DOM，所以只需要遍历它的 children 数组，并将其中的节点逐个卸载即可。
+
+#### 总结
+
+本篇文章，我们首先讨论了如果挂载子节点，以及节点属性。对于子节点，只需要递归地调用 patch 函数完成挂载即可。而节点的属性比想象中的复杂，它涉及两个重要的概念：HTML Attributes 和 DOM Properties。为元素设置属性时，我们不能总是使用 `setAttribute` 函数，也不能总是通过元素的 `DOM Properties` 来设置。至于如何正确地的为元素设置属性，取决于被设置属性的特点。例如，表单元素的 `el.form` 属性是只读的，因此只能使用 `setAttribute` 函数来设置。
+
+接着，我们讨论了特殊属性的处理。以 class 属性为例，Vue.js 对 class 属性做了增强，它允许我们为 class 指定不同类型的值。但在把这些值设置给 DOM 元素之前，要对值进行正常化。我们还讨论了微元素设置 class 的三种方式及其性能情况。其中，`el.className` 的性能最优，所以我们选择在 `patchProps` 函数中使用 `el.className` 来完成 `class` 属性的设置。除了 class 属性之外，Vue.js 也对 style 属性做了增强，所以 style 属性也需要做类似的处理。
+
+然后，我们讨论了卸载操作。一开始，我们直接使用 `innerHTML` 来清空容器元素，但是这样会存在诸多问题。
+
+* 容器的内容可能是由某个或多个组件渲染的，当卸载操作发生时，应该正确地调用这些组件的 `beforeUnmount`、`unmounted` 等生命周期函数。
+* 即使内容不是由组件渲染的，有的元素存在自定义指令，我们应该在卸载操作发生时正确地执行对应的指令钩子函数。
+* 使用 `innerHTML` 清空容器元素内容的另一个缺陷是，它不会移除绑定在 DOM 元素上的事件处理函数。
+
+因此，我们不能直接使用 `innerHTML` 来完成卸载任务。为了解决这些问题，我们还封装了 `unmount` 函数。该函数是以一个 vnode 的维度来完成卸载的，它会根据 `vnode.el` 属性取得该虚拟节点对应的真实 DOM，然后调用原生 DOM API 来完成 DOM 元素的卸载。这样做还有两点额外的好处。
+
+* 在 unmount 函数内，我们有机会调用绑定在 DOM 元素上的指令钩子函数，例如 `beforeUnmount`、`unmounted` 等。
+* 当 unmount 函数执行时，我们有机会检测虚拟节点 vnode 的类型。如果该虚拟节点描述的是组件，则我们也有机会调用组件相关的生命周期函数。
+
+而后，我们讨论了 vnode 类型的区分。渲染器在执行更新时，需要优先检查新旧 vnode 所描述的内容是否相同。只有当它们所描述的内容相同时，才有打补丁的必要。另外，即使它们描述的内容相同，我们也需要进一步检查它们的类型，即检查 `vnode.type` 属性值的类型，据此判断它描述的具体内容是什么。如果类型是字符串，则它描述的是普通标签元素，这时我们会调用 `mountElement` 和 `patchComponent` 来完成挂载和打补丁。
+
+我们还讲解了事件的处理。首先介绍了如何在虚拟节点中描述事件，我们把 `vnode.props` 对象中以字符串 on 开头的属性当作事件对待。接着，我们讲解了如何绑定和更新事件。在更新事件的时候，为了提升性能，我们伪造了 `invoker` 函数，并把真正的事件处理函数存储在 `invoker.value` 属性中，当事件需要更新时，只更新 `invoker.value` 的值即可，这样可以避免一次 `removeEventListener` 函数的调用。
+
+我们还讲解了如何处理事件与更新时机的问题。解决方案是，利用事件处理函数被绑定到 DOM 元素的时间与事件触发时间的差异。我们需要屏蔽所有绑定时间晚于事件触发时间的事件处理函数的执行。
+
+之后，我们讨论了子节点的更新。我们对虚拟节点中的 children 属性进行了规范化，规定 `vnode.children` 属性只能有以下三种类型。
+
+* 字符串类型：代表元素具有文本子节点。
+* 数组类型：代表元素具有一组子节点。
+* null：代表元素没有子节点。
+
+在更新时，新旧 vnode 的子节点都有可能是以上三种情况之一，所以在执行更新时，我们需要考虑九种可能。不过落实到代码中，我们并不需要罗列所有情况。另外，当新旧 vnode 都具有一组子节点时，我们采用比较笨的方式来完成更新，即卸载所有的旧节点，再挂载所有新子节点。更好的做法是，通过 Diff 算法比较新旧两组子节点，试图最大程度复用 DOM 元素。
+
+我们还讨论了如何使用虚拟节点来描述文本节点和注释节点。我们利用了 symbol 类型值的唯一性，为文本节点和注释节点分别创建唯一标识，并将其作为 `vnode.type` 属性的值。
+
+最后，我们讨论了 Fragment 及其用途。渲染器渲染 Fragment 的方式类似于渲染普通标签，不同的是，Fragment 本身并不会渲染任何 DOM 元素。所以，只需要渲染一个 Fragment 的所有子节点即可。
 
 ### 简易 Diff 算法
 
