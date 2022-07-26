@@ -61,12 +61,14 @@ const buildModule = (entry: string): MdNode => {
       const stat = fs.statSync(_entry)
   
       if (stat.isDirectory() && isValid(_entry)) {
-        const needMove = layer < 2
-        if (needMove) {
-          module.children?.push(
-            getModules(_entry, layer + 1, module)
-          )
+        const needRemove = layer >= 2
+        const child = getModules(_entry, layer + 1, module)
+
+        if (needRemove) {
+          child.mark = false
         }
+        
+        module.children?.push(child)
         return
       }
       
@@ -107,8 +109,7 @@ interface Sidebar {
 
 const generateDocs = (module: MdNode) => {
   const sidebar: Sidebar = {
-    text: module.name,
-    collapsible: true
+    text: module.name
   }
 
   const currentDir = module.path.replace(entry, output)
