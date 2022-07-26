@@ -595,7 +595,7 @@ perf: update
 
 =>
 
-```base
+```
 [detached HEAD c3657c8] perf: git merge commit test
  Date: Mon Jan 17 22:02:12 2022 +0800
  1 file changed, 39 insertions(+), 1 deletion(-)

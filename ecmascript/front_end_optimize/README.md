@@ -434,7 +434,7 @@ dns-prefetch 可以帮助开发人员掩盖 DNS 解析延迟。HTML `link` 元�
 
 还可以通过 HTTP Link 字段将 `dns-prefetch` （以及其他资源提示）指定为 HTTP 标头：
 
-```http
+```
 Link: <https://at.alicdn.com/>; rel=dns-prefetch
 ```
 
@@ -496,13 +496,13 @@ HTTP 协议的初始版本，每进行一次 HTTP 通信就要断开一次 TCP �
 
 为了解决这个问题，有些浏览器在请求时，用了一个非标准的 Connection 字段。
 
-```http
+```
 Connection: keep-alive
 ```
 
 这个字段要求服务器不要关闭 TCP 连接，以便其他请求复用。服务器同样回应这个字段。
 
-```http
+```
 Connection: keep-alive
 ```
 
@@ -518,7 +518,7 @@ HTTP 1.1 版本的最大变化，就是引入了持久连接（HTTP Persistent C
 
 客户端和服务器发现对方一段时间没有活动，就可以主动关闭连接。不过，规范的做法是，客户端在最后一个请求时，发送 `Connection: close` ，明确要求服务器关闭 TCP 连接
 
-```http
+```
 Connection: close
 ```
 
@@ -536,7 +536,7 @@ HTTP 1.1 版本还引入了管道机制（pipelining），即在同一个 TCP �
 
 一个 TCP 连接可以传送多个回应，所以必须有一种机制，区分数据包属于哪一个回应。这就是 `Content-length` 字段的作用，声明本次回应的数据长度。
 
-```http
+```
 Content-Length: 3495
 ```
 
@@ -554,13 +554,13 @@ Content-Length: 3495
 
 因此，1.1 版本规定不适用 `Content-Length` 字段，使用 "分块传输编码"（chunked transfer encoding）。只要请求或回应的头信息有 `Transfer-Encoding` 字段，就表明回应将由数量未定的数据块组成。
 
-```http
+```
 Transfer-Encoding: chunked
 ```
 
 每一个非空的数据块之前，会有一个 16 进制的数值，表示这个块的长度。最后一个是大小为 0 的块，就表明本次回应的数据发送完了。
 
-```http
+```
 HTTP/1.1 200 OK
 Content-Type: text/plain
 Transfer-Encoding: chunked
@@ -727,13 +727,13 @@ URL  重定向，也成为 URL 转发，是一种当实际资源，如单个表�
 
 下面是一个请求响应的 HTTP 报文示例：
 
-```http
+```
 GET /encrpted-area HTTP/1.1
 Host: www.example.com
 Accept-Encoding: gzip, deflate, br
 ```
 
-```http
+```
 HTTP/1.1 200 OK
 date: Mon, 11 Apr 2022 13:15:52 GMT
 Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)
@@ -872,7 +872,7 @@ HTTP 缓存应该算是前端开发中最常接触的缓存机制之一，它又
 
 介绍缓存命中判断之前，先来看下一段响应头的部分信息：
 
-```http
+```
 access-control-allow-origin: *
 age: 734978
 content-length: 40830
@@ -950,7 +950,7 @@ if (pathname === '/images/01.jpg') {
 
 我们给 `01.jpg` 添加了 1分钟的缓存，现在我们访问图片，会看到图片已经被缓存。
 
-```http
+```
 请求网址: http://localhost:3000/images/01.jpg
 请求方法: GET
 状态代码: 200 OK （来自内存缓存）
@@ -1005,7 +1005,7 @@ if (pathname === '/images/02.jpg') {
 }
 ```
 
-```http
+```
 Cache-Control: max-age=60
 Connection: keep-alive
 Date: Tue, 12 Apr 2022 12:37:37 GMT
@@ -1021,13 +1021,13 @@ Transfer-Encoding: chunked
 
 设置如下响应头可以关闭缓存。
 
-```http
+```
 Cache-Control: no-store
 ```
 
 指定 `no-cache` 或 `max-age=0` 表示客户端可以缓存资源，但是每次使用缓存资源前都必须重新验证其有效性。这意味着每次都会发起 HTTP 请求，但当缓存内容仍有效时可以跳过 HTTP 响应体的下载。
 
-```http
+```
 Cache-Control: max-age=0
 
 Cache-COntrol: no-store
@@ -1093,7 +1093,7 @@ if (pathname === '/images/03.jpg') {
 
 首次响应头
 
-```http
+```
 Connection: keep-alive
 Content-Length: 74030
 Date: Tue, 12 Apr 2022 14:19:52 GMT
@@ -1103,7 +1103,7 @@ last-modified: Thu, 06 May 2021 15:49:24 GMT
 
 第二次请求，会携带 `If-Modified-Since` 字段。
 
-```http
+```
 If-Modified-Since: Thu, 06 May 2021 15:49:24 GMT
 ```
 
@@ -1130,7 +1130,7 @@ if (pathname === '/images/03.jpg') {
 }
 ```
 
-```http
+```
 请求网址: http://localhost:3000/images/03.jpg
 请求方法: GET
 状态代码: 304 Not Modified
@@ -1170,7 +1170,7 @@ if (pathname === '/images/04.jpg') {
 
 响应头。
 
-```http
+```
 Cache-Control: no-cache
 Connection: keep-alive
 Content-Length: 74356
@@ -1181,7 +1181,7 @@ Keep-Alive: timeout=5
 
 第二次请求，请求头会携带 `If-None-Match` 字段。
 
-```http
+```
 If-None-Match: "12274-tEuUYy8halvEHeM+olO/cV8mQ8A"
 ```
 

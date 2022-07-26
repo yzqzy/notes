@@ -478,8 +478,6 @@ domain:*.yueluo.club method:GET
 * Reveiving Push：浏览器正在通过 HTTP/2 服务器推送接收此类型的数据
 * Reading Push：浏览器正在读取之前收到的本地数据
 
-
-
 <img src="./images/preview.png" />
 
 ### URI 的基本格式
@@ -494,14 +492,14 @@ domain:*.yueluo.club method:GET
 * 转换为二进制模式
 * 下载名为 xxx.mkv 格式的文件
 
-有了 URI：ftp://user:pass@yueluo.club:8502/shared/movie/xxx.mkv
+有了 URI：`ftp://user:pass@yueluo.club:8502/shared/movie/xxx.mkv`
 
 #### 什么是 URI
 
 * URL：RFC1738（1994.12），Uniform Resource Locator，表示资源的位置，期望提供查找资源的方法
 
 * URN：RFC2141（1997.5），Uniform Resource Name，期望为资源提供持久的、位置无关的标识方法，并允许简单地将多个命名空间映射到单个 URN 命名空间。
-  * 例如磁力链接：magnet:?xt=urn:sha1:YNCKHTQC5C
+  * 例如磁力链接：`magnet:?xt=urn:sha1:YNCKHTQC5C`
 * URI：RFC1630（1994.6）、RFC3986（2005.1，取代 RFC2396 和 RFC2732），Unform Resource Identifier，用以区分资源，是 URI 和 URN 的超级，用以取代 URL 和 URN 概念。
 
 #### URI 
@@ -529,48 +527,50 @@ Uniform Resource Identifier 统一资源标识符
 
 #### URI 格式
 
-* URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ] 
-* scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) 
+* `URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ] `
+* `scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) `
   * 例如：http, https, ftp,mailto,rtsp,file,telnet 
-* query = *( pchar / "/" / "?" ) 
-* fragment = *( pchar / "/" / "?" ) 
+* `query = *( pchar / "/" / "?" ) `
+* `fragment = *( pchar / "/" / "?" ) `
 
 https://tools.ietf.org/html/rfc7231?test=1#page=-7
 
 **hier-part**
 
-hier-part = "//" authority path-abempty / path-absolute / path-rootless / path-empty 
+`hier-part = "//" authority path-abempty / path-absolute / path-rootless / path-empty `
 
-* authority = [ userinfo "@" ] host [ ":" port ] 
-  * userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
-  * host = IP-literal / IPv4address / reg-name
-  * port = *DIGIT 
+* authority =` [ userinfo "@" ] host [ ":" port ] `
+  * userinfo = `*( unreserved / pct-encoded / sub-delims / ":" )`
+  * host = `IP-literal / IPv4address / reg-name`
+  * port =` *DIGIT `
 
 https://tom:pass@localhost:8080/index.html
 
 **path = path-abempty/ path-absolute/ path-noscheme / path-rootless / path-empty** 
 
-* path-abempty = *( “/” segment )
+* path-abempty = `*( “/” segment )`
   * 以/开头的路径或者空路径 
-* path-absolute = “/” [ segment-nz *( “/” segment ) ]
+* path-absolute =` “/” [ segment-nz *( “/” segment ) ]`
   * 以/开头的路径，但不能以//开头
-* path-noscheme = segment-nz-nc *( “/” segment )
+* path-noscheme = `segment-nz-nc *( “/” segment )`
   * 以非:号开头的路径
-* path-rootless = segment-nz *( “/” segment ) 
+* path-rootless = `segment-nz *( “/” segment ) `
   * 相对path-noscheme，增加允许以:号开头的路径 
-* path-empty = 0<pchar>
+* path-empty = `0<pchar>`
   * 空路径
 
 #### 相对 URI
 
-URI-reference = URI/relative-ref
+URI-reference = `URI/relative-ref`
 
-* relative-ref = relative-part [ "?" query ] [ "#" fragment ]
-  * relative-part = "//" authority path-abempty / path-absolute / path-noscheme / path-empty
+* relative-ref = `relative-part [ "?" query ] [ "#" fragment ]`
+  * relative-part = `"//" authority path-abempty / path-absolute / path-noscheme / path-empty`
 
 https://tools.ietf.org/html/rfc7231?test=1#page=-7
 
+```
 /html/rfc7231?test=1#page-7
+```
 
 ### URI 编码
 
@@ -587,20 +587,20 @@ https://tools.ietf.org/html/rfc7231?test=1#page=-7
 
 * 保留字符
   * reserved = gen-delims / sub-delims
-    * gen-delims = ":" / "/" / "?" / "#" / "[" / "]" / "@"
-    * sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+    * gen-delims = `":" / "/" / "?" / "#" / "[" / "]" / "@"`
+    * sub-delims = `"!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="`
 * 非保留字符
-  * unreserved = ALPHA / DIGIT / "**-**" / "**.**" / "**_**" / "~"
-    * ALPHA: %41-%5A and %61-%7A
-    * DIGIT: %30-%39 
-    * -: %2D .: %2E _: %5F
-    * ~: %7E，某些实现将其认为保留字符
+  * unreserved = `ALPHA / DIGIT / "**-**" / "**.**" / "**_**" / "~"`
+    * ALPHA: `%41-%5A and %61-%7A`
+    * DIGIT: `%30-%39 `
+    * `-: %2D .: %2E _: %5F`
+    * `~: %7E`，某些实现将其认为保留字符
 
 #### URI 百分号编码
 
 * 百分号编码的方式
 
-  * pct-encoded = "%" HEXDIG HEXDIG
+  * pct-encoded = `"%" HEXDIG HEXDIG`
     * US-ASCII：128 个字符（95 个可显示字符，33 个不可显示字符） 
     * 参见：https://zh.wikipedia.org/wiki/ASCII 
   * 对于 HEXDIG 十六进制中的字母，大小写等价
@@ -609,15 +609,12 @@ https://tools.ietf.org/html/rfc7231?test=1#page=-7
 
 * 对 URI 合法字符，编码与不编码是等价的 
 
-  * 例如，“URI 转换”既可以“URI%e8%bd%ac%e6%8d%a”，也可以 “%55%52%49%e8%bd%ac%e6%8d%a2” 
+  * 例如，“URI 转换”既可以“`URI%e8%bd%ac%e6%8d%a`”，也可以 “`%55%52%49%e8%bd%ac%e6%8d%a2`” 
 
     * https://www.baidu.com/s?wd=URI%20%e8%bd%ac%e6%8d%a2 
     * https://www.baidu.com/s?wd=%55%52%49%20%e8%bd%ac%e6%8d%a2
 
 ### HTTP 的请求行
-
-
-
 
 ## 二、WebSocket 协议
 

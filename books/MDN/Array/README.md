@@ -936,7 +936,7 @@ console.log(arr); // ['parrot', 'anemone', 'blue', 'drum', 'mandarin', 'sturgeon
 
 #### 从第 2 位开始删除 2 个元素
 
-```jjs
+```js
 var arr = ['parrot', 'anemone', 'blue', 'trumpet', 'sturgeon'];
 var removed = arr.splice(arr.length - 3, 2);
 

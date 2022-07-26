@@ -520,7 +520,7 @@ Array.prototype.$reduceRight = function (fn, initialVal) {
 
 #### findIndex
 
-```j
+```js
 
 ```
 

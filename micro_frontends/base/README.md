@@ -423,7 +423,7 @@ start({
 
 index.ejs
 
-```ejs
+```
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
@@ -484,7 +484,7 @@ registerApplication({
 
 index.ejs
 
-```ejs
+```
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
@@ -504,7 +504,7 @@ index.ejs
 
 index.ejs
 
-```ejs
+```
 <script type="systemjs-importmap">
   {
     "imports": {
@@ -647,7 +647,7 @@ module.exports = {
 
 容器应用配置 vue、vue-router
 
-```ejs
+```
 <script type="systemjs-importmap">
   {
     "imports": {
@@ -687,7 +687,7 @@ registerApplication({
 
 index.ejs
 
-```ejs
+```
   <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: localhost:*; script-src 'unsafe-inline' 'unsafe-eval' https: localhost:*; connect-src https: localhost:* ws://localhost:*; style-src 'unsafe-inline' https:; object-src 'none';"> 内容安全策略 --> 
 
 <% if (isLocal) { %>
@@ -863,7 +863,7 @@ module.exports = (webpackConfigEnv, argv) => {
 
 #### 4. 指定模块地址
 
-```ejs
+```
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
@@ -997,7 +997,7 @@ export function sayHello (who) {
 
 #### 4. 声明模块访问地址
 
-```ejs
+```
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
@@ -1089,7 +1089,7 @@ export default {
 
 #### 1. 添加 rxjs 的 import-map
 
-```ejs
+```
 <script type="systemjs-importmap">
   {
     "imports": {
@@ -1256,7 +1256,7 @@ yarn add single-spa-layout -S
 
 #### 2. 构建路由
 
-```ejs
+```
 <% if (isLocal) { %>
 <script type="systemjs-importmap">
   {
