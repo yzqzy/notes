@@ -30,14 +30,14 @@ const cleanDocs = (entry: string) => {
   })
 
   // remove dir
-  const needRemove = !entry.includes('docs')
+  const needRemove = !/docs$/.test(entry)
   needRemove && fs.rmdirSync(entry)
 }
 
 const buildModule = (entry: string): MdNode => {
   let ans: MdNode 
   
-  const cache: MdNode[] = []
+  const removeNodes: MdNode[] = []
 
   const isMarkdown = (path: string) => path.includes('README.md')
   const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs', 'books']
@@ -45,7 +45,7 @@ const buildModule = (entry: string): MdNode => {
 
   const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
 
-  const getModules = (entry: string, parent?: MdNode) => {
+  const getModules = (entry: string, layer: number, parent?: MdNode) => {
     const module: MdNode = {
       name: getFileName(entry),
       path: entry,
@@ -61,7 +61,12 @@ const buildModule = (entry: string): MdNode => {
       const stat = fs.statSync(_entry)
   
       if (stat.isDirectory() && isValid(_entry)) {
-        module.children?.push(getModules(_entry, module))
+        const needMove = layer < 2
+        if (needMove) {
+          module.children?.push(
+            getModules(_entry, layer + 1, module)
+          )
+        }
         return
       }
       
@@ -75,15 +80,15 @@ const buildModule = (entry: string): MdNode => {
         return
       }
       
-      cache.push(module)
+      removeNodes.push(module)
     })
 
     return module
   }
 
-  ans = getModules(entry)
+  ans = getModules(entry, 0)
 
-  cache.forEach(m => {
+  removeNodes.forEach(m => {
     while (m && m.parent && !m.mark) {
       m.parent.children = m.parent.children?.filter((item) => item.path != m.path)
       m = m.parent
@@ -97,11 +102,13 @@ interface Sidebar {
   text: string;
   link?: string;
   items?: Sidebar[]
+  collapsible?: boolean;
 }
 
 const generateDocs = (module: MdNode) => {
   const sidebar: Sidebar = {
-    text: module.name
+    text: module.name,
+    collapsible: true
   }
 
   const currentDir = module.path.replace(entry, output)
@@ -123,6 +130,7 @@ const generateDocs = (module: MdNode) => {
       })
     }
   }
+  const normalizeText = (name: string) => name.replace(/README.md/, 'index.md')
 
   if (Array.isArray(module.children)) {
     if (!fs.existsSync(currentDir)) {
@@ -137,11 +145,12 @@ const generateDocs = (module: MdNode) => {
       sidebar.items = items
     }
   } else {
-    fs.copyFileSync(module.path, currentDir.replace(/README.md/, 'index.md'))
-    sidebar.link = module.path
+    fs.copyFileSync(module.path, normalizeText(currentDir))
+    sidebar.link = normalizeText(
+      module.path
       .replace(entry, '')
       .replace(/\\/g, '/')
-      .replace(/README.md/, 'index.md')
+    )
   }
 
   return sidebar
@@ -154,17 +163,14 @@ const genrateSidebarConfig = (sideber: Sidebar) => {
   config = config?.filter(node => node.text !== 'README.md')
 
   const clear = (_sidebar: Sidebar) => {
-    const child = _sidebar.items && _sidebar.items[0]
-
-    if (
-      _sidebar.items?.length == 1 &&
-      child && child.text === 'README.md'
-    ) {
-      _sidebar.link = child.link
-      child.text = _sidebar.text
-      return;
+    if (Array.isArray(_sidebar.items)) {
+      _sidebar.items.forEach(item => {
+        if (item.text === 'README.md' || item.text === 'index.md') {
+          _sidebar.link = item.link
+          item.text = _sidebar.text
+        }
+      })
     }
-    
     _sidebar.items?.forEach(clear)
   }
 
