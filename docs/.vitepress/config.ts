@@ -4,7 +4,7 @@ import sidebars from './sidebar.json'
 export default defineConfig((ctx) => ({
   base: ctx.mode == 'production' ? '/notes/' : '', 
   lang: 'en-US',
-  title: '月落个人笔记',
+  title: 'Personal Notes',
   description: 'Web Developer & JS Fancier',
   themeConfig: {
     footer: {
