@@ -1,0 +1,1 @@
+import{_ as e,c as t,o as a}from"./app.6041488b.js";const l=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"alg/leetcode/index.md"}'),r={name:"alg/leetcode/index.md"};function o(n,c,s,d,i,p){return a(),t("div")}var m=e(r,[["render",o]]);export{l as __pageData,m as default};
