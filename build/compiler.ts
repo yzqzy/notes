@@ -12,8 +12,26 @@ interface MdNode {
   children?: MdNode[]
 }
 
-const cleanDocs = () => {
-  // TODO
+const cleanDocs = (entry: string) => {
+  const dirs = fs.readdirSync(entry)
+
+  dirs.forEach(dir => {
+    const newPath = path.join(entry, dir)
+    const stat = fs.statSync(newPath)
+    const needRemove = dir !== '.vitepress'
+
+    if (stat.isDirectory()) {
+      // recursion
+      needRemove && cleanDocs(newPath)
+    } else {
+      // remove file
+      fs.unlinkSync(newPath)
+    }
+  })
+
+  // remove dir
+  const needRemove = !entry.includes('docs')
+  needRemove && fs.rmdirSync(entry)
 }
 
 const buildModule = (entry: string): MdNode => {
@@ -159,7 +177,7 @@ const genrateSidebarConfig = (sideber: Sidebar) => {
 }
 
 const buildEntry = (entry: string) => {
-  cleanDocs()
+  cleanDocs(output)
 
   const modules = buildModule(entry)
   const sidebar = generateDocs(modules)
