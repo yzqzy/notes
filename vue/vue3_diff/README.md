@@ -16,7 +16,7 @@ Vue3 Diff 算法和 Vue2 基本是一致的，主要看一下 patch 方法。
 
 ### patch 流程图
 
-![流程图](F:\js\review\vue\vue3_diff\images\0.png)
+![流程图](./images/0.png)
 
 ### patch 源码分析
 
@@ -785,25 +785,25 @@ const patchKeyedChildren = (
 
 ##### 图3
 
-![图三](F:\js\review\vue\vue3_diff\images\3.png)
+![图三](./images/3.png)
 
 
 
 ##### 图4
 
-![图4](F:\js\review\vue\vue3_diff\images\4.png)
+![图4](./images/4.png)
 
 
 
 ##### 图5
 
-![图5](F:\js\review\vue\vue3_diff\images\5.png)
+![图5](./images/5.png)
 
 
 
 ##### 图6
 
-![图6](F:\js\review\vue\vue3_diff\images\6.png)
+![图6](./images/6.png)
 
 
 

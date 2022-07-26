@@ -6,5 +6,6 @@ node_modules/
 
 # vitepress
 docs/*
+docs/.vitepress/.temp
 docs/.vitepress/dist
 !/docs/.vitepress

@@ -73,7 +73,7 @@ function add (a, b) {
 // Js 引擎只有在实际运行时才可以确定参数类型
 ```
 
-```c++
+```
 class c {
   public: 
   	int x;

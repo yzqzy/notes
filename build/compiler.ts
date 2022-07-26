@@ -41,7 +41,9 @@ const buildModule = (entry: string): MdNode => {
 
   const isMarkdown = (path: string) => path.includes('README.md')
   const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs', 'books']
-  const isValid = (dir: string) => !validFiles.some(_ => dir.includes(_))
+  const isValid = (dir: string) => 
+    // valid files and max files
+    !validFiles.some(_ => dir.includes(_) || /vue_source/.test(dir))
 
   const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
 
@@ -73,7 +75,11 @@ const buildModule = (entry: string): MdNode => {
       }
       
       if(isMarkdown(_entry)) {
-        module.mark = true
+        let m = module
+        while (m && m.parent) {
+          m.mark = true
+          m = m.parent
+        }
         module.children?.push({
           name: dir,
           mark: false,
@@ -91,8 +97,10 @@ const buildModule = (entry: string): MdNode => {
   ans = getModules(entry, 0)
 
   removeNodes.forEach(m => {
-    while (m && m.parent && !m.mark) {
-      m.parent.children = m.parent.children?.filter((item) => item.path != m.path)
+    while (m && m.parent) {
+      if (!m.mark) {
+        m.parent.children = m.parent.children?.filter((item) => item.path != m.path)
+      }
       m = m.parent
     }
   })
@@ -118,18 +126,30 @@ const generateDocs = (module: MdNode) => {
     const dir = path.resolve(module.path, 'images')
     const destDir = dir.replace(entry, output)
 
-    if (fs.existsSync(dir)) {
-      if (!fs.existsSync(destDir)) {
-        fs.mkdirSync(destDir)
+    const copy = (dir: string, destDir: string) => {
+      if (fs.existsSync(dir)) {
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir)
+        }
+        
+        const files = fs.readdirSync(dir)
+        files.forEach(file => {
+          const source = path.join(dir, file)
+          const target = path.join(destDir, file)
+          const stat = fs.statSync(source)
+          
+          if (stat.isFile()) {
+            const readStream = fs.createReadStream(source)
+            const writeStream = fs.createWriteStream(target)
+            readStream.pipe(writeStream);
+          } else {
+            copy(source, target)
+          }
+        })
       }
-
-      const files = fs.readdirSync(dir)
-      files.forEach(file => {
-        const readStream = fs.createReadStream(`${dir}/${file}`)
-        const writeStream = fs.createWriteStream(`${destDir}/${file}`)
-        readStream.pipe(writeStream)
-      })
     }
+
+    copy(dir, destDir)
   }
   const normalizeText = (name: string) => name.replace(/README.md/, 'index.md')
 

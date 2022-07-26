@@ -130,7 +130,7 @@ let vm = new Vue({
 
 首先来看一下数据劫持的流程图。
 
-<img src="./public/imgs/tu01.png" style="zoom: 80%;" />
+<img src="./images/tu01.png" style="zoom: 80%;" />
 
 #### 对象劫持
 
@@ -154,7 +154,7 @@ js 调用时存在参数上限，[参数个数上限：65536](https://bugs.webki
 
 ### 文本编译
 
-<img src="./public/imgs/tu02.png" style="zoom: 80%;" />
+<img src="./images/tu02.png" style="zoom: 80%;" />
 
 #### 编译文本
 
@@ -164,7 +164,7 @@ js 调用时存在参数上限，[参数个数上限：65536](https://bugs.webki
 
 上面文本编译我们已经处理完了，接下来处理依赖收集的问题（暂不考虑数组和批量更新问题）。
 
-<img src="./public/imgs/tu03.png" style="zoom: 80%;" />
+<img src="./images/tu03.png" style="zoom: 80%;" />
 
 ### 批量异步更新策略
 
@@ -172,7 +172,7 @@ js 调用时存在参数上限，[参数个数上限：65536](https://bugs.webki
 
 由于每个对象都有自己的一个 Dep，并且依赖了相同的 watcher ，更新多条数据时会导致多次渲染更新，其实并不需要多次渲染，只需要更新一次就够了，下面我们来处理一下这个问题。
 
-<img src="./public/imgs/tu04.png" style="zoom: 80%;" />
+<img src="./images/tu04.png" style="zoom: 80%;" />
 
 #### 批量更新
 

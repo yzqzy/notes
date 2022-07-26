@@ -103,7 +103,7 @@ var arr: Array<number> = [1, 2, 3];
 arr.push('Hello');
 ```
 
-数组类型注释的格式是 Array<T>，T 表示数组中每项的数据类型。在上述代码中，arr 是每项均为数字的数组。  
+数组类型注释的格式是 `Array<T>`，T 表示数组中每项的数据类型。在上述代码中，arr 是每项均为数字的数组。  
 
 如果我们给这个数组添加了一个字符串，Flow 能检查出错误。
 
@@ -5075,7 +5075,7 @@ const resolve = once((res: Object | Class<Component>) => {
 
 ⾸先把加载结果缓存到 factory.resolved 中，这个时候因为 sync 已经为 false，则执⾏ forceRender() 再次执⾏到 resolveAsyncComponent ：
 
-```j
+```js
 if (isDef(factory.resolved)) {
 	return factory.resolved
 }
