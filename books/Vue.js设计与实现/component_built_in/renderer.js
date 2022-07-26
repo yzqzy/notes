@@ -64,7 +64,19 @@ function createRenderer(options) {
       }
     }
 
+    // 判断一个 VNode 是否需要过渡
+    const needTransition = vnode.transtion
+    if (needTransition) {
+      // 调用 transition.beforeEnter 钩子，并将 DOM 元素作为参数传递
+      vnode.transtion.beforEnter(el)
+    }
+
     insert(el, container, anchor)
+
+    if (needTransition) {
+      // 调用 transition.enter 钩子，并将 DOM 元素作为参数传递
+      vnode.transtion.enter(el)
+    }
   }
 
   function patchChildren(n1, n2, container) {
@@ -258,6 +270,9 @@ function createRenderer(options) {
   const Fragment = Symbol()
 
   function unmount(vnode) {
+    // 判断 vnode 是否需要过渡处理
+    const needTransition = vnode.transtion
+
     if (vnode.type === Fragment) {
       vnode.children.forEach(c => unmount(c))
       return
@@ -272,9 +287,21 @@ function createRenderer(options) {
       }
       return
     }
+
     const parent = vnode.el.parentNode
+
     if (parent) {
-      parent.removeChild(vnode.el)
+      // 将卸载动作封装到 performRemove 函数中
+      const performRemove = () => parent.removeChild(vnode.el)
+
+      if (needTransition) {
+        // 如果需要过渡处理，则调用 transition.leave 钩子，
+        // 同时将 DOM 元素和 performRemove 函数作为参数传递
+        vnode.transtion.leave(vnode.el, performRemove)
+      } else {
+        // 如果不需要过渡处理，直接执行卸载操作
+        performRemove()
+      }
     }
   }
 
@@ -772,3 +799,59 @@ const Teleport = {
 }
 
 // -----------------------------
+
+const Transtion = {
+  name: 'Transition',
+  setup(props, { slots }) {
+    return () => {
+      // 通过默认插槽获取需要过渡的元素
+      const innerVNode = slots.default()
+
+      // 在过渡元素的 VNode 对象上添加 transition 相应的钩子函数
+      innerVNode.transtion = {
+        beforEnter(el) {
+          // 设置处理状态：添加 enter-from 和 enter-active 类
+          el.classList.add('enter-from')
+          el.classList.add('enter-active')
+        },
+        enter(el) {
+          // 下一帧切换到结束状态
+          nextFrame(() => {
+            // 移除 enter-from 类，添加 enter-to 类
+            el.classList.remove('enter-from')
+            el.classList.add('enter-to')
+            // 监听 transitionend 事件完成
+            el.addEventListener('transitionend', () => {
+              el.classList.remove('enter-to')
+              el.classList.remove('enter-active')
+            })
+          })
+        },
+        leave(el, performRemove) {
+          // 设置离场过渡的初始状态：添加 leve-from 和 leave-active 类
+          el.classList.add('leave-from')
+          el.classList.add('leave-active')
+          // 强制 reflow：使初始状态生效
+          document.body.offsetHeight
+          // 在下一帧切换状态
+          nextFrame(() => {
+            // 移除 leave-from 类，添加 leave-to 类
+            el.classList.remove('leave-from')
+            el.classList.add('leave-to')
+
+            // 监听 transitionend 事件做收尾工作
+              el.addEventListener('transitionend', () => {
+                el.classList.remove('leave-to')
+                el.classList.remove('leave-active')
+                // 当过渡完成后，调用 performRemove 函数将 DOM 元素移除
+                performRemove()
+              })
+          })
+        }
+      }
+
+      // 返回需要过渡的元素
+      return innerVNode
+    }
+  }
+}

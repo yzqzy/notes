@@ -21,6 +21,16 @@
     .enter-active {
       transition: transform 1s ease-in-out;
     }
+
+    .leave-from {
+      transform: translateX(0);
+    }
+    .leave-to {
+      transform: translateX(200px);
+    }
+    .leave-active {
+      transition: transform 2s ease-out;
+    }
   </style>
 </head>
 <body>
@@ -42,12 +52,39 @@
       el.classList.remove('enter-from')
       el.classList.add('enter-to')
 
-      // 监听 transitionend 时间完成
+      // 监听 transitionend 事件完成
       el.addEventListener('transitionend', () => {
         el.classList.remove('enter-to')
         el.classList.remove('enter-active')
       })
-    }) 
+    })
+
+    el.addEventListener('click', () => {
+      // 将卸载动作封装到 performRemove 函数中
+      const performRemove = () => el.parentNode.removeChild(el)
+
+      // 设置初始状态：添加 leave-from 和 leave-active 类
+      el.classList.add('leave-from')
+      el.classList.add('leave-active')
+
+      // 强制 reflow：使初始状态生效
+      document.body.offsetHeight
+
+      // 在下一帧切换状态
+      requestAnimationFrame(() => {
+        // 切换到结束状态
+        el.classList.remove('leave-from')
+        el.classList.add('leave-to')
+      })
+
+      // 监听 transitionend 事件做收尾工作
+      el.addEventListener('transitionend', () => {
+        el.classList.remove('leave-to')
+        el.classList.remove('leave-active')
+        // 当过渡完成后，调用 performRemove 函数将 DOM 元素移除
+        performRemove()
+      })
+    })
   </script>
   
 </body>
