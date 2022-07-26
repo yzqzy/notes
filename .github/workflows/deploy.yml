@@ -20,7 +20,7 @@ jobs:
         run: yarn compile
 
       - name: Build
-        run: yarn docs:build
+        run: export NODE_OPTIONS=--max_old_space_size=4096 && yarn docs:build
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
