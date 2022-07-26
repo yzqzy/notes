@@ -1,10 +1,14 @@
 import { defineConfig } from "vitepress";
 import sidebars from './sidebar.json'
 
+// @ts-ignore
 export default defineConfig((ctx) => ({
   base: ctx.mode == 'production' ? '/notes/' : '', 
   lang: 'en-US',
   title: 'Personal Notes',
+  head: [
+    ['link', { rel: 'icon', href: '/favicon.ico' }]
+  ],
   description: 'Web Developer & JS Fancier',
   themeConfig: {
     footer: {

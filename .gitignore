@@ -9,3 +9,4 @@ docs/*
 docs/.vitepress/.temp
 docs/.vitepress/dist
 !/docs/.vitepress
+!/docs/public

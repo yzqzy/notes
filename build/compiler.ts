@@ -18,7 +18,7 @@ const cleanDocs = (entry: string) => {
   dirs.forEach(dir => {
     const newPath = path.join(entry, dir)
     const stat = fs.statSync(newPath)
-    const needRemove = dir !== '.vitepress'
+    const needRemove = dir !== '.vitepress' && dir !== 'public'
 
     if (stat.isDirectory()) {
       // recursion
