@@ -8371,7 +8371,372 @@ patchProps (el, key, preValue, nextValue) {
 上一节中，我们介绍了基本的事件处理。本小节我们将讨论事件冒泡与更新时机相结合所导致的问题。为了更清晰地的描述问题，我们需要构造一个小例子。
 
 ```js
+const { effect, ref } = VueReactivity
+
+const bol = ref(false)
+
+effect(() => {
+  // 创建 vnode
+  const vnode = {
+    type: 'div',
+    props: bol.value ? {
+      onClick: () => {
+        alert('父元素 clicked')
+      }
+    } : {},
+    children: [
+      {
+        type: 'p',
+        props: {
+          onClick: () => {
+            bol.value = true
+          }
+        },
+        children: 'text'
+      }
+    ]
+  }
+
+  // 渲染 vnode
+  renderer.render(vnode, document.querySelector('#app'))
+})
 ```
+
+这个例子比较复杂。在上面这段代码中，我们创建一个响应式数据 `bol`，它是一个 `ref`，初始值为 false。接着，创建了一个 effect，并在副作用函数内调用 `renderer.render` 函数来渲染 `vnode`。这里的重点在于该 `vnode` 对象，它描述了一个 div 元素，并且该 div 元素具有一个 p 元素作为子节点。
+
+* div 元素：它的 props 对象的值是由一个三元表达式决定的。在首次渲染时，由于 `bol.value` 的值为 false，所以它的 props 的值是一个空对象。
+* p 元素：它具有 click 点击事件，并且当点击它时，事件处理函数会将 `bol.value` 的值设置为 true。
+
+综合上述特点，我们来思考一个问题：当首次渲染完成后，用鼠标点击 p 元素，会触发父级 div 元素的 click 事件的事件处理函数执行吗？
+
+答案其实很明显，在首次渲染完成之后，由于 `bol.value` 的值为 false，所以渲染器并不会为 div 元素绑定点击事件。当用鼠标点击 p 元素时，即使 click 的事件可以从 p 元素冒泡到父级 div 元素，但由于 div 元素没有绑定 click 函数的事件处理函数，所以什么都不会发生。但事实时，当你尝试运行上面这段代码并点击 p 元素时，会发现父级 div 元素的 click 事件的事件处理函数竟然执行了。为什么会发生如此奇怪的现象呢？这其实与更新机制有关，我们来分析一下当点击 p 元素时，到底发生了什么？
+
+当点击 p 元素时，绑定到它身上的 click 事件处理函数会执行，于是 `bol.value` 的值被改为 true。接下来的一步非常关键，由于 `bol` 是一个响应式数据，所以当它的值发生变化时，会触发副作用函数重新执行。由于此时的 `bol.value` 已经变成 true，所以在更新阶段，渲染器会为父级 div 元素绑定 click 事件处理函数。当更新完成之后，点击事件才从 p 元素冒泡到父级 div 元素。由于此时 div 元素已经绑定了 click 事件的处理函数，因此就发生了上述奇怪的现象。下图是点击 p 元素后，整个更新和事件触发的流程图。
+
+<img src="./images/patch01.png" />
+
+根据上图可知，之所以会出现上述奇怪的现象，是因为更新操作发生在事件冒泡之前，即为 div 元素绑定事件处理函数发生在事件冒泡之前。那如何避免这个问题呢？那如何避免这个问题呢？一个很自然的想法是，能否将绑定事件的动作移动到事件冒泡之后？但这个想法并不可靠，因为我们无法知道事件冒泡是否完成，以及完成到什么程度。你可能会想，Vue.js 的更新难道不是在一个异步队列中进行的吗？那是不是自然能够避免这个问题？其实不然，换句话来说，微任务会穿插在由事件冒泡触发的多个事件处理函数之间被执行。因此，即使把绑定事件的动作放到微任务中，也无法避免这个问题。
+
+那应该如何解决呢？其实，仔细观察上图就会发现，触发事件的时间与绑定事件的时间之间是有联系的。
+
+<img src="./images/patch02.png" />
+
+由上图可以发现，事件触发的时间要早于事件处理函数被绑定的时间。这意味着当一个事件被触发时，目标元素上还没有绑定相关的事件处理函数，我们可以根据这个特点来解决问题：**屏蔽所有绑定时间晚于事件触发时间的事件处理函数的执行**。基于此，我们可以调整 `patchProps` 函数中关于事件的代码。
+
+```js
+patchProps(el, key, prevValue, nextValue) {
+  if (/^on/.test(key)) {
+    const invokers = el._vei || (el._vei = {})
+    let invoker = invokers[key]
+    const name = key.slice(2).toLowerCase()
+    if (nextValue) {
+      if (!invoker) {
+        invoker = el._vei[key] = (e) => {
+          // e.timeStamp 是事件发生的时间
+          // 如果事件发生的时间早于事件处理函数绑定的事件，则不执行事件处理函数
+          if (e.timeStamp < invoker.attached) return
+          if (Array.isArray(invoker.value)) {
+            invoker.value.forEach(fn => fn(e))
+          } else {
+            invoker.value(e)
+          }
+        }
+        invoker.value = nextValue
+        // 添加 invoker.attached 属性，存储事件处理函数被绑定的时间
+        invoker.attached = performance.now()
+        el.addEventListener(name, invoker)
+      } else {
+        invoker.value = nextValue
+      }
+    } else if (invoker) {
+      el.removeEventListener(name, invoker)
+    }
+  } else if (key === 'class') {
+    el.className = nextValue || ''
+  } else if (shouldSetAsProps(el, key, nextValue)) {
+    const type = typeof el[key]
+    if (type === 'boolean' && nextValue === '') {
+      el[key] = true
+    } else {
+      el[key] = nextValue
+    }
+  } else {
+    el.setAttribute(key, nextValue)
+  }
+}
+```
+
+如上面的代码所示，我们在原来的基础上只添加了两行代码。首先，我们为伪造的事件处理函数添加了 `invoker.attached` 属性，用来存储事件处理函数被绑定的时间。然后，在 invoker 执行的时候，通过事件对象的 `e.timeStamp` 获取事件发生的时间。最后，比较两者，如果事件处理函数被绑定的时间万余事件发生的时间，则不执行该事件处理函数。
+
+在关于时间的存储和比较方面，我们使用的是高精时间，即 `performance.now`。但根据浏览器的不同，`e.timeStamp` 的值也会有所不同。它既可能是高精时间，也可能是非高精时间。因此，严格来讲，这里需要做兼容处理。不过在 `Chrome 49`、`Firefox 54`、`Opera 36` 以及之后的版本中，`e.timeStamp` 的值都是高精时间。
+
+#### 更新子节点
+
+前几小节我们讲解了元素属性的更新，包括普通标签属性和事件。接下来，我们将讨论如何更新元素的子节点。首先，回顾一下元素的子节点是如何被挂载的，如下面的 `mountElement` 函数的代码所示：
+
+```js
+function mountElement(vnode, container, anchor) {
+  const el = vnode.el = createElement(vnode.type)
+
+  // 挂载子节点，首先判断 children 的类型
+  if (typeof vnode.children === 'string') {
+    // 如果是字符串类型，说明是文本子节点
+    setElementText(el, vnode.children)
+  } else if (Array.isArray(vnode.children)) {
+    // 如果是数字，说明是多个子节点
+    vnode.children.forEach(child => {
+      patch(null, child, el)
+    })
+  }
+
+  if (vnode.props) {
+    for (const key in vnode.props) {
+      patchProps(el, key, null, vnode.props[key])
+    }
+  }
+
+  insert(el, container, anchor)
+}
+```
+
+在挂载子节点时，首先要区分其类型：
+
+* 如果 `vnode.children` 是字符串，则说明元素具有文本子节点；
+* 如果 `vnode.children` 是数组，则说明具有多个子节点。
+
+这里需要思考的是，为什么要区分子节点的类型呢？其实这是一个规范性的问题，因为只有子节点的类型是规范化的，才有利于我们编写更新逻辑。因此，在具体讨论如何更新子节点之前，我们有必要先规范化 `vnode.children`。那应该设定怎样的规范呢？为了搞清楚这个问题，我们需要先搞清楚在一个 HTML 页面中，元素的子节点都有哪些情况，如下面的 HTML 代码所示：
+
+```html
+<!-- 没有子节点 -->
+<div></div>
+<!-- 文本节点 -->
+<div>Some Text</div>
+<!-- 多个节点 -->
+<div>
+  <p/>
+  <p/>
+</div>
+```
+
+对于一个元素来说，它的子节点无非有以下三种情况。
+
+* 没有子节点，此时 `vnode.children` 的值为 null。
+* 具有文本子节点，此时 `vnode.children` 的值为字符串，代表文本的内容。
+* 其他情况，无论是单个元素子节点，还是多个子节点（可能是文本节点和元素的混合），都可以用数组来表示。
+
+如下面的代码所示：
+
+```js
+// 没有子节点
+vnode = {
+  type: 'div',
+  children: null
+}
+// 文本子节点
+vnode = {
+  type: 'div',
+  children: 'Some Text'
+}
+// 其他情况
+vnode = {
+  type: 'div',
+  children: [
+    { type: 'p' },
+    'Some Text'
+  ]
+}
+```
+
+现在，我们已经规范化了 `vnode.children` 的类型。既然一个 vnode 的子节点可能有三种情况，那么当渲染器执行更新时，新旧子节点都分别是三种情况之一。所以，我们可以总结出更新子节点时的全部九种可能。
+
+<img src="./images/patch03.png" />
+
+但落实到代码，我们会发现其实并不需要完全覆盖这九种可能。
+
+```js
+function patchElement(n1, n2) {
+  const el = n2.el = n1.el
+  const oldProps = n1.props
+  const newProps = n2.props
+  
+  // 第一步：更新 props
+  for (const key in newProps) {
+    if (newProps[key] !== oldProps[key]) {
+      patchProps(el, key, oldProps[key], newProps[key])
+    }
+  }
+  for (const key in oldProps) {
+    if (!(key in newProps)) {
+      patchProps(el, key, oldProps[key], null)
+    }
+  }
+
+  // 第二步：更新 children
+  patchChildren(n1, n2, el)
+}
+```
+
+如上面的代码所示，更新子节点是对一个元素进行打补丁的最后一步操作。我们将它封装到 `patchChildren` 函数中，并将新旧 vnode 以及当前正在被打补丁的 DOM 元素 el 作为参数传递给它。
+
+`patchChildren` 函数的实现如下：
+
+```js
+function patchChildren(n1, n2, container) {
+  // 判断新子节点的类型是否是文本节点
+  if (typeof n2.children === 'string') {
+    // 旧子节点的类型有三种可能：没有子节点、文本子节点以及一组子节点
+    // 只有当旧子节点为一组子节点时，才需要逐个卸载，其他情况什么都不需要做
+    if (Array.isArray(n1.children)) {
+      n1.children.forEach((c) => unmount(c))
+    }
+    // 最后将新的文本子节点内容设置给父元素容器
+    setElementText(container, n2.children)
+  }
+}
+```
+
+如上面这段代码所示，首先，我们检测新子节点的类型是否是文本子节点，如果是，则还需要检查旧子节点的类型。旧子节点的类型可能有三种情况，分别是：没有子节点、文本子节点或一组子节点。如果没有旧子节点或旧子节点的类型是文本子节点，那么只需要将新的文本内容设置给容器元素即可；如果旧子节点存在，并且不是文本子节点，则说明它的类型是一组子节点。这时我们需要循环遍历它们，并逐个调用 `unmount` 函数进行卸载。
+
+如果新子节点的类型不是文本子节点，我们需要再添加一个判断分支，判断它是否是一组子节点。
+
+```js
+function patchChildren(n1, n2, container) {
+  // 判断新子节点的类型是否是文本节点
+  if (typeof n2.children === 'string') {
+    // 旧子节点的类型有三种可能：没有子节点、文本子节点以及一组子节点
+    // 只有当旧子节点为一组子节点时，才需要逐个卸载，其他情况什么都不需要做
+    if (Array.isArray(n1.children)) {
+      n1.children.forEach((c) => unmount(c))
+    }
+    // 最后将新的文本子节点内容设置给父元素容器
+    setElementText(container, n2.children)
+  } else if (Array.isArray(n2.children)) {
+    // 说明新子节点是一组子节点
+
+    // 判断旧子节点是否也是一组子节点
+    if (Array.isArray(n1.children)) {
+      // 代码运行到这里，说明新旧子节点都是一组子节点，这里涉及核心的 diff 算法
+    } else {
+      // 此时：
+      // 旧子节点要么是文本子节点，要么不存在
+      // 但无论哪种情况，我们都只需要将容器清空，然后将新的一组子节点逐个挂载
+      setElementText(container, '')
+      n2.children.forEach(c => patch(null, c, container))
+    }
+  }
+}
+```
+
+在上面这段代码中，我们新增了对 `n2.children` 类型的判断：检测它是否是一组子节点，如果是，接着再检查旧子节点的类型。同样，旧子节点也有三种可能：没有子节点、文本子节点和一组子节点。对于没有旧子节点或者旧子节点是文本子节点的情况，我们只需要将容器元素清空，然后逐个将新的一组子节点挂载到容器中即可。如果旧子节点也是一组子节点，则涉及新旧两组子节点的比对，这里就涉及我们常用的 Diff 算法。这里我们暂时使用一种傻瓜式的方法来保证功能可用。这个方法很简单，即把旧的一组子节点全部卸载，再将新的一组子节点全部挂载。
+
+```js
+function patchChildren(n1, n2, container) {
+  // 判断新子节点的类型是否是文本节点
+  if (typeof n2.children === 'string') {
+    // 旧子节点的类型有三种可能：没有子节点、文本子节点以及一组子节点
+    // 只有当旧子节点为一组子节点时，才需要逐个卸载，其他情况什么都不需要做
+    if (Array.isArray(n1.children)) {
+      n1.children.forEach((c) => unmount(c))
+    }
+    // 最后将新的文本子节点内容设置给父元素容器
+    setElementText(container, n2.children)
+  } else if (Array.isArray(n2.children)) {
+    // 说明新子节点是一组子节点
+
+    // 判断旧子节点是否也是一组子节点
+    if (Array.isArray(n1.children)) {
+      // 代码运行到这里，说明新旧子节点都是一组子节点，这里涉及核心的 diff 算法
+
+      // 临时处理：
+      // 1. 将旧的一组子节点全部卸载
+      n1.children.forEach(c => unmount(c))
+      // 2. 再将新的一组子节点全部挂载到容器中
+      n2.children.forEach(c => patch(null, c, container))
+    } else {
+      // 此时：
+      // 旧子节点要么是文本子节点，要么不存在
+      // 但无论哪种情况，我们都只需要将容器清空，然后将新的一组子节点逐个挂载
+      setElementText(container, '')
+      n2.children.forEach(c => patch(null, c, container))
+    }
+  }
+}
+```
+
+这样做所以能够实现需求，但并不是最优解。现在，对于新子节点来说，还剩下最后一种情况，即新子节点不存在。
+
+```js
+function patchChildren(n1, n2, container) {
+  // 判断新子节点的类型是否是文本节点
+  if (typeof n2.children === 'string') {
+    // 旧子节点的类型有三种可能：没有子节点、文本子节点以及一组子节点
+    // 只有当旧子节点为一组子节点时，才需要逐个卸载，其他情况什么都不需要做
+    if (Array.isArray(n1.children)) {
+      n1.children.forEach((c) => unmount(c))
+    }
+    // 最后将新的文本子节点内容设置给父元素容器
+    setElementText(container, n2.children)
+  } else if (Array.isArray(n2.children)) {
+    // 说明新子节点是一组子节点
+
+    // 判断旧子节点是否也是一组子节点
+    if (Array.isArray(n1.children)) {
+      // 代码运行到这里，说明新旧子节点都是一组子节点，这里涉及核心的 diff 算法
+
+      // 临时处理：
+      // 1. 将旧的一组子节点全部卸载
+      n1.children.forEach(c => unmount(c))
+      // 2. 再将新的一组子节点全部挂载到容器中
+      n2.children.forEach(c => patch(null, c, container))
+    } else {
+      // 此时：
+      // 旧子节点要么是文本子节点，要么不存在
+      // 但无论哪种情况，我们都只需要将容器清空，然后将新的一组子节点逐个挂载
+      setElementText(container, '')
+      n2.children.forEach(c => patch(null, c, container))
+    }
+  } else {
+    // 代码运行到这里，说明新子节点不存在
+    if (Array.isArray(n1.children)) {
+      // 旧子节点是一组子节点，只需逐个卸载即可
+      n1.children.forEach(c => unmount(c))
+    } else if (typeof n1.children === 'string') {
+      // 旧子节点是文本子节点，直接清空
+      setElementText(container, '')
+    }
+    // 如果没有旧子节点，那么什么都不需要做
+  }
+}
+```
+
+可以看到，如果代码走到 else 分支，则说明新子节点不存在。这时，对于旧子节点来说仍然有三种可能：没有子节点、文本子节点以及一组子节点。如果旧子节点不存在，则什么都不需要做；如果旧子节点是一组子节点，则逐个卸载即可；如果旧的子节点是文本子节点，则清空文本内容即可。
+
+#### 文本节点和注释节点
+
+之前我们只讲解了一种类型的 vnode，即用于描述普通标签的 vnode，如下面的代码所示：
+
+```js
+const vnode = {
+  type: 'div'
+}
+```
+
+我们用 `vnode.type` 来描述元素的名称，它是一个字符串类型的值。
+
+接下来，我们讨论如何用虚拟 DOM 描述更多类型的真实 DOM。其中最常见的两种节点类型是文本节点和注释节点，如下面的 HTML 代码所示：
+
+```html
+<div><!-- 注释节点 -->我是文本节点</div>
+```
+
+`<div>` 是元素节点，它包含一个注释节点和一个文本节点。那么，如果使用 `vnode` 描述注释节点和文本节点呢？
+
+我们知道，`vnode.type` 属性能够代表一个 vnode 的类型。如果 `vnode.type` 的值是字符串类型，则代表它描述的是普通标签，并且该值就代表标签的名称。但注释节点与文本节点不同普通标签节点，它们不具有标签名称，所以我们需要人为创造一些唯一的标识，并将其作为注释节点和文本节点的 type 属性值，如下面的代码所示：
+
+```js
+```
+
+
 
 ### 简易 Diff 算法
 
