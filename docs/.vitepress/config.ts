@@ -7,7 +7,7 @@ export default defineConfig((ctx) => ({
   lang: 'en-US',
   title: 'Personal Notes',
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }]
+    ['link', { rel: 'icon', href: '/notes/favicon.ico' }]
   ],
   description: 'Web Developer & JS Fancier',
   themeConfig: {
