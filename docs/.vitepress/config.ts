@@ -2,7 +2,7 @@ import { defineConfig } from "vitepress";
 import sidebars from './sidebar.json'
 
 export default defineConfig((ctx) => ({
-  base: ctx.mode == 'production' ? '.' : '', 
+  base: ctx.mode == 'production' ? '/notes/' : '', 
   lang: 'en-US',
   title: '月落个人笔记',
   description: 'Web Developer & JS Fancier',
