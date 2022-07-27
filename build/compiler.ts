@@ -42,8 +42,8 @@ const buildModule = (entry: string): MdNode => {
   const isMarkdown = (path: string) => path.includes('README.md')
   const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs', 'books']
   const isValid = (dir: string) => 
-    // valid files and max files
-    !validFiles.some(_ => dir.includes(_) || /vue_source/.test(dir))
+    // valid file and large file
+    !validFiles.some(_ => dir.includes(_))
 
   const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
 
