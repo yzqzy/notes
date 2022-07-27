@@ -37,3 +37,8 @@ type TupleToObject<T extends readonly any[]> = {
 type First<T extends any[]> = T['length'] extends 0 ? never : T[0]
 ```
 
+### Length of Tuple
+
+```typescript
+type Length<T extends readonly any[]> = T['length']
+```
