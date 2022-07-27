@@ -1,6 +1,6 @@
-## NPM 私服
+# NPM 私服
 
-### nexus
+## nexus
 
 **安装**
 
@@ -96,7 +96,7 @@ nrm add yueluo https://registry.yueluo.club/nexus/repository/npm-public/
 nrm use yueluo
 ```
 
-### verdaccio docker
+## verdaccio docker
 
 ```js
 docker pull verdaccio/verdaccio
@@ -142,7 +142,7 @@ docker run -d \
   verdaccio/verdaccio
 ```
 
-### verdaccio pm2
+## verdaccio pm2
 
 ```js
 npm install -g verdaccio

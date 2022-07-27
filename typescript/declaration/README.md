@@ -1,10 +1,10 @@
-## 声明文件
+# 声明文件
 
 常见库的格式以及如何为每种格式书写正确的声明文件。
 
-### 识别库的类型
+## 识别库的类型
 
-#### 全局库
+## 全局库
 
 例如 jQuery，`$` 变量可以被简单的引用。
 
@@ -34,7 +34,7 @@ window.creatGreeting = function (s) {
 }
 ```
 
-#### 模板化库
+## 模板化库
 
 一些库只能工作在模块加载器的环境下。例如 express 只能在 `node.js` 中运行。
 
@@ -55,7 +55,7 @@ define(..., ['somelib'], function (somelib) {
 * 赋值给 `exports` 或 `module.exports`
 * 极少包含对 window 或 global 赋值
 
-#### UMD 模块（UMD 库）
+## UMD 模块（UMD 库）
 
 UMD 模块是指哪些即可以作为模块使用又可以作为全局使用的模块，例如 `Moment.js`，就是这样的形式。
 
@@ -89,7 +89,7 @@ console.log(moment.format())
 
 如果在库的源码中看到 `typeof define`、`typeof window` 或 `type module`  这样的测试，尤其是在文件顶端，它几乎就是一个 UMD 库。
 
-#### 模块插件、UMD 插件
+## 模块插件、UMD 插件
 
 一个插件可以改变一个模块的结构（UMD或模块）。
 
@@ -97,7 +97,7 @@ console.log(moment.format())
 
 一个全局插件是全局代码，他们会改变全局对象的结构。一些库往 `Array.prototype` 或 `String.prototype`  里添加新的方法。
 
-###  全局库的声明文件
+##  全局库的声明文件
 
 目录结构
 
@@ -335,5 +335,5 @@ interface 和 type 不需要 declare 声明就可以直接使用。
 变量声明重复声明只有第一个声明生效。
 接口声明重复声明会发生声明合并。
 
-### 模块化库声明文件
+## 模块化库声明文件
 

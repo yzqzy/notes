@@ -1,10 +1,10 @@
-## 闭包 closure
+# 闭包 closure
 
 闭包 + 回调 => JS 高阶函数  High-order function
 
 高阶函数可以比普通函数处理更多问题，有更好的集成性和封装性。
 
-### 闭包
+## 闭包
 
 MDN 是目前可以找到非常专业且总结性很强的针对 ECMA262 文件，针对开发者最全，也是最专业的一个技术文档集合。
 
@@ -259,7 +259,7 @@ const comp = compute();
 console.log(comp.plus(1, 2));
 ```
 
-### 回调
+## 回调
 
 回调，callback。回应，通讯的回应。
 

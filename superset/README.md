@@ -1,4 +1,4 @@
-## superset 开发环境搭建
+# superset 开发环境搭建
 
 搭建前端本地开发环境有很多坑，官网文档写的模糊不清，百度、chrome 教程早已过时很久。
 
@@ -6,7 +6,7 @@
 
 https://superset.apache.org/docs/installation/installing-superset-from-scratch。
 
-### 安装 python 环境
+## 安装 python 环境
 
 Python 自带 pip 打包管理工具，安装时需要将 python 添加到 path 中。
 
@@ -15,13 +15,13 @@ Python 版本不得高于 3.9.0，高于此版本部署虚拟环境会有问题�
 > [https://www.python.org/downloads/release/python-390/](https://www.python.org/downloads/release/python-390/)
 
 
-### 下载 superset 源码
+## 下载 superset 源码
 
 [https://github.com/apache/superset/releases/tag/1.4.2](https://github.com/apache/superset/releases/tag/1.4.2)  
 
 [Source code(zip)](https://github.com/apache/superset/archive/refs/tags/1.4.2.zip)
 
-### 部署 python 虚拟环境
+## 部署 python 虚拟环境
 
 > 命令最好使用 cmd，bash 创建用户时有问题。
 
@@ -38,7 +38,7 @@ virtualenv env
 env\Scripts\activate
 ```
 
-### 安装、初始化 superset
+## 安装、初始化 superset
 
 解压之前下载的 superset 源码，进入到源码目录。
 
@@ -86,7 +86,7 @@ superset run -p 3000 --with-threads --reload --debugger
 
 开发环境是热更新，需要同时启动两个服务。一个是服务端的服务 ，一个是前端的打包服务，修改前端的代码时，前端的代码会实时的打包更新到 `superset/static/assets` 文件夹下，服务端根据这个文件夹内的文件对前端的页面进行渲染。
 
-### 前端项目环境配置
+## 前端项目环境配置
 
 安装项目依赖
 
@@ -125,16 +125,16 @@ npm run dev
 
 
 
-### 总结
+## 总结
 
 搭建好开发环境后，我们就可以做更多事情。例如对 superset 进行二次开发，自定义页面内容，样式等。
 
 项目开发完毕后，运行 `npm run build`  命令编译线上资源。
 将 `superset\static\assets` 目录的资源提供给后端开发人员就可以正常部署使用。
 
-### Fix
+## Fix
 
-#### 钉钉移动端不能正常访问
+## 钉钉移动端不能正常访问
 
 安卓端 钉钉微应用在使用 superset 时，会发现页面一直处于 loading 状态。
 
