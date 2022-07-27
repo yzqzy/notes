@@ -5,7 +5,7 @@ import sidebars from './sidebar.json'
 export default defineConfig((ctx) => ({
   base: ctx.mode == 'production' ? '/notes/' : '', 
   lang: 'en-US',
-  title: 'Personal Notes',
+  title: '月落 - Personal Notes',
   head: [
     ['link', { rel: 'icon', href: '/notes/favicon.ico' }]
   ],

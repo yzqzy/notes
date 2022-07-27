@@ -1301,7 +1301,7 @@ AO = {
 }
 ```
 
-###　面试题
+### test
 
 
 ```js
@@ -1550,7 +1550,7 @@ var test = function () {
 
 
 
-相关题目
+题目：
 
 ```js
 function test (a) {
@@ -1837,329 +1837,378 @@ console.log(t2);
 
   ## 九、构造函数及实例化原理、包装类
 
-    function Car (color, brand) {
-      this.color = color;
-      this.brand = brand;
-      this.drive = function () {
-        console.log('I am running.');
+### 构造函数
+
+```js
+function Car (color, brand) {
+  this.color = color;
+  this.brand = brand;
+  this.drive = function () {
+    console.log('I am running.');
+  }
+}
+
+var car = new Car('red', 'Mazda');
+console.log(car.color);
+console.log(car.brand);
+car.drive();
+```
+
+如果不实例化 Car 或者没有执行 Car, this 不存在。
+一旦执行或者实例化，this 就存在了。实例化构造函数 this 指向实例化的对象。
+this 指向的是实例化出来的对象实例。不指向构造函数本身。
+
+```js
+// 构造函数中的this
+
+GO = {
+  Car: function Car () {}
+  car1: {
+    color: 'red',
+    brand: 'Benz'
+	}
+}
+
+function Car (name, brand) {
+  // AO
+  // this = {
+  //   color: color,
+  //   brand: brand
+  // }
+
+  this.color = color;
+  this.brand = brand;
+
+  // return this; 隐式添加return this.
+}
+
+var car = new Car('red', 'Benz');
+
+// 实例化时，产生 AO，AO 里面存在 this 对象。构造完成，隐式 return this 对象。
+// new 关键字，改变 this 指向，生成 this 对象，并且隐式返回 this 对象。
+```
+
+
+
+```js
+function Car () {
+  this.color = 'red';
+
+  return {};
+}
+var car = new Car();
+console.log(car.red); // undefined
+
+// 实例化构造函数时，手动返回一个引用值时，会覆盖默认的this对象，返回原始值，没有影响。
+```
+
+### 包装类
+
+```js
+var a = 1,
+    b = 'abc';
+
+// 原始值没有自己的方法和属性。
+
+var a = 1; // 原始值
+
+// 数字不一定是原始值。
+
+var b = new Number(a); 
+b.length = 2;
+b.add = function () {}
+
+// Number是内置的构造函数，new Number是实例化出一个number对象。
+// 可以向对象上添加属性和方法。
+
+a + b // 2
+
+// number对象和原始值运算，可以正常运行，会作为原始值进行计算。
+
+// 系统内置构造函数有3种：new Number、new String、new Boolen。
+
+var test = new Number(undefined); // NaN
+var test = new Number(null); // 0
+
+// undefined和null无法设置任何的方法和属性。
+
+// JS包装类
+var a = 123;
+a.len = 3; // new Number(123).len = 3; delete 
+console.log(a.len); // undefined 
+
+var b = new Number(123);
+b.len = 3;
+console.log(b.len); // 3
+
+// 原始值没有属性和方法，不能添加属性和方法。
+// 向number类型上添加属性和方法， 首先会转化为Number对象，因为无法赋值，所以又删掉对象，转为原始值。
+// 打印出来的结果就是undefined。
+
+var str = 'abc';
+console.log(str.length); // 3 new String(str).length
+
+// 在string类型上返回长度，会经过String构造函数包装，然后获取到length属性。
+```
+
+
+
+数组的截断方法（length属性赋值截断）
+
+```js
+var arr = [1, 2, 3, 4, 5];
+console.log(arr.length); // 5
+console.log(arr.length); // [1, 2, 3, 4, 5]
+arr.length = 3;
+console.log(arr.length); // [1, 2, 3]
+```
+
+string是否能截断？
+
+```js
+var str  = 'abc';
+str.length = 1; // new String(str).length = 1; 无法保存 delete
+console.log(str); // abc 
+```
+
+### test
+
+```js
+var name = 'yueluo';
+
+name += 10; // yuelu10
+
+var type = typeof(name); // 'string'
+
+if (type.length === 6) { // true
+  type.text = 'string'; // new String(type).text = 'string' -> delete
+}
+
+console.log(type.text); // undefined
+```
+
+
+```js
+function Car (brand, color) {
+  this.brand = 'Benz';
+  this.color = 'red';
+}
+var car = new Car('Mazda', 'blank');
+console.log(car.brand, car.color); // Bena red
+```
+
+```js
+function Test (a, b, c) {
+  var d = 1;
+  this.a = a;
+  this.b = b;
+  this.c = c;
+
+  function f () {
+    d++;
+    console.log(d);
+  }
+
+  this.g = f;
+}
+var test = new Test();
+test.g(); // 2
+test.g(); // 3
+var test2 = new Test();
+test2.g(); // 2
+```
+
+
+```js
+var x = 1,
+    y = z = 0;
+function add (n) {
+  return n = n + 1;
+}      
+y = add(x);
+function add (n) {
+  return n = n + 3;
+}
+z = add(x);
+console.log(x, y, z); // 1 4 4
+
+// 预编译 add 方法覆盖上面的 add 方法
+```
+
+
+```js
+function foo1 (x) {
+  console.log(arguments); // Arguments(5) [1, 2, 3, 4, 5, callee: ƒ, Symbol(Symbol.iterator): ƒ]
+  return x;
+}
+foo1(1, 2, 3, 4, 5);
+
+function foo2 (x) {
+  console.log(arguments); // 不执行，无返回值
+  return x;
+}(1, 2, 3, 4, 5);
+
+(funtion foo3 (x) {
+  console.log(arguments); // Arguments(5) [1, 2, 3, 4, 5, callee: ƒ, Symbol(Symbol.iterator): ƒ]
+  return x;
+})(1, 2, 3, 4, 5); 
+```
+
+
+```js
+function b (x, y, a) {
+  a = 10;
+  console.log(arguments[2]); // 10
+}
+b(1, 2, 3);
+```
+
+```js
+function b (x, y, a) {
+  arguments[2] = 10;
+  console.log(a); // 10
+}
+b(1, 2, 3);
+```
+
+
+
+ASCII码
+
+表1 0-127
+表2 128-255
+
+ASCII 码里面的字符都是一个字节 byte
+
+UNICODE 码 涵盖 ASCII 码 256位之后是两个字节
+
+```js
+var str = 'a',
+    pos = str.charCodeAt(0);
+console.log(pos); // 97
+
+// a 97 
+// b 98
+```
+
+
+
+写一个函数，累加实参
+
+
+```js
+function Computed () {
+  var args = arguments,
+      res;
+
+  this.plus = function () {
+    res = 0;
+    loop('add', res);
+  }
+
+  this.times = function () {
+    res = 1;
+    loop('mul', res);
+  }
+
+  function loop (method, res) {
+    for (var i = 0; i < args.length; i++) {
+      var item = args[i];
+
+      switch (method) {
+        case 'add':
+          res += item;
+          break;
+        case 'mul':
+          res *= item;
+          break;
       }
+
     }
-    
-    var car = new Car('red', 'Mazda');
-    console.log(car.color);
-    console.log(car.brand);
-    car.drive();
-    
-    如果不实例化Car或者没有执行Car, this 不存在。
-    一旦执行或者实例化，this就存在了。实例化构造函数this指向实例化的对象。
-    this指向的是实例化出来的对象实例。不指向构造函数本身。
-    
-    构造函数中的this
-    
-      GO = {
-        Car: function Car () {}
-        car1: {
-          color: 'red',
-          brand: 'Benz'
-        }
-      }
-    
-      function Car (name, brand) {
-        // AO
-        // this = {
-        //   color: color,
-        //   brand: brand
-        // }
-    
-        this.color = color;
-        this.brand = brand;
-    
-        // return this; 隐式添加return this.
-      }
-    
-      var car = new Car('red', 'Benz');
-    
-      实例化时，产生AO，AO里面存在this对象。构造完成，隐式return this对象。
-      new 关键字，改变this指向，生成this对象，并且隐式返回this对象。
-    
-      function Car () {
-        this.color = 'red';
-    
-        return {};
-      }
-      var car = new Car();
-      console.log(car.red); // undefined
-    
-      实例化构造函数时，手动返回一个引用值时，会覆盖默认的this对象，返回原始值，没有影响。
-    
-    包装类
-    
-      var a = 1,
-          b = 'abc';
-    
-      原始值没有自己的方法和属性。
-    
-      var a = 1; // 原始值
-    
-      数字不一定是原始值。
-    
-      var b = new Number(a); 
-      b.length = 2;
-      b.add = function () {}
-    
-      Number是内置的构造函数，new Number是实例化出一个number对象。
-      可以向对象上添加属性和方法。
-    
-      a + b // 2
-    
-      number对象和原始值运算，可以正常运行，会作为原始值进行计算。
-    
-      系统内置构造函数有3种：new Number、new String、new Boolen。
-    
-      var test = new Number(undefined); // NaN
-      var test = new Number(null); // 0
-    
-      undefined和null无法设置任何的方法和属性。
-    
-      // JS包装类
-      var a = 123;
-      a.len = 3; // new Number(123).len = 3; delete 
-      console.log(a.len); // undefined 
-    
-      var b = new Number(123);
-      b.len = 3;
-      console.log(b.len); // 3
-    
-      原始值没有属性和方法，不能添加属性和方法。
-      向number类型上添加属性和方法， 首先会转化为Number对象，因为无法赋值，所以又删掉对象，转为原始值。
-      打印出来的结果就是undefined。
-    
-      var str = 'abc';
-      console.log(str.length); // 3 new String(str).length
-    
-      在string类型上返回长度，会经过String构造函数包装，然后获取到length属性。
-    
-    数组的截断方法（length属性赋值截断）
-    
-      var arr = [1, 2, 3, 4, 5];
-      console.log(arr.length); // 5
-      console.log(arr.length); // [1, 2, 3, 4, 5]
-      arr.length = 3;
-      console.log(arr.length); // [1, 2, 3]
-    
-    string是否能截断？
-    
-      var str  = 'abc';
-      str.length = 1; // new String(str).length = 1; 无法保存 delete
-      console.log(str); // abc 
-    
-    题目：
-    
-      var name = 'yueluo';
-    
-      name += 10; // yuelu10
-    
-      var type = typeof(name); // 'string'
-    
-      if (type.length === 6) { // true
-        type.text = 'string'; // new String(type).text = 'string' -> delete
-      }
-    
-      console.log(type.text); // undefined
+
+    console.log(res);
+  }
+}
+
+var compute = new Computed(2, 4, 6);
+compute.plus();
+compute.times();
+```
+
+  ## 九、原型、原型链、闭包立即执行函数、插件开发
+
+### 原型、原型链
+
+```js
+function Phone (color, brand) {
+  this.color = color;
+  this.brand = brand;
+  this.screen = '18:9';
+  this.system = 'Android';
+}
+
+Phone.prototype.rom = '64g';
+Phone.prototype.ram = '6g';
+Phone.prototype.screen = '15:9';
+```
+
+Phone.prototype 是一个对象。
+原型 prototype 其实是 function 对象的一个属性，属性值是一个对象。
 
 
-      function Car (brand, color) {
-        this.brand = 'Benz';
-        this.color = 'red';
-      }
-      var car = new Car('Mazda', 'blank');
-      console.log(car.brand, car.color); // Bena red
+
+```js
+var phone1 = new Phone('red', '小米');
+var phone2 = new Phone('black', '华为');
+
+console.log(phone1, phone2);
+console.log(phone1.rom, phone2.ram); // 64g 6g
+console.log(phone1.screen, phone2.screen); // 18:9 18:9
+```
+
+prototype 其实是定义构造函数构造出的每个对象的公共祖先。
+所以被该构造函数构造出来的对象，都可以继承原型上的属性和方法。
+构造出来的对象自己本身有的属性，不会再去原型上寻找属性。
+
+某些固定的属性和方法可以写在原型上，不用重复创建。
+
+通过实例化对象只能查找 prototype 上的属性，不能进行增删改操作。
 
 
-​      
-      function Test (a, b, c) {
-        var d = 1;
-        this.a = a;
-        this.b = b;
-        this.c = c;
-    
-        function f () {
-          d++;
-          console.log(d);
-        }
-    
-        this.g = f;
-      }
-      var test = new Test();
-      test.g(); // 2
-      test.g(); // 3
-      var test2 = new Test();
-      test2.g(); // 2
 
 
-      var x = 1,
-          y = z = 0;
-      function add (n) {
-        return n = n + 1;
-      }      
-      y = add(x);
-      function add (n) {
-        return n = n + 3;
-      }
-      z = add(x);
-      console.log(x, y, z); // 1 4 4
-    
-      预编译add方法覆盖上面的add方法
+```js
+function Phone (color, brand, system) {
+  this.color = color;
+  this.brand = brand;
+  this.system = system;
+}
+var phone = new Phone('black', 'iPhone', 'IOS');
+
+console.log(phone);
+console.log(phone.constructor);
+console.log(Phone.prototype);
+```
+
+Phone.prototype 上的 constructor 对象指向构造函数本身。
+可以通过 Phone.prototype 的对象手动修改 constructor 的值。
 
 
-      function foo1 (x) {
-        console.log(arguments); // Arguments(5) [1, 2, 3, 4, 5, callee: ƒ, Symbol(Symbol.iterator): ƒ]
-        return x;
-      }
-      foo1(1, 2, 3, 4, 5);
-    
-      function foo2 (x) {
-        console.log(arguments); // 不执行，无返回值
-        return x;
-      }(1, 2, 3, 4, 5);
-    
-      (funtion foo3 (x) {
-        console.log(arguments); // Arguments(5) [1, 2, 3, 4, 5, callee: ƒ, Symbol(Symbol.iterator): ƒ]
-        return x;
-      })(1, 2, 3, 4, 5); 
 
 
-      function b (x, y, a) {
-        a = 10;
-        console.log(arguments[2]); // 10
-      }
-      b(1, 2, 3);
+```js
+function Car () {
+
+}
+Car.prototype.name = 'Benz';
+var car = new Car();
+console.log(car);
+```
+
+prototype 是实例化以后的结果。
 
 
-​      
-      function b (x, y, a) {
-        arguments[2] = 10;
-        console.log(a); // 10
-      }
-      b(1, 2, 3);
 
-
-    ASCII码
-    
-      表1 0-127
-      表2 128-255
-    
-      ASCII码里面的字符都是一个字节 byte
-    
-      UNICODE码 涵盖ASCII码 256位之后是两个字节
-    
-      var str = 'a',
-          pos = str.charCodeAt(0);
-      console.log(pos); // 97
-    
-      a 97 
-      b 98
-    
-      写一个函数，累加实参
-    
-        function Computed () {
-          var args = arguments,
-              res;
-    
-          this.plus = function () {
-            res = 0;
-            loop('add', res);
-          }
-          
-          this.times = function () {
-            res = 1;
-            loop('mul', res);
-          }
-    
-          function loop (method, res) {
-            for (var i = 0; i < args.length; i++) {
-              var item = args[i];
-    
-              switch (method) {
-                case 'add':
-                  res += item;
-                  break;
-                case 'mul':
-                  res *= item;
-                  break;
-              }
-            
-            }
-            
-            console.log(res);
-          }
-        }
-    
-        var compute = new Computed(2, 4, 6);
-        compute.plus();
-        compute.times();
-    
-      写一个函数，接收任意字符串，算出字符串的总字节数。
-
-  ## 原型、原型链、闭包立即执行函数、插件开发
-
-    function Phone (color, brand) {
-      this.color = color;
-      this.brand = brand;
-      this.screen = '18:9';
-      this.system = 'Android';
-    }
-    
-    Phone.prototype.rom = '64g';
-    Phone.prototype.ram = '6g';
-    Phone.prototype.screen = '15:9';
-    
-    Phone.prototype // 对象
-    
-    原型prototype其实是function对象的一个属性，属性值是一个对象。
-
-
-    var phone1 = new Phone('red', '小米');
-    var phone2 = new Phone('black', '华为');
-    
-    console.log(phone1, phone2);
-    console.log(phone1.rom, phone2.ram); // 64g 6g
-    console.log(phone1.screen, phone2.screen); // 18:9 18:9
-    
-    prototype其实是定义构造函数构造出的每个对象的公共祖先。
-    所以被该构造函数构造出来的对象，都可以继承原型上的属性和方法。
-    构造出来的对象自己本身有的属性，不会再去原型上寻找属性。
-    
-    某些固定的属性和方法可以写在原型上，不用重复创建。
-    
-    通过实例化对象只能查找prototype上的属性，不能进行增删改操作。
-    
-    function Phone (color, brand, system) {
-      this.color = color;
-      this.brand = brand;
-      this.system = system;
-    }
-    var phone = new Phone('black', 'iPhone', 'IOS');
-    
-    console.log(phone);
-    console.log(phone.constructor);
-    console.log(Phone.prototype);
-    
-    Phone.prototype上的constructor对象指向构造函数本身。
-    可以通过Phone.prototype的对象手动修改constructor的值。
-
-
-    function Car () {
-    
-    }
-    Car.prototype.name = 'Benz';
-    var car = new Car();
-    console.log(car);
-    
-    prototype是实例化以后的结果。
-
-
-​    
     function Car () {
       var this = {
         __proto__: Car.prototype
@@ -2172,123 +2221,150 @@ console.log(t2);
     console.log(car.name);
     console.log(car.__proto__);
     
-    __proto__ 属于每个实例化对象
-    原型属于实例化对象，不属于某一个构造函数。
     
-    __proto__ 内置属性写法，__proto__就是一个键名，键值是prototype。
-    
-    当构造函数被实例化的时候，产生this对象，this里面默认存在__proto__，键值是prototype。
-    
-    __proto__是可以被修改的，可以手动指定为别的对象。
+
+`__proto__` 属于每个实例化对象
+原型属于实例化对象，不属于某一个构造函数。
+
+`__proto__` 内置属性写法，`__proto__`  就是一个键名，键值是 prototype。
+
+当构造函数被实例化的时候，产生 this 对象，this 里面默认存在 `__proto__`，键值是 prototype。
+
+`__proto__` 是可以被修改的，可以手动指定为别的对象。
 
 
-    function Car () { }
-    Car.prototype.name = 'Mazda';
-    var car = new Car();
-    Car.prototype.name = 'Benz';
-    console.log(car.name); // Benz
+
+
+```js
+function Car () { }
+Car.prototype.name = 'Mazda';
+var car = new Car();
+Car.prototype.name = 'Benz';
+console.log(car.name); // Benz
+```
 
 
 ​        
-    Car.prototype.name = 'Mazda';
-    function Car () { }
-    var car = new Car();
-    Car.prototype = {
+```js
+Car.prototype.name = 'Mazda';
+function Car () { }
+var car = new Car();
+Car.prototype = {
+  name: 'Benz'
+};
+console.log(car.name); // Mazda
+```
+
+prototype 是实例化对象的，实例化后重新修改 prototype，不会影响原来的值。
+
+constructor 里面保存的是之前的值，实例化之后会生成 `__proto__`，保存prototype。
+
+实例化前：
+
+```
+Car.prototype.constructor -> Car() -> prototype -> name: 'Bena'
+```
+
+实例化后：
+
+```js
+function Car () {
+  this {
+    __proto__: Car.prototype {
       name: 'Benz'
-    };
-    console.log(car.name); // Mazda
-    prototype是实例化对象的，实例化后重新修改prototype，不会影响原来的值。
-    
-    constructor里面保存的是之前的值，实例化之后会生成__proto__，保存prototype。
-
-
-    没有实例化之前
-    Car.prototype.constructor -> Car() -> prototype -> name: 'Bena';
-    
-    实例化后
-    function Car () {
-      this {
-        __proto__: Car.prototype {
-          name: 'Benz'
-        }
-      }
     }
+  }
+}
+```
+
+### 闭包、立即执行函数
+
+window 和 return 的问题
+
+```js
+function test () {
+  var a = 1;
+
+  function plus () {
+    a++;
+    console.log(a);
+  }
+
+  return plus;
+}
+
+var plus = test(); // plus成为全局函数
+plus(); // 2
+plus(); // 3
+plus(); // 4
+```
+
+```js
+function abc () {
+  window.a = 3;
+}
+abc();
+console.log(a); // 3
+```
+
+```js
+function test () {
+  var a = 1;
+
+  function add () {
+    a++;
+    console.log(a);
+  }
+
+  window.add = add;
+}
+test();
+add(); // 2
+add(); // 3
+add(); // 4
+```
+
+```js
+(function () {
+  var a = 1;
+
+  function add () {
+    a++;
+    console.log(a);
+  }
+
+  window.add = add;
+})();
+add(); // 2
+add(); // 3
+add(); // 4
+```
+
+### js 插件写法
 
 
-    window 和 return 的问题
-    
-      function test () {
-        var a = 1;
-    
-        function plus () {
-          a++;
-          console.log(a);
-        }
-    
-        return plus;
-      }
-    
-      var plus = test(); // plus成为全局函数
-      plus(); // 2
-      plus(); // 3
-      plus(); // 4
+```js
+;(function () {
+  function Test () {
+
+  }
+
+  window.Test = Test();
+})();
+```
+
+可以限制作用域范围。
+
+```js
+;(function () {})()
+;(function () {})()
+```
+
+立即执行函数前面最好加分号，如果不加分号，写在一起会报错。
+
+  ## 十、原型与原型链深入、对象继承
 
 
-      function abc () {
-        window.a = 3;
-      }
-      abc();
-      console.log(a); // 3
-
-
-      function test () {
-        var a = 1;
-    
-        function add () {
-          a++;
-          console.log(a);
-        }
-    
-        window.add = add;
-      }
-      test();
-      add(); // 2
-      add(); // 3
-      add(); // 4
-
-
-      (function () {
-        var a = 1;
-    
-        function add () {
-          a++;
-          console.log(a);
-        }
-    
-        window.add = add;
-      })();
-      add(); // 2
-      add(); // 3
-      add(); // 4
-    
-    JS 插件写法
-    
-      ;(function () {
-        function Test () {
-    
-        }
-    
-        window.Test = Test();
-      })();
-    
-      可以限制作用域范围。
-    
-      ;(function () {})()
-      ;(function () {})()
-    
-      立即执行函数前面最好加分号，如果不加分号，写在一起会报错。
-
-  ## 原型与原型链深入、对象继承
 
     // 获取字节数
     function getBytes (str) {
