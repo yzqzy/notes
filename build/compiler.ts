@@ -40,10 +40,10 @@ const buildModule = (entry: string): MdNode => {
   const removeNodes: MdNode[] = []
 
   const isMarkdown = (path: string) => path.includes('README.md')
-  const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs', 'books']
+  const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs']
   const isValid = (dir: string) => 
-    // valid file and large file
-    !validFiles.some(_ => dir.includes(_))
+    // valid file and large file or build failed file
+    ![...validFiles, 'Vue.js设计与实现'].some(_ => dir.includes(_))
 
   const getFileName = (entry: string) => entry.split(path.sep).at(-1) as string
 
