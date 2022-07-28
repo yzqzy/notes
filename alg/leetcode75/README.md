@@ -2,7 +2,7 @@
 
 https://leetcode.cn/study-plan/leetcode_75/
 
-## day1
+## day01
 
 ### 一维数组的动态和
 
