@@ -39,8 +39,64 @@ function pivotIndex(nums: number[]): number {
   }
   
   return -1
-};
+}
 ```
 
 ## day02
+
+### 同构字符串
+
+https://leetcode.cn/problems/isomorphic-strings/
+
+```typescript
+function isIsomorphic(s: string, t: string): boolean {
+  const sMap = new Map<string, string>()
+  const tMap = new Map<string, string>()
+  const len = s.length
+
+  for (let i = 0; i < len; i++) {
+    const x = s[i]
+    const y = t[i]
+
+    if (
+        sMap.has(x) && sMap.get(x) !== y || 
+        tMap.has(y) && tMap.get(y) !== x
+      ) {
+      return false
+    }
+
+    sMap.set(x, y)
+    tMap.set(y, x)
+  }  
+
+  return true
+}
+```
+
+### 判断子序列
+
+https://leetcode.cn/problems/is-subsequence/
+
+```js
+// 双指针
+
+function isSubsequence(s: string, t: string): boolean {
+  const sLen = s.length
+  const tLen = t.length
+
+  let i = 0;
+  let j = 0;
+
+  while (i < sLen && j < tLen) {
+    if (s[i] === t[j]) {
+      i++
+    }
+    j++
+  }
+
+  return i == sLen
+};
+```
+
+## day03
 
