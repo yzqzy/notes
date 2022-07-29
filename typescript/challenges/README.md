@@ -42,3 +42,43 @@ type First<T extends any[]> = T['length'] extends 0 ? never : T[0]
 ```typescript
 type Length<T extends readonly any[]> = T['length']
 ```
+
+### Exclude
+
+```typescript
+type MyExclude<T, U> = T extends U ? never : T
+```
+
+* extends: When the type on the left of the extends is assignable to the one on the right, then you’ll get the type in the first branch (the “true” branch); otherwise you’ll get the type in the latter branch (the “false” branch).
+
+### Includes
+
+```typescript
+
+```
+
+### Awaited
+
+```typescript
+type MyAwaited<T> = T extends Promise<infer V> ? MyAwaited<V> : T
+```
+
+* infer：Conditional types provide us with a way to infer from types we compare against in the true branch using the infer keyword.
+
+### If
+
+```typescript
+type If<C extends true | false, T, F> = C extends true ? T : F
+```
+
+### Concat
+
+```typescript
+type Concat<T extends any[], U extends any[]> = [...T, ...U]
+```
+
+### Includes
+
+```typescript
+
+```
