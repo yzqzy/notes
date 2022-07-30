@@ -144,6 +144,8 @@ function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode
 
 https://leetcode.cn/problems/reverse-linked-list/
 
+
+
 ```typescript
 function reverseList(head: ListNode | null): ListNode | null {
   let prev = null
@@ -161,6 +163,10 @@ function reverseList(head: ListNode | null): ListNode | null {
 }
 ```
 
+<img src="./images/reverse.png" style="zoom: 80%" />
+
+
+
 ```typescript
 function reverseList(head: ListNode | null): ListNode | null {
   if (head == null || head.next == null) {
@@ -175,3 +181,94 @@ function reverseList(head: ListNode | null): ListNode | null {
   return curr
 }
 ```
+
+## day04
+
+### 链表的中间节点
+
+https://leetcode.cn/problems/middle-of-the-linked-list/
+
+```typescript
+function middleNode(head: ListNode | null): ListNode | null {
+  let n = 0;
+  let curr = head
+
+  while (curr) {
+    n++
+    curr = curr.next
+  }
+
+  let k = 0;
+  curr = head
+  while(k < Math.trunc(n / 2)) {
+    k++
+    curr = curr.next
+  }
+
+  return curr
+}
+```
+
+```js
+function middleNode(head: ListNode | null): ListNode | null {
+  let slow = head
+  let fast = head
+  
+  while (fast && fast.next) {
+    slow = slow.next
+    fast = fast.next.next
+  }
+
+  return slow
+}
+```
+
+### 环形链表2
+
+https://leetcode.cn/problems/linked-list-cycle-ii/
+
+```js
+function detectCycle(head: ListNode | null): ListNode | null {
+  const visited = new Set()
+
+  while (head) {
+    if (visited.has(head)) return head
+    visited.add(head)
+    head = head.next
+  }
+
+  return null
+}
+```
+
+
+
+```typescript
+function detectCycle(head: ListNode | null): ListNode | null {
+  if (head === null) return null
+
+  let slow = head
+  let fast = head
+
+  while (fast.next && fast.next.next) {
+    slow = slow.next
+    fast = fast.next.next
+
+    if (slow === fast) {
+      fast = head
+
+      while (fast !== slow) {
+        fast = fast.next
+        slow = slow.next
+      }
+
+      return fast
+    }
+  }
+
+  return null
+}
+```
+
+<img src="./images/cycle02.gif" />
+
