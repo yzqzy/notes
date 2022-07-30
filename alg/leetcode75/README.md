@@ -78,8 +78,6 @@ function isIsomorphic(s: string, t: string): boolean {
 https://leetcode.cn/problems/is-subsequence/
 
 ```js
-// 双指针
-
 function isSubsequence(s: string, t: string): boolean {
   const sLen = s.length
   const tLen = t.length
@@ -95,8 +93,85 @@ function isSubsequence(s: string, t: string): boolean {
   }
 
   return i == sLen
-};
+}
 ```
 
 ## day03
 
+### 合并两个有序链表
+
+https://leetcode.cn/problems/merge-two-sorted-lists/
+
+```typescript
+function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
+  const dummy = new ListNode()
+
+  let curr = dummy
+
+  while (list1 && list2) {
+    if (list1.val <= list2.val) {
+      curr.next = list1
+      list1 = list1.next
+    } else {
+      curr.next = list2
+      list2 = list2.next
+    }
+    curr = curr.next
+  }
+
+  curr.next = list1 || list2
+
+  return dummy.next
+}
+```
+
+```typescript
+function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
+  if (list1 === null) return list2
+  if (list2 === null) return list1
+
+  if (list1.val <= list2.val) {
+    list1.next = mergeTwoLists(list1.next, list2)
+    return list1
+  }
+
+  list2.next = mergeTwoLists(list2.next, list1)
+  return list2
+}
+```
+
+### 反转链表
+
+https://leetcode.cn/problems/reverse-linked-list/
+
+```typescript
+function reverseList(head: ListNode | null): ListNode | null {
+  let prev = null
+  let curr = head
+
+  while (curr) {
+    const next = curr.next
+
+    curr.next = prev
+    prev = curr
+    curr = next
+  }
+
+  return prev
+}
+```
+
+```typescript
+function reverseList(head: ListNode | null): ListNode | null {
+  if (head == null || head.next == null) {
+    return head
+  }
+
+  const curr = reverseList(head.next)
+
+  head.next.next = head
+  head.next = null
+
+  return curr
+}
+```
