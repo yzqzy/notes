@@ -290,7 +290,7 @@ function maxProfit(prices: number[]): number {
 }
 ```
 
-### 
+### 最长回文串
 
 [https://leetcode.cn/problems/longest-palindrome/](https://leetcode.cn/problems/longest-palindrome/)
 
