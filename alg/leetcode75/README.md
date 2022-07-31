@@ -1,12 +1,14 @@
 # LeetCode 75
 
-https://leetcode.cn/study-plan/leetcode_75/
+[https://leetcode.cn/study-plan/leetcode_75/](https://leetcode.cn/study-plan/leetcode_75/)
 
 ## day01
 
 ### 一维数组的动态和
 
-https://leetcode.cn/problems/running-sum-of-1d-array/
+[https://leetcode.cn/problems/running-sum-of-1d-array/](https://leetcode.cn/problems/running-sum-of-1d-array/)
+
+
 
 ```typescript
 function runningSum(nums: number[]): number[] {
@@ -22,7 +24,7 @@ function runningSum(nums: number[]): number[] {
 
 ### 寻找数组的中心下标
 
-https://leetcode.cn/problems/find-pivot-index/
+[https://leetcode.cn/problems/find-pivot-index/](https://leetcode.cn/problems/find-pivot-index/)
 
 ```typescript
 function pivotIndex(nums: number[]): number {
@@ -46,7 +48,7 @@ function pivotIndex(nums: number[]): number {
 
 ### 同构字符串
 
-https://leetcode.cn/problems/isomorphic-strings/
+[https://leetcode.cn/problems/isomorphic-strings/](https://leetcode.cn/problems/isomorphic-strings/)
 
 ```typescript
 function isIsomorphic(s: string, t: string): boolean {
@@ -75,7 +77,7 @@ function isIsomorphic(s: string, t: string): boolean {
 
 ### 判断子序列
 
-https://leetcode.cn/problems/is-subsequence/
+[https://leetcode.cn/problems/is-subsequence/](https://leetcode.cn/problems/is-subsequence/)
 
 ```js
 function isSubsequence(s: string, t: string): boolean {
@@ -100,7 +102,7 @@ function isSubsequence(s: string, t: string): boolean {
 
 ### 合并两个有序链表
 
-https://leetcode.cn/problems/merge-two-sorted-lists/
+[https://leetcode.cn/problems/merge-two-sorted-lists/](https://leetcode.cn/problems/merge-two-sorted-lists/)
 
 ```typescript
 function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {
@@ -142,8 +144,7 @@ function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode
 
 ### 反转链表
 
-https://leetcode.cn/problems/reverse-linked-list/
-
+[https://leetcode.cn/problems/reverse-linked-list/](https://leetcode.cn/problems/reverse-linked-list/)
 
 
 ```typescript
@@ -166,7 +167,6 @@ function reverseList(head: ListNode | null): ListNode | null {
 <img src="./images/reverse.png" style="zoom: 80%" />
 
 
-
 ```typescript
 function reverseList(head: ListNode | null): ListNode | null {
   if (head == null || head.next == null) {
@@ -186,7 +186,7 @@ function reverseList(head: ListNode | null): ListNode | null {
 
 ### 链表的中间节点
 
-https://leetcode.cn/problems/middle-of-the-linked-list/
+[https://leetcode.cn/problems/middle-of-the-linked-list/](https://leetcode.cn/problems/middle-of-the-linked-list/)
 
 ```typescript
 function middleNode(head: ListNode | null): ListNode | null {
@@ -225,7 +225,7 @@ function middleNode(head: ListNode | null): ListNode | null {
 
 ### 环形链表2
 
-https://leetcode.cn/problems/linked-list-cycle-ii/
+[https://leetcode.cn/problems/linked-list-cycle-ii/](https://leetcode.cn/problems/linked-list-cycle-ii/)
 
 ```js
 function detectCycle(head: ListNode | null): ListNode | null {
@@ -240,8 +240,6 @@ function detectCycle(head: ListNode | null): ListNode | null {
   return null
 }
 ```
-
-
 
 ```typescript
 function detectCycle(head: ListNode | null): ListNode | null {
@@ -272,3 +270,45 @@ function detectCycle(head: ListNode | null): ListNode | null {
 
 <img src="./images/cycle02.gif" />
 
+## day05
+
+### 买卖股票的最佳时机
+
+[https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
+
+```typescript
+function maxProfit(prices: number[]): number {
+  let min = Infinity
+  let max = 0
+
+  for (const price of prices) {
+    min = Math.min(min, price)
+    max = Math.max(max, price - min)
+  }
+
+  return max
+}
+```
+
+### 
+
+[https://leetcode.cn/problems/longest-palindrome/](https://leetcode.cn/problems/longest-palindrome/)
+
+```typescript
+function longestPalindrome(s: string): number {
+  const visited = new Set()
+
+  let max = 0
+
+  for (const key of s) {
+    if (visited.has(key)) {
+      visited.delete(key)
+      max += 2
+    } else {
+      visited.add(key)
+    }
+  }
+
+  return visited.size ? max + 1 : max
+}
+```
