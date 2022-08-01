@@ -312,3 +312,139 @@ function longestPalindrome(s: string): number {
   return visited.size ? max + 1 : max
 }
 ```
+
+## day06
+
+### N 叉树的前序遍历
+
+[https://leetcode.cn/problems/n-ary-tree-preorder-traversal/](https://leetcode.cn/problems/n-ary-tree-preorder-traversal/)
+
+```typescript
+interface Node {
+  val: number
+  children: Node[]
+}
+
+function preorder(root: Node | null): number[] {
+  const ans = []
+  helper(root, ans)
+  return ans
+}
+
+function helper(node: Node | null, ans: number[]) {
+  if (!node) return
+  ans.push(node.val)
+  node.children.forEach(item => {
+    helper(item, ans)
+  })
+}
+```
+
+```typescript
+interface Node {
+  val: number
+  children: Node[]
+}
+
+function preorder(root: Node | null): number[] {
+  if(!root) return []
+
+  const ans = []
+
+  const stack = [root]
+
+  while (stack.length) {
+    const node = stack.pop()
+
+    ans.push(node.val)
+
+    stack.push(...node.children.reverse())
+  }
+
+  return ans
+}
+```
+
+### 二叉树的层序遍历
+
+[https://leetcode.cn/problems/binary-tree-level-order-traversal/](https://leetcode.cn/problems/binary-tree-level-order-traversal/)
+
+```typescript
+function levelOrder(root: TreeNode | null): number[][] {
+  if (!root) return []
+
+  const ans = []
+
+  const queue = [
+    { 
+      layer: 0,
+      node: root
+    }
+  ]
+
+  while (queue.length) {
+    const { layer, node } = queue.shift()
+
+    if (!ans[layer]) {
+      ans[layer] = []
+    }
+    ans[layer].push(node.val)
+
+    node.left && queue.push({
+      layer: layer + 1,
+      node: node.left
+    })
+    node.right && queue.push({
+      layer: layer + 1,
+      node: node.right
+    })
+  }
+
+  return ans
+}
+```
+
+```typescript
+function levelOrder(root: TreeNode | null): number[][] {
+  if (!root) return []
+
+  const ans = []
+  const queue = [root]
+
+  let len: number
+
+  while (len = queue.length) {
+    ans.push([])
+
+    while (len--) {
+      const n = queue.shift()
+
+      ans[ans.length - 1].push(n.val)
+
+      n.left && queue.push(n.left)
+      n.right && queue.push(n.right)
+    }
+  }
+
+  return ans
+}
+```
+
+```typescript
+function levelOrder(root: TreeNode | null): number[][] {
+  const ans = []
+  helper(root, 0, ans)
+  return ans
+}
+
+function helper(node: TreeNode | null, l: number, ans: number[][]) {
+  if (!node) return
+
+  if (!ans[l]) ans[l] = []
+
+  ans[l].push(node.val)
+
+  node.left && helper(node.left, l + 1, ans)
+  node.right && helper(node.right, l + 1, ans)
+}
+```
