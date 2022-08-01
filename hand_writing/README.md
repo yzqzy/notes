@@ -1,4 +1,4 @@
-### typeof 
+## typeof 
 
 了解 JS 方法特性，手写源码应当是信手拈来，这也是一名合格的前端工程师基本素养之一。
 
@@ -24,9 +24,9 @@ function $typeof (value) {
 
 ```
 
-### 防抖、节流
+## 防抖、节流
 
-#### 防抖
+### 防抖
 
 ```js
 // 函数防抖
@@ -79,7 +79,7 @@ function debounce (fn, delay, triggerNow) {
 }
 ```
 
-#### 节流
+### 节流
 
 ```js
 // 函数节流
@@ -110,9 +110,9 @@ function throttle (fn, delay) {
 }
 ```
 
-### 浅拷贝、深拷贝
+## 浅拷贝、深拷贝
 
-#### 浅拷贝
+### 浅拷贝
 
 ```js
 /**
@@ -134,7 +134,7 @@ function clone (origin, target) {
 }
 ```
 
-#### 深拷贝
+### 深拷贝
 
 ```js
 function isArray (target) {
@@ -169,7 +169,7 @@ function deepClone (origin, target) {
 }
 ```
 
-### new 关键字
+## new 关键字
 
 ```js
 /**
@@ -188,7 +188,7 @@ function $new () {
 } 
 ```
 
-### instanceof 关键字
+## instanceof 关键字
 
 ```js
 /**
@@ -211,7 +211,7 @@ function $instanceof (target, type) {
 }
 ```
 
-### Object.create
+## Object.create
 
 ```js
 /**
@@ -227,9 +227,9 @@ Object.prototype.$create = function (proto) {
 }
 ```
 
-### call/apply/bind
+## call/apply/bind
 
-#### call
+### call
 
 ```js
 /**
@@ -254,7 +254,7 @@ Function.prototype.$call = function (ctx) {
 }
 ```
 
-#### apply
+### apply
 
 ```js
 /**
@@ -292,7 +292,7 @@ Function.prototype.$apply = function (ctx, args) {
 }
 ```
 
-#### bind
+### bind
 
 ```js
 /**
@@ -327,9 +327,9 @@ Function.prototype.$bind = function (ctx) {
 ```
 
 
-### ES5 方法
+## ES5 方法
 
-#### forEach
+### forEach
 
 ```js
 /**
@@ -350,7 +350,7 @@ Array.prototype.$forEach = function (fn) {
 }
 ```
 
-#### map
+### map
 
 ```js
 /**
@@ -377,7 +377,7 @@ Array.prototype.$map = function (fn) {
 }
 ```
 
-#### filter
+### filter
 
 ```js
 /**
@@ -402,7 +402,7 @@ Array.prototype.$filter = function (fn) {
 }
 ```
 
-####  every
+###  every
 
 ```js
 /**
@@ -427,7 +427,7 @@ Array.prototype.$every = function (fn) {
 }
 ```
 
-#### some
+### some
 
 ```js
 /**
@@ -452,7 +452,7 @@ Array.prototype.$some = function (fn) {
 }
 ```
 
-#### reduce
+### reduce
 
 ```js
 /**
@@ -478,7 +478,7 @@ Array.prototype.$reduce = function (fn, initialVal) {
 }
 ```
 
-#### reduceRight
+### reduceRight
 
 ```js
 /**
@@ -504,35 +504,35 @@ Array.prototype.$reduceRight = function (fn, initialVal) {
 }
 ```
 
-### ES6 方法
+## ES6 方法
 
-#### fill
-
-```js
-
-```
-
-#### find
+### fill
 
 ```js
 
 ```
 
-#### findIndex
+### find
 
 ```js
 
 ```
 
-### ES7 方法
-
-#### flat
+### findIndex
 
 ```js
 
 ```
 
-### promise
+## ES7 方法
+
+### flat
+
+```js
+
+```
+
+## promise
 
 ```js
 const PENDING = 'PENDING',
@@ -804,7 +804,7 @@ $Promise.defer = $Promise.deferred = function () {
 module.exports = $Promise;
 ```
 
-### async/await
+## async/await
 
 async 本质就是 generator 生成器函数，是一种语法糖。
 
@@ -853,7 +853,7 @@ Co(addThree(0)).then(val => {
 });
 
 ```
-### ajax 请求
+## ajax 请求
 
 ```js
 const $ = (function () {
