@@ -420,7 +420,7 @@ Vue.prototype.$mount = function (
 
 
 
-vue 3 中也会优先渲染 render 函数，不过其过程是在挂载函数时进行判断的，具体代码在 `runtime-core/src/component.ts` 文件中。
+vue 3 中也会优先渲染 render 函数，不过其过程是在挂载函数组件时进行判断的，具体代码在 `runtime-core/src/component.ts` 文件中。
 
 ```typescript
 export function finishComponentSetup(
