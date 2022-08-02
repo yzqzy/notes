@@ -448,3 +448,56 @@ function helper(node: TreeNode | null, l: number, ans: number[][]) {
   node.right && helper(node.right, l + 1, ans)
 }
 ```
+
+## day07
+
+###  二分查找
+
+https://leetcode.cn/problems/binary-search/
+
+```typescript
+function search(nums: number[], target: number): number {
+  let start = 0
+  let end = nums.length - 1
+
+  while (start <= end) {
+    const mid = start + Math.floor((end - start) / 2)
+    const num = nums[mid]
+
+    if (num < target) {
+      start = mid + 1
+    } else if (num > target) {
+      end = mid - 1
+    } else　{
+      return mid
+    }
+  }
+
+  return -1
+}
+```
+
+### 第一个错误的版本
+
+https://leetcode.cn/problems/first-bad-version/
+
+```typescript
+var solution = function(isBadVersion: any) {
+  return function(n: number): number {
+    let start = 1
+    let end = n
+
+    while (start <= end) {
+      const mid = start + Math.floor((end - start) / 2)
+
+      if (isBadVersion(mid)) {
+        end = mid - 1
+      } else  {
+        start = mid + 1
+      }
+    }
+
+    return start
+  }
+}
+```
