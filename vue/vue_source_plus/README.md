@@ -454,3 +454,651 @@ export function finishComponentSetup(
 
 ## vue 初始化过程
 
+platforms 下定义的文件都是与平台相关的内容
+
+```js
+// src/platforms/web/entry-runtime-with-compiler.js
+
+/* @flow */
+
+import config from 'core/config'
+import { warn, cached } from 'core/util/index'
+import { mark, measure } from 'core/util/perf'
+
+import Vue from './runtime/index'
+import { query } from './util/index'
+import { compileToFunctions } from './compiler/index'
+import { shouldDecodeNewlines, shouldDecodeNewlinesForHref } from './util/compat'
+
+const idToTemplate = cached(id => {
+  const el = query(id)
+  return el && el.innerHTML
+})
+
+const mount = Vue.prototype.$mount
+Vue.prototype.$mount = function (
+  el?: string | Element,
+  hydrating?: boolean
+): Component {
+  el = el && query(el)
+
+	// ...
+
+  const options = this.$options
+  // resolve template/el and convert to render function
+  if (!options.render) {
+    let template = options.template
+    if (template) {
+      if (typeof template === 'string') {
+        if (template.charAt(0) === '#') {
+          template = idToTemplate(template)
+          /* istanbul ignore if */
+          if (process.env.NODE_ENV !== 'production' && !template) {
+            warn(
+              `Template element not found or is empty: ${options.template}`,
+              this
+            )
+          }
+        }
+      } else if (template.nodeType) {
+        template = template.innerHTML
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          warn('invalid template option:' + template, this)
+        }
+        return this
+      }
+    } else if (el) {
+      template = getOuterHTML(el)
+    }
+    if (template) {
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+        mark('compile')
+      }
+
+      const { render, staticRenderFns } = compileToFunctions(template, {
+        outputSourceRange: process.env.NODE_ENV !== 'production',
+        shouldDecodeNewlines,
+        shouldDecodeNewlinesForHref,
+        delimiters: options.delimiters,
+        comments: options.comments
+      }, this)
+      options.render = render
+      options.staticRenderFns = staticRenderFns
+
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+        mark('compile end')
+        measure(`vue ${this._name} compile`, 'compile', 'compile end')
+      }
+    }
+  }
+  return mount.call(this, el, hydrating)
+}
+
+// ...
+
+// htmlStr to render funcion
+Vue.compile = compileToFunctions
+
+export default Vue
+```
+
+```js
+// src/platforms/web/entry-runtime.js
+
+/* @flow */
+
+import Vue from './runtime/index'
+
+export default Vue
+```
+
+
+
+注册平台相关的指令和组件，注册 `__patch__` 和 `$mount` 方法
+
+```js
+// src/platforms/web/runtime/index.js
+
+/* @flow */
+
+import Vue from 'core/index'
+import config from 'core/config'
+import { extend, noop } from 'shared/util'
+import { mountComponent } from 'core/instance/lifecycle'
+import { devtools, inBrowser } from 'core/util/index'
+
+import {
+  query,
+  mustUseProp,
+  isReservedTag,
+  isReservedAttr,
+  getTagNamespace,
+  isUnknownElement
+} from 'web/util/index'
+
+import { patch } from './patch'
+import platformDirectives from './directives/index'
+import platformComponents from './components/index'
+
+// install platform specific utils
+// vue 内部使用方法
+Vue.config.mustUseProp = mustUseProp
+Vue.config.isReservedTag = isReservedTag
+Vue.config.isReservedAttr = isReservedAttr
+Vue.config.getTagNamespace = getTagNamespace
+Vue.config.isUnknownElement = isUnknownElement
+
+// install platform runtime directives & components
+// 注册指令（v-model，v-show）
+extend(Vue.options.directives, platformDirectives)
+// 注册组件（Transition TransitionGroup）
+extend(Vue.options.components, platformComponents)
+
+// install platform patch function
+// 注册 patch 函数，将虚拟 DOM 转换为真实 DOM
+Vue.prototype.__patch__ = inBrowser ? patch : noop
+
+// public mount method
+Vue.prototype.$mount = function (
+  el?: string | Element,
+  hydrating?: boolean
+): Component {
+  el = el && inBrowser ? query(el) : undefined
+  // 渲染 DOM
+  return mountComponent(this, el, hydrating)
+}
+
+// devtools global hook
+/* istanbul ignore next */
+if (inBrowser) {
+	// ....
+}
+
+export default Vue
+```
+
+```js
+// src/core/util/env.js
+
+// Browser environment sniffing
+export const inBrowser = typeof window !== 'undefined'
+
+// ...
+```
+
+
+
+core 目录下代码都是与平台无关的代码，初始化静态方法
+
+```js
+// src/core/index.js
+
+import Vue from './instance/index'
+import { initGlobalAPI } from './global-api/index'
+import { isServerRendering } from 'core/util/env'
+import { FunctionalRenderContext } from 'core/vdom/create-functional-component'
+
+// 初始化静态方法
+// 1. 初始化 Vue.config 对象
+// 2. Vue.util = { warn, extend, mergeOptions, defineReactive } 不推荐用户使用
+// 3. Vue.set、Vue.delete、Vue.nextTick 
+// 4. Vue.observable 使普通对象变为响应式对象
+// 5. 初始化 Vue.options 对象，如 components/directives/filters
+// 6. 设置 keep-alive 组件
+// 7. 注册 Vue.use 用来注册插件
+// 8. 注册 Vue.mixin 实现混入
+// 9. 注册 Vue.extend，基于传入的 options 返回一个组件的构造函数
+// 10. 注册 Vue.directive、Vue.component、Vue.filter
+initGlobalAPI(Vue)
+
+Object.defineProperty(Vue.prototype, '$isServer', {
+  get: isServerRendering
+})
+
+Object.defineProperty(Vue.prototype, '$ssrContext', {
+  get () {
+    /* istanbul ignore next */
+    return this.$vnode && this.$vnode.ssrContext
+  }
+})
+
+// expose FunctionalRenderContext for ssr runtime helper installation
+Object.defineProperty(Vue, 'FunctionalRenderContext', {
+  value: FunctionalRenderContext
+})
+
+Vue.version = '__VERSION__'
+
+export default Vue
+```
+
+创建 Vue 构造函数，设置 Vue 的实例成员
+
+```js
+// src/core/instance/index.js
+
+import { initMixin } from './init'
+import { stateMixin } from './state'
+import { renderMixin } from './render'
+import { eventsMixin } from './events'
+import { lifecycleMixin } from './lifecycle'
+import { warn } from '../util/index'
+
+// vue 构造函数
+function Vue (options) {
+  if (process.env.NODE_ENV !== 'production' &&
+    !(this instanceof Vue)
+  ) {
+    warn('Vue is a constructor and should be called with the `new` keyword')
+  }
+  this._init(options)
+}
+
+// 注册 vm 的 _init 方法，初始化 vm
+initMixin(Vue)
+// 注册 vm 的 $data、$props、$set、$delete、$watch
+stateMixin(Vue)
+// 初始化事件相关方法，$on、$once、$off、$emit
+eventsMixin(Vue)
+// 初始化生命周期相关方法，_update、$forceUpdate、$destory
+lifecycleMixin(Vue)
+// render、$nextTick/_render
+renderMixin(Vue)
+
+export default Vue
+```
+
+使用构造函数的方式定义 Vue，可以方便的按照功能将这些扩展分散到各个模块中去实现，易于代码管理和维护，这种编程技巧也很值得我们学习。 
+
+
+
+**src/platforms/web/entry-runtime-with-compiler.js**
+
+* web 平台相关的入口文件
+* 重写 `$mount` 方法
+* 注册 Vue.compile 方法，传递 HTML 字符串返回 render 函数
+
+**src/platforms/web/runtime/index.js**
+
+* web 平台相关代码
+* 注册平台相关指令：v-model、v-show
+* 注册平台相关组件：transition、tansition-group
+* 定义全局方法：
+  * `__patch__` ：将虚拟 DOM 转换为真实 DOM
+  * `$mount`：定义挂载方法，其内容调用 `mountComponent` 方法
+
+**src/core/index.js**
+
+* 平台无关代码
+* 通过 `initGlobalAPI` 设置 Vue 的静态方法
+  * 初始化 Vue.config 对象
+  * Vue.util = { warn, extend, mergeOptions, defineReactive }，不推荐用户使用
+  * Vue.set、Vue.delete、Vue.nextTick 
+  * Vue.observable 使普通对象变为响应式对象
+  * 初始化 Vue.options 对象，如 components/directives/filters
+  * 设置 keep-alive 组件
+  * 注册 Vue.use 用来注册插件
+  * 注册 Vue.mixin 实现混入
+  * 注册 Vue.extend，基于传入的 options 返回一个组件的构造函数
+  * 注册 Vue.directive、Vue.component、Vue.filter
+
+**src/core/instance/index.js**
+
+* 平台无关代码
+* 定义 Vue 构造函数，内部调用 `_init` 方法
+* 定义常用的 Vue 实例成员
+  * initMixin：注册 vm 的 `_init` 方法，初始化 vm
+  * stateMixin：注册 vm 的 $data、$props、$set、$delete、$watch
+  * eventsMixin：初始化事件相关方法，$on、$once、$off、$emit
+  * lifecycleMixin：初始化生命周期相关方法，_update、$forceUpdate、$destory
+  * renderMixin：render、$nextTick/_render
+
+## vscode 配置
+
+### flow 语法报错
+
+<img src="./images/flow_error.png" />
+
+关闭 vscode 代码检查
+
+```json
+// settings.json
+
+"javascript.validate.enable": false,
+```
+
+### 高亮显示问题
+
+解析报错，导致无法高亮显式。
+
+<img src="./images/highlight.png" />
+
+安装 vscode - Babel JavaScript 插件。
+
+## Vue 初始化 - 静态成员
+
+vue 静态成员初始化发生在 **src/core/index.js** 中，调用 `initGlobalAPI(Vue)` 方法。
+
+```js
+// vue/src/core/global-api/index.js
+
+export function initGlobalAPI (Vue: GlobalAPI) {
+  // config
+  const configDef = {}
+  configDef.get = () => config
+  if (process.env.NODE_ENV !== 'production') {
+    configDef.set = () => {
+      warn(
+        'Do not replace the Vue.config object, set individual fields instead.'
+      )
+    }
+  }
+  // 初始化 Vue.config 对象
+  // 我们在 src/platforms/web/runtime/index.js 中，给 config 属性设置方法
+	// 1. Vue.config.mustUseProp = mustUseProp
+	// 2. Vue.config.isReservedTag = isReservedTag
+	// 3. Vue.config.isReservedAttr = isReservedAttr
+	// 4. Vue.config.getTagNamespace = getTagNamespace
+	// 5. Vue.config.isUnknownElement = isUnknownElement
+  Object.defineProperty(Vue, 'config', configDef)
+
+  // exposed util methods.
+  // NOTE: these are not considered part of the public API - avoid relying on
+  // them unless you are aware of the risk.
+  // 不推荐用户使用
+  Vue.util = {
+    warn,
+    extend,
+    mergeOptions,
+    defineReactive
+  }
+
+  Vue.set = set
+  Vue.delete = del
+  Vue.nextTick = nextTick
+
+  // 2.6 explicit observable API
+  // 设置响应式对象
+  Vue.observable = <T>(obj: T): T => {
+    observe(obj)
+    return obj
+  }
+	
+  // 定义 components/directives/filters
+  //  import { ASSET_TYPES } from 'shared/constants'
+  // 	export const ASSET_TYPES = [
+  // 	'component',
+  // 	'directive',
+  // 	'filter'
+	// 	]
+  Vue.options = Object.create(null)
+  ASSET_TYPES.forEach(type => {
+    // 存放全局的组件、指令、过滤器
+    // Vue.options.components
+    // Vue.options.directives
+    // Vue.options.filters
+    Vue.options[type + 's'] = Object.create(null)
+  })
+
+  // this is used to identify the "base" constructor to extend all plain-object
+  // components with in Weex's multi-instance scenarios.
+  // 记录当前构造函数
+  Vue.options._base = Vue
+	
+  // 拷贝内部对象（extend 浅拷贝）
+  // 注册内置组件：keep-alive 组件
+  extend(Vue.options.components, builtInComponents)
+	
+  // 注册静态方法
+  // 1. Vue.use 注册插件
+  initUse(Vue)
+  // 2. Vue.mixin 实现混入
+  initMixin(Vue)
+  // 3. Vue.extend 基于传入的 options 返回组件构造函数，开发自定义组件使用
+  initExtend(Vue)
+  // 4. Vue.directive、Vue.component、Vue.filter
+  initAssetRegisters(Vue)
+}
+```
+
+
+
+```js
+// vue/src/core/global-api/use.js
+
+/* @flow */
+
+import { toArray } from '../util/index'
+
+export function initUse (Vue: GlobalAPI) {
+  Vue.use = function (plugin: Function | Object) {
+    // 已安装插件
+    const installedPlugins = (this._installedPlugins || (this._installedPlugins = []))
+    if (installedPlugins.indexOf(plugin) > -1) {
+      return this
+    }
+
+    // additional parameters
+    // 移除第一个参数（plugin）
+    const args = toArray(arguments, 1)
+    // 将 this（Vue）插入到第一项
+    args.unshift(this)
+    if (typeof plugin.install === 'function') {
+      plugin.install.apply(plugin, args)
+    } else if (typeof plugin === 'function') {
+      plugin.apply(null, args)
+    }
+    // 缓存已安装插件
+    installedPlugins.push(plugin)
+    return this
+  }
+}
+```
+
+```js
+// vue/src/core/global-api/mixin.js
+
+/* @flow */
+
+import { mergeOptions } from '../util/index'
+
+export function initMixin (Vue: GlobalAPI) {
+  Vue.mixin = function (mixin: Object) {
+    // 将传递的配置拷贝到 Vue.options 中，注册的是全局的选项
+    this.options = mergeOptions(this.options, mixin)
+    return this
+  }
+}
+```
+
+```js
+// vue/src/core/global-api/extend.js
+
+/* @flow */
+
+import { ASSET_TYPES } from 'shared/constants'
+import { defineComputed, proxy } from '../instance/state'
+import { extend, mergeOptions, validateComponentName } from '../util/index'
+
+export function initExtend (Vue: GlobalAPI) {
+  /**
+   * Each instance constructor, including Vue, has a unique
+   * cid. This enables us to create wrapped "child
+   * constructors" for prototypal inheritance and cache them.
+   */
+  Vue.cid = 0
+  let cid = 1
+
+  /**
+   * Class inheritance
+   */
+  Vue.extend = function (extendOptions: Object): Function {
+    extendOptions = extendOptions || {}
+    // Vue 构造函数
+    const Super = this
+    const SuperId = Super.cid
+    // 已缓存的组件构造函数
+    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
+    if (cachedCtors[SuperId]) {
+      return cachedCtors[SuperId]
+    }
+
+    const name = extendOptions.name || Super.options.name
+    if (process.env.NODE_ENV !== 'production' && name) {
+      // 开发环境验证组件名称
+      validateComponentName(name)
+    }
+	
+    // 创建组件构造函数，VueComponent
+    const Sub = function VueComponent (options) {
+      // 初始化方法
+      this._init(options)
+    }
+    // 改变构造函数原型，指向 Vue 构造函数，继承 Vue
+    // 所有的 vue 组件都是继承自 vue 的
+    Sub.prototype = Object.create(Super.prototype)
+    Sub.prototype.constructor = Sub
+    Sub.cid = cid++
+    // 合并配置
+    Sub.options = mergeOptions(
+      Super.options,
+      extendOptions
+    )
+    Sub['super'] = Super
+
+    // For props and computed properties, we define the proxy getters on
+    // the Vue instances at extension time, on the extended prototype. This
+    // avoids Object.defineProperty calls for each instance created.
+    if (Sub.options.props) {
+      initProps(Sub)
+    }
+    if (Sub.options.computed) {
+      initComputed(Sub)
+    }
+
+    // allow further extension/mixin/plugin usage
+    Sub.extend = Super.extend
+    Sub.mixin = Super.mixin
+    Sub.use = Super.use
+
+    // create asset registers, so extended classes
+    // can have their private assets too.
+    ASSET_TYPES.forEach(function (type) {
+      Sub[type] = Super[type]
+    })
+    // enable recursive self-lookup
+    if (name) {
+      Sub.options.components[name] = Sub
+    }
+
+    // keep a reference to the super options at extension time.
+    // later at instantiation we can check if Super's options have
+    // been updated.
+    Sub.superOptions = Super.options
+    Sub.extendOptions = extendOptions
+    Sub.sealedOptions = extend({}, Sub.options)
+
+    // cache constructor
+    // 缓存组件构造函数
+    cachedCtors[SuperId] = Sub
+    // 返回组件构造函数
+    return Sub
+  }
+}
+
+function initProps (Comp) {
+  const props = Comp.options.props
+  for (const key in props) {
+    proxy(Comp.prototype, `_props`, key)
+  }
+}
+
+function initComputed (Comp) {
+  const computed = Comp.options.computed
+  for (const key in computed) {
+    defineComputed(Comp.prototype, key, computed[key])
+  }
+}
+```
+
+```js
+// vue/src/shared/constants.js
+
+export const ASSET_TYPES = [
+  'component',
+  'directive',
+  'filter'
+]
+
+export const LIFECYCLE_HOOKS = [
+  'beforeCreate',
+  'created',
+  'beforeMount',
+  'mounted',
+  'beforeUpdate',
+  'updated',
+  'beforeDestroy',
+  'destroyed',
+  'activated',
+  'deactivated',
+  'errorCaptured',
+  'serverPrefetch'
+]
+
+
+// vue/src/core/global-api/assets.js
+
+/* @flow */
+
+import { ASSET_TYPES } from 'shared/constants'
+import { isPlainObject, validateComponentName } from '../util/index'
+
+export function initAssetRegisters (Vue: GlobalAPI) {
+  /**
+   * Create asset registration methods.
+   */
+  // Vue.directive、Vue.component、Vue.filter
+  // 参数基本一致，所以可以统一注册
+  // https://v2.vuejs.org/v2/api/#Vue-directive
+  // https://v2.vuejs.org/v2/api/#Vue-component
+  // https://v2.vuejs.org/v2/api/#Vue-filter
+  ASSET_TYPES.forEach(type => {
+    Vue[type] = function (
+      id: string,
+      definition: Function | Object
+    ): Function | Object | void {
+      if (!definition) {
+        return this.options[type + 's'][id]
+      } else {
+        /* istanbul ignore if */
+        if (process.env.NODE_ENV !== 'production' && type === 'component') {
+          validateComponentName(id)
+        }
+        if (type === 'component' && isPlainObject(definition)) {
+          definition.name = definition.name || id
+          // _base 定义在 vue/src/core/global-api/index.js 中
+          // 把组件配置转换为组件的构造函数
+          definition = this.options._base.extend(definition)
+        }
+        if (type === 'directive' && typeof definition === 'function') {
+          definition = { bind: definition, update: definition }
+        }
+        // 全局注册，缓存并赋值
+        this.options[type + 's'][id] = definition
+    		// 返回定义
+        return definition
+      }
+    }
+  })
+}
+```
+
+* [https://v2.vuejs.org/v2/api/#Vue-directive](https://v2.vuejs.org/v2/api/#Vue-directive)
+* [https://v2.vuejs.org/v2/api/#Vue-component](https://v2.vuejs.org/v2/api/#Vue-component)
+* [https://v2.vuejs.org/v2/api/#Vue-filter](https://v2.vuejs.org/v2/api/#Vue-filter)
+
+## Vue 初始化 - 实例成员
+
