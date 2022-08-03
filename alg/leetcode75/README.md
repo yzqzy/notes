@@ -501,3 +501,86 @@ var solution = function(isBadVersion: any) {
   }
 }
 ```
+
+## day08
+
+### 验证二叉搜索树
+
+[https://leetcode.cn/problems/validate-binary-search-tree/](https://leetcode.cn/problems/validate-binary-search-tree/)
+
+```typescript
+function isValidBST(root: TreeNode | null): boolean {
+  return helper(root, -Infinity, +Infinity)
+}
+
+function helper(root: TreeNode, lower: number, upper: number) {
+  if (!root) return true
+
+  if (root.val <= lower || root.val >= upper) return false
+
+  return helper(root.left, lower, root.val) &&  helper(root.right, root.val, upper)
+}
+```
+
+```typescript
+function isValidBST(root: TreeNode | null): boolean {
+  const stack = []
+
+  let value = -Infinity
+
+  while (stack.length || root) {
+    while (root) {
+      stack.push(root)
+      root = root.left
+    }
+
+    root = stack.pop()
+
+    if (root.val <= value) return false
+    value = root.val
+
+    root = root.right
+  }
+
+  return true
+}
+```
+
+### 二叉搜索树的最近公共祖先
+
+[https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-search-tree/](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-search-tree/)
+
+```typescript
+function lowestCommonAncestor(
+  root: TreeNode | null,
+  p: TreeNode | null,
+  q: TreeNode | null
+): TreeNode | null {
+  if (p.val < root.val && q.val < root.val) {
+    return lowestCommonAncestor(root.left, p, q)
+  }
+  if (p.val > root.val && q.val > root.val) {
+    return lowestCommonAncestor(root.right, p, q)
+  }
+  return root
+}
+```
+
+```typescript
+function lowestCommonAncestor(
+  root: TreeNode | null,
+  p: TreeNode | null,
+  q: TreeNode | null
+): TreeNode | null {
+  while (root) {
+    if (p.val < root.val && q.val < root.val) {
+      root = root.left
+    } else if (p.val > root.val && q.val > root.val) {
+      root = root.right
+    } else {
+      break
+    }
+  }
+  return root
+}
+```
