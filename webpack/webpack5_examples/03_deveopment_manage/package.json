@@ -1,18 +1,22 @@
 {
-  "name": "output_manage",
+  "name": "deveopment_manage",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "private": "true",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "dev": "webpack serve --open"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.9.3"
   },
   "dependencies": {
     "lodash": "^4.17.21"
