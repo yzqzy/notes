@@ -2156,5 +2156,423 @@ function createWatcher (
 
 ## 首次渲染过程
 
+### src/core/instance/init.js
 
+```js
+// src/core/instance/init.js
+
+export function initMixin (Vue: Class<Component>) {
+  Vue.prototype._init = function (options?: Object) {
+		// ...
+    
+    if (vm.$options.el) {
+      // 页面挂载
+      vm.$mount(vm.$options.el)
+    }
+  }
+}
+```
+
+### src/platforms/web/entry-runtime-with-compiler.js
+
+```js
+// src/platforms/web/entry-runtime-with-compiler.js
+
+const mount = Vue.prototype.$mount
+Vue.prototype.$mount = function (
+  el?: string | Element,
+  hydrating?: boolean
+): Component {
+  el = el && query(el)
+	
+  // ...
+  
+  const options = this.$options
+  // resolve template/el and convert to render function
+  if (!options.render) {
+    let template = options.template
+    
+    // 如果模板存在
+    if (template) {
+      if (typeof template === 'string') {
+        // 如果模板是 id 选择器
+        if (template.charAt(0) === '#') {
+          // 获取对应的 DOM 对象的 innerHTML
+          template = idToTemplate(template)
+          /* istanbul ignore if */
+          if (process.env.NODE_ENV !== 'production' && !template) {
+            warn(
+              `Template element not found or is empty: ${options.template}`,
+              this
+            )
+          }
+        }
+      } else if (template.nodeType) {
+        // 如果模板是元素，返回元素的 innerHTML
+        template = template.innerHTML
+      } else {
+        // 既不是 DOM 元素也不是字符串，开发环境打印警告
+        if (process.env.NODE_ENV !== 'production') {
+          warn('invalid template option:' + template, this)
+        }
+        // 返回当前实例
+        return this
+      }
+    } else if (el) {
+      // 如果当前环境没有模板，获取 el 的 outHTML 作为模板
+      template = getOuterHTML(el)
+    }
+    
+    // 如果模板存在
+    if (template) {
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+        mark('compile')
+      }
+	
+      // 将 template 转换为 render 函数
+      const { render, staticRenderFns } = compileToFunctions(template, {
+        outputSourceRange: process.env.NODE_ENV !== 'production',
+        shouldDecodeNewlines,
+        shouldDecodeNewlinesForHref,
+        delimiters: options.delimiters,
+        comments: options.comments
+      }, this)
+      options.render = render
+      options.staticRenderFns = staticRenderFns
+
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+        mark('compile end')
+        measure(`vue ${this._name} compile`, 'compile', 'compile end')
+      }
+    }
+  }
+  
+  // 调用 mount 方法，渲染 DOM
+  return mount.call(this, el, hydrating)
+}
+```
+
+###  src/platforms/web/runtime/index.js
+
+```js
+// src/platforms/web/runtime/index.js
+
+// public mount method
+Vue.prototype.$mount = function (
+  el?: string | Element,
+  hydrating?: boolean
+): Component {
+  el = el && inBrowser ? query(el) : undefined
+  return mountComponent(this, el, hydrating)
+}
+```
+
+### src/core/instance/lifecycle.js
+
+```js
+// src/core/instance/lifecycle.js
+
+export function mountComponent (
+  vm: Component,
+  el: ?Element,
+  hydrating?: boolean
+): Component {
+  vm.$el = el
+  
+  // 判断是否存在 render 函数
+  if (!vm.$options.render) {
+    vm.$options.render = createEmptyVNode
+    if (process.env.NODE_ENV !== 'production') {
+      /* istanbul ignore if */
+      if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
+        vm.$options.el || el) {
+        warn(
+          'You are using the runtime-only build of Vue where the template ' +
+          'compiler is not available. Either pre-compile the templates into ' +
+          'render functions, or use the compiler-included build.',
+          vm
+        )
+      } else {
+        warn(
+          'Failed to mount component: template or render function not defined.',
+          vm
+        )
+      }
+    }
+  }
+  	
+  // 触发 beforeMount 声明周期钩子函数
+  callHook(vm, 'beforeMount')
+	
+  // 更新组件
+  let updateComponent
+  /* istanbul ignore if */
+  if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+    updateComponent = () => {
+      const name = vm._name
+      const id = vm._uid
+      const startTag = `vue-perf-start:${id}`
+      const endTag = `vue-perf-end:${id}`
+
+      mark(startTag)
+      const vnode = vm._render()
+      mark(endTag)
+      measure(`vue ${name} render`, startTag, endTag)
+
+      mark(startTag)
+      vm._update(vnode, hydrating)
+      mark(endTag)
+      measure(`vue ${name} patch`, startTag, endTag)
+    }
+  } else {
+    updateComponent = () => {
+      // vm._render 调用用户传入的 render 或编译器生成的 render，返回虚拟 DOM
+      // vm._update 将虚拟 DOM 转换为真实 DOM，渲染到页面中
+      vm._update(vm._render(), hydrating)
+    }
+  }
+
+  // we set this to vm._watcher inside the watcher's constructor
+  // since the watcher's initial patch may call $forceUpdate (e.g. inside child
+  // component's mounted hook), which relies on vm._watcher being already defined
+  new Watcher(vm, updateComponent, noop, {
+    before () {
+      if (vm._isMounted && !vm._isDestroyed) {
+        callHook(vm, 'beforeUpdate')
+      }
+    }
+  }, true /* isRenderWatcher */)
+  hydrating = false
+
+  // manually mounted instance, call mounted on self
+  // mounted is called for render-created child components in its inserted hook
+  if (vm.$vnode == null) {
+    vm._isMounted = true
+    // 触发 mounted 生命周期钩子函数
+    callHook(vm, 'mounted')
+  }
+  return vm
+}
+```
+
+### src/core/observer/watcher.js
+
+observer 响应式处理相关
+
+vue 中 watcher 有三种
+
+* 渲染 watcher
+* 计算属性 watcher
+* 侦听器 watcher
+
+```js
+// src/core/observer/watcher.js
+
+/* @flow */
+
+// ....
+
+/**
+ * A watcher parses an expression, collects dependencies,
+ * and fires callback when the expression value changes.
+ * This is used for both the $watch() api and directives.
+ */
+export default class Watcher {
+  vm: Component;
+  expression: string;
+  cb: Function;
+  id: number;
+  deep: boolean;
+  user: boolean;
+  lazy: boolean;
+  sync: boolean;
+  dirty: boolean;
+  active: boolean;
+  deps: Array<Dep>;
+  newDeps: Array<Dep>;
+  depIds: SimpleSet;
+  newDepIds: SimpleSet;
+  before: ?Function;
+  getter: Function;
+  value: any;
+
+  constructor (
+    vm: Component,
+    // 表达式或者函数
+    expOrFn: string | Function,
+    cb: Function,
+    options?: ?Object,
+    // 是否是渲染 watcher
+    isRenderWatcher?: boolean
+  ) {
+    this.vm = vm
+    if (isRenderWatcher) {
+      vm._watcher = this
+    }
+    vm._watchers.push(this)
+    // options
+    if (options) {
+      this.deep = !!options.deep
+      this.user = !!options.user
+      // 是否延迟执行视图
+      // 计算属性 watcher 会延迟执行视图
+      this.lazy = !!options.lazy
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.user = this.lazy = this.sync = false
+    }
+    this.cb = cb
+    this.id = ++uid // uid for batching
+    this.active = true
+    this.dirty = this.lazy // for lazy watchers
+    this.deps = []
+    this.newDeps = []
+    this.depIds = new Set()
+    this.newDepIds = new Set()
+    this.expression = process.env.NODE_ENV !== 'production'
+      ? expOrFn.toString()
+      : ''
+    // parse expression for getter
+    if (typeof expOrFn === 'function') {
+      // 首次渲染传入的是 updateComponent 函数
+      this.getter = expOrFn
+    } else {
+      // 侦听器时，第二个参数会传入字符串
+      this.getter = parsePath(expOrFn)
+      if (!this.getter) {
+        this.getter = noop
+        process.env.NODE_ENV !== 'production' && warn(
+          `Failed watching path: "${expOrFn}" ` +
+          'Watcher only accepts simple dot-delimited paths. ' +
+          'For full control, use a function instead.',
+          vm
+        )
+      }
+    }
+    this.value = this.lazy
+      ? undefined
+      : this.get()
+  }
+
+  /**
+   * Evaluate the getter, and re-collect dependencies.
+   */
+  get () {
+    // 将当前 watcher 对象存储到栈中
+    // 如果组件嵌套，先渲染内部组件，所以要把父组件的 watcher 保存起来
+    pushTarget(this)
+    let value
+    const vm = this.vm
+    try {
+      // 调用存储的 getter，即 updateComponent 函数
+      value = this.getter.call(vm, vm)
+    } catch (e) {
+      if (this.user) {
+        handleError(e, vm, `getter for watcher "${this.expression}"`)
+      } else {
+        throw e
+      }
+    } finally {
+      // "touch" every property so they are all tracked as
+      // dependencies for deep watching
+      if (this.deep) {
+        traverse(value)
+      }
+      // 将当前 watcher 在栈中弹出
+      popTarget()
+      this.cleanupDeps()
+    }
+    return value
+  }
+
+ 	// ...
+}
+```
+
+### src/core/instance/lifecycle.js
+
+通过掉啊用 getter 方法，触发 updateComponent 函数
+
+```js
+// src/core/instance/lifecycle.js
+
+export function mountComponent (
+  vm: Component,
+  el: ?Element,
+  hydrating?: boolean
+): Component {
+  vm.$el = el
+	
+  // ...
+  
+  // 更新组件
+  let updateComponent
+  /* istanbul ignore if */
+  if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+		// ...
+  } else {
+    updateComponent = () => {
+      // vm._render 调用用户传入的 render 或编译器生成的 render，返回虚拟 DOM
+      // vm._update 将虚拟 DOM 转换为真实 DOM，渲染到页面中
+      vm._update(vm._render(), hydrating)
+    }
+  }
+
+  // we set this to vm._watcher inside the watcher's constructor
+  // since the watcher's initial patch may call $forceUpdate (e.g. inside child
+  // component's mounted hook), which relies on vm._watcher being already defined
+  new Watcher(vm, updateComponent, noop, {
+    before () {
+      if (vm._isMounted && !vm._isDestroyed) {
+        callHook(vm, 'beforeUpdate')
+      }
+    }
+  }, true /* isRenderWatcher */)
+ 	
+  // ...
+}
+```
+
+执行完 `vm._update(vm._render(), hydrating)` 之后，就会把模板渲染到页面中。
+
+### 总结
+
+* Vue 初始化，初始化实例成员和静态成员
+* new Vue()
+* this._init()
+* vm.$mount()
+  * src/platforms/web/runtime/index.js
+  * 如果没有传递 render，将模板编译为 render 函数
+  * compileToFunctions() 生成 render() 渲染函数
+  * options.render = render
+* vm.$mount()
+  * src/platforms/web/runtime/index.js
+  * mountComponent()
+* mountComponent
+  * src/core/instance/lifecycle.js
+  * 判断是否有 render 函数，如果没有但是传入模板，打印警告
+  * 触发 beforeMount
+  * 定义 updateComponent 方法
+    * `vm._update(vm._render(), ...)`
+    * `vm._render` ，调用 render 函数，返回虚拟 DOM
+    * `vm._update` ，将虚拟 DOM 转换成真实 DOM
+  * 创建 Watcher 实例
+    * updateComponent 赋值给 expOrFn
+    * 调用 get() 方法
+  * 触发 mounted 方法
+  * return vm
+* watcher.get
+  * src/core/observer/watcher.js
+  * 调用 updateComponent() 函数
+  * 调用 `vm._render()` 创建 VNode
+    * 调用 `render.call(vm._renderProxy, vm.$createElement())`  或者编译 template 生成的 `render()` 
+    * 返回 vnode
+  * 调用 `vm._update(vnode, ...)` 
+    * 调用 `vm.__patch__(vm.$el, vnode)` 挂载真实 DOM
+    * 记录 `vm.$el`
+
+## 数据响应式原理
 
