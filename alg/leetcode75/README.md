@@ -584,3 +584,78 @@ function lowestCommonAncestor(
   return root
 }
 ```
+
+## day09
+
+### 图像渲染
+
+[https://leetcode.cn/problems/flood-fill/](https://leetcode.cn/problems/flood-fill/)
+
+```js
+function floodFill(image: number[][], sr: number, sc: number, newColor: number): number[][] {
+  if (!image.length) return []
+
+  const m = image.length
+  const n = image[0].length
+
+  const currentColor = image[sr][sc]
+  const d = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+
+  const queue = [[sr, sc]]
+
+  while (queue.length) {
+    const [i, j] = queue.shift()
+
+    if (image[i][j] !== currentColor || image[i][j] === newColor) continue
+
+    image[i][j] = newColor
+
+    for (const [dx, dy] of d) {
+      const x = dx + i
+      const y = dy + j
+
+      if (x >= 0 && x < m && y >= 0 && y < n) queue.push([x, y])
+    }
+  }
+
+  return image
+}
+```
+
+```typescript
+function floodFill(image: number[][], sr: number, sc: number, newColor: number): number[][] {
+  if (!image.length) return []
+
+  const m = image.length
+  const n = image[0].length
+
+  const currentColor = image[sr][sc]
+  const d = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+
+  const helper = (i: number, j: number) => {
+    if (image[i][j] !== currentColor || image[i][j] === newColor) return
+
+    image[i][j] = newColor
+
+     for (const [dx, dy] of d) {
+      const x = dx + i
+      const y = dy + j
+
+      if (x >= 0 && x < m && y >= 0 && y < n) helper(x, y)
+    }
+  }
+
+  helper(sr, sc)
+
+  return image
+}
+```
+
+### 岛屿数量
+
+[https://leetcode.cn/problems/number-of-islands/](https://leetcode.cn/problems/number-of-islands/)
+
+
+```typescript
+
+```
