@@ -1,1 +1,0 @@
-import{_ as s,c as a,o as p,a as e}from"./app.e5e29865.js";const y=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"vue/vue_vite/index.md"}'),n={name:"vue/vue_vite/index.md"},l=e("",19),o=[l];function c(t,i,r,d,_,v){return p(),a("div",null,o)}var m=s(n,[["render",c]]);export{y as __pageData,m as default};
