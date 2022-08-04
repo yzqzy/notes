@@ -2574,5 +2574,107 @@ export function mountComponent (
     * 调用 `vm.__patch__(vm.$el, vnode)` 挂载真实 DOM
     * 记录 `vm.$el`
 
-## 数据响应式原理
+## 响应式原理
 
+当数据发生变化时，自动更新视图，不需要手动操作 DOM。
+
+* `vm.msg = { count: 0 }` ，重新给属性赋值，是否是响应式的？
+* `vm.arr[0] = 4`  ，给数组元素赋值，视图是否会更新？
+* `vm.arr.length = 0`，修改数组 length，视图是否会更新？
+* `vm.arr.push(4)`，视图是否会更新？
+
+响应式处理的过程是比较复杂的，我们可以先从入口开始
+
+* src/core/instance/init.js
+  * initState，vm 状态初始化，初始化 `_data`、`_props` 、methods 等
+* src/core/instance/state.js
+
+### src/core/instance/state.js
+
+```js
+// src/core/instance/state.js
+
+export function initState (vm: Component) {
+  vm._watchers = []
+  const opts = vm.$options
+  if (opts.props) initProps(vm, opts.props)
+  if (opts.methods) initMethods(vm, opts.methods)
+  if (opts.data) {
+    initData(vm)
+  } else {
+    // 响应式处理入口
+    observe(vm._data = {}, true /* asRootData */)
+  }
+  if (opts.computed) initComputed(vm, opts.computed)
+  if (opts.watch && opts.watch !== nativeWatch) {
+    initWatch(vm, opts.watch)
+  }
+}
+
+function initData (vm: Component) {
+  let data = vm.$options.data
+  data = vm._data = typeof data === 'function'
+    ? getData(data, vm)
+    : data || {}
+		
+  // ...
+  
+  // proxy data on instance
+  const keys = Object.keys(data)
+  const props = vm.$options.props
+  const methods = vm.$options.methods
+  let i = keys.length
+  while (i--) {
+    const key = keys[i]
+    if (process.env.NODE_ENV !== 'production') {
+   		// ...
+    }
+    if (props && hasOwn(props, key)) {
+     // ...
+    } else if (!isReserved(key)) {
+      proxy(vm, `_data`, key)
+    }
+  }
+  // observe data
+  observe(data, true /* asRootData */)
+}
+```
+
+### src/core/observer/index.js
+
+响应式处理相关代码
+
+```js
+// src/core/observer/index.js
+
+// 响应式处理入口
+export function observe (value: any, asRootData: ?boolean): Observer | void {
+  // 判断 value 不是对象，或者 value 是 VNode 的实例，直接返回
+  if (!isObject(value) || value instanceof VNode) {
+    return
+  }
+  let ob: Observer | void
+  // 如果 value 存在 __ob__ （observer 对象）属性
+  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    ob = value.__ob__
+  } else if (
+    shouldObserve &&
+    !isServerRendering() &&
+    // 判断 value 是否是数组或者是 JavaScript 对象
+    (Array.isArray(value) || isPlainObject(value)) &&
+    Object.isExtensible(value) &&
+    // 判断 value 是否是 vue 实例
+    !value._isVue
+  ) {
+    // 创建 Observer 对象
+    ob = new Observer(value)
+  }
+  // 如果当前处理的是根数据，vmCount 属性自增
+  if (asRootData && ob) {
+    ob.vmCount++
+  }
+  return ob
+}
+```
+
+## 
