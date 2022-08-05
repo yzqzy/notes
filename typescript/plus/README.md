@@ -2310,7 +2310,7 @@ globalLib.doAnything = () => {}
 
 我们可以来看一下 jQuery 的声明文件是如何组织的。
 
-<img src="./images/jquery.png" align="left" />
+<div><img src="./images/jquery.png" /></div>
 
 ```json
 // package.json  types 字段代表声明文件入口
@@ -2365,7 +2365,7 @@ export = jQuery;
 
 模块依赖使用 types 属性，比如文中的 `types="sizzle"` ，sizzle 是 jQuery 的一个引擎。ts 会在 @types 目录下寻找这个模块。然后把对应的定义引入进来。
 
-<img src="./images/sizzle.png" align="left" />
+<div><img src="./images/sizzle.png" /></div>
 
 路径依赖使用 path 属性。代表一个相对路径。使用 index.d.ts 同级的一些文件。
 
@@ -2406,7 +2406,7 @@ ts 文件有三种类型，分别是 `ts` ，`d.ts` ，`tsx`。
 tsc
 ```
 
-<img src="./images/tsconfig_default.png" align="left" />
+<div><img src="./images/tsconfig_default.png" /></div>
 
 ##### files
 
@@ -2590,7 +2590,7 @@ include 支持通配符配置。
 }
 ```
 
-<img src="./images/compile.png" align="left" />
+<div><img src="./images/compile.png" /></div>
 
 我们还可以通过 `tsBuildInfoFile` 配置增量编译文件的存储位置（路径、文件名称可以自定义）。
 
@@ -2739,7 +2739,7 @@ Cannot write file 'D:/workspace/notes/typescript/plus/ts-config/build/webpack.ba
 }
 ```
 
-<img src="./images/outDir.png" align="left" />
+<div><img src="./images/outDir.png" /></div>
 
 我们还可以定义 `rootDir` 指定输入文件目录，默认就是当前目录。
 
@@ -2755,7 +2755,7 @@ Cannot write file 'D:/workspace/notes/typescript/plus/ts-config/build/webpack.ba
 }
 ```
 
-<img src="./images/rootDir.png" align="left" />
+<div><img src="./images/rootDir.png" /></div>
 
 rootDir 指定的是当前目录，所以输出目录中就会包含 src 目录。如果我们把输入目录指定为 src。
 
@@ -2771,7 +2771,7 @@ rootDir 指定的是当前目录，所以输出目录中就会包含 src 目录�
 }
 ```
 
-<img src="./images/rootDir02.png" align="left" />
+<div><img src="./images/rootDir02.png" /></div>
 
 从图中可以看到，输出的目录就不包含 src 目录。这个选项是用来控制输出目录结构的。
 
@@ -2787,7 +2787,7 @@ rootDir 指定的是当前目录，所以输出目录中就会包含 src 目录�
 
 开启 sourceMap 会为我们自动生成 sourceMap 文件。
 
-<img src="./images/sourceMap.png" align="left" />
+<div><img src="./images/sourceMap.png" /></div>
 
 ```js
 // amd.js.map
@@ -2865,7 +2865,7 @@ var s = 'a';
 }
 ```
 
-<img src="./images/sourceMap02.png" align="left" />
+<div><img src="./images/sourceMap02.png" /></div>
 
 ```js
 // a.d.ts.map
@@ -3325,7 +3325,7 @@ console.log(util)
 
 可以在命令行打印相关信息。
 
-<img src="./images/emitter.png" align="left" />
+<div><img src="./images/emitter.png" /></div>
 
 ##### 总结
 
@@ -3337,7 +3337,7 @@ console.log(util)
 
 工程引用是 ts 3.0 引入的新特性。我们来看下具体的应用场景。
 
-<img src="./images/project.png" align="left" />
+<div><img src="./images/project.png" /></div>
 
 我们有一个项目，是一个前后端混合项目，并且有公共的引用文件，且服务端和客户端代码的测试用例都在一个目录中。
 
@@ -3394,7 +3394,7 @@ const c = new Server()
 
 编译后的文件目录如下。
 
-<img src="./images/project02.png" align="left" />
+<div><img src="./images/project02.png" /></div>
 
 我们并不希望构建后的目录有一个 src 层级，我们想把 client、common、server 直接构建到 dist 目录下。
 
@@ -3414,7 +3414,7 @@ const c = new Server()
 
 这样可以实现我们的目的，但是你会发现这样就把 test 目录给遗忘。还有一些不方便的地方就是，我们不能单独的构建客户端应用或者服务端应用。此外，我们也不想把测试用例构建到 dist 目录下。以上的问题都是通过单个配置文件不能解决的。工程引用就是用来解决这类问题的。它可以灵活控制输出目录，还可以使工程之间产生依赖关系，可以把一个大的项目拆分成小的项目，同时还可以利用增量编译提升编译速度。下面来看一下使用工程引用改造后的项目。
 
-<img src="./images/new_project.png" align="left" />
+<div><img src="./images/new_project.png" /></div>
 
 上述代码基本没有改动，只是我们为每个目录增加了自己的 tsconfig.json 文件。
 
@@ -3483,7 +3483,7 @@ tsc -b src/client --verbose # 构建 client 工程
 
 构建完毕后生成目录如下：
 
-<img src="./images/new_project02.png" align="left" />
+<div><img src="./images/new_project02.png" /></div>
 
 再次执行构建命令，你会发现构建速度也很快。因为我们启用了增量编译。
 
@@ -3495,7 +3495,7 @@ tsc -b test --verbose # 构建测试用例
 
 你会发现 test 目录下会生成构建后的文件。
 
-<img src="./images/new_project03.png" align="left" />
+<div><img src="./images/new_project03.png" /></div>
 
 我们可以用以下命令清空构建文件。
 
@@ -3618,7 +3618,7 @@ module.exports = {
 }
 ```
 
-<img src="./images/compiler.png" align="left" />
+<div><img src="./images/compiler.png" /></div>
 
 可以看到未开启 `transpileOnly` 编译需要 3.15s，开启后编译只需要 1.79s。不过这个模式也有缺点，就是编译时不能做类型检查。
 

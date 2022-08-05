@@ -73,7 +73,7 @@ chromium 本质是 Chrome 的开源版，可以看作是一个浏览器。
 >
 > 进程间通过 IPC 通信；
 
-<div align="left"><img src="./images/chromium.png" /></div>
+<div><img src="./images/chromium.png" /></div>
 
 #### Electron 架构
 
@@ -87,7 +87,7 @@ Node.js 事件循环基于 libuv，但 Chromium 基于 message pump。
 >
 > Node.js 集成到 Chromium。
 
-<div align="left"><img src="./images/electron.png" /></div>
+<div><img src="./images/electron.png" /></div>
 
 Electron 是将 Node.js 集成到 Chromium 中。
 
@@ -95,7 +95,7 @@ Electron 是将 Node.js 集成到 Chromium 中。
 >
 > 通过 PostTask 转发到 Chromium 的事件循环中。这样实现 Electron 的事件融合。
 
-<div align="left"><img src="./images/electron_design.png" style="zoom: 80%" /></div>
+<div><img src="./images/electron_design.png" style="zoom: 80%" /></div>
 
 ### 桌面端技术选型
 
@@ -356,7 +356,7 @@ startWork();
 
 ### Electron vs Web： 特性
 
-<div align="left"><img src="./images/electron.png" /></div>
+<div><img src="./images/electron.png" /></div>
 
 #### 主进程
 

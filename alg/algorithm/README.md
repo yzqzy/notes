@@ -250,7 +250,7 @@ JS 解释器使用栈来控制函数的调用顺序。
 
 #### 解题步骤
 
-<div align="left"><img src="./images/code20.png" alt="leetcode 20" style="zoom: 80%;" /></div>
+<div><img src="./images/code20.png" alt="leetcode 20" style="zoom: 80%;" /></div>
 
 1. 新建一个栈。
 
@@ -360,7 +360,7 @@ func1();
 
 **示例一**
 
-<div align="left"><img src="./images/code144_01.png" alt="leetcode 144" style="zoom: 90%;" /></div>
+<div><img src="./images/code144_01.png" alt="leetcode 144" style="zoom: 90%;" /></div>
 
 ```html
 输入：root = [1,null,2,3]
@@ -383,7 +383,7 @@ func1();
 
 **示例四**
 
-<div align="left"><img src="./images/code144_02.png" alt="leetcode 144" style="zoom: 90%;" /></div>
+<div><img src="./images/code144_02.png" alt="leetcode 144" style="zoom: 90%;" /></div>
 
 ```html
 输入：root = [1,2]
@@ -392,7 +392,7 @@ func1();
 
 **示例五**
 
-<div align="left"><img src="./images/code144_03.png" alt="leetcode 144" style="zoom: 90%;" /></div>
+<div><img src="./images/code144_03.png" alt="leetcode 144" style="zoom: 90%;" /></div>
 
 ```html
 输入：root = [1,null,2]
@@ -1664,11 +1664,11 @@ JS 中没有树，但是可以用 Object 和 Array 构建树。
 
 深度优先遍历：尽可能深的搜索树的分支。
 
-<div align="left"><img src="./images/tree_deep.png" alt="深度优先遍历" style="zoom:80%;" /></div>
+<div><img src="./images/tree_deep.png" alt="深度优先遍历" style="zoom:80%;" /></div>
 
 广度优先遍历：先访问离根节点最近的节点。
 
-<div align="left"><img src="./images/tree_with.png" alt="广度优先遍历" style="zoom:80%;" /></div>
+<div><img src="./images/tree_with.png" alt="广度优先遍历" style="zoom:80%;" /></div>
 
 #### tree 模拟数据
 
@@ -4673,11 +4673,11 @@ var rob = function(nums) {
 
 #### 零钱兑换
 
-<div align="left"><img src="./images/exchange.png" style="zoom: 80%" /></div>
+<div><img src="./images/exchange.png" style="zoom: 80%" /></div>
 
 这种情况使用贪心算法可以得到最优解。
 
-<div align="left"><img src="./images/exchange02.png" style="zoom: 80%" /></div>
+<div><img src="./images/exchange02.png" style="zoom: 80%" /></div>
 
 这种情况使用贪心算法并不能得到最优解。
 
@@ -4854,7 +4854,7 @@ var maxProfit = function(prices) {
 
 #### 全排列
 
-<div align="left"><img src="./images/all.png" style="zoom: 80%" /></div>
+<div><img src="./images/all.png" style="zoom: 80%" /></div>
 
 1. 用递归模拟出所有情况；
 

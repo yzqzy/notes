@@ -1543,7 +1543,7 @@ npm i glob -D
 
 **页面结构整理**
 
-<div align="left"><img src="./images/floder.png" style="zoom: 100%;" /></div>
+<div><img src="./images/floder.png" style="zoom: 100%;" /></div>
 
 **webpack.prod.js**
 
@@ -2975,7 +2975,7 @@ module.exports = merge(baseConfig, devConfig);
 
 #### 功能模块设计
 
-<div align="left"><img src="./images/design.png" style="zoom: 100%;" /></div>
+<div><img src="./images/design.png" style="zoom: 100%;" /></div>
 
 #### 目录结构设计
 
@@ -2983,7 +2983,7 @@ lib 放置源代码。
 
 test 放置测试代码。
 
-<div align="left"><img src="./images/folder_design.png" style="zoom: 80%;" /></div>
+<div><img src="./images/folder_design.png" style="zoom: 80%;" /></div>
 
 #### 配置
 
@@ -3708,7 +3708,7 @@ scripts:
 
 #### 提交格式要求
 
-<div align="left"><img src="./images/commit_rule.png" style="zoom: 120%" /></div>
+<div><img src="./images/commit_rule.png" style="zoom: 120%" /></div>
 
 #### 本地开发阶段增加 precommit 钩子
 
@@ -3744,11 +3744,11 @@ npm i husky -D
 
 alpha和rc等修饰版本的关键字后面可以带上次数和meta信息 。
 
-<div align="left"><img src="./images/react_version.png" style="zoom: 120%" /></div>
+<div><img src="./images/react_version.png" style="zoom: 120%" /></div>
 
 #### 遵守 semver 规范的优势 
 
-<div align="left"><img src="./images/react_semver.png" style="zoom: 120%" /></div>
+<div><img src="./images/react_semver.png" style="zoom: 120%" /></div>
 
 #### 语义化版本（Semantic Versioning）规范格式
 

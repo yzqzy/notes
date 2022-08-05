@@ -216,7 +216,7 @@ flow 目录
 
 ### Vue 源码目录设计
 
-<div align="left" > <img src="./images/vue-dir.png" alt="vue-dir" style="zoom: 80%;" /> </div>
+<div > <img src="./images/vue-dir.png" alt="vue-dir" style="zoom: 80%;" /> </div>
 
 Vue.js 的源码都在 src 目录下，其目录结构如下。
 
@@ -2766,7 +2766,7 @@ export function appendChild (node: Node, child: Node) {
 
 我们可以通过下图更直观地看到从初始化 Vue 到最终渲染的整个过程。 
 
-<div align="left" > <img src="./images/data-dirven.png" alt="data-dirven" style="zoom: 100%;" /> </div>
+<div > <img src="./images/data-dirven.png" alt="data-dirven" style="zoom: 100%;" /> </div>
 
 我们这⾥只是分析了最简单和最基础的场景，在实际项⽬中，我们是把⻚⾯拆成很多组件的，Vue 另⼀个核⼼思想就是组件化。
 
