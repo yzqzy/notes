@@ -597,9 +597,9 @@ function floodFill(image: number[][], sr: number, sc: number, newColor: number):
 
   const m = image.length
   const n = image[0].length
+  const d = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
   const currentColor = image[sr][sc]
-  const d = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
   const queue = [[sr, sc]]
 
@@ -628,11 +628,11 @@ function floodFill(image: number[][], sr: number, sc: number, newColor: number):
 
   const m = image.length
   const n = image[0].length
-
-  const currentColor = image[sr][sc]
   const d = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
-  const helper = (i: number, j: number) => {
+  const currentColor = image[sr][sc]
+
+  const fill = (i: number, j: number) => {
     if (image[i][j] !== currentColor || image[i][j] === newColor) return
 
     image[i][j] = newColor
@@ -641,11 +641,11 @@ function floodFill(image: number[][], sr: number, sc: number, newColor: number):
       const x = dx + i
       const y = dy + j
 
-      if (x >= 0 && x < m && y >= 0 && y < n) helper(x, y)
+      if (x >= 0 && x < m && y >= 0 && y < n) fill(x, y)
     }
   }
 
-  helper(sr, sc)
+  fill(sr, sc)
 
   return image
 }
@@ -657,5 +657,34 @@ function floodFill(image: number[][], sr: number, sc: number, newColor: number):
 
 
 ```typescript
+function numIslands(grid: string[][]): number {
+  const m = grid.length
+  const n = grid[0].length
+  const d = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
+  let count = 0
+
+  const turnZero = (i: number, j: number) =>　{
+    if (
+      i < 0 || i >= m ||
+      j < 0 || j >= n || 
+      grid[i][j] === '0'
+    ) return
+
+    grid[i][j] = '0'
+
+    d.forEach(([dx, dy]) => turnZero(dx + i, dy + j))
+  }
+  
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (grid[i][j] === '1') {
+        count++
+        turnZero(i, j)      
+      }
+    }
+  }
+
+  return count
+}
 ```
