@@ -175,7 +175,7 @@ playground 项目 package.json 如下：
 
 将 `playground` 项目放在 `vite` 同级目录中，然后执行 `pnpm i`，`vite ` 命令会自动安装到测试项目的 `node_modules/.bin`目录中。
 
-<img src="./images/command.png" align="left" />
+<img src="./images/command.png" />
 
 接着我们在 `playground` 项目中执行 `pnpm dev` 命令(内部执行 `vite`)，可以看到如下的 log 信息:
 
@@ -231,7 +231,7 @@ export async function startDevServer() {
 
 再次执行 `pnpm dev`，你可以发现终端出现如下的启动日志:
 
-<img src="./images/server.png" align="left" />
+<img src="./images/server.png" />
 
 ### 依赖预构建
 
