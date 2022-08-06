@@ -688,3 +688,121 @@ function numIslands(grid: string[][]): number {
   return count
 }
 ```
+
+## day10
+
+### 斐波那契数
+
+[https://leetcode.cn/problems/fibonacci-number/](https://leetcode.cn/problems/fibonacci-number/)
+
+```typescript
+function fib(n: number): number {
+  if (n < 2) return n
+  return fib(n - 1) + fib(n - 2)
+}
+```
+
+```typescript
+function fib(n: number): number {
+  return helper(n, [])
+}
+
+function helper(n: number, memo: number[]) {
+  if (n < 2) return n
+
+  if (!memo[n]) {
+    memo[n] = helper(n - 1, memo) + helper(n - 2, memo)
+  }
+
+  return  memo[n]
+}
+```
+
+```typescript
+function fib(n: number): number {
+  if (n < 2) return n
+
+  const dp = [0, 1]
+
+  for (let i = 2; i <= n; i++) {
+    dp[i] = dp[i - 1] + dp[i - 2]
+  }
+
+  return dp[n]
+}
+```
+
+```typescript
+function fib(n: number): number {
+  if (n < 2) return n
+
+  let n1 = 0
+  let n2 = 1
+
+  let result: number
+
+  for (let i = 2; i <= n; i++) {
+    result = n1 + n2
+
+    n1 = n2
+    n2 = result
+  }
+
+  return n2
+}
+```
+
+### 爬楼梯
+
+[https://leetcode.cn/problems/climbing-stairs/](https://leetcode.cn/problems/climbing-stairs/)
+
+
+```typescript
+function climbStairs(n: number): number {
+  return helper(n, [])
+}
+
+function helper (n: number, memo: number[]) {
+  if (n <= 2) return n
+
+  if (!memo[n]) {
+    memo[n] = helper(n - 1, memo) + helper(n - 2, memo)
+  }
+
+  return memo[n]
+}
+```
+
+```typescript
+function climbStairs(n: number): number {
+  if (n <= 2) return n
+
+  const dp = [1, 1]
+
+  for (let i = 2; i <= n; i++) {
+    dp[i] = dp[i - 1] + dp[i - 2]
+  }
+
+  return dp[n]
+}
+```
+
+```typescript
+function climbStairs(n: number): number {
+  if (n <= 2) return n
+
+  let n1 = 1
+  let n2 = 1
+
+  let result: number
+
+  for (let i = 2; i <= n; i++) {
+    result = n1 + n2
+
+    n1 = n2
+    n2 = result
+  }
+
+  return n2
+}
+```
