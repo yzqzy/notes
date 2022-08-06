@@ -1,4 +1,4 @@
-const students = [
+const students: Studnet[] = [
   {
     name: 'yueluo',
     age: '24'
