@@ -778,9 +778,11 @@ export default Vue
 
 安装 vscode - Babel JavaScript 插件。
 
-## Vue 初始化 - 静态成员
+## Vue 初始化
 
-### src/core/global-api/index.js
+### 静态成员
+
+#### src/core/global-api/index.js
 
 vue 静态成员初始化发生在 **src/core/index.js** 中，调用 `initGlobalAPI(Vue)` 方法。
 
@@ -866,7 +868,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 }
 ```
 
-###  src/core/global-api/use.js
+#### src/core/global-api/use.js
 
 ```js
 // src/core/global-api/use.js
@@ -900,7 +902,7 @@ export function initUse (Vue: GlobalAPI) {
 }
 ```
 
-### src/core/global-api/mixin.js
+#### src/core/global-api/mixin.js
 
 ```js
 // src/core/global-api/mixin.js
@@ -918,7 +920,7 @@ export function initMixin (Vue: GlobalAPI) {
 }
 ```
 
-### src/core/global-api/extend.js
+#### src/core/global-api/extend.js
 
 ```js
 // src/core/global-api/extend.js
@@ -1030,7 +1032,7 @@ function initComputed (Comp) {
 }
 ```
 
-### src/core/global-api/assets.js
+#### src/core/global-api/assets.js
 
 ```js
 // src/shared/constants.js
@@ -1108,9 +1110,9 @@ export function initAssetRegisters (Vue: GlobalAPI) {
 * [https://v2.vuejs.org/v2/api/#Vue-component](https://v2.vuejs.org/v2/api/#Vue-component)
 * [https://v2.vuejs.org/v2/api/#Vue-filter](https://v2.vuejs.org/v2/api/#Vue-filter)
 
-## Vue 初始化 - 实例成员
+### 实例成员
 
-### src/core/instance/index.js
+#### src/core/instance/index.js
 
 ```js
 // src/core/instance/index.js
@@ -1141,7 +1143,7 @@ renderMixin(Vue)
 export default Vue
 ```
 
-### src/core/instance/init.js
+#### src/core/instance/init.js
 
 ```js
 // src/core/instance/init.js
@@ -1224,7 +1226,7 @@ export function initMixin (Vue: Class<Component>) {
 // ...
 ```
 
-###  src/core/instance/state.js
+####  src/core/instance/state.js
 
 ```js
 // src/core/instance/state.js
@@ -1286,7 +1288,7 @@ export function stateMixin (Vue: Class<Component>) {
 // ...
 ```
 
-### src/core/instance/events.js
+#### src/core/instance/events.js
 
 ```js
 // src/core/instance/events.js
@@ -1387,7 +1389,7 @@ export function eventsMixin (Vue: Class<Component>) {
 }
 ```
 
-### src/core/instance/lifecycle.js
+#### src/core/instance/lifecycle.js
 
 ```js
 // src/core/instance/lifecycle.js
@@ -1480,7 +1482,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
 }
 ```
 
-### src/core/instance/render.js
+#### src/core/instance/render.js
 
 ```js
 // src/core/instance/render-helpers/index.js
@@ -1583,7 +1585,7 @@ export function renderMixin (Vue: Class<Component>) {
 }
 ```
 
-### 总结
+#### 总结
 
 * initMixin：vue 原型上挂载 `_init` 方法、合并 options / 初始化操作
 * stateMixin
@@ -1598,9 +1600,9 @@ export function renderMixin (Vue: Class<Component>) {
 * renderMixin：定义原型方法：$nextTick、_render
   * render 方法内部调用用户定义的 render 函数或者模板编译后的 render(渲染函数)
 
-## Vue 初始化 - initMixin - init
+### initMixin - init
 
-### src/core/instance/init.js
+#### src/core/instance/init.js
 
 ```js
 // src/core/instance/init.js
@@ -1682,7 +1684,7 @@ export function initMixin (Vue: Class<Component>) {
 }
 ```
 
-### src/core/instance/lifecycle.js
+#### src/core/instance/lifecycle.js
 
 ```js
 // src/core/instance/lifecycle.js
@@ -1716,7 +1718,7 @@ export function initLifecycle (vm: Component) {
 }
 ```
 
-### src/core/instance/events.js
+#### src/core/instance/events.js
 
 ```js
 // src/core/instance/events.js
@@ -1736,7 +1738,7 @@ export function initEvents (vm: Component) {
 }
 ```
 
-### src/core/instance/render.js
+#### src/core/instance/render.js
 
 ```js
 // src/core/instance/render.js
@@ -1782,7 +1784,7 @@ export function initRender (vm: Component) {
 }
 ```
 
-### src/core/instance/inject.js
+#### src/core/instance/inject.js
 
 实现依赖注入
 
@@ -1862,7 +1864,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
 }
 ```
 
-### src/core/instance/state.js
+#### src/core/instance/state.js
 
 ```js
 // src/core/instance/state.js
@@ -2154,9 +2156,9 @@ function createWatcher (
 // ...
 ```
 
-## 首次渲染过程
+### 首次渲染过程
 
-### src/core/instance/init.js
+#### src/core/instance/init.js
 
 ```js
 // src/core/instance/init.js
@@ -2173,7 +2175,7 @@ export function initMixin (Vue: Class<Component>) {
 }
 ```
 
-### src/platforms/web/entry-runtime-with-compiler.js
+#### src/platforms/web/entry-runtime-with-compiler.js
 
 ```js
 // src/platforms/web/entry-runtime-with-compiler.js
@@ -2254,7 +2256,7 @@ Vue.prototype.$mount = function (
 }
 ```
 
-###  src/platforms/web/runtime/index.js
+####  src/platforms/web/runtime/index.js
 
 ```js
 // src/platforms/web/runtime/index.js
@@ -2269,7 +2271,7 @@ Vue.prototype.$mount = function (
 }
 ```
 
-### src/core/instance/lifecycle.js
+#### src/core/instance/lifecycle.js
 
 ```js
 // src/core/instance/lifecycle.js
@@ -2357,7 +2359,7 @@ export function mountComponent (
 }
 ```
 
-### src/core/observer/watcher.js
+#### src/core/observer/watcher.js
 
 observer 响应式处理相关
 
@@ -2492,7 +2494,7 @@ export default class Watcher {
 }
 ```
 
-### src/core/instance/lifecycle.js
+#### src/core/instance/lifecycle.js
 
 通过掉啊用 getter 方法，触发 updateComponent 函数
 
@@ -2538,7 +2540,7 @@ export function mountComponent (
 
 执行完 `vm._update(vm._render(), hydrating)` 之后，就会把模板渲染到页面中。
 
-### 总结
+#### 总结
 
 * Vue 初始化，初始化实例成员和静态成员
 * new Vue()
@@ -2576,6 +2578,8 @@ export function mountComponent (
 
 ## 响应式原理
 
+### 入口文件
+
 当数据发生变化时，自动更新视图，不需要手动操作 DOM。
 
 * `vm.msg = { count: 0 }` ，重新给属性赋值，是否是响应式的？
@@ -2589,7 +2593,7 @@ export function mountComponent (
   * initState，vm 状态初始化，初始化 `_data`、`_props` 、methods 等
 * src/core/instance/state.js
 
-### src/core/instance/state.js
+#### src/core/instance/state.js
 
 ```js
 // src/core/instance/state.js
@@ -2640,7 +2644,7 @@ function initData (vm: Component) {
 }
 ```
 
-### src/core/observer/index.js
+#### src/core/observer/index.js
 
 响应式处理相关代码
 
@@ -2649,7 +2653,7 @@ function initData (vm: Component) {
 
 // 响应式处理入口
 export function observe (value: any, asRootData: ?boolean): Observer | void {
-  // 判断 value 不是对象，或者 value 是 VNode 的实例，直接返回
+  // 如果 value 不是对象，或者 value 是 VNode 的实例，直接返回
   if (!isObject(value) || value instanceof VNode) {
     return
   }
@@ -2677,4 +2681,5 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 }
 ```
 
-## 
+### Observer
+
