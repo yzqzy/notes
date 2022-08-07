@@ -3603,7 +3603,7 @@ export default class Dep {
 	// 发布通知
   notify () {
     // stabilize the subscriber list first
-    // 克隆数组
+    // 克隆数组，不会处理新增加的 subs，保存当前状态的 subs 数组
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
@@ -3656,6 +3656,18 @@ let waiting = false
 let flushing = false
 let index = 0
 
+/**
+ * Reset the scheduler's state.
+ */
+function resetSchedulerState () {
+  index = queue.length = activatedChildren.length = 0
+  has = {}
+  if (process.env.NODE_ENV !== 'production') {
+    circular = {}
+  }
+  waiting = flushing = false
+}
+
 // ...
 
 /**
@@ -3703,11 +3715,14 @@ function flushSchedulerQueue () {
   // keep copies of post queues before resetting state
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
-
+	
+  // 重置任务队列状态
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 组件相关的钩子函数
   callActivatedHooks(activatedQueue)
+  // 触发 updated 声明周期钩子函数
   callUpdatedHooks(updatedQueue)
 
   // devtool hook
@@ -3763,7 +3778,54 @@ export function queueWatcher (watcher: Watcher) {
 
 ### 总结
 
+* initState - intData - observe
+  * observe 就是响应式入口
+* observe(value)
+  * src/core/observer/index.js
+  * 判断 value 是否是对象，如果不是对象直接返回
+  * 判断对象是否存在 `__ob__` 属性，如果有直接返回
+  * ☆ 如果没有，创建 observer 对象
+  * 返回 observer 对象
+* Observer
+  * src/core/observer/index.js
+  * 给 value 对象定义不可枚举的 `__ob__` 属性，记录当前的 observer 对象
+  * ☆ 数组的响应式处理
+    * 定义原型方法， 当方法被调用时，获取对象的 `__ob__.dep`，调用 notify() 方法
+    * 遍历数组成员，针对每个成员调用 observe 方法
+  * ☆ 对象的响应式处理，调用 walk 方法
+    * 遍历对象所有属性，对每个属性调用 definedReactive 
+* defineReactive
+  * src/core/observer/index.js
+  * 为每一个属性创建 dep 对象
+  * 如果当前属性的值是对象，调用 observe
+  * ☆ 定义 getter
+    * ☆☆ 依赖收集
+    * 返回属性
+  * ☆ 定义 setter
+    * 保存新值
+    * 如果新值是对象，调用 observe
+    * ☆☆ 派发更新，调用 dep.notify() 方法
+* 依赖收集
+  * 在 watcher 对象的 get 方法中调用 pushTarget 记录 Dep.target 属性
+  * 访问 data 中成员时收集依赖，defineReactive 的 getter 中收集依赖
+  * 把属性对应的 watcher 对象添加到 dep.subs 数组中
+  * 给 childOb 收集依赖，目的是子对象添加删除成员等操作时发送通知
+* Watcher
+  * dep.notify() 调用 watcher 对象的 update() 方法
+  * 调用 queueWatcher() 判断 watcher 是否被处理，如果没有添加到 queue 队列中，并调用 flushSchedulerQueue()
+  * flushSchedulerQueue()
+    * 触发 beforeUpdate 钩子函数
+    * 调用 watcher.run() 方法
+      * run() -> get() -> getter() - updateComponent
+    * 清空上一次的依赖
+    * 触发 activated 钩子函数
+    * 触发 updated 钩子函数
 
+
+
+vue lifecycle diagram：
+
+<img src="./images/lifecycle.png" style="zoom: 60%" />
 
 ## 动态添加响应式属性
 
