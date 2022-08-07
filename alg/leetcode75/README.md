@@ -806,3 +806,51 @@ function climbStairs(n: number): number {
   return n2
 }
 ```
+
+## day11
+
+### 使用最小花费爬楼梯
+
+[https://leetcode.cn/problems/min-cost-climbing-stairs/](https://leetcode.cn/problems/min-cost-climbing-stairs/)
+
+```typescript
+function minCostClimbingStairs(cost: number[]): number {
+  const n = cost.length
+
+  let n1 = 0
+  let n2 = 0
+
+  let result: number
+
+  for (let i = 2; i <= n; i++) {
+    result = Math.min(n2 + cost[i - 1], n1 + cost[i - 2])
+
+    n1 = n2
+    n2 = result
+  }
+
+  return n2
+}
+```
+
+### 不同路径
+
+[https://leetcode.cn/problems/unique-paths/](https://leetcode.cn/problems/unique-paths/)
+
+```typescript
+function uniquePaths(m: number, n: number): number {
+ const dp = Array.from({ length: m }, () => new Array(n).fill(0))
+
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i == 0 || j == 0) {
+        dp[i][j] = 1;
+      } else {
+        dp[i][j] = dp[i - 1][j] + dp[i][j - 1]
+      }
+    }
+  }
+
+  return dp[m - 1][n - 1]
+}
+```
