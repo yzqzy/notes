@@ -22,11 +22,17 @@
       }
     })
 
-    // setTimeout(() => {
-    //   vm.arr.push(8)
-    //   vm.arr[0] = 100
-    //   vm.arr.length = 0
-    // }, 200)
+    setTimeout(() => {
+      // vm.array.push(100) // vue 内部重写了 push 方法，所以可以监听到，重新渲染视图
+
+      // vm.array[0] = 100 // 数组值被改变，视图不会发生变化
+      // vm.array.length = 0 // 数组会被清空，视图不会发生变化，遍历数组时只会对象属性进响应式处理
+
+      // vm.array.splice(0, 1, 100) // 利用 splice 实现修改指定项，重新渲染视图
+      // vm.array.splice(0) // 清空数组，重新渲染视图
+
+      // vm.array = [3, 2, 1] // 修改数组本身，重新渲染视图
+    }, 3000)
   </script>
 
 </body>
