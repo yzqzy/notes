@@ -2363,7 +2363,7 @@ export function mountComponent (
 
 observer 响应式处理相关
 
-vue 中 watcher 有三种
+vue 中 watcher 有三种：
 
 * 渲染 watcher
 * 计算属性 watcher
@@ -2682,4 +2682,616 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 ```
 
 ### Observer
+
+#### src/core/observer/index.js
+
+```js
+// src/core/observer/index.js
+
+/**
+ * Observer class that is attached to each observed
+ * object. Once attached, the observer converts the target
+ * object's property keys into getter/setters that
+ * collect dependencies and dispatch updates.
+ */
+export class Observer {
+  // 观测对象
+  value: any;
+  // 依赖对象
+  dep: Dep;
+  // 实例计数器
+  vmCount: number; // number of vms that have this object as root $data
+
+  constructor (value: any) {
+    this.value = value
+    this.dep = new Dep()
+    this.vmCount = 0
+    // 设置对象的 __ob__　属性
+    def(value, '__ob__', this)
+    // 数据响应式数据
+    if (Array.isArray(value)) {
+      if (hasProto) {
+        protoAugment(value, arrayMethods)
+      } else {
+        copyAugment(value, arrayMethods, arrayKeys)
+      }
+      // 数组响应式处理，为数组中的每一个对象创建一个 observer 实例
+      this.observeArray(value)
+    } else {
+      // 遍历对象中每一个属性，转换成 setter/getter
+      this.walk(value)
+    }
+  }
+
+  /**
+   * Walk through all properties and convert them into
+   * getter/setters. This method should only be called when
+   * value type is Object.
+   */
+  walk (obj: Object) {
+    // 获取观察对象属性
+    const keys = Object.keys(obj)
+    // 遍历属性，设置响应式数据
+    for (let i = 0; i < keys.length; i++) {
+      defineReactive(obj, keys[i])
+    }
+  }
+
+  /**
+   * Observe a list of Array items.
+   */
+  observeArray (items: Array<any>) {
+    for (let i = 0, l = items.length; i < l; i++) {
+      observe(items[i])
+    }
+  }
+}
+
+/**
+ * Define a reactive property on an Object.
+ */
+export function defineReactive (
+  obj: Object,
+  key: string,
+  val: any,
+  customSetter?: ?Function,
+  shallow?: boolean // 是否浅响应
+) {
+  // 创建依赖对象实例
+  const dep = new Dep()
+	// 获取 obj 的属性描述符对象
+  const property = Object.getOwnPropertyDescriptor(obj, key)
+  if (property && property.configurable === false) {
+    return
+  }
+
+  // cater for pre-defined getter/setters
+  // 获取预定义的存取器函数（用户可能自己设置过 getter/setter）
+  const getter = property && property.get
+  const setter = property && property.set
+  if ((!getter || setter) && arguments.length === 2) {
+    val = obj[key]
+  }
+	
+  // 非浅响应，递归观察子对象，将子对象转换成属性转换为 getter/setter，并返回
+  let childOb = !shallow && observe(val)
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter () {
+      // 如果用户提供 getter，调用用户 getter返回值，否则直接设置值
+      const value = getter ? getter.call(obj) : val
+      // 如果存在依赖目标，即 watcher 对象，建立依赖
+      if (Dep.target) {
+        dep.depend()
+        if (childOb) {
+          // 如果子观察目标存在，建立对象的依赖关系
+          childOb.dep.depend()
+          if (Array.isArray(value)) {
+            // 如果属性是数组，特殊处理收集数组对象依赖
+            dependArray(value)
+          }
+        }
+      }
+      // 返回属性值
+      return value
+    },
+    set: function reactiveSetter (newVal) {
+      const value = getter ? getter.call(obj) : val
+      /* eslint-disable no-self-compare */
+      // 如果新值等于旧值或者新值旧值为 NaN 则不执行
+      if (newVal === value || (newVal !== newVal && value !== value)) {
+        return
+      }
+      /* eslint-enable no-self-compare */
+      if (process.env.NODE_ENV !== 'production' && customSetter) {
+        customSetter()
+      }
+      // #7981: for accessor properties without setter
+      if (getter && !setter) return
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
+      // 非浅响应，观察子对象并返回子对象的 observe 对象
+      childOb = !shallow && observe(newVal)
+      // 派发更新
+      dep.notify()
+    }
+  })
+}
+```
+
+### 依赖收集
+
+#### src/core/observer/index.js
+
+```js
+// src/core/observer/index.js
+
+/**
+ * Define a reactive property on an Object.
+ */
+export function defineReactive (
+  obj: Object,
+  key: string,
+  val: any,
+  customSetter?: ?Function,
+  shallow?: boolean // 是否浅响应
+) {
+  // 创建依赖对象实例
+  const dep = new Dep()
+	
+  // ...
+	
+  // 非浅响应，递归观察子对象，将子对象转换成属性转换为 getter/setter，并返回
+  let childOb = !shallow && observe(val)
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter () {
+      // 如果用户提供 getter，调用用户 getter返回值，否则直接设置值
+      const value = getter ? getter.call(obj) : val
+      
+      // 如果存在依赖目标，即 watcher 对象，建立依赖
+      if (Dep.target) {
+        // 1. 将 dep 对象添加到 watcher 对象的 newDeps 数组中
+        // 2. 将 watcher 对象添加到 dep 的 subs 数组中
+        dep.depend()
+        if (childOb) {
+          // 如果子观察目标存在，建立对象的依赖关系
+          childOb.dep.depend()
+          if (Array.isArray(value)) {
+            // 如果属性是数组，特殊处理收集数组对象依赖
+            dependArray(value)
+          }
+        }
+      }
+      // 返回属性值
+      return value
+    },
+    set: function reactiveSetter (newVal) {
+      const value = getter ? getter.call(obj) : val
+      /* eslint-disable no-self-compare */
+      // 如果新值等于旧值或者新值旧值为 NaN 则不执行
+      if (newVal === value || (newVal !== newVal && value !== value)) {
+        return
+      }
+      /* eslint-enable no-self-compare */
+      if (process.env.NODE_ENV !== 'production' && customSetter) {
+        customSetter()
+      }
+      // #7981: for accessor properties without setter
+      if (getter && !setter) return
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
+      // 非浅响应，观察子对象并返回子对象的 observe 对象
+      childOb = !shallow && observe(newVal)
+      // 派发更新
+      dep.notify()
+    }
+  })
+}
+```
+
+Observer 实例有自己的 dep 属性，目的是为当前实例的子对象收集依赖。
+
+defineReactive 方法中可以看到每个属性也有自己的 dep 对象，负责收集每一个属性的依赖。
+
+#### src/core/observer/dep.js
+
+vue 2 之后，每一个组件会对应一个 watcher 对象。每一个组件都会调用 mounteComponent 函数，创建 watcher 对象。
+
+```js
+// src/core/observer/dep.js
+
+let uid = 0
+
+/**
+ * A dep is an observable that can have multiple
+ * directives subscribing to it.
+ */
+export default class Dep {
+  // watcher 对象
+  static target: ?Watcher;
+  // dep 实例 ID
+  id: number;
+  // dep 实例对应的 watcher 对象/订阅者数据
+  subs: Array<Watcher>;
+
+  constructor () {
+    this.id = uid++
+    this.subs = []
+  }
+	
+	// 添加订阅者 watcher 对象
+  addSub (sub: Watcher) {
+    this.subs.push(sub)
+  }
+
+  removeSub (sub: Watcher) {
+    remove(this.subs, sub)
+  }
+	
+  // 收集依赖 
+  depend () {
+    // 如果 target 存在，将 dep 对象添加到 watcher 的依赖中
+    if (Dep.target) {
+      // watcher.addDep
+      Dep.target.addDep(this)
+    }
+  }
+
+  notify () {
+    // stabilize the subscriber list first
+    const subs = this.subs.slice()
+    if (process.env.NODE_ENV !== 'production' && !config.async) {
+      // subs aren't sorted in scheduler if not running async
+      // we need to sort them now to make sure they fire in correct
+      // order
+      subs.sort((a, b) => a.id - b.id)
+    }
+    for (let i = 0, l = subs.length; i < l; i++) {
+      subs[i].update()
+    }
+  }
+}
+
+// Dep.target 用来存放目前正在使用的 Watcher
+// The current target watcher being evaluated.
+// This is globally unique because only one watcher
+// can be evaluated at a time.
+Dep.target = null
+const targetStack = []
+
+// 入栈，将当前 watcher 赋值给 Dep.target
+export function pushTarget (target: ?Watcher) {
+  targetStack.push(target)
+  Dep.target = target
+}
+
+// 出栈
+export function popTarget () {
+  targetStack.pop()
+  Dep.target = targetStack[targetStack.length - 1]
+}
+```
+
+#### src/core/observer/watcher.js
+
+```js
+// src/core/observer/watcher.js
+
+/* @flow */
+
+// ....
+
+/**
+ * A watcher parses an expression, collects dependencies,
+ * and fires callback when the expression value changes.
+ * This is used for both the $watch() api and directives.
+ */
+export default class Watcher {
+  vm: Component;
+  expression: string;
+  cb: Function;
+  id: number;
+  deep: boolean;
+  user: boolean;
+  lazy: boolean;
+  sync: boolean;
+  dirty: boolean;
+  active: boolean;
+  deps: Array<Dep>;
+  newDeps: Array<Dep>;
+  depIds: SimpleSet;
+  newDepIds: SimpleSet;
+  before: ?Function;
+  getter: Function;
+  value: any;
+
+  constructor (
+    vm: Component,
+    // 表达式或者函数
+    expOrFn: string | Function,
+    cb: Function,
+    options?: ?Object,
+    // 是否是渲染 watcher
+    isRenderWatcher?: boolean
+  ) {
+    this.vm = vm
+    if (isRenderWatcher) {
+      vm._watcher = this
+    }
+    vm._watchers.push(this)
+    // options
+    if (options) {
+      this.deep = !!options.deep
+      this.user = !!options.user
+      // 是否延迟执行视图
+      // 计算属性 watcher 会延迟执行视图
+      this.lazy = !!options.lazy
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.user = this.lazy = this.sync = false
+    }
+    this.cb = cb
+    this.id = ++uid // uid for batching
+    this.active = true
+    this.dirty = this.lazy // for lazy watchers
+    this.deps = []
+    this.newDeps = []
+    this.depIds = new Set()
+    this.newDepIds = new Set()
+    this.expression = process.env.NODE_ENV !== 'production'
+      ? expOrFn.toString()
+      : ''
+    // parse expression for getter
+    if (typeof expOrFn === 'function') {
+      // 首次渲染传入的是 updateComponent 函数
+      this.getter = expOrFn
+    } else {
+      // 侦听器时，第二个参数会传入字符串
+      this.getter = parsePath(expOrFn)
+      if (!this.getter) {
+        this.getter = noop
+        process.env.NODE_ENV !== 'production' && warn(
+          `Failed watching path: "${expOrFn}" ` +
+          'Watcher only accepts simple dot-delimited paths. ' +
+          'For full control, use a function instead.',
+          vm
+        )
+      }
+    }
+    this.value = this.lazy
+      ? undefined
+      : this.get()
+  }
+
+  /**
+   * Evaluate the getter, and re-collect dependencies.
+   */
+  get () {
+    // 将当前 watcher 对象存储到栈中
+    // 如果组件嵌套，先渲染内部组件，所以要把父组件的 watcher 保存起来
+    pushTarget(this)
+    let value
+    const vm = this.vm
+    try {
+      // 调用存储的 getter，即 updateComponent 函数
+      value = this.getter.call(vm, vm)
+    } catch (e) {
+      if (this.user) {
+        handleError(e, vm, `getter for watcher "${this.expression}"`)
+      } else {
+        throw e
+      }
+    } finally {
+      // "touch" every property so they are all tracked as
+      // dependencies for deep watching
+      if (this.deep) {
+        traverse(value)
+      }
+      // 将当前 watcher 在栈中弹出
+      popTarget()
+      this.cleanupDeps()
+    }
+    return value
+  }
+
+  /**
+   * Add a dependency to this directive.
+   */
+  addDep (dep: Dep) {
+    const id = dep.id
+    // 每一个 dep 对象都有一个 id 属性
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id)
+      this.newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        dep.addSub(this)
+      }
+    }
+  }
+
+ 	// ...
+}
+```
+
+### 数组处理
+
+#### src/core/observer/index.js
+
+```js
+// src/core/util/env.js
+
+// can we use __proto__?
+export const hasProto = '__proto__' in {}
+```
+
+```js
+// src/core/observer/index.js
+
+// 获取重新定义的数组方法名称
+const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
+
+/**
+ * Observer class that is attached to each observed
+ * object. Once attached, the observer converts the target
+ * object's property keys into getter/setters that
+ * collect dependencies and dispatch updates.
+ */
+export class Observer {
+  // 观测对象
+  value: any;
+  // 依赖对象
+  dep: Dep;
+  // 实例计数器
+  vmCount: number; // number of vms that have this object as root $data
+
+  constructor (value: any) {
+    this.value = value
+    this.dep = new Dep()
+    this.vmCount = 0
+    // 设置对象的 __ob__　属性
+    def(value, '__ob__', this)
+    // 数据响应式数据
+    if (Array.isArray(value)) {
+      // 判断当前浏览器是否支持 __proto__ 属性，用来处理浏览器兼容性问题
+      if (hasProto) {
+        // 改变数组对象原型属性，让当前数组的原型指向 arrayMethods
+        protoAugment(value, arrayMethods)
+      } else {
+        /// 设置数组自身方法，数组优先访问自身属性，如果不存在，才会寻找原型方法
+        copyAugment(value, arrayMethods, arrayKeys)
+      }
+      // 数组响应式处理，为数组中的每一个对象创建一个 observer 实例
+      this.observeArray(value)
+    } else {
+      // 遍历对象中每一个属性，转换成 setter/getter
+      this.walk(value)
+    }
+  }
+
+  /**
+   * Walk through all properties and convert them into
+   * getter/setters. This method should only be called when
+   * value type is Object.
+   */
+  walk (obj: Object) {
+    // 获取观察对象属性
+    const keys = Object.keys(obj)
+    // 遍历属性，设置响应式数据
+    for (let i = 0; i < keys.length; i++) {
+      defineReactive(obj, keys[i])
+    }
+  }
+
+  /**
+   * Observe a list of Array items.
+   */
+  observeArray (items: Array<any>) {
+    for (let i = 0, l = items.length; i < l; i++) {
+      observe(items[i])
+    }
+  }
+}
+
+// ...
+
+// helpers
+
+/**
+ * Augment a target Object or Array by intercepting
+ * the prototype chain using __proto__
+ */
+function protoAugment (target, src: Object) {
+  /* eslint-disable no-proto */
+  // 重新设置数组的原型属性
+  target.__proto__ = src
+  /* eslint-enable no-proto */
+}
+
+/**
+ * Augment a target Object or Array by defining
+ * hidden properties.
+ */
+/* istanbul ignore next */
+function copyAugment (target: Object, src: Object, keys: Array<string>) {
+  for (let i = 0, l = keys.length; i < l; i++) {
+    const key = keys[i]
+    // 给当前数组对象重新定义函数
+    def(target, key, src[key])
+  }
+}
+```
+
+#### src/core/observer/array.js
+
+```js
+/*
+ * not type checking this file because flow doesn't play well with
+ * dynamically accessing methods on Array prototype
+ */
+
+import { def } from '../util/index'
+
+const arrayProto = Array.prototype
+// 使用数组原型创建一个新对象
+export const arrayMethods = Object.create(arrayProto)
+
+// 修改原数组
+const methodsToPatch = [
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'reverse'
+]
+
+/**
+ * Intercept mutating methods and emit events
+ */
+methodsToPatch.forEach(function (method) {
+  // cache original method
+  // 保存数组原始方法
+  const original = arrayProto[method]
+  // 重写数组方法
+  def(arrayMethods, method, function mutator (...args) {
+    // 执行数组原始方法
+    const result = original.apply(this, args)
+    // 获取数组对象的 __ob__ 属性
+    const ob = this.__ob__
+    let inserted
+    switch (method) {
+      case 'push':
+      case 'unshift':
+        inserted = args
+        break
+      case 'splice':
+        inserted = args.slice(2)
+        break
+    }
+    // 对新增元素进行响应式处理
+    if (inserted) ob.observeArray(inserted)
+    // notify change
+    // 发送通知
+    ob.dep.notify()
+    return result
+  })
+})
+```
+
+### Watcher
+
+
+
+### 总结
 
