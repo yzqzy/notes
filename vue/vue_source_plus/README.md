@@ -3827,5 +3827,285 @@ vue lifecycle diagram：
 
 <img src="./images/lifecycle.png" style="zoom: 60%" />
 
-## 动态添加响应式属性
+## 添加属性
+
+### Vue.set
+
+#### src/core/global-api/index.js
+
+```js
+// src/core/global-api/index.js
+
+export function initGlobalAPI (Vue: GlobalAPI) {
+	// ...
+
+  // exposed util methods.
+  // NOTE: these are not considered part of the public API - avoid relying on
+  // them unless you are aware of the risk.
+  // 不推荐用户使用
+  Vue.util = {
+    warn,
+    extend,
+    mergeOptions,
+    defineReactive
+  }
+
+  Vue.set = set
+  Vue.delete = del
+  Vue.nextTick = nextTick
+
+	// ...
+}
+```
+
+#### src/core/observer/index.js
+
+```js
+// src/core/observer/index.js
+
+/**
+ * Set a property on an object. Adds the new property and
+ * triggers change notification if the property doesn't
+ * already exist.
+ */
+export function set (target: Array<any> | Object, key: any, val: any): any {
+  if (process.env.NODE_ENV !== 'production' &&
+    (isUndef(target) || isPrimitive(target))
+  ) {
+    warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
+  }
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    target.length = Math.max(target.length, key)
+    target.splice(key, 1, val)
+    return val
+  }
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val
+    return val
+  }
+  const ob = (target: any).__ob__
+  if (target._isVue || (ob && ob.vmCount)) {
+    process.env.NODE_ENV !== 'production' && warn(
+      'Avoid adding reactive properties to a Vue instance or its root $data ' +
+      'at runtime - declare it upfront in the data option.'
+    )
+    return val
+  }
+  if (!ob) {
+    target[key] = val
+    return val
+  }
+  defineReactive(ob.value, key, val)
+  ob.dep.notify()
+  return val
+}
+```
+
+### vm.$set
+
+#### src/core/instance/index.js
+
+```js
+// src/core/instance/index.js
+
+import { initMixin } from './init'
+import { stateMixin } from './state'
+import { renderMixin } from './render'
+import { eventsMixin } from './events'
+import { lifecycleMixin } from './lifecycle'
+import { warn } from '../util/index'
+
+// 定义 vue 构造函数
+function Vue (options) {
+  if (process.env.NODE_ENV !== 'production' &&
+    !(this instanceof Vue)
+  ) {
+    warn('Vue is a constructor and should be called with the `new` keyword')
+  }
+  this._init(options)
+}
+
+initMixin(Vue)
+// 注册 vm 的 $data/$props/$set/$delete/$watch 方法
+stateMixin(Vue)
+eventsMixin(Vue)
+lifecycleMixin(Vue)
+renderMixin(Vue)
+
+export default Vue
+```
+
+#### src/core/instance/state.js
+
+```js
+// src/core/instance/state.js
+
+export function stateMixin (Vue: Class<Component>) {
+  // flow somehow has problems with directly declared definition object
+  // when using Object.defineProperty, so we have to procedurally build up
+  // the object here.
+  const dataDef = {}
+  dataDef.get = function () { return this._data }
+  const propsDef = {}
+  propsDef.get = function () { return this._props }
+  if (process.env.NODE_ENV !== 'production') {
+    dataDef.set = function () {
+      warn(
+        'Avoid replacing instance root $data. ' +
+        'Use nested data properties instead.',
+        this
+      )
+    }
+    propsDef.set = function () {
+      warn(`$props is readonly.`, this)
+    }
+  }
+  // 定义原型属性，$data、$props
+  Object.defineProperty(Vue.prototype, '$data', dataDef)
+  Object.defineProperty(Vue.prototype, '$props', propsDef)
+	
+  // 定义原型方法，$set、$delete
+  Vue.prototype.$set = set
+  Vue.prototype.$delete = del
+	
+  // 定义原型方法，$watch，监视数据变化
+  Vue.prototype.$watch = function (
+    expOrFn: string | Function,
+    cb: any,
+    options?: Object
+  ): Function {
+    const vm: Component = this
+    if (isPlainObject(cb)) {
+      return createWatcher(vm, expOrFn, cb, options)
+    }
+    options = options || {}
+    options.user = true
+    const watcher = new Watcher(vm, expOrFn, cb, options)
+    if (options.immediate) {
+      try {
+        cb.call(vm, watcher.value)
+      } catch (error) {
+        handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
+      }
+    }
+    return function unwatchFn () {
+      watcher.teardown()
+    }
+  }
+}
+
+// ...
+```
+
+#### src/core/observer/index.js
+
+这里的 set 和静态的 set 方法使用的是一个方法。
+
+```js
+// src/core/observer/index.js
+
+/**
+ * Set a property on an object. Adds the new property and
+ * triggers change notification if the property doesn't
+ * already exist.
+ */
+export function set (target: Array<any> | Object, key: any, val: any): any {
+  if (process.env.NODE_ENV !== 'production' &&
+    (isUndef(target) || isPrimitive(target))
+  ) {
+    // 如果对象是 undefiend 或者 原始值，会打印警告
+    warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
+  }
+  // 如果 target 是数组，并且是一个合法的数组索引
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    target.length = Math.max(target.length, key)
+    // 通过 splice 对 key 位置元素进行替换
+    target.splice(key, 1, val)
+    return val
+  }
+  // 如果 target 是对象并且已经存在值，直接赋值即可
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val
+    return val
+  }
+  // target 是对象，新增值
+  // 1. 获取 target 的 observer 对象
+  const ob = (target: any).__ob__
+  // 2. 如果 target 是 vue 实例或者 $data 直接返回，并打印警告
+  if (target._isVue || (ob && ob.vmCount)) {
+    process.env.NODE_ENV !== 'production' && warn(
+      'Avoid adding reactive properties to a Vue instance or its root $data ' +
+      'at runtime - declare it upfront in the data option.'
+    )
+    return val
+  }
+  // 3. 如果 ob 不存在，说明 target 不是响应式对象，直接赋值即可
+  if (!ob) {
+    target[key] = val
+    return val
+  }
+  // 4. 如果 ob 存在，设置响应式属性，并调用 notify 发送通知
+  defineReactive(ob.value, key, val)
+  ob.dep.notify()
+  return val
+}
+```
+
+set 方法既会处理数组响应式，也会处理对象的响应式。
+
+当使用 set 处理数组时，会调用 splice 方法，当使用 set 给对象增加新成员时，会调用 defineReactive 方法。
+
+## 删除属性
+
+删除对象属性。如果对象是响应式对象，删除要触发视图更新。
+
+这个方法主要是用于避免 Vue 检测不到属性被删除的限制，但是应该避免使用它。
+
+> 与 set 方法一致，这是的 vue 不能是一个 Vue 实例或 Vue 实例的根数据对象。
+>
+> 方法定义的位置和 set 方法一致。
+
+### src/core/observer/index.js
+
+```js
+/**
+ * Delete a property and trigger change if necessary.
+ */
+export function del (target: Array<any> | Object, key: any) {
+  if (process.env.NODE_ENV !== 'production' &&
+    (isUndef(target) || isPrimitive(target))
+  ) {
+    // 如果对象是 undefiend 或者 原始值，会打印警告
+    warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
+  }
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 如果是数组并且索引合法，调用 splice 方法删除元素
+    target.splice(key, 1)
+    return
+  }
+  const ob = (target: any).__ob__
+  // 如果 target 是 Vue 实例或者 $data 对象，直接返回
+  if (target._isVue || (ob && ob.vmCount)) {
+    process.env.NODE_ENV !== 'production' && warn(
+      'Avoid deleting properties on a Vue instance or its root $data ' +
+      '- just set it to null.'
+    )
+    return
+  }
+  // 如果对象不存在当前 key 属性 ，直接返回
+  if (!hasOwn(target, key)) {
+    return
+  }
+  // 删除目标对象属性
+  delete target[key]
+  // 如果不是响应式对象，直接返回不需要处理
+  if (!ob) {
+    return
+  }
+  // 如果是响应式对象，发送通知
+  ob.dep.notify()
+}
+```
+
+### 
 

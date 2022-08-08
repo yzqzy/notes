@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>set</title>
+</head>
+<body>
+
+  <div id="app">
+    {{ obj.title }}
+    <hr>
+    {{ obj.name }}
+    <hr>
+    {{ arr }}
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        obj: {
+          title: 'hello vue'
+        },
+        arr: [1, 2, 3, 4]
+      }
+    })
+
+    setTimeout(() => {
+      // vm.obj.name = 'abc' // 不会渲染视图
+
+      // vm.$set()、Vue.set()
+      // vm.$set(vm.obj, 'name', 'yueluo') // 渲染视图
+      // vm.$set(vm.arr, 0, 100) // 渲染视图
+
+      // 不能直接在 vm 实例上或根 $data 中添加属性
+      // vm.$set(vm, 'name', 'vue')
+      // [Vue warn]: Avoid adding reactive properties to a Vue instance or its root $data at runtime - declare it upfront in the data option.
+    }, 3000)
+  </script>
+
+</body>
+</html>
