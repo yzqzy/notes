@@ -10,8 +10,8 @@ Vite 底层使用两个构建引擎，Esbuild 和 Rollup。
 
 * 依赖预构建阶段，作为 bundler（打包工具） 使用
 
-* 语法转义，将 Esbuild 作为 transformer 使用
-  * TS 或者 JSX 文件转义，生产环境和开发环境都会执行
+* 语法转译，将 Esbuild 作为 transformer 使用
+  * TS 或者 JSX 文件转译，生产环境和开发环境都会执行
   * 替换原来的 Babel 和 TSC 功能
 * 代码压缩，作为压缩工具使用
   * 在生产环境通过插件的形式融入到 Rollup 的打包流程
@@ -555,7 +555,70 @@ export function htmlInlineScriptProxyPlugin(): Plugin {
 
 这个插件的核心在于 [compileCSS](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L568)  函数的实现。
 
-**5. EsBuild 转义插件**
+**5. EsBuild 转译插件**
+
+[vite:esbuild](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/esbuild.ts) 插件，用来编译 .js、.ts、.jsx 和 tsx，代替了传统的 Babel 或者 TSC 的功能，这也是 Vite 开发阶段性能强悍的一个原因。
+
+插件中主要的逻辑是 `transformWithEsBuild` 函数，可以通过这个函数实现代码转译。Vite 本身也导出了这个函数，作为一种通用的 transform 能力。
+
+使用方法如下：
+
+```typescript
+import { transformWithEsbuild } from 'vite';
+
+// 传入两个参数: code, filename
+transformWithEsbuild('<h1>hello</h1>', './index.tsx').then(res => {
+  // {
+  //   warnings: [],
+  //   code: '/* @__PURE__ */ React.createElement("h1", null, "hello");\n',
+  //   map: {/* sourcemap 信息 */}
+  // }
+  console.log(res);
+})
+```
+
+**6. 静态资源加载插件**
+
+静态资源加载插件包括：
+
+* [vite:json](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/json.ts#L30)：用来加载 JSON 文件，通过 `@rollup/pluginutils` 的 `dataToEsm` 方法可以实现 JSON 的具名导入
+* [vite:wasm](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/wasm.ts#L45)：用来加载 `.wasm` 格式的文件
+* [vite:worker](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/worker.ts)：用来加载 Web Worker 脚本，插件内部会使用 Rollup 对 Worker 脚本进行打包
+* [vite:asset](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/asset.ts#L37)：开发阶段实现了其他格式静态资源的加载，生产环境会通过 `renderChunk` 钩子将静态资源地址重写为产物的文件地址。
+  * 如`./img.png` 重写为 `https://cdn.xxx.com/assets/img.91ee297e.png` 
+
+Rollup 本身存在 [asset cascade](https://bundlers.tooling.report/hashing/asset-cascade/) 问题，即静态资源哈希更新，引用它的 JS 的哈希并没有更新（[issue](https://github.com/rollup/rollup/issues/3415)）。因此 Vite 在静态资源处理的时候，并没有交给 Rollup 生成哈希，而是根据资源内容生成哈希（[源码实现](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/asset.ts#L306)），并手动进行路径重写，以避免 `asset-cascade` 问题。
+
+#### 生产环境特有插件
+
+**1. 全局变量替换插件**
+
+提供全局变量替换的功能，如下面的这个配置：
+
+```typescript
+// vite.config.ts
+const version = '2.0.0';
+
+export default {
+  define: {
+    __APP_VERSION__: `JSON.stringify(${version})`
+  }
+}
+```
+
+全局变量替换的功能与 [@rollup/plugin-replace](https://github.com/rollup/plugins/tree/master/packages/replace) 差不多，当然在实现上 Vite 有所区别：
+
+* 开发环境下，Vite 会将所有的全局变量挂载到 window 对象，不用经过 define 插件的处理，节省编译开销；
+* 生产环境下，Vite 会使用 [define 插件](https://github.com/vitejs/vite/blob/main/packages/vite/src/node/plugins/define.ts)，进行字符串替换以及 sourcemap 生成。
+
+> SSR 构建开发环境时也会使用这个插件，仅用来替换字符串。
+
+**2. CSS 后处理插件**
+
+CSS 后处理插件即 [vite:css-post](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L137) 插件，它的功能如下：
+
+* 开发阶段 CSS 响应结果处理
+* 生产环境 CSS 文件生成
 
 
 
