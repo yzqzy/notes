@@ -932,3 +932,63 @@ function helper(char: string) {
 }
 ```
 
+## day13
+
+### 两数之和
+
+[https://leetcode.cn/problems/two-sum/](https://leetcode.cn/problems/two-sum/)
+
+```typescript
+function twoSum(nums: number[], target: number): number[] {
+  const cached = new Map()
+  const len = nums.length
+
+  let curr: number
+
+  for (let i = 0; i < len; i++) {
+    curr = target - nums[i]
+
+    if (cached.has(curr)) {
+      return [cached.get(curr), i]
+    } 
+
+    cached.set(nums[i], i)
+  }
+
+  return []
+}
+```
+
+### 猜数字游戏
+
+[https://leetcode.cn/problems/bulls-and-cows/](https://leetcode.cn/problems/bulls-and-cows/)
+
+```typescript
+function getHint(secret: string, guess: string): string {
+  const s = new Array(10).fill(0)
+  const g = new Array(10).fill(0)
+
+  let bulls = 0
+
+  for (let i = 0; i < secret.length; i++) {
+    if (secret[i] == guess[i]) {
+      bulls++
+    } else {
+      s[helper(secret[i])]++
+      g[helper(guess[i])]++
+    }
+  }
+
+  let cows = 0
+
+  for (let i = 0; i < 10; i++) {
+    cows += Math.min(s[i], g[i])
+  }
+
+  return `${ bulls }A${ cows }B`
+}
+
+function helper(char: string) {
+  return char.charCodeAt(0) - '0'.charCodeAt(0)
+}
+```
