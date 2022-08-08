@@ -854,3 +854,50 @@ function uniquePaths(m: number, n: number): number {
   return dp[m - 1][n - 1]
 }
 ```
+
+## day12
+
+### 找到字符串中所有字母异位词
+
+[https://leetcode.cn/problems/find-all-anagrams-in-a-string/](https://leetcode.cn/problems/find-all-anagrams-in-a-string/)
+
+```typescript
+function findAnagrams(s: string, p: string): number[] {
+  const sLen = s.length
+  const pLen = p.length
+
+  if (sLen < pLen) return []
+
+  const ans = []
+  const sCount = new Array(26).fill(0)
+  const pCount = new Array(26).fill(0)
+
+  for (let i = 0; i < pLen; i++) {
+    sCount[getOffsetCharCode(s[i])]++
+    pCount[getOffsetCharCode(p[i])]++
+  }
+
+  if (isEqual(sCount, pCount)) ans.push(0)
+
+  for (let i = 0; i < sLen - pLen; i++) {
+    sCount[getOffsetCharCode(s[i])]--
+    sCount[getOffsetCharCode(s[i + pLen])]++
+
+    if (isEqual(sCount, pCount)) ans.push(i + 1)
+  }
+
+  return ans
+}
+
+function isEqual(sCount: number[], pCount: number[]) {
+  if (sCount.toString() === pCount.toString()) return true
+}
+
+function getOffsetCharCode(char: string) {
+  return char.charCodeAt(0) - 'a'.charCodeAt(0)
+}
+```
+
+```typescript
+
+```
