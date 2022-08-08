@@ -3827,7 +3827,7 @@ vue lifecycle diagram：
 
 <img src="./images/lifecycle.png" style="zoom: 60%" />
 
-## 添加属性
+## 添加属性（set）
 
 ### Vue.set
 
@@ -4055,7 +4055,7 @@ set 方法既会处理数组响应式，也会处理对象的响应式。
 
 当使用 set 处理数组时，会调用 splice 方法，当使用 set 给对象增加新成员时，会调用 defineReactive 方法。
 
-## 删除属性
+## 删除属性（delete）
 
 删除对象属性。如果对象是响应式对象，删除要触发视图更新。
 
@@ -4107,5 +4107,25 @@ export function del (target: Array<any> | Object, key: any) {
 }
 ```
 
-### 
+## watch
+
+### 基本使用
+
+`vm.$watch(expOrFn, callback, [options])`
+
+#### 功能
+
+观察 Vue 实例变化的一个表达式或计算属性函数，回调函数得到的参数为新值和旧值，表达式只接受监督的键路径，对于复杂的表达式，用一个函数取代。
+
+#### 参数
+
+* expOrFn：要监视的 $data 中的属性，可以是表达式或函数
+* callback：数据变化后执行的函数
+  * 函数：回调函数
+  * 对象：具有 handler 属性（字符串或者函数）
+* options：可选项
+  * deep：布尔类型，是否启用深度监听
+  * immediate：布尔类型，是否立即执行一次函数函数
+
+### 源码调试
 
