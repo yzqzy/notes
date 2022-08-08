@@ -873,15 +873,15 @@ function findAnagrams(s: string, p: string): number[] {
   const pCount = new Array(26).fill(0)
 
   for (let i = 0; i < pLen; i++) {
-    sCount[getOffsetCharCode(s[i])]++
-    pCount[getOffsetCharCode(p[i])]++
+    sCount[helper(s[i])]++
+    pCount[helper(p[i])]++
   }
 
   if (isEqual(sCount, pCount)) ans.push(0)
 
   for (let i = 0; i < sLen - pLen; i++) {
-    sCount[getOffsetCharCode(s[i])]--
-    sCount[getOffsetCharCode(s[i + pLen])]++
+    sCount[helper(s[i])]--
+    sCount[helper(s[i + pLen])]++
 
     if (isEqual(sCount, pCount)) ans.push(i + 1)
   }
@@ -893,11 +893,42 @@ function isEqual(sCount: number[], pCount: number[]) {
   if (sCount.toString() === pCount.toString()) return true
 }
 
-function getOffsetCharCode(char: string) {
+function helper(char: string) {
   return char.charCodeAt(0) - 'a'.charCodeAt(0)
 }
 ```
 
-```typescript
+### 替换后的最长重复字符
 
+[https://leetcode.cn/problems/longest-repeating-character-replacement/](https://leetcode.cn/problems/longest-repeating-character-replacement/)
+
+```typescript
+function characterReplacement(s: string, k: number): number {
+  const nums = new Array(26).fill(0)
+  const n = s.length
+
+  let left = 0
+  let right = 0 
+
+  let max = 0
+
+  while (right < n) {
+    nums[helper(s[right])]++
+    max = Math.max(max, nums[helper(s[right])])
+
+    if (right - left + 1 - max > k) {
+      nums[helper(s[left])]--
+      left++
+    }
+
+    right++
+  }
+
+  return right - left
+}
+
+function helper(char: string) {
+  return char.charCodeAt(0) - 'A'.charCodeAt(0)
+}
 ```
+
