@@ -20,15 +20,23 @@
       data: {
         user: {
           firstName: 'yue',
-          lastname: 'luo'
+          lastname: 'luo',
+          fullName: ''
         }
       }
     })
 
+    vm.$watch('user', function(newValue, oldValue) {
+      this.user.fullName = newValue.firstName + '' + newValue.lastname
+    }, {
+      deep: true,
+      immediate: true
+    })
+
     setTimeout(() => {
-      vm.$watch('user', function(newValue, oldValue) {
-        this.user.fullName = newValue.firstName + ' ' + newValue.lastname
-      })
+      // vm.$data.user = {}
+
+      vm.user.firstName = 'heora' // 需要深度监听
     }, 3000)
   </script>
 

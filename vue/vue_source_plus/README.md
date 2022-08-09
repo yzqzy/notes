@@ -4109,15 +4109,15 @@ export function del (target: Array<any> | Object, key: any) {
 
 ## watch
 
-### 基本使用
+### 如何使用
 
 `vm.$watch(expOrFn, callback, [options])`
 
-#### 功能
+**功能**
 
 观察 Vue 实例变化的一个表达式或计算属性函数，回调函数得到的参数为新值和旧值，表达式只接受监督的键路径，对于复杂的表达式，用一个函数取代。
 
-#### 参数
+**参数**
 
 * expOrFn：要监视的 $data 中的属性，可以是表达式或函数
 * callback：数据变化后执行的函数
@@ -4127,5 +4127,373 @@ export function del (target: Array<any> | Object, key: any) {
   * deep：布尔类型，是否启用深度监听
   * immediate：布尔类型，是否立即执行一次函数函数
 
-### 源码调试
+
+
+三种类型的的 Watcher 对象：
+
+* 没有静态方法，只能使用实例方法，因为 $watch 方法中要使用 Vue 的实例
+* Watcher 分为三种：计算属性 watcher、用户 watcher（侦听器）、渲染 watcher
+  * 创建顺序：计算属性 watcher、用户 watcher、渲染 watcher
+
+```js
+export function initState (vm: Component) {
+  vm._watchers = []
+  const opts = vm.$options
+  if (opts.props) initProps(vm, opts.props)
+  if (opts.methods) initMethods(vm, opts.methods)
+  if (opts.data) {
+    initData(vm)
+  } else {
+    observe(vm._data = {}, true /* asRootData */)
+  }
+  // 优先处理 computed
+  if (opts.computed) initComputed(vm, opts.computed)
+  // 其次处理 watch
+  if (opts.watch && opts.watch !== nativeWatch) {
+    initWatch(vm, opts.watch)
+  }
+}
+```
+
+渲染 watcher 是在渲染过程中创建的，定义在 mountComponent 方法中。执行顺序和创建顺序一致。
+
+### 源码分析
+
+#### src/core/instance/state.js
+
+```js
+// src/core/instance/state.js
+
+export function initState (vm: Component) {
+  vm._watchers = []
+  const opts = vm.$options
+  // 将 props 中属性转换为响应式数据，并且定义到 vue 实例中
+  if (opts.props) initProps(vm, opts.props)
+  // 将选项中方法定义到 vue 实例中，注入之前会判断是否存在重名属性，并且还判断命名规范
+  if (opts.methods) initMethods(vm, opts.methods)
+  // 如果存在 data，初始化 data，否则初始化 vm._data 属性
+  if (opts.data) {
+    initData(vm)
+  } else {
+    // 调用 observer 函数，把对象转换为响应式对象
+    observe(vm._data = {}, true /* asRootData */)
+  }
+  // 初始化计算属性
+  if (opts.computed) initComputed(vm, opts.computed)
+  // 初始化 watch 侦听器
+  if (opts.watch && opts.watch !== nativeWatch) {
+    initWatch(vm, opts.watch)
+  }
+}
+
+// 计算属性 watcher，lazy 属性为 true
+const computedWatcherOptions = { lazy: true }
+
+function initComputed (vm: Component, computed: Object) {
+  // $flow-disable-line
+  const watchers = vm._computedWatchers = Object.create(null)
+  // computed properties are just getters during SSR
+  const isSSR = isServerRendering()
+
+  for (const key in computed) {
+    const userDef = computed[key]
+    const getter = typeof userDef === 'function' ? userDef : userDef.get
+    if (process.env.NODE_ENV !== 'production' && getter == null) {
+      warn(
+        `Getter is missing for computed property "${key}".`,
+        vm
+      )
+    }
+
+    if (!isSSR) {
+      // create internal watcher for the computed property.
+      watchers[key] = new Watcher(
+        vm,
+        getter || noop,
+        noop,
+        computedWatcherOptions
+      )
+    }
+
+    // component-defined computed properties are already defined on the
+    // component prototype. We only need to define computed properties defined
+    // at instantiation here.
+    if (!(key in vm)) {
+      defineComputed(vm, key, userDef)
+    } else if (process.env.NODE_ENV !== 'production') {
+      if (key in vm.$data) {
+        warn(`The computed property "${key}" is already defined in data.`, vm)
+      } else if (vm.$options.props && key in vm.$options.props) {
+        warn(`The computed property "${key}" is already defined as a prop.`, vm)
+      }
+    }
+  }
+}
+
+// ...
+
+function initWatch (vm: Component, watch: Object) {
+  // 遍历 watch 对象
+  for (const key in watch) {
+    const handler = watch[key]
+    // 如果 handler 是数组
+    if (Array.isArray(handler)) {
+      for (let i = 0; i < handler.length; i++) {
+        createWatcher(vm, key, handler[i])
+      }
+    } else {
+      // handler 不是数组
+      createWatcher(vm, key, handler)
+    }
+  }
+}
+
+function createWatcher (
+  vm: Component,
+  expOrFn: string | Function,
+  handler: any,
+  options?: Object
+) {
+  if (isPlainObject(handler)) {
+    options = handler
+    handler = handler.handler
+  }
+  if (typeof handler === 'string') {
+    handler = vm[handler]
+  }
+  return vm.$watch(expOrFn, handler, options)
+}
+
+export function stateMixin (Vue: Class<Component>) {
+	// ...
+
+  Vue.prototype.$set = set
+  Vue.prototype.$delete = del
+
+  Vue.prototype.$watch = function (
+    expOrFn: string | Function,
+    cb: any,
+    options?: Object
+  ): Function {
+    // 获取 Vue 实例 this
+    const vm: Component = this
+    if (isPlainObject(cb)) {
+      // 如果 cb 是对象，执行 createWatcher
+      return createWatcher(vm, expOrFn, cb, options)
+    }
+    options = options || {}
+    // 标记为用户 watcher
+    options.user = true
+    // 创建用户 watcher
+    const watcher = new Watcher(vm, expOrFn, cb, options)
+    // 如果 immediate 为 true
+    if (options.immediate) {
+      try {
+        // 立即执行一次 cb 回调，并且把当前值传入
+        cb.call(vm, watcher.value)
+      } catch (error) {
+        handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
+      }
+    }
+    // 返回取消监听的方法
+    return function unwatchFn () {
+      watcher.teardown()
+    }
+  }
+}
+```
+
+#### src/core/observer/watcher.js
+
+```js
+// src/core/observer/watcher.js
+
+/* @flow */
+
+/**
+ * A watcher parses an expression, collects dependencies,
+ * and fires callback when the expression value changes.
+ * This is used for both the $watch() api and directives.
+ */
+export default class Watcher {
+	// ...
+
+  constructor (
+    vm: Component,
+    // 表达式或者函数
+    expOrFn: string | Function,
+    cb: Function,
+    options?: ?Object,
+    // 是否是渲染 watcher
+    isRenderWatcher?: boolean
+  ) {
+    this.vm = vm
+    if (isRenderWatcher) {
+      vm._watcher = this
+    }
+    // watcher，包含所有 watcher
+    vm._watchers.push(this)
+    // options
+    if (options) {
+      this.deep = !!options.deep
+      this.user = !!options.user
+      // 是否延迟执行
+      // 计算属性 watcher 会延迟执行
+      this.lazy = !!options.lazy
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.user = this.lazy = this.sync = false
+    }
+    this.cb = cb
+    // watcher 标识
+    this.id = ++uid // uid for batching
+    // 标识当前 watcher 是否是激活的
+    this.active = true
+    this.dirty = this.lazy // for lazy watchers
+    this.deps = []
+    this.newDeps = []
+    this.depIds = new Set()
+    this.newDepIds = new Set()
+    this.expression = process.env.NODE_ENV !== 'production'
+      ? expOrFn.toString()
+      : ''
+    // parse expression for getter
+    if (typeof expOrFn === 'function') {
+      // 首次渲染传入的是 updateComponent 函数
+      this.getter = expOrFn
+    } else {
+      // 侦听器时，第二个参数会传入字符串，例如 watch: { 'person.name': function () {} }
+      // 生成一个获取属性值的函数
+      this.getter = parsePath(expOrFn)
+      if (!this.getter) {
+        this.getter = noop
+        process.env.NODE_ENV !== 'production' && warn(
+          `Failed watching path: "${expOrFn}" ` +
+          'Watcher only accepts simple dot-delimited paths. ' +
+          'For full control, use a function instead.',
+          vm
+        )
+      }
+    }
+    this.value = this.lazy
+      ? undefined
+      : this.get()
+  }
+
+  /**
+   * Evaluate the getter, and re-collect dependencies.
+   */
+  get () {
+    // 将当前 watcher 对象存储到栈中
+    // 如果组件嵌套，先渲染内部组件，所以要把父组件的 watcher 保存起来
+    pushTarget(this)
+    let value
+    const vm = this.vm
+    try {
+      // 调用存储的 getter
+      // 渲染 watcher，存储的是 updateComponent 函数
+      value = this.getter.call(vm, vm)
+    } catch (e) {
+      if (this.user) {
+        handleError(e, vm, `getter for watcher "${this.expression}"`)
+      } else {
+        throw e
+      }
+    } finally {
+      // "touch" every property so they are all tracked as
+      // dependencies for deep watching
+      // 深度监听准备
+      if (this.deep) {
+        traverse(value)
+      }
+      // 将当前 watcher 在栈中弹出
+      popTarget()
+      // 将当前 watcher 从 dep.subs 数组中移除，并且会把 watcher 中记录的 dep 也给移除
+      this.cleanupDeps()
+    }
+    return value
+  }
+
+  /**
+   * Add a dependency to this directive.
+   */
+  addDep (dep: Dep) {
+    const id = dep.id
+    // 每一个 dep 对象都有一个 id 属性
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id)
+      this.newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        dep.addSub(this)
+      }
+    }
+  }
+  
+    /**
+   * Subscriber interface.
+   * Will be called when a dependency changes.
+   */
+  update () {
+    /* istanbul ignore else */
+    if (this.lazy) {
+      this.dirty = true
+    } else if (this.sync) {
+      this.run()
+    } else {
+      // 渲染 watcher
+      queueWatcher(this)
+    }
+  }
+
+  /**
+   * Scheduler job interface.
+   * Will be called by the scheduler.
+   */
+  // schedular.js - flushSchedulerQueue 中会调用 run 方法
+  run () {
+    // 判断当前 watcher 对象是否是存活状态
+    if (this.active) {
+      // 调用 watcher 对象 get 方法
+      // 渲染 watcher 会调用 updateComponent 函数，更新视图，渲染 watcher 不存在返回值
+      // 用户 watcher 会存在返回值
+      const value = this.get()
+      if (
+        value !== this.value ||
+        // Deep watchers and watchers on Object/Arrays should fire even
+        // when the value is the same, because the value may
+        // have mutated.
+        isObject(value) ||
+        this.deep
+      ) {
+        // set new value
+        const oldValue = this.value
+        this.value = value
+        // 如果当前 watcher 是用户 watcher
+        if (this.user) {
+          try {
+            // 调用用户传入的回调函数
+            this.cb.call(this.vm, value, oldValue)
+          } catch (e) {
+            handleError(e, this.vm, `callback for watcher "${this.expression}"`)
+          }
+        } else {
+          // 渲染 watcher cb 是 noop，空函数
+          this.cb.call(this.vm, value, oldValue)
+        }
+      }
+    }
+  }
+
+ 	// ...
+}
+```
+
+## 异步更新队列 - nextTick
+
+Vue 更新 DOM 是异步执行的，批量执行
+
+* 在下一次 DOM 更新循环结束之后执行延迟回调。在修改数据之后立即使用这个方法，获取更新后的 DOM。
+
+Vue.nextTick(function () {})、vm.$nextTick(function() {})
 
