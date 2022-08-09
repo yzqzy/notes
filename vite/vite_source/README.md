@@ -615,10 +615,71 @@ export default {
 
 **2. CSS 后处理插件**
 
-CSS 后处理插件即 [vite:css-post](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L137) 插件，它的功能如下：
+CSS 后处理插件即 [vite:css-post](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L137) 插件，功能如下：
 
 * 开发阶段 CSS 响应结果处理
 * 生产环境 CSS 文件生成
+
+首先，在开发阶段，这个插件会将之前的 CSS 编译插件处理后的结果，包装成一个 ESM 模块，返回给浏览器（[代码链接](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L284)）。
+
+其次，生产环境中，Vite 默认会通过这个插件进行 CSS 的 code splitting，即对每个异步 chunk，Vite 会将其依赖的 CSS 代码单独打包成一个文件（[代码链接](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L400)）。
+
+```typescript
+const fileHandle = this.emitFile({
+  name: chunk.name + '.css',
+  type: 'asset',
+  source: chunkCSS
+});
+```
+
+如果 CSS 的 code splitting 功能被关闭（通过 `build.cssCodeSplit` 配置）那么 vite 会将所有的 CSS 代码打包到同一个 CSS 文件中（[代码链接](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L433)）。
+
+最后，插件会调用 EsBuild 对 CSS 进行压缩，实现在 `minifyCSS` 函数（[代码链接](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/css.ts#L905)）。
+
+**3. HTML 构建插件**
+
+HTML 构建插件会调用 `build-html` 插件。之前我们在内联脚本加载插件中提到过，项目根目录下的 html 会转换为一段 JavaScript 代码。
+
+```html
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  // 普通方式引入
+  <script src="./index.ts"></script>
+  // 内联脚本
+  <script type="module">
+    import React from 'react';
+    console.log(React)
+  </script>
+</body>
+</html>
+```
+
+首先，当 Vite 在生产环境 transform 这段入口 HTML 时，会做 3 件事情：
+
+* 对 HTML 执行各个插件中带有 `enforce: "pre"` 属性的 `transformIndexHtml` 钩子；
+* 将其中的 script 标签内容删除，并将其转换为 `import` 语句，例如 `import './index.ts'`，并记录下来；
+* 在 transform 钩子中返回记录下来的 import 内容，将 import 语句作为模块内容进行加载也就是说，虽然 Vite 处理的是一个 HTML 文件，但最后进行打包的内容将是一段 JS 内容（[代码链接](https://github.com/vitejs/vite/blob/main/packages/vite/src/node/plugins/html.ts#L233)）。
+
+```typescript
+export function buildHtmlPlugin() {
+  name: 'vite:build',
+  transform(html, id) {
+    if (id.endsWith('.html')) {
+      let js = '';
+      // 省略 HTML AST 遍历过程(通过 @vue/compiler-dom 实现)
+      // 收集 script 标签，转换成 import 语句，拼接到 js 字符串中
+      return js;
+    }
+  }
+}
+```
 
 
 
