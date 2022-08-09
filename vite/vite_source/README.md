@@ -681,6 +681,199 @@ export function buildHtmlPlugin() {
 }
 ```
 
+其次，在生成产物的最后一步即 `generateBundle` 钩子中，根据入口 Chunk 的内容，分情况进行处理。
+
+如果只有 import 语句，先通过 Rollup 提供的 chunk 和 bundle 对象获取入口 chunk 所有的依赖 chunk，并将这些 chunk 进行后序排列。如 a 依赖 b，b 依赖 c，最后的依赖数组就是 `[c, b, a]` 。然后依次将 c, b, a 生成三个 script 标签，插入到 HTML 中。最后，Vite 会将入口 chunk 的内容从 bundle 产物中移除，因此它的内容只要 import 语句，而它 import 的 chunk 已经作为 script 标签插入到 HTML 中，入口 chunk 也就没有存在的意义了。
+
+如果除了 import 语句，还有其他内容，Vite 就会将入口 Chunk 单独生成一个 script 标签，分析出依赖的后续排列，然后通过注入 `<link rel="modulepreload">` 标签对入口文件的依赖 chunk 进行预加载。
+
+最后，插件会调用用户插件中带有 `enforce: "post"`  属性的 transformIndexHtml 钩子，对 HTML 进行进一步的处理。
+
+**4. commonjs 转换插件** 
+
+开发环境中，Vite 会使用 EsBuild 将 commonjs 转换为 ESM。生产环境中，Vite 会直接使用 Rollup 的官方插件 [@rollup/plugin-commonjs](https://github.com/rollup/plugins/tree/master/packages/commonjs)。
+
+**5. data-uri 插件**
+
+[data-uri](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/dataUri.ts#L14) 插件用来支持 import 模块中含有 Base64 编码的情况，如：
+
+```typescript
+import batman from 'data:application/json;base64, eyAiYmF0bWFuIjogInRydWUiIH0='
+```
+
+**6. dynamic-import-vars 插件 **
+
+用于支持在动态 import 中使用变量的功能，如下示例代码：
+
+```typescript
+function importLocale(locale) {
+  return import(`./locales/${locale}.js`);
+}
+```
+
+内部使用的是 Rollup 的官方插件 [@rollup/plugin-dynamic-import-vars](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Frollup%2Fplugins%2Ftree%2Fmaster%2Fpackages%2Fdynamic-import-vars)。
+
+**7. import-meta-url 支持插件**
+
+用来转换如下格式的资源 URL：
+
+```typescript
+new URL('./foo.png', import.meta.url)
+```
+
+将其转换为生产环境的 URL 格式：
+
+```typescript
+// 使用 self.location 来保证低版本浏览器和 Web Worker 环境的兼容性
+new URL('./assets.a4b3d56d.png, self.location)
+```
+
+同时，对于动态 import 的情况也能进行支持：
+
+```typescript
+function getImageUrl(name) {
+  return new URL(`./dir/${name}.png`, import.meta.url).href
+}
+```
+
+Vite 识别到 `./dir/${name}.png` 这样的模板字符串，会将整行代码转换成下面这样：
+
+```js
+function getImageUrl(name) {
+    return import.meta.globEager('./dir/**.png')[`./dir/${name}.png`].default;
+}
+```
+
+[插件代码链接](https://github.com/vitejs/vite/blob/2b7e836f84b56b5f3dc81e0f5f161a9b5f9154c0/packages/vite/src/node/plugins/assetImportMetaUrl.ts#L18)
+
+**8. import 分析插件**
+
+[vite:build-import-analysis](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/importAnalysisBuild.ts#L87) 插件会在生产环境打包时用作 import 语句分析和重写，主要目的是对动态 import 的模块进行预加载处理。
+
+对含有动态 import 的 chunk 而言，会在插件的 transform 钩子中添加一段工具代码用来进行模块预加载，逻辑并不复杂（[代码链接](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/importAnalysisBuild.ts#L43)）。
+
+关键代码简化后如下:
+
+```typescript
+function preload(importModule, deps) {
+  return Promise.all(
+    deps.map(dep => {
+      // 如果异步模块的依赖还没有加载
+      if (!alreadyLoaded(dep)) { 
+        // 创建 link 标签加载，包括 JS 或者 CSS
+        document.head.appendChild(createLink(dep))  
+        // 如果是 CSS，进行特殊处理，后文会介绍
+        if (isCss(dep)) {
+          return new Promise((resolve, reject) => {
+            link.addEventListener('load', resolve)
+            link.addEventListener('error', reject)
+          })
+        }
+      }
+    })
+  ).then(() => importModule())
+}
+```
+
+我们知道，Vite 内置了 CSS 代码分割的能力，当一个模块通过动态 import 引入的时候，这个模块就会被单独打包成一个 chunk，与此同时这个模块中的样式代码也会打包成单独的 CSS 文件。如果异步模块的 CSS 和 JS 同时预加载，那么在某些浏览器下（如 IE）就会出现 [FOUC 问题](https://en.wikipedia.org/wiki/Flash_of_unstyled_content) ，页面样式会闪烁，影响用户体验。 Vite 通过监听 link 标签 load 事件的方式来保证 CSS 在 JS 之前加载完成，从而解决 FOUC 问题。
+
+```typescript
+if (isCss) {
+  return new Promise((res, rej) => {
+    link.addEventListener('load', res)
+    link.addEventListener('error', rej)
+  })
+}
+```
+
+现在，我们已经知道预加载的实现方法，那么 Vite 是如何将动态 import 编译成预加载的代码的呢？
+
+从源码的 [transform 钩子实现](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/importAnalysisBuild.ts#L111) 中，可以看到 Vite 会将动态 import 的代码进行转换，如下代码所示：
+
+```typescript
+/ 转换前
+import('a')
+// 转换后
+__vitePreload(() => 'a', __VITE_IS_MODERN__ ? "__VITE_PRELOAD__" : void)
+```
+
+其中，`__vitePreload` 会被加载为前文的 preload 工具函数，`__VITE_IS_MODERN__` 会在 [renderChunk](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/importAnalysisBuild.ts#L208) 中被替换为 true 或者 false，表示是否为 Modern 模式打包。对于 `"__VITE_PRELOAD__"` ，Vite 会在 [generateBundle](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/importAnalysisBuild.ts#L234) 阶段，分析出 a 模块所有依赖文件（包括 CSS），将依赖文件名的数组作为 preload 工具函数的第二个参数。
+
+同时，对于 Vite 独有的 `import.meta.glob` 语法，也会在这个插件中进行编译：
+
+```typescript
+const modules = import.meta.glob('./dir/*.js')
+```
+
+会通过插件转换成下面这段代码:
+
+```typescript
+const modules = {
+  './dir/foo.js': () => import('./dir/foo.js'),
+  './dir/bar.js': () => import('./dir/bar.js')
+}
+```
+
+具体的实现在 [transformImportGlob](https://github.com/vitejs/vite/blob/075128a8dd0a2680540179dad2277a797f793199/packages/vite/src/node/importGlob.ts#L11) 函数中，除了被该插件使用外，这个函数还依赖预构建、开发环境 import 分析等核心流程使用。
+
+**9. JS 压缩插件 **
+
+Vite 中提供了两种 JS 代码压缩的工具，即 EsBuild 和 Terser，分别由两个插件实现：
+
+* [vite:esbuild-transpile](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/esbuild.ts#L217)。在 renderChunk 阶段，调用 EsBuild 的 transform API，并指定 minify 参数，从而实现 JS 的压缩。
+* [vite:terser](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/terser.ts#L6)。同样在 renderChunk 阶段，Vite 会在单独的 Worker 进程中调用 Terser 进行 JS 代码压缩。
+
+**10. 构建报告插件**
+
+主要由三个插件输出构建报告：
+
+* [vite:manifest](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/manifest.ts) 。提供打包后的各种资源文件及其关联信息，如下内容所示：
+
+```typescript
+// manifest.json
+{
+  "index.html": {
+    "file": "assets/index.8edffa56.js",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      // JS 引用
+      "_vendor.71e8fac3.js"
+    ],
+    "css": [
+      // 样式文件应用
+      "assets/index.458f9883.css"
+    ],
+    "assets": [
+      // 静态资源引用
+      "assets/img.9f0de7da.png"
+    ]
+  },
+  "_vendor.71e8fac3.js": {
+    "file": "assets/vendor.71e8fac3.js"
+  }
+}
+```
+
+* [vite:ssr-manifest](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/ssr/ssrManifestPlugin.ts) 。提供每个模块与 chunk 之间的映射关系，方便 SSR 时通过渲染的组件来确定哪些 chunk 会被调用，从而按需进行预加载。
+
+```typescript
+// ssr-manifest.json
+{
+  "node_modules/object-assign/index.js": [
+    "/assets/vendor.71e8fac3.js"
+  ],
+  "node_modules/object-assign/index.js?commonjs-proxy": [
+    "/assets/vendor.71e8fac3.js"
+  ],
+  // 省略其它模块信息
+}
+```
+
+* [vite:reporter](https://github.com/vitejs/vite/blob/v2.7.0/packages/vite/src/node/plugins/reporter.ts) 。主要提供打包时的命令行构建日志。
+
+#### 开发环境特有插件
+
 
 
 ## 源码实现
