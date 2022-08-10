@@ -1067,44 +1067,39 @@ function backspaceCompare(s: string, t: string): boolean {
 
 [https://leetcode.cn/problems/decode-string/](https://leetcode.cn/problems/decode-string/)
 
-// todo
-
+```typescript
 function decodeString(s: string): string {
   const stack = []
 
-  for (let i = 0; i < s.length; i++) {
-    const curr = s[i]
+  let str = ''
+  let count = ''
 
-    if (curr === '[') {
+  for (const char of s) {
+    if (char === '[') {
       stack.push('[')
-    } else if (curr === ']') {
-      let str = ''
-
+    } else if (char === ']') {
       while(true) {
-        const ele = stack.pop()
-
-        if (ele === '[') break
-
-        str = ele + str
+        const temp = stack.pop()
+        if (temp === '[') break
+        str = temp + str
       }
-
-      let count: string
-
       while (true) {
-        const ele = stack.pop()
-
-        if (!/\d/.test(ele)) {
+        const temp = stack.pop()
+        if (isNaN(+temp)) {
+          stack.push(temp)
           break
         }
-        
-        count = ele + count
+        count = temp + count
       }
 
       stack.push(str.repeat(+count))
+      str = ''
+      count = ''
     } else {
-      stack.push(curr)
+      stack.push(char)
     }
   }
 
   return stack.join('')
 }
+```
