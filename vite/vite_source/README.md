@@ -38,7 +38,36 @@ Vite 3.0 支持通过配置将 EsBuild 预构建同时用于开发环境和生�
 
 ## 插件流水线
 
+在开发阶段 Vite 实现了一个按需加载的服务器，每一个文件都会经历一系列的编译流程，然后再将编译结果响应给浏览器。
+在生产环境中，Vite 同样会执行一系列编译过程，将编译结果交给 Rollup 进行模块打包。
 
+这一系列的编译过程指的就是 Vite 的插件工作流水线（Pipeline），插件功能是 Vite 构建的核心。
+
+在生产环境中 Vite 直接调用 Rollup 进行打包，由 Rollup 调度各种插件。
+在开发环境中，Vite 模拟了 Rollup 的插件机制，设计了一个 `PluginContainer` 对象来调度各个插件。
+
+PluginContainer 的实现主要分为两部分：
+
+* 实现 Rollup 插件钩子的调度
+* 实现插件钩子内部的 Context 上下文对象
+
+Vite 插件的具体执行顺序如下：
+
+* 别名插件：`vite:pre-alias` 和 `@rollup/plugin-alias` ，用于路径别名替换。
+* 用户自定义 pre 插件，即带有 `enforce: "pre"` 属性的自定义插件。
+* vite 核心构建插件。
+* 用户自定义普通插件，即不带有 `enforce` 属性的自定义插件。
+* vite 生产环境插件和用户插件中带有 `enforce: "post"` 属性的插件。
+* 开发阶段特有的插件，包括环境变量注入插件 `clientInjectionsPlugin` 和 import 语句分析及重写插件 `importAnalysisPlugin`。
+
+Vite 内置的插件包括四大类：
+
+* 别名插件
+* 核心构建插件
+* 生产环境特有插件
+* 开发环境特有插件
+
+关于更多插件流水线内容，可以查看这篇文章。
 
 ## 源码实现
 
