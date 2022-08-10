@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>virtual dom</title>
+</head>
+<body>
+
+  <div id="app">
+    <p ref="p1">{{ message }}</p>
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      render(h) {
+        // h(tag, data, children)
+        // return h('h1', this.message)
+        // return h('h1', { domProps: { innerHTML: this.message } })
+        // return h('h1', { attrs: { id: 'title' } }, this.message)
+        const vnode = h(
+          'h1',
+          {
+            attrs: { id: 'title' }
+          },
+          this.message
+        )
+
+        console.log(vnode)
+
+        return vnode
+      },
+      data: {
+        message: 'Hello vue'
+      }
+    })
+  </script>
+
+</body>
+</html>

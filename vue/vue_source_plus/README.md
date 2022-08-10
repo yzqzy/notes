@@ -4701,3 +4701,70 @@ nextTick 核心其实就是 timeFunc 处理，优先微任务，然后使用宏�
 
 ## 虚拟 DOM
 
+### 基本概念
+
+虚拟 DOM （Virtual DOM）是使用 JavaScript 对象描述的真实 DOM。
+
+Vue.js 中的虚拟 DOM 借鉴 Snabbdom，并添加了 Vue.js 的特性。
+
+* 例如：指令和组件机制
+
+为什么要使用虚拟 DOM？
+
+* 避免直接操作 DOM，提高开发效率
+* 作为一个中间层可以跨平台
+* 虚拟 DOM 不一定可以提高性能
+  * 首次渲染的时候会增加开销
+  * 复杂视图情况下会提升渲染性能
+
+
+
+h 函数
+
+vm.$createElement(tag, data, children, normalizeChildren)
+
+* tag
+  * 标签名称或者组件对象
+* data
+  * 描述 tag，可以设置 DOM 的属性或者标签属性
+* children
+  * tag 中的文本内容或者子节点
+
+
+
+vnode 的核心属性
+
+* tag
+* data
+* children
+* text
+* elm
+* key
+
+### 过程分析
+
+* vm._init()
+* vm.$mount()
+* mountComponent
+* 创建 watcher 对象
+* updateComponent()
+  * `vm._update(vm._render(), hydrating)`
+* vm._render
+  * `vnode = render.call(vm._renderProxy, vm.$creatElement)`
+  * vm.$createElement()
+    * h 函数，render() 中调用
+    * createElement(vm, a, b, c, true)
+    * `_createElemnt(context, tag, data, children, normalizationType)`
+  * vm._createElement()
+    * `vnode = new VNode(config, parsePlatformTagName(tag), data, children, undefiend, undefiend, context)`
+    * `vm._render() ` 结束，返回 vnode
+* vm._update()
+  * 负责将虚拟 DOM  渲染成真实 DOM
+  * 首次执行：`vm.__patch__(vm.$el, vnode, hydrating, false)`
+  * 数据更新：`vm.__patch__(prevVnode, vnode)`
+* `vm.__patch__()`
+* patchVnode
+* updateChildren
+
+### createElement
+
