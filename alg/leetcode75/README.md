@@ -992,3 +992,119 @@ function helper(char: string) {
   return char.charCodeAt(0) - '0'.charCodeAt(0)
 }
 ```
+
+## day14
+
+### 比较含退格的字符串
+
+[https://leetcode.cn/problems/backspace-string-compare/solution/bi-jiao-han-tui-ge-de-zi-fu-chuan-by-leetcode-solu/](https://leetcode.cn/problems/backspace-string-compare/solution/bi-jiao-han-tui-ge-de-zi-fu-chuan-by-leetcode-solu/)
+
+```typescript
+function backspaceCompare(s: string, t: string): boolean {
+  return helper(s) === helper(t)
+}
+
+function helper(str: string) {
+  const stack = []
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] == '#') {
+      stack.pop()
+    } else {
+      stack.push(str[i])
+    }
+  }
+
+  return stack.join('')
+}
+```
+
+```typescript
+function backspaceCompare(s: string, t: string): boolean {
+  let i = s.length - 1
+  let j = t.length - 1
+
+  let skip: number
+
+  while (i >= 0 || j >= 0) {
+    skip = 0
+    while (i >= 0) {
+      if (s[i] === '#') {
+        skip++
+        i--
+      } else  if (skip > 0){
+        skip--
+        i--
+      } else {
+        break
+      }
+    }
+
+    skip = 0
+    while (j >= 0) {
+      if (t[j] === '#') {
+        skip++
+        j--
+      } else if (skip > 0){
+        skip--
+        j--
+      } else {
+        break
+      }
+    }
+
+    if (s[i] !== t[j]) return false
+
+    i--
+    j--
+  }
+
+  return true
+}
+```
+
+### 字符串解码
+
+[https://leetcode.cn/problems/decode-string/](https://leetcode.cn/problems/decode-string/)
+
+// todo
+
+function decodeString(s: string): string {
+  const stack = []
+
+  for (let i = 0; i < s.length; i++) {
+    const curr = s[i]
+
+    if (curr === '[') {
+      stack.push('[')
+    } else if (curr === ']') {
+      let str = ''
+
+      while(true) {
+        const ele = stack.pop()
+
+        if (ele === '[') break
+
+        str = ele + str
+      }
+
+      let count: string
+
+      while (true) {
+        const ele = stack.pop()
+
+        if (!/\d/.test(ele)) {
+          break
+        }
+        
+        count = ele + count
+      }
+
+      stack.push(str.repeat(+count))
+    } else {
+      stack.push(curr)
+    }
+  }
+
+  return stack.join('')
+}

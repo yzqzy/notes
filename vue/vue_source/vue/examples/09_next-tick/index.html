@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>next tick</title>
+</head>
+<body>
+
+  <div id="app">
+    <p ref="p1">{{ message }}</p>
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        message: 'hello vue',
+        name: 'yueluo',
+        title: 'heora'
+      },
+      mounted() {
+        this.message = 'hello world'
+        this.name = 'yueluo plus'
+        this.title = 'heora plus'
+
+        this.$nextTick(() => {
+          console.log(this.$refs.p1.textContent)
+        })
+      }
+    })
+
+
+  </script>
+
+</body>
+</html>
