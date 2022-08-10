@@ -784,33 +784,38 @@ import{_ as s,c as n,o as a,a as l}from"./app.3c6e9e4e.js";var p="/notes/assets/
 <span class="line"></span>
 <span class="line"><span style="color:#F07178;">  </span><span style="color:#89DDFF;font-style:italic;">return</span><span style="color:#F07178;"> </span><span style="color:#FF9CAC;">true</span></span>
 <span class="line"><span style="color:#89DDFF;">}</span></span>
-<span class="line"></span></code></pre></div><h3 id="\u5B57\u7B26\u4E32\u89E3\u7801" tabindex="-1">\u5B57\u7B26\u4E32\u89E3\u7801 <a class="header-anchor" href="#\u5B57\u7B26\u4E32\u89E3\u7801" aria-hidden="true">#</a></h3><p><a href="https://leetcode.cn/problems/decode-string/" target="_blank" rel="noopener noreferrer">https://leetcode.cn/problems/decode-string/</a></p><p>// todo</p><p>function decodeString(s: string): string { const stack = []</p><p>for (let i = 0; i &lt; s.length; i++) { const curr = s[i]</p><pre><code>if (curr === &#39;[&#39;) {
-  stack.push(&#39;[&#39;)
-} else if (curr === &#39;]&#39;) {
-  let str = &#39;&#39;
-
-  while(true) {
-    const ele = stack.pop()
-
-    if (ele === &#39;[&#39;) break
-
-    str = ele + str
-  }
-
-  let count: string
-
-  while (true) {
-    const ele = stack.pop()
-
-    if (!/\\d/.test(ele)) {
-      break
-    }
-    
-    count = ele + count
-  }
-
-  stack.push(str.repeat(+count))
-} else {
-  stack.push(curr)
-}
-</code></pre><p>}</p><p>return stack.join(&#39;&#39;) }</p>`,123),c=[t];function r(y,F,D,C,A,i){return a(),n("div",null,c)}var h=s(e,[["render",r]]);export{u as __pageData,h as default};
+<span class="line"></span></code></pre></div><h3 id="\u5B57\u7B26\u4E32\u89E3\u7801" tabindex="-1">\u5B57\u7B26\u4E32\u89E3\u7801 <a class="header-anchor" href="#\u5B57\u7B26\u4E32\u89E3\u7801" aria-hidden="true">#</a></h3><p><a href="https://leetcode.cn/problems/decode-string/" target="_blank" rel="noopener noreferrer">https://leetcode.cn/problems/decode-string/</a></p><div class="language-typescript"><span class="copy"></span><pre><code><span class="line"><span style="color:#C792EA;">function</span><span style="color:#A6ACCD;"> </span><span style="color:#82AAFF;">decodeString</span><span style="color:#89DDFF;">(</span><span style="color:#A6ACCD;">s</span><span style="color:#89DDFF;">:</span><span style="color:#A6ACCD;"> </span><span style="color:#FFCB6B;">string</span><span style="color:#89DDFF;">):</span><span style="color:#A6ACCD;"> </span><span style="color:#FFCB6B;">string</span><span style="color:#A6ACCD;"> </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">  </span><span style="color:#C792EA;">const</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">stack</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> []</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F07178;">  </span><span style="color:#C792EA;">let</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">str</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;&#39;</span></span>
+<span class="line"><span style="color:#F07178;">  </span><span style="color:#C792EA;">let</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">count</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;&#39;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F07178;">  </span><span style="color:#89DDFF;font-style:italic;">for</span><span style="color:#F07178;"> (</span><span style="color:#C792EA;">const</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">char</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">of</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">s</span><span style="color:#F07178;">) </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">    </span><span style="color:#89DDFF;font-style:italic;">if</span><span style="color:#F07178;"> (</span><span style="color:#A6ACCD;">char</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">===</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;</span><span style="color:#C3E88D;">[</span><span style="color:#89DDFF;">&#39;</span><span style="color:#F07178;">) </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">push</span><span style="color:#F07178;">(</span><span style="color:#89DDFF;">&#39;</span><span style="color:#C3E88D;">[</span><span style="color:#89DDFF;">&#39;</span><span style="color:#F07178;">)</span></span>
+<span class="line"><span style="color:#F07178;">    </span><span style="color:#89DDFF;">}</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;font-style:italic;">else</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;font-style:italic;">if</span><span style="color:#F07178;"> (</span><span style="color:#A6ACCD;">char</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">===</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;</span><span style="color:#C3E88D;">]</span><span style="color:#89DDFF;">&#39;</span><span style="color:#F07178;">) </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#89DDFF;font-style:italic;">while</span><span style="color:#F07178;">(</span><span style="color:#FF9CAC;">true</span><span style="color:#F07178;">) </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#C792EA;">const</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">pop</span><span style="color:#F07178;">()</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#89DDFF;font-style:italic;">if</span><span style="color:#F07178;"> (</span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">===</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;</span><span style="color:#C3E88D;">[</span><span style="color:#89DDFF;">&#39;</span><span style="color:#F07178;">) </span><span style="color:#89DDFF;font-style:italic;">break</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#A6ACCD;">str</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">+</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">str</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#89DDFF;">}</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#89DDFF;font-style:italic;">while</span><span style="color:#F07178;"> (</span><span style="color:#FF9CAC;">true</span><span style="color:#F07178;">) </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#C792EA;">const</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">pop</span><span style="color:#F07178;">()</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#89DDFF;font-style:italic;">if</span><span style="color:#F07178;"> (</span><span style="color:#82AAFF;">isNaN</span><span style="color:#F07178;">(</span><span style="color:#89DDFF;">+</span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;">)) </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">          </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">push</span><span style="color:#F07178;">(</span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;">)</span></span>
+<span class="line"><span style="color:#F07178;">          </span><span style="color:#89DDFF;font-style:italic;">break</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#89DDFF;">}</span></span>
+<span class="line"><span style="color:#F07178;">        </span><span style="color:#A6ACCD;">count</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">temp</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">+</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">count</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#89DDFF;">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">push</span><span style="color:#F07178;">(</span><span style="color:#A6ACCD;">str</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">repeat</span><span style="color:#F07178;">(</span><span style="color:#89DDFF;">+</span><span style="color:#A6ACCD;">count</span><span style="color:#F07178;">))</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#A6ACCD;">str</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;&#39;</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#A6ACCD;">count</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">=</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">&#39;&#39;</span></span>
+<span class="line"><span style="color:#F07178;">    </span><span style="color:#89DDFF;">}</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;font-style:italic;">else</span><span style="color:#F07178;"> </span><span style="color:#89DDFF;">{</span></span>
+<span class="line"><span style="color:#F07178;">      </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">push</span><span style="color:#F07178;">(</span><span style="color:#A6ACCD;">char</span><span style="color:#F07178;">)</span></span>
+<span class="line"><span style="color:#F07178;">    </span><span style="color:#89DDFF;">}</span></span>
+<span class="line"><span style="color:#F07178;">  </span><span style="color:#89DDFF;">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F07178;">  </span><span style="color:#89DDFF;font-style:italic;">return</span><span style="color:#F07178;"> </span><span style="color:#A6ACCD;">stack</span><span style="color:#89DDFF;">.</span><span style="color:#82AAFF;">join</span><span style="color:#F07178;">(</span><span style="color:#89DDFF;">&#39;&#39;</span><span style="color:#F07178;">)</span></span>
+<span class="line"><span style="color:#89DDFF;">}</span></span>
+<span class="line"></span></code></pre></div>`,118),c=[t];function r(y,F,D,C,A,i){return a(),n("div",null,c)}var f=s(e,[["render",r]]);export{u as __pageData,f as default};
