@@ -1,4 +1,4 @@
-# Vite 源码实现
+Vite 源码实现
 
 ## 架构原理
 
@@ -1031,5 +1031,67 @@ export function transformMiddleware(
 同时，我们也需要补充如下的工具函数和常量定义：
 
 ```typescript
+// src/node/utils.ts
+
+import path from 'path'
+import os from 'os'
+import { JS_TYPES_RE } from './constants.ts'
+
+// ...
+
+export const isJSRequest = (id: string): boolean => {
+  id = cleanUrl(id);
+  if (JS_TYPES_RE.test(id)) {
+    return true;
+  }
+  if (!path.extname(id) && !id.endsWith("/")) {
+    return true;
+  }
+  return false;
+};
+
+export const cleanUrl = (url: string): string =>
+  url.replace(HASH_RE, "").replace(QEURY_RE, "");
 ```
+
+```typescript
+// src/node/constants.ts
+
+import path from 'path'
+
+// ...
+
+export const JS_TYPES_RE = /\.(?:j|t)sx?$|\.mjs$/
+export const QEURY_RE = /\?.*$/s
+export const HASH_RE = /#.*$/s
+```
+
+从如上的核心编译函数 `transformRequest`可以看出，Vite 对于 JS/TS/JSX/TSX 文件的编译流程主要是依次调用插件容器的如下方法：
+
+- resolveId
+- load
+- transform
+
+其中会经历众多插件的处理逻辑，那么，对于 TSX 文件的编译逻辑，也分散到了各个插件当中，具体来说主要包含以下的插件：
+
+- 路径解析插件
+- Esbuild 语法编译插件
+- import 分析插件
+
+接下来，我们就开始依次实现这些插件。
+
+#### 路径解析插件
+
+当浏览器解析到如下的标签时：
+
+```typescript
+<script type="module" src="/src/main.tsx"></script>
+```
+
+会自动发送一个路径为 `/src/main.tsx` 的请求，但如果服务端不做任何处理，是无法定位到源文件的，随之会返回 404 状态码：
+
+```ty
+```
+
+因此，我们需要开发一个路径解析插件，对请求的路径进行处理，使之能转换真实文件系统中的路径。你可以新建文件 `src/node/plugins/resolve.ts`，内容如下：
 
