@@ -8,8 +8,6 @@
 
 [https://leetcode.cn/problems/running-sum-of-1d-array/](https://leetcode.cn/problems/running-sum-of-1d-array/)
 
-
-
 ```typescript
 function runningSum(nums: number[]): number[] {
   const len = nums.length
