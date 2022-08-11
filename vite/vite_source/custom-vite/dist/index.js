@@ -26,12 +26,12 @@ var import_connect = __toESM(require("connect"));
 var import_picocolors2 = require("picocolors");
 
 // src/node/optimizer/index.ts
-var import_path2 = __toESM(require("path"));
+var import_path4 = __toESM(require("path"));
 var import_esbuild = require("esbuild");
 var import_picocolors = require("picocolors");
 
 // src/node/constants.ts
-var path = require("path");
+var import_path = __toESM(require("path"));
 var EXTERNAL_TYPES = [
   "css",
   "less",
@@ -54,7 +54,7 @@ var EXTERNAL_TYPES = [
   "avif"
 ];
 var BARE_IMPORT_RE = /^[\w@][^:]/;
-var PRE_BUNDLE_DIR = path.join("node_modules", ".vite");
+var PRE_BUNDLE_DIR = import_path.default.join("node_modules", ".vite");
 
 // src/node/optimizer/scanPlugin.ts
 function scanPlugin(deps) {
@@ -89,20 +89,20 @@ function scanPlugin(deps) {
 
 // src/node/optimizer/preBundlePlugin.ts
 var import_es_module_lexer = require("es-module-lexer");
-var import_path = __toESM(require("path"));
+var import_path3 = __toESM(require("path"));
 var import_resolve = __toESM(require("resolve"));
 var import_fs_extra = __toESM(require("fs-extra"));
 var import_debug = __toESM(require("debug"));
 
 // src/node/utils.ts
-var path2 = require("path");
-var os = require("os");
+var import_path2 = __toESM(require("path"));
+var import_os = __toESM(require("os"));
 function slash(p) {
   return p.replace(/\\/g, "/");
 }
-var isWindows = os.platform() === "win32";
+var isWindows = import_os.default.platform() === "win32";
 function normalizePath(id) {
-  return path2.posix.normalize(isWindows ? slash(id) : id);
+  return import_path2.default.posix.normalize(isWindows ? slash(id) : id);
 }
 
 // src/node/optimizer/preBundlePlugin.ts
@@ -140,7 +140,7 @@ function preBundlePlugin(deps) {
           const entryPath = import_resolve.default.sync(id, { basedir: root });
           const code = await import_fs_extra.default.readFile(entryPath, "utf-8");
           const [imports, exports] = await (0, import_es_module_lexer.parse)(code);
-          let relativePath = normalizePath(import_path.default.relative(root, entryPath));
+          let relativePath = normalizePath(import_path3.default.relative(root, entryPath));
           if (!relativePath.startsWith("./") && !relativePath.startsWith("../") && relativePath !== ".") {
             relativePath = `./${relativePath}`;
           }
@@ -159,7 +159,7 @@ function preBundlePlugin(deps) {
             proxyModule.push(`export * from "${relativePath}"`);
           }
           debug("\u4EE3\u7406\u6A21\u5757\u5185\u5BB9: %o", proxyModule.join("\n"));
-          const loader = import_path.default.extname(entryPath).slice(1);
+          const loader = import_path3.default.extname(entryPath).slice(1);
           return {
             loader,
             contents: proxyModule.join("\n"),
@@ -173,7 +173,7 @@ function preBundlePlugin(deps) {
 
 // src/node/optimizer/index.ts
 async function optimize(root) {
-  const entry = import_path2.default.resolve(root, "src/main.tsx");
+  const entry = import_path4.default.resolve(root, "src/main.tsx");
   const deps = /* @__PURE__ */ new Set();
   await (0, import_esbuild.build)({
     entryPoints: [entry],
@@ -191,9 +191,95 @@ ${[...deps].map(import_picocolors.green).map((item) => `  ${item}`).join("\n")}`
     bundle: true,
     format: "esm",
     splitting: true,
-    outdir: import_path2.default.resolve(root, PRE_BUNDLE_DIR),
+    outdir: import_path4.default.resolve(root, PRE_BUNDLE_DIR),
     plugins: [preBundlePlugin(deps)]
   });
+}
+
+// src/node/plugins/index.ts
+function resolvePlugins() {
+  return [];
+}
+
+// src/node/pluginContainer.ts
+var createPluginContainer = (plugins) => {
+  class Context {
+    async resolve(id, importer) {
+      let out = await pluginContainer.resolveId(id, importer);
+      if (typeof out === "string")
+        out = { id: out };
+      return out;
+    }
+  }
+  const pluginContainer = {
+    async resolveId(id, importer) {
+      const ctx = new Context();
+      for (const plugin of plugins) {
+        if (plugin.resolveId) {
+          const newId = await plugin.resolveId.call(ctx, id, importer);
+          if (newId) {
+            id = typeof newId === "string" ? newId : newId.id;
+            return { id };
+          }
+        }
+      }
+      return null;
+    },
+    async load(id) {
+      const ctx = new Context();
+      for (const plugin of plugins) {
+        if (plugin.load) {
+          const result = await plugin.load.call(ctx, id);
+          if (result) {
+            return result;
+          }
+        }
+      }
+      return null;
+    },
+    async transform(code, id) {
+      const ctx = new Context();
+      for (const plugin of plugins) {
+        if (plugin.transform) {
+          const result = await plugin.transform.call(ctx, code, id);
+          if (!result)
+            continue;
+          if (typeof result === "string") {
+            code = result;
+          } else if (result.code) {
+            code = result.code;
+          }
+        }
+      }
+      return { code };
+    }
+  };
+  return pluginContainer;
+};
+
+// src/node/server/middlewares/indexHtml.ts
+var import_path5 = __toESM(require("path"));
+var import_fs_extra2 = require("fs-extra");
+function indexHtmlMiddware(serverContext) {
+  return async (req, res, next) => {
+    if (req.url === "/") {
+      const { root } = serverContext;
+      const indexHtmlPath = import_path5.default.join(root, "index.html");
+      if (await (0, import_fs_extra2.pathExists)(indexHtmlPath)) {
+        const rawHtml = await (0, import_fs_extra2.readFile)(indexHtmlPath, "utf8");
+        let html = rawHtml;
+        for (const plugin of serverContext.plugins) {
+          if (plugin.transformIndexHtml) {
+            html = await plugin.transformIndexHtml(html);
+          }
+        }
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/html");
+        return res.end(html);
+      }
+    }
+    return next();
+  };
 }
 
 // src/node/server/index.ts
@@ -201,6 +287,20 @@ async function startDevServer() {
   const app = (0, import_connect.default)();
   const root = process.cwd();
   const startTime = Date.now();
+  const plugins = resolvePlugins();
+  const pluginContainer = createPluginContainer(plugins);
+  const serverContext = {
+    root: process.cwd(),
+    app,
+    pluginContainer,
+    plugins
+  };
+  for (const plugin of plugins) {
+    if (plugin.configureServer) {
+      await plugin.configureServer(serverContext);
+    }
+  }
+  app.use(indexHtmlMiddware(serverContext));
   app.listen(3e3, async () => {
     await optimize(root);
     console.log(

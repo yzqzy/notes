@@ -1,5 +1,5 @@
-const path = require('path')
-const os = require('os')
+import path from 'path'
+import os from 'os'
 
 export function slash(p: string): string {
   return p.replace(/\\/g, '/')

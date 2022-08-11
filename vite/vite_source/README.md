@@ -467,7 +467,7 @@ export async function optimize(root: string) {
 在此，我们引入了一个新的常量 `PRE_BUNDLE_DIR`，定义如下:
 
 ```typescript
-const path = require('path')
+import path from 'path'
 
 // ...
 
@@ -482,8 +482,8 @@ export const PRE_BUNDLE_DIR = path.join("node_modules", ".vite")
 ```typescript
 // src/node/utils.ts
 
-const path = require('path')
-const os = require('os')
+import path from 'path'
+import os from 'os'
 
 export function slash(p: string): string {
   return p.replace(/\\/g, '/')
@@ -669,4 +669,367 @@ export {
 <div><img src="./images/bundle01.png" /></div>
 
 ### 插件机制开发
+
+完成了依赖预构建的功能之后，我们开始着手实现插件容器和插件上下文对象。
+
+首先，你可以新建 `src/node/pluginContainer.ts` 文件，增加如下的类型定义:
+
+```typescript
+import type {
+  LoadResult,
+  PartialResolvedId,
+  SourceDescription,
+  PluginContext as RollupPluginContext,
+  ResolvedId,
+} from "rollup";
+
+export interface PluginContainer {
+  resolveId(id: string, importer?: string): Promise<PartialResolvedId | null>;
+  load(id: string): Promise<LoadResult | null>;
+  transform(code: string, id: string): Promise<SourceDescription | null>;
+}
+```
+
+另外，由于插件容器需要接收 Vite 插件作为初始化参数，因此我们需要提前声明插件的类型，你可以继续新建 `src/node/plugin.ts` 来声明如下的插件类型:
+
+```typescript
+import { LoadResult, PartialResolvedId, SourceDescription } from "rollup";
+import { ServerContext } from "./server";
+
+export type ServerHook = (
+  server: ServerContext
+) => (() => void) | void | Promise<(() => void) | void>;
+
+// 仅实现以下这几个钩子
+export interface Plugin {
+  name: string;
+  configureServer?: ServerHook;
+  resolveId?: (
+    id: string,
+    importer?: string
+  ) => Promise<PartialResolvedId | null> | PartialResolvedId | null;
+  load?: (id: string) => Promise<LoadResult | null> | LoadResult | null;
+  transform?: (
+    code: string,
+    id: string
+  ) => Promise<SourceDescription | null> | SourceDescription | null;
+  transformIndexHtml?: (raw: string) => Promise<string> | string;
+}
+```
+
+对于其中的 ServerContext，我们暂时不用过于关心，只需要在 `server/index.ts` 中简单声明一下类型即可:
+
+```typescript
+// src/node/server/index.ts
+
+// 增加如下类型声明
+export interface ServerContext {}
+```
+
+接着，我们来实现插件机制的具体逻辑，主要集中在 `createPluginContainer` 函数中:
+
+```typescript
+import type {
+  LoadResult,
+  PartialResolvedId,
+  SourceDescription,
+  PluginContext as RollupPluginContext,
+  ResolvedId,
+} from "rollup";
+
+export interface PluginContainer {
+  resolveId(id: string, importer?: string): Promise<PartialResolvedId | null>;
+  load(id: string): Promise<LoadResult | null>;
+  transform(code: string, id: string): Promise<SourceDescription | null>;
+}
+
+export const createPluginContainer = (plugins: Plugin[]): PluginContainer => {
+  // 插件上下文对象
+  // @ts-ignore 
+  class Context implements RollupPluginContext {
+    // 这里仅实现上下文对象的 resolve 方法
+    async resolve(id: string, importer?: string) {
+      let out = await pluginContainer.resolveId(id, importer)
+      if (typeof out === "string") out = { id: out }
+      return out as ResolvedId | null
+    }
+  }
+
+  // 插件容器
+  const pluginContainer: PluginContainer = {
+    async resolveId(id: string, importer?: string) {
+      const ctx = new Context() as any
+      for (const plugin of plugins) {
+        if (plugin.resolveId) {
+          const newId = await plugin.resolveId.call(ctx as any, id, importer)
+          if (newId) {
+            id = typeof newId === "string" ? newId : newId.id
+            return { id }
+          }
+        }
+      }
+      return null
+    },
+    async load(id) {
+      const ctx = new Context() as any
+      for (const plugin of plugins) {
+        if (plugin.load) {
+          const result = await plugin.load.call(ctx, id)
+          if (result) {
+            return result
+          }
+        }
+      }
+      return null
+    },
+    async transform(code, id) {
+      const ctx = new Context() as any
+      for (const plugin of plugins) {
+        if (plugin.transform) {
+          const result = await plugin.transform.call(ctx, code, id)
+          if (!result) continue
+          if (typeof result === "string") {
+            code = result
+          } else if (result.code) {
+            code = result.code
+          }
+        }
+      }
+      return { code }
+    }
+  }
+
+  return pluginContainer
+}
+```
+
+接着，我们来完善一下之前的服务器逻辑：
+
+```typescript
+// src/node/server/index.ts
+
+import connect from "connect"
+import { blue, green } from "picocolors"
+
+import { optimize } from '../optimizer'
+import { resolvePlugins } from '../plugins'
+import { Plugin } from "../plugin";
+import { createPluginContainer, PluginContainer } from '../pluginContainer'
+
+export interface ServerContext {
+  root: string;
+  pluginContainer: PluginContainer;
+  app: connect.Server;
+  plugins: Plugin[]
+}
+
+export async function startDevServer() {
+  const app = connect()
+  const root = process.cwd()
+  const startTime = Date.now()
+
+  const plugins = resolvePlugins()
+  const pluginContainer = createPluginContainer(plugins)
+
+  const serverContext: ServerContext = {
+    root: process.cwd(),
+    app,
+    pluginContainer,
+    plugins
+  }
+
+  for (const plugin of plugins) {
+    if (plugin.configureServer) {
+      await plugin.configureServer(serverContext)
+    }
+  }
+
+  app.listen(3000, async () => {
+    await optimize(root)
+
+    console.log(
+      green("🚀 No-Bundle 服务已经成功启动!"),
+      `耗时: ${Date.now() - startTime}ms`
+    )
+    console.log(`> 本地访问路径: ${blue("http://localhost:3000")}`)
+  })
+}
+```
+
+其中 `resolvePlugins` 方法我们还未定义，你可以新建 `src/node/plugins/index.ts`  文件，内容如下:
+
+```typescript
+import { Plugin } from "../plugin";
+
+export function resolvePlugins(): Plugin[] {
+  return [];
+}
+```
+
+### 入口 HTML 加载
+
+现在我们基于如上的插件机制，来实现 Vite 的核心编译能力。
+
+首先要考虑的就是入口 HTML 如何编译和加载的问题，这里我们可以通过一个服务中间件，配合插件机制来实现。具体而言，你可以新建`src/node/server/middlewares/indexHtml.ts`，内容如下:
+
+```typescript
+import { NextHandleFunction } from "connect"
+import path from "path"
+import { pathExists, readFile } from "fs-extra"
+import { ServerContext } from "../index"
+
+export function indexHtmlMiddware(
+  serverContext: ServerContext
+): NextHandleFunction {
+  return async (req, res, next) => {
+    if (req.url === "/") {
+      const { root } = serverContext
+
+      // 默认使用项目根目录下的 index.html
+      const indexHtmlPath = path.join(root, "index.html")
+
+      if (await pathExists(indexHtmlPath)) {
+        const rawHtml = await readFile(indexHtmlPath, "utf8")
+
+        let html = rawHtml
+
+        // 通过执行插件的 transformIndexHtml 方法来对 HTML 进行自定义的修改
+        for (const plugin of serverContext.plugins) {
+          if (plugin.transformIndexHtml) {
+            html = await plugin.transformIndexHtml(html)
+          }
+        }
+
+        res.statusCode = 200
+        res.setHeader("Content-Type", "text/html")
+        return res.end(html)
+      }
+    }
+    
+    return next()
+  }
+}
+```
+
+然后在服务中应用这个中间件：
+
+```typescript
+import connect from "connect"
+import { blue, green } from "picocolors"
+
+import { optimize } from '../optimizer'
+import { resolvePlugins } from '../plugins'
+import { Plugin } from "../plugin";
+import { createPluginContainer, PluginContainer } from '../pluginContainer'
+
+import { indexHtmlMiddware } from './middlewares/indexHtml'
+
+// ...
+
+export async function startDevServer() {
+  const app = connect()
+  const root = process.cwd()
+  const startTime = Date.now()
+
+  const plugins = resolvePlugins()
+  const pluginContainer = createPluginContainer(plugins)
+	
+  // ...
+  
+  // 处理入口 HTML 资源
+  app.use(indexHtmlMiddware(serverContext))
+
+	// ...
+}
+```
+
+接下来通过 `pnpm dev` 启动项目，然后访问 `http://localhost:3000`，从网络面板中你可以查看到 HTML 的内容已经成功返回：
+
+<img src="./images/resource01.png" />
+
+不过当前的页面并没有任何内容，因为 HTML 中引入的 TSX 文件并没有被正确编译。接下来，我们就来处理 TSX 文件的编译工作。
+
+### JS/TS/JSX/TSX 编译能力
+
+首先新增一个中间件 `src/node/server/middlewares/transform.ts`，内容如下：
+
+```typescript
+import { NextHandleFunction } from "connect"
+import {
+  isJSRequest,
+  cleanUrl,
+} from "../../utils"
+import { ServerContext } from "../index"
+import createDebug from "debug"
+
+const debug = createDebug("dev")
+
+export async function transformRequest(
+  url: string,
+  serverContext: ServerContext
+) {
+  const { pluginContainer } = serverContext
+
+  url = cleanUrl(url)
+  
+  // 简单来说，就是依次调用插件容器的 resolveId、load、transform 方法
+  const resolvedResult = await pluginContainer.resolveId(url)
+
+  let transformResult
+
+  if (resolvedResult?.id) {
+    let code = await pluginContainer.load(resolvedResult.id)
+    if (typeof code === "object" && code !== null) {
+      code = code.code
+    }
+    if (code) {
+      transformResult = await pluginContainer.transform(
+        code as string,
+        resolvedResult?.id
+      )
+    }
+  }
+  return transformResult
+}
+
+export function transformMiddleware(
+  serverContext: ServerContext
+): NextHandleFunction {
+  return async (req, res, next) => {
+    if (req.method !== "GET" || !req.url) {
+      return next()
+    }
+
+    const url = req.url
+
+    debug("transformMiddleware: %s", url)
+
+    // transform JS request
+    if (isJSRequest(url)) {
+      // 核心编译函数
+      let result = await transformRequest(url, serverContext)
+
+      if (!result) {
+        return next()
+      }
+      if (result && typeof result !== "string") {
+        result = result.code
+      }
+
+      // 编译完成，返回响应给浏览器
+      res.statusCode = 200
+      res.setHeader("Content-Type", "application/javascript")
+      
+      return res.end(result)
+    }
+
+    next()
+  }
+}
+```
+
+同时，我们也需要补充如下的工具函数和常量定义：
+
+```typescript
+```
 
