@@ -1103,3 +1103,150 @@ function decodeString(s: string): string {
   return stack.join('')
 }
 ```
+
+## day15
+
+### 最后一块石头的重量
+
+[https://leetcode.cn/problems/last-stone-weight/](https://leetcode.cn/problems/last-stone-weight/)
+
+```typescript
+function lastStoneWeight(stones: number[]): number {
+  stones.sort((a, b) => b - a)
+
+  const insert = (num: number): void => {
+    let left = 0
+    let right = stones.length - 1
+
+    while (left <= right) {
+      const mid = left + Math.floor((right - left) / 2)
+
+      if (stones[mid] > num) {
+        left = mid + 1
+      } else {
+        right = mid - 1
+      }
+    }
+
+    stones.splice(right + 1, 0, num)
+  }
+
+  while (stones.length > 1) {
+    const m = stones.shift()
+    const n = stones.shift()
+
+    if (m === n) continue
+    
+    insert(Math.abs(m - n))
+  }
+
+  return stones.length > 0 ? stones[0] : 0
+}
+```
+
+```typescript
+function lastStoneWeight(stones: number[]): number {
+  const heap = new BinaryHeap<number>((a, b) => b - a)
+
+  for (const stone of stones) {
+    heap.insert(stone)
+  }
+
+  while (heap.size() > 1) {
+    const a = heap.pop()
+    const b = heap.pop()
+
+    console.log(a, b, heap)
+
+    if (a > b) {
+      heap.insert(a - b)
+    }
+  }
+
+  return heap.size() ? heap.pop() : 0
+}
+
+type Compare<T> = (...args: T[]) => number
+
+class BinaryHeap<T> {
+  data:T[]
+  compare: Compare<T>
+
+  constructor (compare: Compare<T>) {
+    this.data = [];
+    this.compare = compare;
+  }
+
+  private swap (i1: number, i2: number) {
+    [this.data[i1], this.data[i2]] = [this.data[i2], this.data[i1]];
+  }
+
+  private getParentIndex (i: number) {
+    return (i - 1) >> 1;
+  }
+
+  private getLeftIndex (i: number) {
+    return i * 2 + 1;
+  }
+  
+  private getRightIndex (i: number) {
+    return i * 2 + 2;
+  }
+
+  private heapifyUp (curIdx: number) {
+    if (curIdx == 0) return;
+
+    const parentIdx = this.getParentIndex(curIdx);
+
+    if (this.data[parentIdx] && this.compare(this.data[curIdx], this.data[parentIdx]) < 0) {
+      this.swap(parentIdx, curIdx);
+      this.heapifyUp(parentIdx);
+    }
+  }
+
+  private heapifyDown (curIdx: number) {
+    const leftIdx = this.getLeftIndex(curIdx),
+          rightIdx = this.getRightIndex(curIdx);
+
+    if (this.data[leftIdx] && this.compare(this.data[leftIdx], this.data[curIdx]) < 0) {
+      this.swap(leftIdx, curIdx);
+      this.heapifyDown(leftIdx);
+    }
+    if (this.data[rightIdx] && this.compare(this.data[rightIdx], this.data[curIdx]) < 0) {
+      this.swap(rightIdx, curIdx);
+      this.heapifyDown(rightIdx);
+    }
+  }
+
+  insert (val: T) {
+    this.data.push(val);
+    this.heapifyUp(this.size() - 1);
+  }
+
+  pop () {
+    const value = this.data[0]
+    const last = this.data.pop()
+    if (this.size()) {
+      this.data[0] = last;
+      this.heapifyDown(0);
+    }
+    return value
+  }
+
+  peek () {
+    return this.data[0];
+  }
+
+  size () {
+    return this.data.length;
+  }
+}
+```
+
+### 前K个高频单词
+
+[https://leetcode.cn/problems/top-k-frequent-words/](https://leetcode.cn/problems/top-k-frequent-words/)
+
+```typescript
+
+```
