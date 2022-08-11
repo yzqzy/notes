@@ -1156,8 +1156,6 @@ function lastStoneWeight(stones: number[]): number {
     const a = heap.pop()
     const b = heap.pop()
 
-    console.log(a, b, heap)
-
     if (a > b) {
       heap.insert(a - b)
     }
@@ -1224,13 +1222,13 @@ class BinaryHeap<T> {
   }
 
   pop () {
-    const value = this.data[0]
-    const last = this.data.pop()
+    const ret = this.data[0]
+    const value = this.data.pop()
     if (this.size()) {
-      this.data[0] = last;
+      this.data[0] = value;
       this.heapifyDown(0);
     }
-    return value
+    return ret
   }
 
   peek () {
@@ -1248,5 +1246,24 @@ class BinaryHeap<T> {
 [https://leetcode.cn/problems/top-k-frequent-words/](https://leetcode.cn/problems/top-k-frequent-words/)
 
 ```typescript
+function topKFrequent(words: string[], k: number): string[] {
+  const cnt = new Map<string, number>()
+  for (const word of words) {
+    cnt.set(word, (cnt.get(word) || 0) + 1)
+  }
 
+  const rec: string[] = []
+  for (const entry of cnt.keys()) {
+    rec.push(entry)
+  }
+
+  rec.sort((a, b) => {
+    if (cnt.get(a) === cnt.get(b)) {
+      return a.localeCompare(b)
+    }
+    return cnt.get(b) - cnt.get(a)
+  })
+
+  return rec.slice(0, k)
+}
 ```
