@@ -4,6 +4,7 @@ import path from "path"
 // magic-string 用来作字符串编辑
 import MagicString from "magic-string" 
 import { init, parse } from "es-module-lexer"
+import { isWindows } from "../utils"
 
 import {
   BARE_IMPORT_RE,
@@ -43,6 +44,17 @@ export function importAnalysisPlugin(): Plugin {
         const { s: modStart, e: modEnd, n: modSource } = importInfo
         
         if (!modSource) continue
+
+        // 静态资源
+        if (modSource.endsWith(".svg")) {
+          // 加上 ?import 后缀
+          const prefix = id.split('\\').at(-2)
+          const resolvedUrl = normalizePath(path.join('/', prefix, modSource))
+
+          ms.overwrite(modStart, modEnd, `${resolvedUrl}?import`)
+          continue
+        }
+
         // 第三方库: 路径重写到预构建产物的路径
         if (BARE_IMPORT_RE.test(modSource)) {
           // const bundlePath = path.join(

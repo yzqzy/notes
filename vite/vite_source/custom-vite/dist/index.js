@@ -119,6 +119,8 @@ var isJSRequest = (id) => {
   return false;
 };
 var isCSSRequest = (id) => cleanUrl(id).endsWith(".css");
+var isImportRequest = (url) => url.endsWith("?import");
+var removeImportQuery = (url) => url.replace(/\?import$/, "");
 var cleanUrl = (url) => url.replace(HASH_RE, "").replace(QEURY_RE, "");
 
 // src/node/optimizer/preBundlePlugin.ts
@@ -322,6 +324,12 @@ function importAnalysisPlugin() {
         const { s: modStart, e: modEnd, n: modSource } = importInfo;
         if (!modSource)
           continue;
+        if (modSource.endsWith(".svg")) {
+          const prefix = id.split("\\").at(-2);
+          const resolvedUrl = normalizePath(import_path7.default.join("/", prefix, modSource));
+          ms.overwrite(modStart, modEnd, `${resolvedUrl}?import`);
+          continue;
+        }
         if (BARE_IMPORT_RE.test(modSource)) {
           const bundlePath = normalizePath(
             import_path7.default.join("/", PRE_BUNDLE_DIR, `${modSource}.js`)
@@ -370,13 +378,32 @@ function cssPlugin() {
   };
 }
 
+// src/node/plugins/assets.ts
+function assetPlugin() {
+  return {
+    name: "vite:asset",
+    async load(id) {
+      let cleanedId = removeImportQuery(cleanUrl(id));
+      if (cleanedId.endsWith(".svg")) {
+        if (isWindows) {
+          cleanedId = cleanedId.replace("D:\\", "").replace(/\\/g, "\\\\");
+        }
+        return {
+          code: `export default "${cleanedId}"`
+        };
+      }
+    }
+  };
+}
+
 // src/node/plugins/index.ts
 function resolvePlugins() {
   return [
     resolvePlugin(),
     esbuildTransformPlugin(),
     importAnalysisPlugin(),
-    cssPlugin()
+    cssPlugin(),
+    assetPlugin()
   ];
 }
 
@@ -490,7 +517,7 @@ function transformMiddleware(serverContext) {
     }
     const url = req.url;
     debug2("transformMiddleware: %s", url);
-    if (isJSRequest(url) || isCSSRequest(url)) {
+    if (isJSRequest(url) || isCSSRequest(url) || isImportRequest(url)) {
       let result = await transformRequest(url, serverContext);
       if (!result) {
         return next();
@@ -503,6 +530,21 @@ function transformMiddleware(serverContext) {
       return res.end(result);
     }
     next();
+  };
+}
+
+// src/node/server/middlewares/static.ts
+var import_sirv = __toESM(require("sirv"));
+function staticMiddleware() {
+  const serveFromRoot = (0, import_sirv.default)("/", { dev: true });
+  return async (req, res, next) => {
+    if (!req.url) {
+      return;
+    }
+    if (isImportRequest(req.url)) {
+      return;
+    }
+    serveFromRoot(req, res, next);
   };
 }
 
@@ -526,6 +568,7 @@ async function startDevServer() {
   }
   app.use(transformMiddleware(serverContext));
   app.use(indexHtmlMiddware(serverContext));
+  app.use(staticMiddleware());
   app.listen(3e3, async () => {
     await optimize(root);
     console.log(

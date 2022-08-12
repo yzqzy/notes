@@ -866,7 +866,9 @@ export function resolvePlugins(): Plugin[] {
 }
 ```
 
-### 入口 HTML 加载
+### 核心编译能力
+
+#### 入口 HTML 加载
 
 现在我们基于如上的插件机制，来实现 Vite 的核心编译能力。
 
@@ -949,7 +951,7 @@ export async function startDevServer() {
 
 不过当前的页面并没有任何内容，因为 HTML 中引入的 TSX 文件并没有被正确编译。接下来，我们就来处理 TSX 文件的编译工作。
 
-### JS/TS/JSX/TSX 编译能力
+#### JS/TS/JSX/TSX 编译能力
 
 首先新增一个中间件 `src/node/server/middlewares/transform.ts`，内容如下：
 
@@ -1105,7 +1107,7 @@ export const HASH_RE = /#.*$/s
 
 接下来，我们就开始依次实现这些插件。
 
-#### 路径解析插件
+##### 路径解析插件
 
 当浏览器解析到如下的标签时：
 
@@ -1204,7 +1206,7 @@ export function resolvePlugin(): Plugin {
 export const DEFAULT_EXTERSIONS = [".tsx", ".ts", ".jsx", "js"]
 ```
 
-#### Esbuild 语法编译插件
+##### Esbuild 语法编译插件
 
 这个插件的作用比较好理解，就是将 JS/TS/JSX/TSX 编译成浏览器可以识别的 JS 语法，可以利用 Esbuild 的 Transform API 来实现。
 
@@ -1252,7 +1254,7 @@ export function esbuildTransformPlugin(): Plugin {
 }
 ```
 
-#### import 分析插件
+##### import 分析插件
 
 在将 TSX 转换为浏览器可以识别的语法之后，是不是就可以直接返回给浏览器执行了呢？
 
@@ -1372,7 +1374,7 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 
 > 测试还没有处理静态资源，如果使用提供的案例，需要注释掉 css、svg 的资源。
 
-### CSS 编译插件
+#### CSS 编译插件
 
 首先，我们可以看看项目中 CSS 代码是如何被引入的:
 
@@ -1490,7 +1492,7 @@ import "./App.css"
 
 <img src="./images/resource04.png" />
 
-### 静态资源加载
+#### 静态资源加载
 
 在完成 CSS 加载之后，我们现在继续完成静态资源的加载。
 以 playground 项目为例，我们来支持 svg 文件的加载。首先，我们看看 svg 文件是如何被引入并使用的：
@@ -1529,4 +1531,214 @@ export default App;
 * 对于具体内容的请求，读取静态资源的文件内容，并响应给浏览器。
 
 首先处理 import 请求，我们可以在 TSX 的 import 分析插件中，给静态资源相关的 import 语句做一个标记：
+
+```typescript
+// src/node/plugins/importAnalysis.ts
+
+// ...
+
+export function importAnalysisPlugin(): Plugin {
+  let serverContext: ServerContext
+  return {
+    name: "vite:import-analysis",
+ 		// ...
+    async transform(code: string, id: string) {
+      // 只处理 JS 相关的请求
+      if (!isJSRequest(id)) {
+        return null
+      }
+      await init
+      // 解析 import 语句
+      const [imports] = parse(code)
+      const ms = new MagicString(code)
+      // 对每一个 import 语句依次进行分析
+      for (const importInfo of imports) {
+   			// ...
+
+        // 静态资源
+        if (modSource.endsWith(".svg")) {
+          // 加上 ?import 后缀
+          const prefix = id.split('\\').at(-2)
+          const resolvedUrl = normalizePath(path.join('/', prefix, modSource))
+
+          ms.overwrite(modStart, modEnd, `${resolvedUrl}?import`)
+          continue
+        }
+				
+        // ...
+      }
+
+      return {
+        code: ms.toString(),
+        // 生成 SourceMap
+        map: ms.generateMap(),
+      }
+    }
+  }
+}
+```
+
+编译后的 App.tsx 内容如下：
+
+接着浏览器会发出带有 `?import` 后缀的请求，我们在 transform 中间件进行处理：
+
+<img src="./images/resource05.png" />
+
+接着浏览器会发出带有 `?import` 后缀的请求，我们在 transform 中间件进行处理：
+
+```diff
+// src/node/server/middlewares/transform.ts
++ import { isImportRequest } from '../../utils';
+
+export function transformMiddleware(
+  serverContext: ServerContext
+): NextHandleFunction {
+  return async (req, res, next) => {
+    if (req.method !== "GET" || !req.url) {
+      return next()
+    }
+    
+    const url = req.url
+    
+    debug("transformMiddleware: %s", url)
+    
+    // transform JS request
+-    if (isJSRequest(url) || isCSSRequest(url)) {
++    if (isJSRequest(url) || isCSSRequest(url) || isImportRequest(url)) {
+      // ....
+     }
+
+    next()
+  }
+}
+```
+
+然后补充对应的工具函数：
+
+```typescript
+// src/node/utils.ts
+export const isImportRequest = (url: string): boolean =>
+  url.endsWith("?import")
+
+export const removeImportQuery = (url: string): string =>
+  url.replace(/\?import$/, "")
+```
+
+此时，我们就可以开发静态资源插件了。新建 `src/node/plugins/assets.ts`，内容如下:
+
+```typescript
+import { Plugin } from "../plugin"
+import { cleanUrl, removeImportQuery, isWindows } from "../utils"
+
+export function assetPlugin(): Plugin {
+  return {
+    name: "vite:asset",
+    async load(id) {
+      let cleanedId = removeImportQuery(cleanUrl(id))
+      // 这里仅处理 svg
+      if (cleanedId.endsWith(".svg")) {
+        if (isWindows) {
+          cleanedId = cleanedId.replace('D:\\', '').replace(/\\/g, '\\\\')
+        }
+
+        return {
+          // 包装成一个 JS 模块
+          code: `export default "${cleanedId}"`
+        }
+      }
+    }
+  }
+}
+```
+
+接着来注册这个插件：
+
+```typescript
+import { Plugin } from "../plugin"
+
+import { resolvePlugin } from "./resolve"
+import { esbuildTransformPlugin } from "./esbuild"
+import { importAnalysisPlugin } from "./importAnalysis"
+import { cssPlugin } from "./css"
+import { assetPlugin } from "./assets"
+
+export function resolvePlugins(): Plugin[] {
+  return [
+    resolvePlugin(),
+    esbuildTransformPlugin(),
+    importAnalysisPlugin(),
+    cssPlugin(),
+    assetPlugin()
+  ]
+}
+```
+
+目前我们处理完了静态资源的 import 请求，接着我们还需要处理非 import 请求，返回资源的具体内容。我们可以通过一个中间件来进行处理：
+
+```typescript
+// src/node/server/middlewares/static.ts
+
+import { NextHandleFunction } from "connect"
+import { isImportRequest } from "../../utils"
+// 一个用于加载静态资源的中间件
+import sirv from "sirv"
+
+export function staticMiddleware(): NextHandleFunction {
+  const serveFromRoot = sirv("/", { dev: true })
+  return async (req, res, next) => {
+    if (!req.url) {
+      return
+    }
+    // 不处理 import 请求
+    if (isImportRequest(req.url)) {
+      return
+    }
+    serveFromRoot(req, res, next)
+  }
+}
+```
+
+然后在服务中注册这个中间件：
+
+```typescript
+// src/node/server/index.ts
+
+// ...
+
+import { indexHtmlMiddware } from './middlewares/indexHtml'
+import { transformMiddleware } from "./middlewares/transform"
+import { staticMiddleware } from "./middlewares/static"
+
+// ...
+
+export async function startDevServer() {
+	// ...
+
+  // 核心编译逻辑
+  app.use(transformMiddleware(serverContext))
+  // 处理入口 HTML 资源
+  app.use(indexHtmlMiddware(serverContext))
+  // 处理静态资源
+  app.use(staticMiddleware())
+
+  app.listen(3000, async () => {
+    await optimize(root)
+
+    console.log(
+      green("🚀 No-Bundle 服务已经成功启动!"),
+      `耗时: ${Date.now() - startTime}ms`
+    )
+    console.log(`> 本地访问路径: ${blue("http://localhost:3000")}`)
+  })
+}
+```
+
+现在，你可以通过 `pnpm dev` 启动 playground 项目，在浏览器中访问，可以发现 svg 图片已经能够成功显示了：
+
+<img src="./images/resource06.png" />
+
+其实不光是 svg 文件，几乎所有格式的静态资源都可以按照如上的思路进行处理:
+
+1. 通过加入`?import` 后缀标识 import 请求，返回将静态资源封装成一个 JS 模块，即 `export default xxx `的形式，导出资源的真实地址。
+2. 对非 import 请求，响应静态资源的具体内容，通过 `Content-Type `响应头告诉浏览器资源的类型(这部分工作 sirv 中间件已经帮我们做了)。
 
