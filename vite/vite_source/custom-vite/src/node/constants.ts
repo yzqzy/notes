@@ -30,3 +30,5 @@ export const PRE_BUNDLE_DIR = path.join("node_modules", ".vite")
 export const JS_TYPES_RE = /\.(?:j|t)sx?$|\.mjs$/
 export const QEURY_RE = /\?.*$/s
 export const HASH_RE = /#.*$/s
+
+export const DEFAULT_EXTERSIONS = [".tsx", ".ts", ".jsx", "js"];

@@ -55,6 +55,10 @@ var EXTERNAL_TYPES = [
 ];
 var BARE_IMPORT_RE = /^[\w@][^:]/;
 var PRE_BUNDLE_DIR = import_path.default.join("node_modules", ".vite");
+var JS_TYPES_RE = /\.(?:j|t)sx?$|\.mjs$/;
+var QEURY_RE = /\?.*$/s;
+var HASH_RE = /#.*$/s;
+var DEFAULT_EXTERSIONS = [".tsx", ".ts", ".jsx", "js"];
 
 // src/node/optimizer/scanPlugin.ts
 function scanPlugin(deps) {
@@ -104,6 +108,17 @@ var isWindows = import_os.default.platform() === "win32";
 function normalizePath(id) {
   return import_path2.default.posix.normalize(isWindows ? slash(id) : id);
 }
+var isJSRequest = (id) => {
+  id = cleanUrl(id);
+  if (JS_TYPES_RE.test(id)) {
+    return true;
+  }
+  if (!import_path2.default.extname(id) && !id.endsWith("/")) {
+    return true;
+  }
+  return false;
+};
+var cleanUrl = (url) => url.replace(HASH_RE, "").replace(QEURY_RE, "");
 
 // src/node/optimizer/preBundlePlugin.ts
 var debug = (0, import_debug.default)("dev");
@@ -196,9 +211,139 @@ ${[...deps].map(import_picocolors.green).map((item) => `  ${item}`).join("\n")}`
   });
 }
 
+// src/node/plugins/resolve.ts
+var import_resolve2 = __toESM(require("resolve"));
+var import_path5 = __toESM(require("path"));
+var import_fs_extra2 = require("fs-extra");
+function resolvePlugin() {
+  let serverContext;
+  return {
+    name: "vite:resolve",
+    configureServer(s) {
+      serverContext = s;
+    },
+    async resolveId(id, importer) {
+      if (import_path5.default.isAbsolute(id)) {
+        if (await (0, import_fs_extra2.pathExists)(id)) {
+          return { id };
+        }
+        id = import_path5.default.join(serverContext.root, id);
+        if (await (0, import_fs_extra2.pathExists)(id)) {
+          return { id };
+        }
+      } else if (id.startsWith(".")) {
+        if (!importer) {
+          throw new Error("`importer` should not be undefined");
+        }
+        const hasExtension = import_path5.default.extname(id).length > 1;
+        let resolvedId;
+        if (hasExtension) {
+          resolvedId = import_resolve2.default.sync(id, { basedir: import_path5.default.dirname(importer) });
+          if (await (0, import_fs_extra2.pathExists)(resolvedId)) {
+            return { id };
+          }
+        } else {
+          for (const extname of DEFAULT_EXTERSIONS) {
+            try {
+              const withExtension = `${id}${extname}`;
+              resolvedId = import_resolve2.default.sync(withExtension, {
+                basedir: import_path5.default.dirname(importer)
+              });
+              if (await (0, import_fs_extra2.pathExists)(resolvedId)) {
+                return { id: withExtension };
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+        }
+      }
+      return null;
+    }
+  };
+}
+
+// src/node/plugins/esbuild.ts
+var import_esbuild2 = __toESM(require("esbuild"));
+var import_path6 = __toESM(require("path"));
+var import_fs_extra3 = require("fs-extra");
+function esbuildTransformPlugin() {
+  return {
+    name: "vite:esbuild-transform",
+    async load(id) {
+      if (isJSRequest(id)) {
+        try {
+          const code = await (0, import_fs_extra3.readFile)(id, "utf-8");
+          return code;
+        } catch (e) {
+          return null;
+        }
+      }
+    },
+    async transform(code, id) {
+      if (isJSRequest(id)) {
+        const extname = import_path6.default.extname(id).slice(1);
+        const { code: transformedCode, map } = await import_esbuild2.default.transform(code, {
+          target: "esnext",
+          format: "esm",
+          sourcemap: true,
+          loader: extname
+        });
+        return {
+          code: transformedCode,
+          map
+        };
+      }
+      return null;
+    }
+  };
+}
+
+// src/node/plugins/importAnalysis.ts
+var import_path7 = __toESM(require("path"));
+var import_magic_string = __toESM(require("magic-string"));
+var import_es_module_lexer2 = require("es-module-lexer");
+function importAnalysisPlugin() {
+  let serverContext;
+  return {
+    name: "vite:import-analysis",
+    configureServer(s) {
+      serverContext = s;
+    },
+    async transform(code, id) {
+      if (!isJSRequest(id)) {
+        return null;
+      }
+      await import_es_module_lexer2.init;
+      const [imports] = (0, import_es_module_lexer2.parse)(code);
+      const ms = new import_magic_string.default(code);
+      for (const importInfo of imports) {
+        const { s: modStart, e: modEnd, n: modSource } = importInfo;
+        if (!modSource)
+          continue;
+        if (BARE_IMPORT_RE.test(modSource)) {
+          const bundlePath = normalizePath(
+            import_path7.default.join("/", PRE_BUNDLE_DIR, `${modSource}.js`)
+          );
+          ms.overwrite(modStart, modEnd, bundlePath);
+        } else if (modSource.startsWith(".") || modSource.startsWith("/")) {
+          const resolved = await this.resolve(modSource, id);
+          if (resolved) {
+            ms.overwrite(modStart, modEnd, resolved.id);
+          }
+        }
+      }
+      return {
+        code: ms.toString(),
+        map: ms.generateMap()
+      };
+    }
+  };
+}
+
 // src/node/plugins/index.ts
 function resolvePlugins() {
-  return [];
+  return [resolvePlugin(), esbuildTransformPlugin(), importAnalysisPlugin()];
 }
 
 // src/node/pluginContainer.ts
@@ -258,15 +403,15 @@ var createPluginContainer = (plugins) => {
 };
 
 // src/node/server/middlewares/indexHtml.ts
-var import_path5 = __toESM(require("path"));
-var import_fs_extra2 = require("fs-extra");
+var import_path8 = __toESM(require("path"));
+var import_fs_extra4 = require("fs-extra");
 function indexHtmlMiddware(serverContext) {
   return async (req, res, next) => {
     if (req.url === "/") {
       const { root } = serverContext;
-      const indexHtmlPath = import_path5.default.join(root, "index.html");
-      if (await (0, import_fs_extra2.pathExists)(indexHtmlPath)) {
-        const rawHtml = await (0, import_fs_extra2.readFile)(indexHtmlPath, "utf8");
+      const indexHtmlPath = import_path8.default.join(root, "index.html");
+      if (await (0, import_fs_extra4.pathExists)(indexHtmlPath)) {
+        const rawHtml = await (0, import_fs_extra4.readFile)(indexHtmlPath, "utf8");
         let html = rawHtml;
         for (const plugin of serverContext.plugins) {
           if (plugin.transformIndexHtml) {
@@ -279,6 +424,51 @@ function indexHtmlMiddware(serverContext) {
       }
     }
     return next();
+  };
+}
+
+// src/node/server/middlewares/transform.ts
+var import_debug2 = __toESM(require("debug"));
+var debug2 = (0, import_debug2.default)("dev");
+async function transformRequest(url, serverContext) {
+  const { pluginContainer } = serverContext;
+  url = cleanUrl(url);
+  const resolvedResult = await pluginContainer.resolveId(url);
+  let transformResult;
+  if (resolvedResult?.id) {
+    let code = await pluginContainer.load(resolvedResult.id);
+    if (typeof code === "object" && code !== null) {
+      code = code.code;
+    }
+    if (code) {
+      transformResult = await pluginContainer.transform(
+        code,
+        resolvedResult?.id
+      );
+    }
+  }
+  return transformResult;
+}
+function transformMiddleware(serverContext) {
+  return async (req, res, next) => {
+    if (req.method !== "GET" || !req.url) {
+      return next();
+    }
+    const url = req.url;
+    debug2("transformMiddleware: %s", url);
+    if (isJSRequest(url)) {
+      let result = await transformRequest(url, serverContext);
+      if (!result) {
+        return next();
+      }
+      if (result && typeof result !== "string") {
+        result = result.code;
+      }
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/javascript");
+      return res.end(result);
+    }
+    next();
   };
 }
 
@@ -300,6 +490,7 @@ async function startDevServer() {
       await plugin.configureServer(serverContext);
     }
   }
+  app.use(transformMiddleware(serverContext));
   app.use(indexHtmlMiddware(serverContext));
   app.listen(3e3, async () => {
     await optimize(root);

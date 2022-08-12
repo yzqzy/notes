@@ -43,6 +43,10 @@ var EXTERNAL_TYPES = [
 ];
 var BARE_IMPORT_RE = /^[\w@][^:]/;
 var PRE_BUNDLE_DIR = path.join("node_modules", ".vite");
+var JS_TYPES_RE = /\.(?:j|t)sx?$|\.mjs$/;
+var QEURY_RE = /\?.*$/s;
+var HASH_RE = /#.*$/s;
+var DEFAULT_EXTERSIONS = [".tsx", ".ts", ".jsx", "js"];
 
 // src/node/optimizer/scanPlugin.ts
 function scanPlugin(deps) {
@@ -92,6 +96,17 @@ var isWindows = os.platform() === "win32";
 function normalizePath(id) {
   return path2.posix.normalize(isWindows ? slash(id) : id);
 }
+var isJSRequest = (id) => {
+  id = cleanUrl(id);
+  if (JS_TYPES_RE.test(id)) {
+    return true;
+  }
+  if (!path2.extname(id) && !id.endsWith("/")) {
+    return true;
+  }
+  return false;
+};
+var cleanUrl = (url) => url.replace(HASH_RE, "").replace(QEURY_RE, "");
 
 // src/node/optimizer/preBundlePlugin.ts
 var debug = createDebug("dev");
@@ -184,9 +199,139 @@ ${[...deps].map(green).map((item) => `  ${item}`).join("\n")}`
   });
 }
 
+// src/node/plugins/resolve.ts
+import resolve2 from "resolve";
+import path5 from "path";
+import { pathExists } from "fs-extra";
+function resolvePlugin() {
+  let serverContext;
+  return {
+    name: "vite:resolve",
+    configureServer(s) {
+      serverContext = s;
+    },
+    async resolveId(id, importer) {
+      if (path5.isAbsolute(id)) {
+        if (await pathExists(id)) {
+          return { id };
+        }
+        id = path5.join(serverContext.root, id);
+        if (await pathExists(id)) {
+          return { id };
+        }
+      } else if (id.startsWith(".")) {
+        if (!importer) {
+          throw new Error("`importer` should not be undefined");
+        }
+        const hasExtension = path5.extname(id).length > 1;
+        let resolvedId;
+        if (hasExtension) {
+          resolvedId = resolve2.sync(id, { basedir: path5.dirname(importer) });
+          if (await pathExists(resolvedId)) {
+            return { id };
+          }
+        } else {
+          for (const extname of DEFAULT_EXTERSIONS) {
+            try {
+              const withExtension = `${id}${extname}`;
+              resolvedId = resolve2.sync(withExtension, {
+                basedir: path5.dirname(importer)
+              });
+              if (await pathExists(resolvedId)) {
+                return { id: withExtension };
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+        }
+      }
+      return null;
+    }
+  };
+}
+
+// src/node/plugins/esbuild.ts
+import esbuild from "esbuild";
+import path6 from "path";
+import { readFile } from "fs-extra";
+function esbuildTransformPlugin() {
+  return {
+    name: "vite:esbuild-transform",
+    async load(id) {
+      if (isJSRequest(id)) {
+        try {
+          const code = await readFile(id, "utf-8");
+          return code;
+        } catch (e) {
+          return null;
+        }
+      }
+    },
+    async transform(code, id) {
+      if (isJSRequest(id)) {
+        const extname = path6.extname(id).slice(1);
+        const { code: transformedCode, map } = await esbuild.transform(code, {
+          target: "esnext",
+          format: "esm",
+          sourcemap: true,
+          loader: extname
+        });
+        return {
+          code: transformedCode,
+          map
+        };
+      }
+      return null;
+    }
+  };
+}
+
+// src/node/plugins/importAnalysis.ts
+import path7 from "path";
+import MagicString from "magic-string";
+import { init as init2, parse as parse2 } from "es-module-lexer";
+function importAnalysisPlugin() {
+  let serverContext;
+  return {
+    name: "vite:import-analysis",
+    configureServer(s) {
+      serverContext = s;
+    },
+    async transform(code, id) {
+      if (!isJSRequest(id)) {
+        return null;
+      }
+      await init2;
+      const [imports] = parse2(code);
+      const ms = new MagicString(code);
+      for (const importInfo of imports) {
+        const { s: modStart, e: modEnd, n: modSource } = importInfo;
+        if (!modSource)
+          continue;
+        if (BARE_IMPORT_RE.test(modSource)) {
+          const bundlePath = normalizePath(
+            path7.join("/", PRE_BUNDLE_DIR, `${modSource}.js`)
+          );
+          ms.overwrite(modStart, modEnd, bundlePath);
+        } else if (modSource.startsWith(".") || modSource.startsWith("/")) {
+          const resolved = await this.resolve(modSource, id);
+          if (resolved) {
+            ms.overwrite(modStart, modEnd, resolved.id);
+          }
+        }
+      }
+      return {
+        code: ms.toString(),
+        map: ms.generateMap()
+      };
+    }
+  };
+}
+
 // src/node/plugins/index.ts
 function resolvePlugins() {
-  return [];
+  return [resolvePlugin(), esbuildTransformPlugin(), importAnalysisPlugin()];
 }
 
 // src/node/pluginContainer.ts
@@ -246,15 +391,15 @@ var createPluginContainer = (plugins) => {
 };
 
 // src/node/server/middlewares/indexHtml.ts
-import path5 from "path";
-import { pathExists, readFile } from "fs-extra";
+import path8 from "path";
+import { pathExists as pathExists2, readFile as readFile2 } from "fs-extra";
 function indexHtmlMiddware(serverContext) {
   return async (req, res, next) => {
     if (req.url === "/") {
       const { root } = serverContext;
-      const indexHtmlPath = path5.join(root, "index.html");
-      if (await pathExists(indexHtmlPath)) {
-        const rawHtml = await readFile(indexHtmlPath, "utf8");
+      const indexHtmlPath = path8.join(root, "index.html");
+      if (await pathExists2(indexHtmlPath)) {
+        const rawHtml = await readFile2(indexHtmlPath, "utf8");
         let html = rawHtml;
         for (const plugin of serverContext.plugins) {
           if (plugin.transformIndexHtml) {
@@ -267,6 +412,51 @@ function indexHtmlMiddware(serverContext) {
       }
     }
     return next();
+  };
+}
+
+// src/node/server/middlewares/transform.ts
+import createDebug2 from "debug";
+var debug2 = createDebug2("dev");
+async function transformRequest(url, serverContext) {
+  const { pluginContainer } = serverContext;
+  url = cleanUrl(url);
+  const resolvedResult = await pluginContainer.resolveId(url);
+  let transformResult;
+  if (resolvedResult?.id) {
+    let code = await pluginContainer.load(resolvedResult.id);
+    if (typeof code === "object" && code !== null) {
+      code = code.code;
+    }
+    if (code) {
+      transformResult = await pluginContainer.transform(
+        code,
+        resolvedResult?.id
+      );
+    }
+  }
+  return transformResult;
+}
+function transformMiddleware(serverContext) {
+  return async (req, res, next) => {
+    if (req.method !== "GET" || !req.url) {
+      return next();
+    }
+    const url = req.url;
+    debug2("transformMiddleware: %s", url);
+    if (isJSRequest(url)) {
+      let result = await transformRequest(url, serverContext);
+      if (!result) {
+        return next();
+      }
+      if (result && typeof result !== "string") {
+        result = result.code;
+      }
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/javascript");
+      return res.end(result);
+    }
+    next();
   };
 }
 
@@ -288,6 +478,7 @@ async function startDevServer() {
       await plugin.configureServer(serverContext);
     }
   }
+  app.use(transformMiddleware(serverContext));
   app.use(indexHtmlMiddware(serverContext));
   app.listen(3e3, async () => {
     await optimize(root);

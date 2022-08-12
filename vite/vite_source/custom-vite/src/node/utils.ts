@@ -1,6 +1,6 @@
 import path from 'path'
 import os from 'os'
-import { JS_TYPES_RE } from './constants.ts'
+import { JS_TYPES_RE, HASH_RE, QEURY_RE } from './constants.ts'
 
 export function slash(p: string): string {
   return p.replace(/\\/g, '/')

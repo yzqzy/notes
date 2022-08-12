@@ -954,6 +954,8 @@ export async function startDevServer() {
 首先新增一个中间件 `src/node/server/middlewares/transform.ts`，内容如下：
 
 ```typescript
+// src/node/server/middlewares/transform.ts
+
 import { NextHandleFunction } from "connect"
 import {
   isJSRequest,
@@ -1028,6 +1030,29 @@ export function transformMiddleware(
 }
 ```
 
+```typescript
+// src/node/server/index.ts
+
+export async function startDevServer() {
+	// ...
+  
+  // 核心编译逻辑
+  app.use(transformMiddleware(serverContext))
+  // 处理入口 HTML 资源
+  app.use(indexHtmlMiddware(serverContext))
+
+  app.listen(3000, async () => {
+    await optimize(root)
+
+    console.log(
+      green("🚀 No-Bundle 服务已经成功启动!"),
+      `耗时: ${Date.now() - startTime}ms`
+    )
+    console.log(`> 本地访问路径: ${blue("http://localhost:3000")}`)
+  })
+}
+```
+
 同时，我们也需要补充如下的工具函数和常量定义：
 
 ```typescript
@@ -1035,7 +1060,7 @@ export function transformMiddleware(
 
 import path from 'path'
 import os from 'os'
-import { JS_TYPES_RE } from './constants.ts'
+import { JS_TYPES_RE, HASH_RE, QEURY_RE } from './constants.ts'
 
 // ...
 
@@ -1090,8 +1115,260 @@ export const HASH_RE = /#.*$/s
 
 会自动发送一个路径为 `/src/main.tsx` 的请求，但如果服务端不做任何处理，是无法定位到源文件的，随之会返回 404 状态码：
 
+> [ES Module 模块](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/)
+
+<div><img src="./images/resource02.png" /></div>
+
+因此，我们需要开发一个路径解析插件，对请求的路径进行处理，使之能转换真实文件系统中的路径。
+
+你可以新建文件 `src/node/plugins/resolve.ts`，内容如下：
+
 ```typescript
+import resolve from "resolve"
+import path from "path"
+import { pathExists } from "fs-extra"
+
+import { Plugin } from "../plugin"
+import { ServerContext } from "../server/index"
+import { DEFAULT_EXTERSIONS } from "../constants"
+import { cleanUrl } from "../utils"
+
+export function resolvePlugin(): Plugin {
+  let serverContext: ServerContext
+  return {
+    name: "vite:resolve",
+    configureServer(s) {
+      // 保存服务端上下文
+      serverContext = s
+    },
+    async resolveId(id: string, importer?: string) {
+      // 1. 绝对路径
+      if (path.isAbsolute(id)) {
+        if (await pathExists(id)) {
+          return { id }
+        }
+        // 加上 root 路径前缀，处理 /src/main.tsx 的情况
+        id = path.join(serverContext.root, id)
+        if (await pathExists(id)) {
+          return { id }
+        }
+      }
+      // 2. 相对路径
+      else if (id.startsWith(".")) {
+        if (!importer) {
+          throw new Error("`importer` should not be undefined")
+        }
+        const hasExtension = path.extname(id).length > 1
+        let resolvedId: string
+        // 2.1 包含文件名后缀
+        // 如 ./App.tsx
+        if (hasExtension) {
+          resolvedId = resolve.sync(id, { basedir: path.dirname(importer) })
+          if (await pathExists(resolvedId)) {
+            // return { id: resolvedId }
+            return { id }
+          }
+        } 
+        // 2.2 不包含文件名后缀
+        // 如 ./App
+        else {
+          // ./App -> ./App.tsx
+          for (const extname of DEFAULT_EXTERSIONS) {
+            try {
+              const withExtension = `${id}${extname}`
+              resolvedId = resolve.sync(withExtension, {
+                basedir: path.dirname(importer),
+              })
+              if (await pathExists(resolvedId)) {
+                // return { id: resolvedId }
+                return { id: withExtension }
+              }
+            } catch (e) {
+              continue
+            }
+          }
+        }
+      }
+      return null
+    }
+  }
+}
 ```
 
-因此，我们需要开发一个路径解析插件，对请求的路径进行处理，使之能转换真实文件系统中的路径。你可以新建文件 `src/node/plugins/resolve.ts`，内容如下：
+这样对于 `/src/main.tsx`，在插件中会转换为文件系统中的真实路径，从而让模块在 load 钩子中能够正常加载(加载逻辑在 Esbuild 语法编译插件实现)。
+
+接着我们来补充一下目前缺少的常量:
+
+```typescript
+// src/node/constants.ts
+export const DEFAULT_EXTERSIONS = [".tsx", ".ts", ".jsx", "js"]
+```
+
+#### Esbuild 语法编译插件
+
+这个插件的作用比较好理解，就是将 JS/TS/JSX/TSX 编译成浏览器可以识别的 JS 语法，可以利用 Esbuild 的 Transform API 来实现。
+
+你可以新建`src/node/plugins/esbuild.ts`文件，内容如下：
+
+```typescript
+import esbuild from "esbuild"
+import path from "path"
+import { readFile } from "fs-extra"
+
+import { Plugin } from "../plugin"
+import { isJSRequest } from "../utils"
+
+export function esbuildTransformPlugin(): Plugin {
+  return {
+    name: "vite:esbuild-transform",
+    // 加载模块
+    async load(id) {
+      if (isJSRequest(id)) {
+        try {
+          const code = await readFile(id, "utf-8")
+          return code
+        } catch (e) {
+          return null
+        }
+      }
+    },
+    async transform(code, id) {
+      if (isJSRequest(id)) {
+        const extname = path.extname(id).slice(1)
+        const { code: transformedCode, map } = await esbuild.transform(code, {
+          target: "esnext",
+          format: "esm",
+          sourcemap: true,
+          loader: extname as "js" | "ts" | "jsx" | "tsx",
+        })
+        return {
+          code: transformedCode,
+          map,
+        }
+      }
+      return null
+    }
+  }
+}
+```
+
+#### import 分析插件
+
+在将 TSX 转换为浏览器可以识别的语法之后，是不是就可以直接返回给浏览器执行了呢？
+
+显然不是，我们还考虑如下的一些问题:
+
+- 对于第三方依赖路径(bare import)，需要重写为预构建产物路径；
+- 对于绝对路径和相对路径，需要借助之前的路径解析插件进行解析。
+
+接下来，我们就在 import 分析插件中一一解决这些问题：
+
+```typescript
+import { pathExists } from "fs-extra"
+import resolve from "resolve"
+import path from "path"
+// magic-string 用来作字符串编辑
+import MagicString from "magic-string" 
+import { init, parse } from "es-module-lexer"
+
+import {
+  BARE_IMPORT_RE,
+  DEFAULT_EXTERSIONS,
+  PRE_BUNDLE_DIR,
+} from "../constants"
+import {
+  cleanUrl,
+  isJSRequest,
+  normalizePath
+} from "../utils"
+
+import { Plugin } from "../plugin"
+import { ServerContext } from "../server/index"
+
+export function importAnalysisPlugin(): Plugin {
+  let serverContext: ServerContext
+  return {
+    name: "vite:import-analysis",
+    configureServer(s) {
+      // 保存服务端上下文
+      serverContext = s
+    },
+    async transform(code: string, id: string) {
+      // 只处理 JS 相关的请求
+      if (!isJSRequest(id)) {
+        return null
+      }
+      await init
+      // 解析 import 语句
+      const [imports] = parse(code)
+      const ms = new MagicString(code)
+      // 对每一个 import 语句依次进行分析
+      for (const importInfo of imports) {
+        // 举例说明: const str = `import React from 'react'`
+        // str.slice(s, e) => 'react'
+        const { s: modStart, e: modEnd, n: modSource } = importInfo
+        
+        if (!modSource) continue
+        // 第三方库: 路径重写到预构建产物的路径
+        if (BARE_IMPORT_RE.test(modSource)) {
+          // const bundlePath = path.join(
+          //   serverContext.root,
+          //   PRE_BUNDLE_DIR,
+          //   `${modSource}.js`
+          // )
+          const bundlePath = normalizePath(
+            path.join('/', PRE_BUNDLE_DIR, `${modSource}.js`)
+          )
+          ms.overwrite(modStart, modEnd, bundlePath)
+        } else if (modSource.startsWith(".") || modSource.startsWith("/")) {
+          // 直接调用插件上下文的 resolve 方法，会自动经过路径解析插件的处理
+          const resolved = await this.resolve(modSource, id)
+          if (resolved) {
+            ms.overwrite(modStart, modEnd, resolved.id)
+          }
+        }
+      }
+
+      return {
+        code: ms.toString(),
+        // 生成 SourceMap
+        map: ms.generateMap(),
+      }
+    }
+  }
+}
+```
+
+现在，我们便完成了 JS 代码的 import 分析工作。接下来，我们把上面实现的三个插件进行注册：
+
+```typescript
+// src/node/plugin/index.ts
+
+import { Plugin } from "../plugin"
+
+import { esbuildTransformPlugin } from "./esbuild"
+import { importAnalysisPlugin } from "./importAnalysis"
+import { resolvePlugin } from "./resolve"
+
+export function resolvePlugins(): Plugin[] {
+  return [resolvePlugin(), esbuildTransformPlugin(), importAnalysisPlugin()]
+}
+```
+
+然后在 `playground` 项目下执行 `pnpm dev`，在浏览器里面访问 `http://localhost:3000`，你可以在网络面板中发现  `main.tsx`  的内容以及被编译为下面这样:
+
+```js
+import React from "/node_modules/.vite/react.js";
+import ReactDOM from "/node_modules/.vite/react-dom.js";
+import App from "./App.tsx";
+ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElementById("root"));
+```
+
+同时，页面内容也能被渲染出来：
+
+<div><img src="./images/resource03.png" /></div>
+
+目前为止我们就基本上完成对 JS/TS/JSX/TSX 文件的编译。
+
+> 测试还没有处理静态资源，如果使用提供的案例，需要注释掉 css、svg 的资源。
 
