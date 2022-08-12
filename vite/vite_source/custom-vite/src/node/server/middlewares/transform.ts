@@ -1,6 +1,7 @@
 import { NextHandleFunction } from "connect"
 import {
   isJSRequest,
+  isCSSRequest,
   cleanUrl,
 } from "../../utils"
 import { ServerContext } from "../index"
@@ -49,7 +50,7 @@ export function transformMiddleware(
     debug("transformMiddleware: %s", url)
 
     // transform JS request
-    if (isJSRequest(url)) {
+    if (isJSRequest(url) || isCSSRequest(url)) {
       // 核心编译函数
       let result = await transformRequest(url, serverContext)
 

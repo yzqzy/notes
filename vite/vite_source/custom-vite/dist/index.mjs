@@ -106,6 +106,7 @@ var isJSRequest = (id) => {
   }
   return false;
 };
+var isCSSRequest = (id) => cleanUrl(id).endsWith(".css");
 var cleanUrl = (url) => url.replace(HASH_RE, "").replace(QEURY_RE, "");
 
 // src/node/optimizer/preBundlePlugin.ts
@@ -329,9 +330,42 @@ function importAnalysisPlugin() {
   };
 }
 
+// src/node/plugins/css.ts
+import { readFile as readFile2 } from "fs-extra";
+function cssPlugin() {
+  return {
+    name: "vite:css",
+    load(id) {
+      if (id.endsWith(".css")) {
+        return readFile2(id, "utf-8");
+      }
+    },
+    async transform(code, id) {
+      if (id.endsWith(".css")) {
+        const jsContent = `
+          const css = '${code.replace(/\n/g, "")}'
+          const style = document.createElement("style")
+          style.setAttribute("type", "text/css")
+          style.innerHTML = css
+          document.head.appendChild(style)
+          export default css`.trim();
+        return {
+          code: jsContent
+        };
+      }
+      return null;
+    }
+  };
+}
+
 // src/node/plugins/index.ts
 function resolvePlugins() {
-  return [resolvePlugin(), esbuildTransformPlugin(), importAnalysisPlugin()];
+  return [
+    resolvePlugin(),
+    esbuildTransformPlugin(),
+    importAnalysisPlugin(),
+    cssPlugin()
+  ];
 }
 
 // src/node/pluginContainer.ts
@@ -392,14 +426,14 @@ var createPluginContainer = (plugins) => {
 
 // src/node/server/middlewares/indexHtml.ts
 import path8 from "path";
-import { pathExists as pathExists2, readFile as readFile2 } from "fs-extra";
+import { pathExists as pathExists2, readFile as readFile3 } from "fs-extra";
 function indexHtmlMiddware(serverContext) {
   return async (req, res, next) => {
     if (req.url === "/") {
       const { root } = serverContext;
       const indexHtmlPath = path8.join(root, "index.html");
       if (await pathExists2(indexHtmlPath)) {
-        const rawHtml = await readFile2(indexHtmlPath, "utf8");
+        const rawHtml = await readFile3(indexHtmlPath, "utf8");
         let html = rawHtml;
         for (const plugin of serverContext.plugins) {
           if (plugin.transformIndexHtml) {
@@ -444,7 +478,7 @@ function transformMiddleware(serverContext) {
     }
     const url = req.url;
     debug2("transformMiddleware: %s", url);
-    if (isJSRequest(url)) {
+    if (isJSRequest(url) || isCSSRequest(url)) {
       let result = await transformRequest(url, serverContext);
       if (!result) {
         return next();

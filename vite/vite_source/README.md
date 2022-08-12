@@ -1065,18 +1065,18 @@ import { JS_TYPES_RE, HASH_RE, QEURY_RE } from './constants.ts'
 // ...
 
 export const isJSRequest = (id: string): boolean => {
-  id = cleanUrl(id);
+  id = cleanUrl(id)
   if (JS_TYPES_RE.test(id)) {
-    return true;
+    return true
   }
   if (!path.extname(id) && !id.endsWith("/")) {
-    return true;
+    return true
   }
-  return false;
-};
+  return false
+}
 
 export const cleanUrl = (url: string): string =>
-  url.replace(HASH_RE, "").replace(QEURY_RE, "");
+  url.replace(HASH_RE, "").replace(QEURY_RE, "")
 ```
 
 ```typescript
@@ -1371,4 +1371,162 @@ ReactDOM.render(/* @__PURE__ */ React.createElement(App, null), document.getElem
 目前为止我们就基本上完成对 JS/TS/JSX/TSX 文件的编译。
 
 > 测试还没有处理静态资源，如果使用提供的案例，需要注释掉 css、svg 的资源。
+
+### CSS 编译插件
+
+首先，我们可以看看项目中 CSS 代码是如何被引入的:
+
+```typescript
+// playground/src/main.tsx
+import "./index.css"
+```
+
+为了让 CSS 能够在 no-bundle 服务中正常加载，我们需要将其包装成浏览器可以识别的模块格式，也就是 `JS 模块`，其中模块加载和转换的逻辑我们可以通过插件来实现。当然，首先我们需要在 transform 中间件中允许对 CSS 的请求进行处理，代码如下：
+
+```diff
+// src/node/server/middlewares/transform.ts
++ import { isCSSRequest } from '../../utils'
+
+export function transformMiddleware(
+  serverContext: ServerContext
+): NextHandleFunction {
+  return async (req, res, next) => {
+    if (req.method !== "GET" || !req.url) {
+      return next()
+    }
+    const url = req.url
+    
+    debug("transformMiddleware: %s", url)
+    
+    // transform JS request
+-    if (isJSRequest(url)) {
++    if (isJSRequest(url) || isCSSRequest(url)) {
+      // ...
+     }
+
+    next()
+  };
+}
+```
+
+然后我们来补充对应的工具函数：
+
+```typescript
+// src/node/utils.ts
+export const isCSSRequest = (id: string): boolean =>
+  cleanUrl(id).endsWith(".css")
+```
+
+现在我们来开发 CSS 的编译插件，你可以新建 `src/node/plugins/css.ts` 文件，内容如下：
+
+```typescript
+import { readFile } from "fs-extra"
+import { Plugin } from "../plugin"
+
+export function cssPlugin(): Plugin {
+  return {
+    name: "vite:css",
+    load(id) {
+      // 加载
+      if (id.endsWith(".css")) {
+        return readFile(id, "utf-8")
+      }
+    },
+    // 转换逻辑
+    async transform(code, id) {
+      if (id.endsWith(".css")) {
+        // 包装成 JS 模块
+        const jsContent = `
+          const css = "${code.replace(/\n/g, "")}"
+          const style = document.createElement("style")
+          style.setAttribute("type", "text/css")
+          style.innerHTML = css
+          document.head.appendChild(style)
+          export default css`.trim()
+        return {
+          code: jsContent,
+        }
+      }
+      return null
+    }
+  }
+}
+```
+
+这个插件的逻辑比较简单，主要是将封装一层 JS 样板代码，将 CSS 包装成一个 ES 模块，当浏览器执行这个模块的时候，会通过一个 style 标签将 CSS 代码作用到页面中，从而使样式代码生效。
+
+接着我们来注册这个 CSS 插件：
+
+```typescript
+// src/node/plugins/index.ts
+import { Plugin } from "../plugin"
+
+import { resolvePlugin } from "./resolve"
+import { esbuildTransformPlugin } from "./esbuild"
+import { importAnalysisPlugin } from "./importAnalysis"
+import { cssPlugin } from "./css"
+
+export function resolvePlugins(): Plugin[] {
+  return [
+    resolvePlugin(),
+    esbuildTransformPlugin(),
+    importAnalysisPlugin(),
+    cssPlugin()
+  ]
+}
+```
+
+现在，你可以通过 `pnpm dev` 来启动 playground 项目，不过在启动之前，需要保证 TSX 文件已经引入了对应的 CSS 文件:
+
+```typescript
+// playground/src/main.tsx
+import "./index.css"
+
+// playground/src/App.tsx
+import "./App.css"
+```
+
+在启动项目后，打开浏览器进行访问，可以看到样式已经正常生效。
+
+<img src="./images/resource04.png" />
+
+### 静态资源加载
+
+在完成 CSS 加载之后，我们现在继续完成静态资源的加载。
+以 playground 项目为例，我们来支持 svg 文件的加载。首先，我们看看 svg 文件是如何被引入并使用的：
+
+```tsx
+// playground/src/App.tsx
+
+import { useState } from "react";
+import React from "react";
+import logo from "./logo.svg";
+import "./App.css";
+
+function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img className="App-logo" src={logo} alt="" />
+      </header>
+    </div>
+  );
+}
+
+export default App;
+```
+
+从如上的代码我们可以分析出静态资源的两种请求：
+
+- import 请求。如 `import logo from "./logo.svg"`。
+- 资源内容请求。如 img 标签将资源 url 填入 src，那么浏览器会请求具体的资源内容。
+
+因此，接下来为了实现静态资源的加载，我们需要做两手准备：
+
+* 对静态资源的 import 请求返回资源的 url；
+* 对于具体内容的请求，读取静态资源的文件内容，并响应给浏览器。
+
+首先处理 import 请求，我们可以在 TSX 的 import 分析插件中，给静态资源相关的 import 语句做一个标记：
 

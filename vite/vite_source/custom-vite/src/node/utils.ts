@@ -12,16 +12,19 @@ export function normalizePath(id: string): string {
 }
 
 export const isJSRequest = (id: string): boolean => {
-  id = cleanUrl(id);
+  id = cleanUrl(id)
   if (JS_TYPES_RE.test(id)) {
-    return true;
+    return true
   }
   if (!path.extname(id) && !id.endsWith("/")) {
-    return true;
+    return true
   }
-  return false;
-};
+  return false
+}
+
+export const isCSSRequest = (id: string): boolean =>
+  cleanUrl(id).endsWith(".css")
 
 export const cleanUrl = (url: string): string =>
-  url.replace(HASH_RE, "").replace(QEURY_RE, "");
+  url.replace(HASH_RE, "").replace(QEURY_RE, "")
   
