@@ -71,7 +71,7 @@ Vite 内置的插件包括四大类：
 
 ## 源码实现
 
-<img src="./images/vite_source.jpg" />
+<img src="./images/vite_source.png" />
 
 ### 开发环境搭建
 
