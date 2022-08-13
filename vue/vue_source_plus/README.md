@@ -6188,6 +6188,946 @@ vue 文档中说明可以在 v-for 的过程中给每一个节点设置 key 属�
 
 ## 模板编译
 
+### 简介
 
+模板编译的主要目的是将模板（template）转换为渲染函数（render）。
 
+```html
+<div>
+  <h1 @click="handler">title</h1>
+  <p>some content</p>
+</div>
+```
+
+```js
+render(h) {
+  return h('div', [
+    h('h1', { on: { click: this.handler } }, 'title'),
+    h('p', 'some content')
+  ])
+}
+```
+
+* Vue 2.x 使用 VNode 描述视图以及各种交互，用户自己编写 VNode 比较复杂
+* 用户只需要编写类似 HTML 的代码 - Vue.js 模板，通过编译器将模板转换为返回 VNode 的 render 函数
+* .vue 文件会被 webpack 在构建的过程中转换成 render 函数
+  * 通过 vue-loader 实现模板编译
+
+根据模板编译时机，我们可以把编译过程分为运行时编译和构建时编译，支持运行时编译必须使用完整的的 Vue 版本。
+
+运行时编译的缺点就是引入的 vue 文件体积大，运行速度慢。
+使用 vue-cli 创建的项目，默认加载的是运行时版本的 vue，不带编译器，体积相对较小。这时就需要构建时编译。
+
+### 模板编译结果分析
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>compile</title>
+</head>
+<body>
+
+  <div id="app">
+    <h1>Vue<span>Template Compile</span></h1>
+    <p>{{ message }}</p>
+    <comp @click="handler" />
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    Vue.component('comp', {
+      template: '<div>a custom component</div>'
+    })
+
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        message: 'vue compiler'
+      },
+      methods: {
+        handler() {
+          console.log('test')
+        }
+      }
+    })
+
+    console.log(vm.$options.render)
+  </script>
+
+</body>
+</html>
+```
+
+```js
+(function anonymous() {
+  with (this) {
+    return _c(
+      'div',
+      { attrs: { "id":"app" } }, 
+      [
+        _m(0),
+        _v(" "),
+        _c('p', [_v(_s(message))]),
+        _v(" "),
+        _c('comp', { on: { "click": handler } } )
+      ],
+      1
+    )
+  }
+})
+```
+
+编译生成的函数的位置
+
+* `_c()`
+  * src/core/instance/render.js
+* `_m()/_v()/_s()`
+  * src/core/instance/render-helpers/index.js
+
+```js
+// src/core/instance/render.js
+
+// _c => createElement
+
+export function initRender (vm: Component) {
+  vm._vnode = null // the root of the child tree
+  vm._staticTrees = null // v-once cached trees
+  const options = vm.$options
+  const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
+  const renderContext = parentVnode && parentVnode.context
+  vm.$slots = resolveSlots(options._renderChildren, renderContext)
+  vm.$scopedSlots = emptyObject
+  // bind the createElement fn to this instance
+  // so that we get proper render context inside it.
+  // args order: tag, data, children, normalizationType, alwaysNormalize
+  // internal version is used by render functions compiled from templates
+  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
+  // normalization is always applied for the public version, used in
+  // user-written render functions.
+  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
+
+  // $attrs & $listeners are exposed for easier HOC creation.
+  // they need to be reactive so that HOCs using them are always updated
+  const parentData = parentVnode && parentVnode.data
+
+  /* istanbul ignore else */
+  if (process.env.NODE_ENV !== 'production') {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
+    }, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$listeners is readonly.`, vm)
+    }, true)
+  } else {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, null, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, null, true)
+  }
+}
+```
+
+```js
+// src/core/instance/render-helpers/index.js
+
+// render.js - renderMixin 中调用 installRenderHelpers 函数
+
+// _m => renderStatic
+// _v => createTextVNode
+// _s => toString
+
+/* @flow */
+
+import { toNumber, toString, looseEqual, looseIndexOf } from 'shared/util'
+import { createTextVNode, createEmptyVNode } from 'core/vdom/vnode'
+import { renderList } from './render-list'
+import { renderSlot } from './render-slot'
+import { resolveFilter } from './resolve-filter'
+import { checkKeyCodes } from './check-keycodes'
+import { bindObjectProps } from './bind-object-props'
+import { renderStatic, markOnce } from './render-static'
+import { bindObjectListeners } from './bind-object-listeners'
+import { resolveScopedSlots } from './resolve-scoped-slots'
+import { bindDynamicKeys, prependModifier } from './bind-dynamic-keys'
+
+export function installRenderHelpers (target: any) {
+  target._o = markOnce
+  target._n = toNumber
+  target._s = toString
+  target._l = renderList
+  target._t = renderSlot
+  target._q = looseEqual
+  target._i = looseIndexOf
+  target._m = renderStatic
+  target._f = resolveFilter
+  target._k = checkKeyCodes
+  target._b = bindObjectProps
+  target._v = createTextVNode
+  target._e = createEmptyVNode
+  target._u = resolveScopedSlots
+  target._g = bindObjectListeners
+  target._d = bindDynamicKeys
+  target._p = prependModifier
+}
+```
+
+```jsx
+<div id="app">
+  <h1>Vue<span>Template Compile</span></h1>
+  <p>{{ message }}</p>
+  <comp @click="handler" />
+</div>
+
+Vue.component('comp', {
+	template: '<div>a custom component</div>'
+})
+
+-----------
+
+(function anonymous() {
+  with (this) {
+    return _c(
+      'div',
+      { attrs: { "id":"app" } }, 
+      [
+        _m(0), // 对应模板中 h1 标签，处理模板的过程中会对静态内容做优化处理
+        _v(" "), // 对应 h1 标签和 p 标签之间的空白位置
+        _c('p', [_v(_s(message))]), // p 标签
+        _v(" "), // p 标签和组件 comp 之间的空白位置
+        _c('comp', { on: { "click": handler } } ) // comp 组件
+      ],
+      1 // 后续如何对 children 处理
+    )
+  }
+})
+
+-----------
+
+(function anonymous() {
+  with (this) {
+    return createElement(
+      'div',
+      { attrs: { "id":"app" } }, 
+      [
+        renderStatic(0),
+        createTextVNode(" "),
+        createElement('p', [createTextVNode(toString(message))]),
+        createTextVNode(" "),
+        createElement('comp', { on: { "click": handler } } )
+      ],
+      1
+    )
+  }
+})
+```
+
+### Vue Template Explorer
+
+网页工具，可以将 HTML 模板转换为 render 函数。
+
+[https://v2.template-explorer.vuejs.org](https://v2.template-explorer.vuejs.org)
+
+[https://template-explorer.vuejs.org](https://template-explorer.vuejs.org)
+
+```html
+<div id="app">
+  <h1>Vue<span>Template Compile</span></h1>
+  <p>{{ message }}</p>
+  <comp @click="handler" />
+</div>
+```
+
+```js
+// vue2
+
+function render() {
+  with(this) {
+    return _c('div', {
+      attrs: {
+        "id": "app"
+      }
+    }, [_m(0), _c('p', [_v(_s(message))]), _c('comp', {
+      on: {
+        "click": handler
+      }
+    })], 1)
+  }
+}
+```
+
+```js
+// vue3
+
+import { createElementVNode as _createElementVNode, createTextVNode as _createTextVNode, toDisplayString as _toDisplayString, resolveComponent as _resolveComponent, createVNode as _createVNode, openBlock as _openBlock, createElementBlock as _createElementBlock } from "vue"
+
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_comp = _resolveComponent("comp")
+
+  return (_openBlock(), _createElementBlock("div", { id: "app" }, [
+    _createElementVNode("h1", null, [
+      _createTextVNode("Vue"),
+      _createElementVNode("span", null, "Template Compile")
+    ]),
+    _createElementVNode("p", null, _toDisplayString(_ctx.message), 1 /* TEXT */),
+    _createVNode(_component_comp, { onClick: _ctx.handler }, null, 8 /* PROPS */, ["onClick"])
+  ]))
+}
+
+// Check the console for the AST
+```
+
+使用 vue2 模板时，标签内文本内容尽量不要添加多余空白内容，vue3 编译后 render 函数已经去除多余空白内容，不会保留。
+
+### 模板编译入口
+
+#### src/platforms/web/entry-runtime-with-compiler.js
+
+```js
+// src/platforms/web/entry-runtime-with-compiler.js
+
+const mount = Vue.prototype.$mount
+Vue.prototype.$mount = function (
+  el?: string | Element,
+  hydrating?: boolean
+): Component {
+  el = el && query(el)
+		
+  // ...
   
+  const options = this.$options
+  // resolve template/el and convert to render function
+  if (!options.render) {
+    let template = options.template
+    if (template) {
+      if (typeof template === 'string') {
+        if (template.charAt(0) === '#') {
+          template = idToTemplate(template)
+         	// ...
+        }
+      } else if (template.nodeType) {
+        template = template.innerHTML
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          warn('invalid template option:' + template, this)
+        }
+        return this
+      }
+    } else if (el) {
+      template = getOuterHTML(el)
+    }
+    if (template) {
+     	// ...
+      
+      // 把 template 转换为 render 函数
+      const { render, staticRenderFns } = compileToFunctions(template, {
+        outputSourceRange: process.env.NODE_ENV !== 'production',
+        shouldDecodeNewlines,
+        shouldDecodeNewlinesForHref,
+        delimiters: options.delimiters,
+        comments: options.comments
+      }, this)
+      options.render = render
+      options.staticRenderFns = staticRenderFns
+
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+        mark('compile end')
+        measure(`vue ${this._name} compile`, 'compile', 'compile end')
+      }
+    }
+  }
+  return mount.call(this, el, hydrating)
+}
+```
+
+#### src/platforms/web/compiler/index.js
+
+```js
+// src/platforms/web/compiler/index.js
+
+/* @flow */
+
+import { baseOptions } from './options'
+import { createCompiler } from 'compiler/index'
+
+const { compile, compileToFunctions } = createCompiler(baseOptions)
+
+export { compile, compileToFunctions }
+```
+
+```js
+// src/platforms/web/compiler/options.js
+import {
+  isPreTag,
+  mustUseProp,
+  isReservedTag,
+  getTagNamespace
+} from '../util/index'
+
+import modules from './modules/index'
+import directives from './directives/index'
+import { genStaticKeys } from 'shared/util'
+import { isUnaryTag, canBeLeftOpenTag } from './util'
+
+export const baseOptions: CompilerOptions = {
+  expectHTML: true,
+  modules,
+  directives,
+  isPreTag,
+  isUnaryTag,
+  mustUseProp,
+  canBeLeftOpenTag,
+  isReservedTag,
+  getTagNamespace,
+  staticKeys: genStaticKeys(modules)
+}
+
+
+//  src/platforms/web/compiler/moduels/index.js
+import klass from './class'
+import style from './style'
+import model from './model'
+
+// 处理类样式与行内样式以及 v-model
+export default [
+  klass,
+  style,
+  model
+]
+// src/platforms/web/compiler/moduels/model.js
+/**
+ * Expand input[v-model] with dynamic type bindings into v-if-else chains
+ * Turn this:
+ *   <input v-model="data[type]" :type="type">
+ * into this:
+ *   <input v-if="type === 'checkbox'" type="checkbox" v-model="data[type]">
+ *   <input v-else-if="type === 'radio'" type="radio" v-model="data[type]">
+ *   <input v-else :type="type" v-model="data[type]">
+ */
+
+
+//  src/platforms/web/compiler/directives/index.js
+import model from './model'
+import text from './text'
+import html from './html'
+
+export default {
+  model,
+  text,
+  html
+}
+```
+
+#### src/compiler/index
+
+```js
+/* @flow */
+
+import { parse } from './parser/index'
+import { optimize } from './optimizer'
+import { generate } from './codegen/index'
+import { createCompilerCreator } from './create-compiler'
+
+// `createCompilerCreator` allows creating compilers that use alternative
+// parser/optimizer/codegen, e.g the SSR optimizing compiler.
+// Here we just export a default compiler using the default parts.
+export const createCompiler = createCompilerCreator(function baseCompile (
+  template: string,
+  options: CompilerOptions
+): CompiledResult {
+  // 将模板转换成 ast 抽象语法树（以树行方式描述代码结构）
+  const ast = parse(template.trim(), options)
+  if (options.optimize !== false) {
+    // 优化抽象语法树
+    optimize(ast, options)
+  }
+  // 将抽象语法树生成字符串形式的 js 代码
+  const code = generate(ast, options)
+  return {
+    ast,
+    // 渲染函数
+    render: code.render,
+    // 静态渲染函数，生成静态 VNode 树
+    staticRenderFns: code.staticRenderFns
+  }
+})
+```
+
+#### src/compiler/create-compiler.js
+
+```js
+/* @flow */
+
+import { extend } from 'shared/util'
+import { detectErrors } from './error-detector'
+import { createCompileToFunctionFn } from './to-function'
+
+export function createCompilerCreator (baseCompile: Function): Function {
+  // baseOptions 平台相关的 options
+  // src/platforms/web/compiler/options.js
+  return function createCompiler (baseOptions: CompilerOptions) {
+    // 接收模板和用户传入的选项
+    function compile (
+      template: string,
+      options?: CompilerOptions
+    ): CompiledResult {
+      const finalOptions = Object.create(baseOptions)
+      const errors = []
+      const tips = []
+
+      let warn = (msg, range, tip) => {
+        (tip ? tips : errors).push(msg)
+      }
+
+      if (options) {
+        if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+          // $flow-disable-line
+          const leadingSpaceLength = template.match(/^\s*/)[0].length
+
+          warn = (msg, range, tip) => {
+            const data: WarningMessage = { msg }
+            if (range) {
+              if (range.start != null) {
+                data.start = range.start + leadingSpaceLength
+              }
+              if (range.end != null) {
+                data.end = range.end + leadingSpaceLength
+              }
+            }
+            (tip ? tips : errors).push(data)
+          }
+        }
+        // merge custom modules
+        if (options.modules) {
+          finalOptions.modules =
+            (baseOptions.modules || []).concat(options.modules)
+        }
+        // merge custom directives
+        if (options.directives) {
+          finalOptions.directives = extend(
+            Object.create(baseOptions.directives || null),
+            options.directives
+          )
+        }
+        // copy other options
+        for (const key in options) {
+          if (key !== 'modules' && key !== 'directives') {
+            finalOptions[key] = options[key]
+          }
+        }
+      }
+
+      finalOptions.warn = warn
+
+      // 调用 baseCompiler 编译模板
+      const compiled = baseCompile(template.trim(), finalOptions)
+      if (process.env.NODE_ENV !== 'production') {
+        detectErrors(compiled.ast, warn)
+      }
+      compiled.errors = errors
+      compiled.tips = tips
+      return compiled
+    }
+
+    return {
+      compile,
+      // 模板编译入口
+      compileToFunctions: createCompileToFunctionFn(compile)
+    }
+  }
+}
+```
+
+#### 总结
+
+* compileToFunctions(template, {}, this)
+  * 返回 { render, staticRenderFns }
+* createCompiler(baseOptions)
+  * 定义 compile(template, options) 函数
+  * 生成 compileToFunctions
+    * createCompileToFunctionFn(compile)
+  * 返回 { compile, compileToFunctions  }
+  * compileToFunctions 函数是模板编译的入口
+* createCompileCreater(function baseCompile(){ })
+  * 传入 baseCompile(template, finalOptions) 函数
+  * baseCompile
+    * 解析 parse
+    * 优化 optimize
+    * 生成 generate
+  * 返回 createCompiler 函数
+
+### compileToFunctions
+
+#### src/compiler/create-compiler.js
+
+```js
+/* @flow */
+
+import { extend } from 'shared/util'
+import { detectErrors } from './error-detector'
+import { createCompileToFunctionFn } from './to-function'
+
+export function createCompilerCreator (baseCompile: Function): Function {
+  // baseOptions 平台相关的 options
+  // src/platforms/web/compiler/options.js
+  return function createCompiler (baseOptions: CompilerOptions) {
+    // 接收模板和用户传入的选项
+    function compile (
+      template: string,
+      options?: CompilerOptions
+    ): CompiledResult {
+      const finalOptions = Object.create(baseOptions)
+      const errors = []
+      const tips = []
+
+      let warn = (msg, range, tip) => {
+        (tip ? tips : errors).push(msg)
+      }
+
+      if (options) {
+        if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+          // $flow-disable-line
+          const leadingSpaceLength = template.match(/^\s*/)[0].length
+
+          warn = (msg, range, tip) => {
+            const data: WarningMessage = { msg }
+            if (range) {
+              if (range.start != null) {
+                data.start = range.start + leadingSpaceLength
+              }
+              if (range.end != null) {
+                data.end = range.end + leadingSpaceLength
+              }
+            }
+            (tip ? tips : errors).push(data)
+          }
+        }
+        // merge custom modules
+        if (options.modules) {
+          finalOptions.modules =
+            (baseOptions.modules || []).concat(options.modules)
+        }
+        // merge custom directives
+        if (options.directives) {
+          finalOptions.directives = extend(
+            Object.create(baseOptions.directives || null),
+            options.directives
+          )
+        }
+        // copy other options
+        for (const key in options) {
+          if (key !== 'modules' && key !== 'directives') {
+            finalOptions[key] = options[key]
+          }
+        }
+      }
+
+      finalOptions.warn = warn
+
+      // 调用 baseCompiler 编译模板
+      const compiled = baseCompile(template.trim(), finalOptions)
+      if (process.env.NODE_ENV !== 'production') {
+        detectErrors(compiled.ast, warn)
+      }
+      compiled.errors = errors
+      compiled.tips = tips
+      return compiled
+    }
+
+    return {
+      compile,
+      // 模板编译入口
+      compileToFunctions: createCompileToFunctionFn(compile)
+    }
+  }
+}
+```
+
+#### src/compiler/to-function.js
+
+寻找缓存中编译结果
+
+* 如果存在直接返回缓存内容
+* 如果没有开始编译，并且将编译后的字符串形式代码转换为函数形式，最后缓存并返回结果
+
+```js
+function createFunction (code, errors) {
+  try {
+    return new Function(code)
+  } catch (err) {
+    errors.push({ err, code })
+    return noop
+  }
+}
+
+export function createCompileToFunctionFn (compile: Function): Function {
+  // 定义 cache 对象
+  const cache = Object.create(null)
+
+  return function compileToFunctions (
+    template: string,
+    options?: CompilerOptions,
+    vm?: Component
+  ): CompiledFunctionResult {
+    options = extend({}, options)
+    const warn = options.warn || baseWarn
+    delete options.warn
+
+    /* istanbul ignore if */
+		// ...
+
+    // check cache
+    // 1. 判断缓存中是否存在编译结果，如果存在，直接返回缓存结果
+    const key = options.delimiters
+      ? String(options.delimiters) + template
+      : template
+    if (cache[key]) {
+      return cache[key]
+    }
+
+    // compile
+    // 2. 把模板编译为对象形式（render、staticRenderFns），字符串形式的 js 代码
+    const compiled = compile(template, options)
+
+    // check compilation errors/tips
+    if (process.env.NODE_ENV !== 'production') {
+      if (compiled.errors && compiled.errors.length) {
+        if (options.outputSourceRange) {
+          compiled.errors.forEach(e => {
+            warn(
+              `Error compiling template:\n\n${e.msg}\n\n` +
+              generateCodeFrame(template, e.start, e.end),
+              vm
+            )
+          })
+        } else {
+          warn(
+            `Error compiling template:\n\n${template}\n\n` +
+            compiled.errors.map(e => `- ${e}`).join('\n') + '\n',
+            vm
+          )
+        }
+      }
+      if (compiled.tips && compiled.tips.length) {
+        if (options.outputSourceRange) {
+          compiled.tips.forEach(e => tip(e.msg, vm))
+        } else {
+          compiled.tips.forEach(msg => tip(msg, vm))
+        }
+      }
+    }
+
+    // turn code into functions
+    const res = {}
+    const fnGenErrors = []
+    
+    // 3. 把字符串形式的 js 代码转换为 js 方法
+    res.render = createFunction(compiled.render, fnGenErrors)
+    res.staticRenderFns = compiled.staticRenderFns.map(code => {
+      return createFunction(code, fnGenErrors)
+    })
+
+    // check function generation errors.
+    // this should only happen if there is a bug in the compiler itself.
+    // mostly for codegen development use
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production') {
+      if ((!compiled.errors || !compiled.errors.length) && fnGenErrors.length) {
+        warn(
+          `Failed to generate render function:\n\n` +
+          fnGenErrors.map(({ err, code }) => `${err.toString()} in\n\n${code}\n`).join('\n'),
+          vm
+        )
+      }
+    }
+	
+    // 4. 缓存并返回 res 对象（render、staticRenderFns 方法）
+    return (cache[key] = res)
+  }
+}
+```
+
+### compile
+
+#### src/compiler/create-compiler.js
+
+```js
+/* @flow */
+
+import { extend } from 'shared/util'
+import { detectErrors } from './error-detector'
+import { createCompileToFunctionFn } from './to-function'
+
+export function createCompilerCreator (baseCompile: Function): Function {
+  // baseOptions 平台相关的 options
+  // src/platforms/web/compiler/options.js
+  return function createCompiler (baseOptions: CompilerOptions) {
+    
+    // 接收模板和用户传入的选项
+    function compile (
+      template: string,
+      options?: CompilerOptions // 用户传入的选项
+    ): CompiledResult {
+      // 合并配置
+      const finalOptions = Object.create(baseOptions)
+      // 存储编译过程中出现的错误和信息
+      const errors = []
+      const tips = []
+
+      let warn = (msg, range, tip) => {
+        (tip ? tips : errors).push(msg)
+      }
+
+      if (options) {
+        if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+          // $flow-disable-line
+          const leadingSpaceLength = template.match(/^\s*/)[0].length
+
+          warn = (msg, range, tip) => {
+            const data: WarningMessage = { msg }
+            if (range) {
+              if (range.start != null) {
+                data.start = range.start + leadingSpaceLength
+              }
+              if (range.end != null) {
+                data.end = range.end + leadingSpaceLength
+              }
+            }
+            (tip ? tips : errors).push(data)
+          }
+        }
+        // merge custom modules
+        if (options.modules) {
+          finalOptions.modules =
+            (baseOptions.modules || []).concat(options.modules)
+        }
+        // merge custom directives
+        if (options.directives) {
+          finalOptions.directives = extend(
+            Object.create(baseOptions.directives || null),
+            options.directives
+          )
+        }
+        // copy other options
+        for (const key in options) {
+          if (key !== 'modules' && key !== 'directives') {
+            finalOptions[key] = options[key]
+          }
+        }
+      }
+
+      finalOptions.warn = warn
+
+      // 调用 baseCompiler 编译模板，将模板编译为 render 函数
+      const compiled = baseCompile(template.trim(), finalOptions)
+      if (process.env.NODE_ENV !== 'production') {
+        detectErrors(compiled.ast, warn)
+      }
+      compiled.errors = errors
+      compiled.tips = tips
+      
+      return compiled
+    }
+
+    return {
+      compile,
+      // 模板编译入口
+      compileToFunctions: createCompileToFunctionFn(compile)
+    }
+  }
+}
+```
+
+### 抽象语法树 AST 
+
+抽象语法树
+
+* 抽象语法树简称 AST（Abstract Syntax Tree）
+* 使用对象的形式描述树形的代码结构
+* 此处的抽象语法树是用来描述树形结构的 HTML 字符串
+
+为什么要使用抽象语法树：
+
+* 模板字符串转换成 AST 后，可以通过 AST 对模板做优化处理
+* 标记模板中的静态内容，在 patch 的时候直接跳过静态内容
+* 在 patch 的过程中静态内容不需要对比和重新渲染
+
+> 使用 babel 对 js 代码进行降级处理时，也会先把代码转换为 AST，再将代码转换为降级后的 js 代码。
+
+抽象语法树查看：[https://astexplorer.net](https://astexplorer.net)
+
+#### src/compiler/index
+
+```js
+/* @flow */
+
+import { parse } from './parser/index'
+import { optimize } from './optimizer'
+import { generate } from './codegen/index'
+import { createCompilerCreator } from './create-compiler'
+
+// `createCompilerCreator` allows creating compilers that use alternative
+// parser/optimizer/codegen, e.g the SSR optimizing compiler.
+// Here we just export a default compiler using the default parts.
+export const createCompiler = createCompilerCreator(function baseCompile (
+  template: string,
+  options: CompilerOptions
+): CompiledResult {
+  // 将模板转换成 ast 抽象语法树（以树行方式描述代码结构）
+  const ast = parse(template.trim(), options)
+  if (options.optimize !== false) {
+    // 优化抽象语法树
+    optimize(ast, options)
+  }
+  // 将抽象语法树生成字符串形式的 js 代码
+  const code = generate(ast, options)
+  return {
+    ast,
+    // 渲染函数
+    render: code.render,
+    // 静态渲染函数，生成静态 VNode 树
+    staticRenderFns: code.staticRenderFns
+  }
+})
+```
+
+### baseCompile - parse
+
+#### src/compiler/index
+
+```js
+/* @flow */
+
+import { parse } from './parser/index'
+import { optimize } from './optimizer'
+import { generate } from './codegen/index'
+import { createCompilerCreator } from './create-compiler'
+
+// `createCompilerCreator` allows creating compilers that use alternative
+// parser/optimizer/codegen, e.g the SSR optimizing compiler.
+// Here we just export a default compiler using the default parts.
+export const createCompiler = createCompilerCreator(function baseCompile (
+  template: string,
+  options: CompilerOptions
+): CompiledResult {
+  // 将模板转换成 ast 抽象语法树（以树行方式描述代码结构）
+  const ast = parse(template.trim(), options)
+  if (options.optimize !== false) {
+    // 优化抽象语法树
+    optimize(ast, options)
+  }
+  // 将抽象语法树生成字符串形式的 js 代码
+  const code = generate(ast, options)
+  return {
+    ast,
+    // 渲染函数
+    render: code.render,
+    // 静态渲染函数，生成静态 VNode 树
+    staticRenderFns: code.staticRenderFns
+  }
+})
+```
+
