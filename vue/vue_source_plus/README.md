@@ -4768,3 +4768,1426 @@ vnode 的核心属性
 
 ### createElement
 
+#### src/core/instance/lifecycle.js
+
+```typescript
+// src/core/instance/lifecycle.js
+
+export function mountComponent (
+  vm: Component,
+  el: ?Element,
+  hydrating?: boolean
+): Component {
+  vm.$el = el
+  
+	// ...
+  	
+  // 触发 beforeMount 声明周期钩子函数
+  callHook(vm, 'beforeMount')
+	
+  // 更新组件
+  let updateComponent
+  /* istanbul ignore if */
+  if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+  	// ...
+  } else {
+    updateComponent = () => {
+      // vm._render 调用用户传入的 render 或编译器生成的 render，返回虚拟 DOM
+      // vm._update 将虚拟 DOM 转换为真实 DOM，渲染到页面中
+      vm._update(vm._render(), hydrating)
+    }
+  }
+
+  // we set this to vm._watcher inside the watcher's constructor
+  // since the watcher's initial patch may call $forceUpdate (e.g. inside child
+  // component's mounted hook), which relies on vm._watcher being already defined
+  new Watcher(vm, updateComponent, noop, {
+    before () {
+      if (vm._isMounted && !vm._isDestroyed) {
+        callHook(vm, 'beforeUpdate')
+      }
+    }
+  }, true /* isRenderWatcher */)
+  hydrating = false
+
+  // manually mounted instance, call mounted on self
+  // mounted is called for render-created child components in its inserted hook
+  if (vm.$vnode == null) {
+    vm._isMounted = true
+    // 触发 mounted 生命周期钩子函数
+    callHook(vm, 'mounted')
+  }
+  return vm
+}
+```
+
+#### src/core/instance/render.js
+
+```js
+// src/core/instance/render.js
+
+// 定义原型方法：$nextTick、_render
+export function renderMixin (Vue: Class<Component>) {
+	// ...
+
+  Vue.prototype._render = function (): VNode {
+    const vm: Component = this
+    // vm.$options
+    const { render, _parentVnode } = vm.$options
+
+    if (_parentVnode) {
+      vm.$scopedSlots = normalizeScopedSlots(
+        _parentVnode.data.scopedSlots,
+        vm.$slots,
+        vm.$scopedSlots
+      )
+    }
+
+    // set parent vnode. this allows render functions to have access
+    // to the data on the placeholder node.
+    vm.$vnode = _parentVnode
+    // render self
+    let vnode
+    try {
+      // There's no need to maintain a stack because all render fns are called
+      // separately from one another. Nested component's render fns are called
+      // when parent component is patched.
+      currentRenderingInstance = vm
+      // 调用用户定义的 render 函数或者模板编译后的 render(渲染函数)
+      //  h 参数：vm.$createElement，生成虚拟 DOM
+      vnode = render.call(vm._renderProxy, vm.$createElement)
+    } catch (e) {
+      handleError(e, vm, `render`)
+      // return error render result,
+      // or previous vnode to prevent render error causing blank component
+      /* istanbul ignore else */
+      if (process.env.NODE_ENV !== 'production' && vm.$options.renderError) {
+        try {
+          vnode = vm.$options.renderError.call(vm._renderProxy, vm.$createElement, e)
+        } catch (e) {
+          handleError(e, vm, `renderError`)
+          vnode = vm._vnode
+        }
+      } else {
+        vnode = vm._vnode
+      }
+    } finally {
+      currentRenderingInstance = null
+    }
+    // if the returned array contains only a single node, allow it
+    if (Array.isArray(vnode) && vnode.length === 1) {
+      vnode = vnode[0]
+    }
+    // return empty vnode in case the render function errored out
+    if (!(vnode instanceof VNode)) {
+      if (process.env.NODE_ENV !== 'production' && Array.isArray(vnode)) {
+        warn(
+          'Multiple root nodes returned from render function. Render function ' +
+          'should return a single root node.',
+          vm
+        )
+      }
+      vnode = createEmptyVNode()
+    }
+    // set parent
+    vnode.parent = _parentVnode
+    return vnode
+  }
+}
+
+// h 函数：vm.$createElement
+// _c：模板编译生成的 render 函数内部，会调用这个方法
+export function initRender (vm: Component) {
+  vm._vnode = null // the root of the child tree
+  vm._staticTrees = null // v-once cached trees
+  const options = vm.$options
+  const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
+  const renderContext = parentVnode && parentVnode.context
+  // 插槽相关属性
+  vm.$slots = resolveSlots(options._renderChildren, renderContext)
+  vm.$scopedSlots = emptyObject
+  // bind the createElement fn to this instance
+  // so that we get proper render context inside it.
+  // args order: tag, data, children, normalizationType, alwaysNormalize
+  // internal version is used by render functions compiled from templates
+  // 模板编译生成的 render 函数内部，会调用这个方法
+  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
+  // normalization is always applied for the public version, used in
+  // user-written render functions.
+  // h 函数，将虚拟 DOM 转换为真实 DOM
+  vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
+
+  // $attrs & $listeners are exposed for easier HOC creation.
+  // they need to be reactive so that HOCs using them are always updated
+  const parentData = parentVnode && parentVnode.data
+
+  /* istanbul ignore else */
+  if (process.env.NODE_ENV !== 'production') {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
+    }, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, () => {
+      !isUpdatingChildComponent && warn(`$listeners is readonly.`, vm)
+    }, true)
+  } else {
+    defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, null, true)
+    defineReactive(vm, '$listeners', options._parentListeners || emptyObject, null, true)
+  }
+}
+```
+
+#### src/core/vdom/create-element.js
+
+```js
+// src/core/vdom/vnode.js
+
+// 创建注释节点
+export const createEmptyVNode = (text: string = '') => {
+  const node = new VNode()
+  node.text = text
+  node.isComment = true
+  return node
+}
+
+export default class VNode {
+  tag: string | void;
+  data: VNodeData | void;
+  children: ?Array<VNode>;
+  text: string | void;
+  elm: Node | void;
+  ns: string | void;
+  context: Component | void; // rendered in this component's scope
+  key: string | number | void;
+  componentOptions: VNodeComponentOptions | void;
+  componentInstance: Component | void; // component instance
+  parent: VNode | void; // component placeholder node
+
+  // strictly internal
+  raw: boolean; // contains raw HTML? (server only)
+  isStatic: boolean; // hoisted static node
+  isRootInsert: boolean; // necessary for enter transition check
+  isComment: boolean; // empty comment placeholder?
+  isCloned: boolean; // is a cloned node?
+  isOnce: boolean; // is a v-once node?
+  asyncFactory: Function | void; // async component factory function
+  asyncMeta: Object | void;
+  isAsyncPlaceholder: boolean;
+  ssrContext: Object | void;
+  fnContext: Component | void; // real context vm for functional nodes
+  fnOptions: ?ComponentOptions; // for SSR caching
+  devtoolsMeta: ?Object; // used to store functional render context for devtools
+  fnScopeId: ?string; // functional scope id support
+
+  constructor (
+    tag?: string,
+    data?: VNodeData,
+    children?: ?Array<VNode>,
+    text?: string,
+    elm?: Node,
+    context?: Component,
+    componentOptions?: VNodeComponentOptions,
+    asyncFactory?: Function
+  ) {
+    this.tag = tag
+    this.data = data
+    this.children = children
+    this.text = text
+    this.elm = elm
+    this.ns = undefined
+    this.context = context
+    this.fnContext = undefined
+    this.fnOptions = undefined
+    this.fnScopeId = undefined
+    this.key = data && data.key
+    this.componentOptions = componentOptions
+    this.componentInstance = undefined
+    this.parent = undefined
+    this.raw = false
+    this.isStatic = false
+    this.isRootInsert = true
+    this.isComment = false
+    this.isCloned = false
+    this.isOnce = false
+    this.asyncFactory = asyncFactory
+    this.asyncMeta = undefined
+    this.isAsyncPlaceholder = false
+  }
+
+  // DEPRECATED: alias for componentInstance for backwards compat.
+  /* istanbul ignore next */
+  get child (): Component | void {
+    return this.componentInstance
+  }
+}
+```
+
+```js
+// src/core/vdom/create-element.js
+
+const SIMPLE_NORMALIZE = 1
+const ALWAYS_NORMALIZE = 2
+
+// wrapper function for providing a more flexible interface
+// without getting yelled at by flow
+export function createElement (
+  context: Component,
+  tag: any,
+  data: any,
+  children: any,
+  normalizationTyp	e: any,
+  alwaysNormalize: boolean
+): VNode | Array<VNode> {
+  // 当 data 是数组或者原始值，重置设置参数
+  if (Array.isArray(data) || isPrimitive(data)) {
+    normalizationType = children
+    children = data
+    data = undefined
+  }
+	// 如果是用户传入的 render 函数，设置 normalizationType 属性
+  if (isTrue(alwaysNormalize)) {
+    normalizationType = ALWAYS_NORMALIZE
+  }
+  return _createElement(context, tag, data, children, normalizationType)
+}
+
+export function _createElement (
+  context: Component,
+  tag?: string | Class<Component> | Function | Object,
+  data?: VNodeData,
+  children?: any,
+  normalizationType?: number
+) {
+  // 如果 data 存在并且存在 __ob__ 属性，这时 data 是响应式对象
+  if (isDef(data) && isDef((data: any).__ob__)) {
+    // data 不应该是响应式数据
+    process.env.NODE_ENV !== 'production' && warn(
+      `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
+      'Always create fresh vnode data objects in each render!',
+      context
+    )
+    return createEmptyVNode()
+  }
+  // <component v-bind:is="currentTabComponent"></component>
+  // object syntax in v-bind
+  if (isDef(data) && isDef(data.is)) {
+    tag = data.is
+  }
+  if (!tag) {
+    // in case of component :is set to falsy value
+    // 如果 tag 是 false，意味着 :is 指令是 false，返回空节点
+    return createEmptyVNode()
+  }
+  // warn against non-primitive key
+  if (process.env.NODE_ENV !== 'production' &&
+    isDef(data) && isDef(data.key) && !isPrimitive(data.key)
+  ) {
+    if (!__WEEX__ || !('@binding' in data.key)) {
+      warn(
+        'Avoid using non-primitive value as key, ' +
+        'use string/number value instead.',
+        context
+      )
+    }
+  }
+  // support single function children as default scoped slot
+  // 处理作用域插槽
+  if (Array.isArray(children) &&
+    typeof children[0] === 'function'
+  ) {
+    data = data || {}
+    data.scopedSlots = { default: children[0] }
+    children.length = 0
+  }
+  if (normalizationType === ALWAYS_NORMALIZE) {
+    // 返回一维数组，处理用户传入的 render 函数
+    children = normalizeChildren(children)
+  } else if (normalizationType === SIMPLE_NORMALIZE) {
+    // 把二维数组转换为一维数组
+    children = simpleNormalizeChildren(children)
+  }
+  let vnode, ns
+  if (typeof tag === 'string') {
+    let Ctor
+    ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    if (config.isReservedTag(tag)) {
+      // 如果 tag 是 html 保留标签，直接创建 VNode 对象
+      // platform built-in elements
+      if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
+        warn(
+          `The .native modifier for v-on is only valid on components but it was used on <${tag}>.`,
+          context
+        )
+      }
+      vnode = new VNode(
+        config.parsePlatformTagName(tag), data, children,
+        undefined, undefined, context
+      )
+    } else if (
+      (!data || !data.pre) && 
+      isDef(Ctor = resolveAsset(context.$options, 'components', tag))
+    ) {
+      // 查找自定义组件构造函数声明
+      // 根据 Ctor 创建组件的 VNode
+      // component
+      vnode = createComponent(Ctor, data, context, children, tag)
+    } else {
+      // 自定义标签
+      // unknown or unlisted namespaced elements
+      // check at runtime because it may get assigned a namespace when its
+      // parent normalizes children
+      vnode = new VNode(
+        tag, data, children,
+        undefined, undefined, context
+      )
+    }
+  } else {
+    // direct component options / constructor
+    // 创建组件
+    vnode = createComponent(tag, data, context, children)
+  }
+  if (Array.isArray(vnode)) {
+    return vnode
+  } else if (isDef(vnode)) {
+    if (isDef(ns)) applyNS(vnode, ns)
+    if (isDef(data)) registerDeepBindings(data)
+    return vnode
+  } else {
+    return createEmptyVNode()
+  }
+}
+```
+
+```js
+// src/core/vdom/helper/normalize-children.js
+
+// The template compiler attempts to minimize the need for normalization by
+// statically analyzing the template at compile time.
+//
+// For plain HTML markup, normalization can be completely skipped because the
+// generated render function is guaranteed to return Array<VNode>. There are
+// two cases where extra normalization is needed:
+
+// 1. When the children contains components - because a functional component
+// may return an Array instead of a single root. In this case, just a simple
+// normalization is needed - if any child is an Array, we flatten the whole
+// thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
+// because functional components already normalize their own children.
+export function simpleNormalizeChildren (children: any) {
+  for (let i = 0; i < children.length; i++) {
+    if (Array.isArray(children[i])) {
+      return Array.prototype.concat.apply([], children)
+    }
+  }
+  return children
+}
+
+// 2. When the children contains constructs that always generated nested Arrays,
+// e.g. <template>, <slot>, v-for, or when the children is provided by user
+// with hand-written render functions / JSX. In such cases a full normalization
+// is needed to cater to all possible types of children values.
+export function normalizeChildren (children: any): ?Array<VNode> {
+  // 1. 如果 children 是原始值，创建文本节点，并返回数组形式
+  // 2. 如果 children 是数组，将数组扁平化
+  // 3. 非上述情况，返回 undefined
+  return isPrimitive(children)
+    ? [createTextVNode(children)]
+    : Array.isArray(children)
+      ? normalizeArrayChildren(children)
+      : undefined
+}
+
+function isTextNode (node): boolean {
+  return isDef(node) && isDef(node.text) && isFalse(node.isComment)
+}
+
+function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNode> {
+  const res = []
+  let i, c, lastIndex, last
+  for (i = 0; i < children.length; i++) {
+    c = children[i]
+    if (isUndef(c) || typeof c === 'boolean') continue
+    lastIndex = res.length - 1
+    last = res[lastIndex]
+    //  nested
+    if (Array.isArray(c)) {
+      if (c.length > 0) {
+        c = normalizeArrayChildren(c, `${nestedIndex || ''}_${i}`)
+        // merge adjacent text nodes
+        if (isTextNode(c[0]) && isTextNode(last)) {
+          res[lastIndex] = createTextVNode(last.text + (c[0]: any).text)
+          c.shift()
+        }
+        res.push.apply(res, c)
+      }
+    } else if (isPrimitive(c)) {
+      if (isTextNode(last)) {
+        // merge adjacent text nodes
+        // this is necessary for SSR hydration because text nodes are
+        // essentially merged when rendered to HTML strings
+        res[lastIndex] = createTextVNode(last.text + c)
+      } else if (c !== '') {
+        // convert primitive to vnode
+        res.push(createTextVNode(c))
+      }
+    } else {
+      if (isTextNode(c) && isTextNode(last)) {
+        // merge adjacent text nodes
+        res[lastIndex] = createTextVNode(last.text + c.text)
+      } else {
+        // default key for nested array children (likely generated by v-for)
+        if (isTrue(children._isVList) &&
+          isDef(c.tag) &&
+          isUndef(c.key) &&
+          isDef(nestedIndex)) {
+          c.key = `__vlist${nestedIndex}_${i}__`
+        }
+        res.push(c)
+      }
+    }
+  }
+  return res
+}
+```
+
+### update
+
+#### src/core/instance/lifecycle.js
+
+```js
+// src/core/instance/lifecycle.js
+
+export function mountComponent (
+  vm: Component,
+  el: ?Element,
+  hydrating?: boolean
+): Component {
+  vm.$el = el
+  
+	// ...
+  	
+  // 触发 beforeMount 声明周期钩子函数
+  callHook(vm, 'beforeMount')
+	
+  // 更新组件
+  let updateComponent
+  /* istanbul ignore if */
+  if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+  	// ...
+  } else {
+    updateComponent = () => {
+      // vm._render 调用用户传入的 render 或编译器生成的 render，返回虚拟 DOM
+      // vm._update 将虚拟 DOM 转换为真实 DOM，渲染到页面中
+      vm._update(vm._render(), hydrating)
+    }
+  }
+
+  // we set this to vm._watcher inside the watcher's constructor
+  // since the watcher's initial patch may call $forceUpdate (e.g. inside child
+  // component's mounted hook), which relies on vm._watcher being already defined
+  new Watcher(vm, updateComponent, noop, {
+    before () {
+      if (vm._isMounted && !vm._isDestroyed) {
+        callHook(vm, 'beforeUpdate')
+      }
+    }
+  }, true /* isRenderWatcher */)
+  hydrating = false
+
+  // manually mounted instance, call mounted on self
+  // mounted is called for render-created child components in its inserted hook
+  if (vm.$vnode == null) {
+    vm._isMounted = true
+    // 触发 mounted 生命周期钩子函数
+    callHook(vm, 'mounted')
+  }
+  return vm
+}
+
+export function lifecycleMixin (Vue: Class<Component>) {
+  // 将 VNode 渲染成真实 DOM，首次渲染、数据更新都会调用
+  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
+    const vm: Component = this
+    const prevEl = vm.$el
+    const prevVnode = vm._vnode
+    const restoreActiveInstance = setActiveInstance(vm)
+    vm._vnode = vnode
+    // Vue.prototype.__patch__ is injected in entry points
+    // based on the rendering backend used.
+    if (!prevVnode) {
+      // initial render 首次渲染
+      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
+    } else {
+      // updates 数据更新
+      vm.$el = vm.__patch__(prevVnode, vnode)
+    }
+    restoreActiveInstance()
+    // update __vue__ reference
+    if (prevEl) {
+      prevEl.__vue__ = null
+    }
+    if (vm.$el) {
+      vm.$el.__vue__ = vm
+    }
+    // if parent is an HOC, update its $el as well
+    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+      vm.$parent.$el = vm.$el
+    }
+    // updated hook is called by the scheduler to ensure that children are
+    // updated in a parent's updated hook.
+  }
+
+  // ...
+}
+```
+
+### patch 定义过程
+
+#### src/platforms/web/runtime/index.js
+
+```js
+// src/platforms/web/runtime/index.js
+
+import { patch } from './patch'
+import platformDirectives from './directives/index'
+import platformComponents from './components/index'
+
+// ...
+
+// install platform patch function
+Vue.prototype.__patch__ = inBrowser ? patch : noop
+```
+
+#### src/platforms/web/runtime/patch.js
+
+```js
+// src/platforms/web/runtime/patch.js
+
+/* @flow */
+
+import * as nodeOps from 'web/runtime/node-ops'
+import { createPatchFunction } from 'core/vdom/patch'
+import baseModules from 'core/vdom/modules/index'
+import platformModules from 'web/runtime/modules/index'
+
+// the directive module should be applied last, after all
+// built-in modules have been applied.
+const modules = platformModules.concat(baseModules)
+
+// createPatchFunction 高阶函数，柯里化函数
+export const patch: Function = createPatchFunction({ nodeOps, modules })
+```
+
+```js
+// src/platforms/web/runtime/node-ops.js
+
+// DOM 操作 API
+
+/* @flow */
+
+import { namespaceMap } from 'web/util/index'
+
+export function createElement (tagName: string, vnode: VNode): Element {
+  const elm = document.createElement(tagName)
+  if (tagName !== 'select') {
+    return elm
+  }
+  // false or null will remove the attribute but undefined will not
+  if (vnode.data && vnode.data.attrs && vnode.data.attrs.multiple !== undefined) {
+    elm.setAttribute('multiple', 'multiple')
+  }
+  return elm
+}
+
+export function createElementNS (namespace: string, tagName: string): Element {
+  return document.createElementNS(namespaceMap[namespace], tagName)
+}
+
+export function createTextNode (text: string): Text {
+  return document.createTextNode(text)
+}
+
+export function createComment (text: string): Comment {
+  return document.createComment(text)
+}
+
+export function insertBefore (parentNode: Node, newNode: Node, referenceNode: Node) {
+  parentNode.insertBefore(newNode, referenceNode)
+}
+
+export function removeChild (node: Node, child: Node) {
+  node.removeChild(child)
+}
+
+export function appendChild (node: Node, child: Node) {
+  node.appendChild(child)
+}
+
+export function parentNode (node: Node): ?Node {
+  return node.parentNode
+}
+
+export function nextSibling (node: Node): ?Node {
+  return node.nextSibling
+}
+
+export function tagName (node: Element): string {
+  return node.tagName
+}
+
+export function setTextContent (node: Node, text: string) {
+  node.textContent = text
+}
+
+export function setStyleScope (node: Element, scopeId: string) {
+  node.setAttribute(scopeId, '')
+}
+```
+
+```js
+// src/platforms/web/runtime/modules/index.js
+
+// 平台相关的处理
+// 操作属性、样式、事件等
+
+import attrs from './attrs'
+import klass from './class'
+import events from './events'
+import domProps from './dom-props'
+import style from './style'
+import transition from './transition'
+
+export default [
+  attrs,
+  klass,
+  events,
+  domProps,
+  style,
+  transition // 过渡动画
+]
+
+
+// src/platforms/web/runtime/modules/attrs.js
+
+// ...
+
+// vnode 钩子的声明周期函数
+export default {
+  create: updateAttrs,
+  update: updateAttrs
+}
+```
+
+```js
+// src/core/vdom/modules/index
+
+// 处理指令和 ref
+
+import directives from './directives'
+import ref from './ref'
+
+export default [
+  ref,
+  directives
+]
+```
+
+#### src/core/vdom/patch.js
+
+```js
+// src/core/vdom/patch.js
+
+const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
+
+export function createPatchFunction (backend) {
+  let i, j
+  const cbs = {}
+	
+  // modules 节点的属性/事件/样式属性
+  // nodeOps 节点操作
+  const { modules, nodeOps } = backend
+
+  for (i = 0; i < hooks.length; ++i) {
+    // cbs['create'] = []
+    cbs[hooks[i]] = []
+    for (j = 0; j < modules.length; ++j) {
+      if (isDef(modules[j][hooks[i]])) {
+        // cbs['create'] = [updateAttrs, updateClass, update...]
+        cbs[hooks[i]].push(modules[j][hooks[i]])
+      }
+    }
+  }
+
+	// ...
+	
+  // 返回 patch 函数
+  // createPatchFunction({ nodeOps, moduels }) 传入平台相关的两个参数
+  // core 中方法与平台无关，通过函数柯里化做到平台与核心逻辑分离
+  return function patch (oldVnode, vnode, hydrating, removeOnly) {
+  	// ...
+  }
+}
+```
+
+### patch 执行过程
+
+#### patch
+
+```js
+// src/core/vdom/patch.js
+
+const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
+
+function sameVnode (a, b) {
+  return (
+    a.key === b.key && (
+      (
+        a.tag === b.tag &&
+        a.isComment === b.isComment &&
+        isDef(a.data) === isDef(b.data) &&
+        sameInputType(a, b)
+      ) || (
+        isTrue(a.isAsyncPlaceholder) &&
+        a.asyncFactory === b.asyncFactory &&
+        isUndef(b.asyncFactory.error)
+      )
+    )
+  )
+}
+
+export function createPatchFunction (backend) {
+  let i, j
+  const cbs = {}
+	
+  // modules 节点的属性/事件/样式属性
+  // nodeOps 节点操作
+  const { modules, nodeOps } = backend
+
+  for (i = 0; i < hooks.length; ++i) {
+    // cbs['create'] = []
+    cbs[hooks[i]] = []
+    for (j = 0; j < modules.length; ++j) {
+      if (isDef(modules[j][hooks[i]])) {
+        // cbs['create'] = [updateAttrs, updateClass, update...]
+        cbs[hooks[i]].push(modules[j][hooks[i]])
+      }
+    }
+  }
+
+	// ...
+	
+  // 返回 patch 函数
+  // createPatchFunction({ nodeOps, moduels }) 传入平台相关的两个参数
+  // core 中方法与平台无关，通过函数柯里化做到平台与核心逻辑分离
+  return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 新 VNode 不存在
+    if (isUndef(vnode)) {
+      // 老 VNode 存在，执行 destory 钩子函数
+      if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
+      return
+    }
+
+    let isInitialPatch = false
+    // 待插入节点队列
+    const insertedVnodeQueue = []
+    
+		// 老 VNode 不存在
+    if (isUndef(oldVnode)) {
+      // empty mount (likely as component), create new root element
+      isInitialPatch = true
+      // 创建新的 VNode，当前创建的 DOM 元素只是存在于内存中
+      createElm(vnode, insertedVnodeQueue)
+    } else {
+      // 新老节点都存在，更新
+      const isRealElement = isDef(oldVnode.nodeType)
+      	
+      if (!isRealElement && sameVnode(oldVnode, vnode)) {
+        // 不是真实 DOM 元素，并且新节点和旧节点相同，更新操作 diff 算法
+        // patch existing root node
+        patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
+      } else {
+        // 如果是真实 DOM 元素，创建 VNode （首次渲染）
+        if (isRealElement) {
+          // mounting to a real element
+          // check if this is server-rendered content and if we can perform
+          // a successful hydration.
+          if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
+            oldVnode.removeAttribute(SSR_ATTR)
+            hydrating = true
+          }
+          if (isTrue(hydrating)) {
+            if (hydrate(oldVnode, vnode, insertedVnodeQueue)) {
+              invokeInsertHook(vnode, insertedVnodeQueue, true)
+              return oldVnode
+            } else if (process.env.NODE_ENV !== 'production') {
+              warn(
+                'The client-side rendered virtual DOM tree is not matching ' +
+                'server-rendered content. This is likely caused by incorrect ' +
+                'HTML markup, for example nesting block-level elements inside ' +
+                '<p>, or missing <tbody>. Bailing hydration and performing ' +
+                'full client-side render.'
+              )
+            }
+          }
+          // either not server-rendered, or hydration failed.
+          // create an empty node and replace it
+          // 将真实 DOM 转换为 VNode 节点
+          oldVnode = emptyNodeAt(oldVnode)
+        }
+
+        // replacing existing element
+        // 获取存储的 DOM 元素
+        const oldElm = oldVnode.elm
+        // 获取 DOM 元素的父元素
+        const parentElm = nodeOps.parentNode(oldElm)
+
+        // create new node
+        // 创建 DOM 节点
+        createElm(
+          vnode,
+          insertedVnodeQueue,
+          // extremely rare edge case: do not insert if old element is in a
+          // leaving transition. Only happens when combining transition +
+          // keep-alive + HOCs. (#4590)
+          oldElm._leaveCb ? null : parentElm,
+          nodeOps.nextSibling(oldElm)
+        )
+
+        // update parent placeholder node element, recursively
+        if (isDef(vnode.parent)) {
+          let ancestor = vnode.parent
+          const patchable = isPatchable(vnode)
+          while (ancestor) {
+            for (let i = 0; i < cbs.destroy.length; ++i) {
+              cbs.destroy[i](ancestor)
+            }
+            ancestor.elm = vnode.elm
+            if (patchable) {
+              for (let i = 0; i < cbs.create.length; ++i) {
+                cbs.create[i](emptyNode, ancestor)
+              }
+              // #6513
+              // invoke insert hooks that may have been merged by create hooks.
+              // e.g. for directives that uses the "inserted" hook.
+              const insert = ancestor.data.hook.insert
+              if (insert.merged) {
+                // start at index 1 to avoid re-invoking component mounted hook
+                for (let i = 1; i < insert.fns.length; i++) {
+                  insert.fns[i]()
+                }
+              }
+            } else {
+              registerRef(ancestor)
+            }
+            ancestor = ancestor.parent
+          }
+        }
+
+        // destroy old node（移除老节点）
+        if (isDef(parentElm)) {
+          // 判断 parentElm 是否存在，将 oldVNode 从界面中移除，并且触发相关的钩子函数
+          removeVnodes([oldVnode], 0, 0)
+        } else if (isDef(oldVnode.tag)) {
+          // 如果 ParentElm 不存在，并且 oldVNode 存在 tag 属性
+          invokeDestroyHook(oldVnode)
+        }
+      }
+    }
+	
+    // 触发队列中节点 insert 钩子函数
+    invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch)
+    return vnode.elm
+  }
+}
+```
+
+#### createElm
+
+把 VNode 转换为 DOM 元素，并插入到 DOM 树中，并且去触发一些相应的钩子函数。
+
+```js
+// src/core/vdom/patch.js
+
+export function createPatchFunction (backend) {
+  let i, j
+  const cbs = {}
+  
+  function createChildren (vnode, children, insertedVnodeQueue) {
+    if (Array.isArray(children)) {
+      // 如果 children 是数组
+      
+      if (process.env.NODE_ENV !== 'production') {
+        // 判断子元素是否存在相同的 key，如果存在，打印警告
+        checkDuplicateKeys(children)
+      }
+      // 遍历 children，再次调用 createElm 将 vnode 转换为真实 DOM
+      for (let i = 0; i < children.length; ++i) {
+        createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
+      }
+    } else if (isPrimitive(vnode.text)) {
+      // 原始值，创建文本节点，挂载到 vnode.elm 中
+      nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)))
+    }
+  }
+  
+  // 把 VNode 转换为真实 DOM
+  function createElm (
+    vnode,
+    insertedVnodeQueue,
+    parentElm,
+    refElm,
+    nested,
+    ownerArray,
+    index
+  ) {
+    if (isDef(vnode.elm) && isDef(ownerArray)) {
+      // 如果 vnode 存在 elm 元素，并且存在子节点
+      // This vnode was used in a previous render!
+      // now it's used as a new node, overwriting its elm would cause
+      // potential patch errors down the road when it's used as an insertion
+      // reference node. Instead, we clone the node on-demand before creating
+      // associated DOM element for it.
+      vnode = ownerArray[index] = cloneVNode(vnode)
+    }
+
+    vnode.isRootInsert = !nested // for transition enter check
+    if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+      return
+    }
+	
+    // 缓存变量
+    const data = vnode.data
+    const children = vnode.children
+    const tag = vnode.tag
+    	
+    if (isDef(tag)) {
+      // vnode 存在 tag 属性，这里就是 vnode 的标签名称
+      
+      if (process.env.NODE_ENV !== 'production') {
+        if (data && data.pre) {
+          creatingElmInVPre++
+        }
+        // 如果标签是否是未知标签，打印警告
+        if (isUnknownElement(vnode, creatingElmInVPre)) {
+          warn(
+            'Unknown custom element: <' + tag + '> - did you ' +
+            'register the component correctly? For recursive components, ' +
+            'make sure to provide the "name" option.',
+            vnode.context
+          )
+        }
+      }
+	
+      // 判断 vnode 是否存在命名空间，分别调用不同的方法
+      vnode.elm = vnode.ns
+        ? nodeOps.createElementNS(vnode.ns, tag)
+        : nodeOps.createElement(tag, vnode)
+      // 为 vnode 所对应的 dom 元素设置样式作用域，设置 scopedId
+      setScope(vnode)
+
+      /* istanbul ignore if */
+      if (__WEEX__) {
+       	// ...
+      } else {
+        // 将 vnode 的子元素转换为 DOM 对象
+        createChildren(vnode, children, insertedVnodeQueue)
+        if (isDef(data)) {
+          // 如果 data 存在值，触发 created 钩子函数
+          invokeCreateHooks(vnode, insertedVnodeQueue)
+        }
+        // 将 vnode 创建好的 DOM 对象插入到父级 DOM 中
+        insert(parentElm, vnode.elm, refElm)
+      }
+
+      if (process.env.NODE_ENV !== 'production' && data && data.pre) {
+        creatingElmInVPre--
+      }
+    } else if (isTrue(vnode.isComment)) {
+      // vnode 是注释节点
+      vnode.elm = nodeOps.createComment(vnode.text)
+      insert(parentElm, vnode.elm, refElm)
+    } else {
+      // vnode 是文本节点
+      vnode.elm = nodeOps.createTextNode(vnode.text)
+      insert(parentElm, vnode.elm, refElm)
+    }
+  }
+}
+```
+
+#### patchVnode
+
+新旧 VNode 对比，找到差异，更新到真实 DOM
+
+```js
+// src/core/vdom/patch.js
+
+export function createPatchFunction (backend) {
+  let i, j
+  const cbs = {}
+  
+  function addVnodes (parentElm, refElm, vnodes, startIdx, endIdx, insertedVnodeQueue) {
+    // 遍历所有新节点的子节点，调用 createElm，将子节点转化为真实 DOM，挂载到 DOM 树
+    for (; startIdx <= endIdx; ++startIdx) {
+      createElm(vnodes[startIdx], insertedVnodeQueue, parentElm, refElm, false, vnodes, startIdx)
+    }
+  }
+  
+  function removeVnodes (vnodes, startIdx, endIdx) {
+    for (; startIdx <= endIdx; ++startIdx) {
+      const ch = vnodes[startIdx]
+      if (isDef(ch)) {
+        if (isDef(ch.tag)) {
+          // 触发 remove、destory 钩子函数
+          removeAndInvokeRemoveHook(ch)
+          invokeDestroyHook(ch)
+        } else { // Text node
+          removeNode(ch.elm)
+        }
+      }
+    }
+  }
+  
+  function patchVnode (
+    oldVnode,
+    vnode,
+    insertedVnodeQueue,
+    ownerArray,
+    index,
+    removeOnly
+  ) {
+    if (oldVnode === vnode) {
+      return
+    }
+
+    if (isDef(vnode.elm) && isDef(ownerArray)) {
+      // clone reused vnode
+      vnode = ownerArray[index] = cloneVNode(vnode)
+    }
+
+    const elm = vnode.elm = oldVnode.elm
+
+		// ...
+    
+    let i
+    const data = vnode.data
+    
+    // 触发 prepatch 钩子函数
+    if (isDef(data) && isDef(i = data.hook) && isDef(i = i.prepatch)) {
+      i(oldVnode, vnode)
+    }
+	
+    // 获取新旧节点的子节点 
+    const oldCh = oldVnode.children
+    const ch = vnode.children
+    
+    if (isDef(data) && isPatchable(vnode)) {
+      // 触发 update 钩子函数（模块中的钩子函数），更新节点的属性/样式/事件等
+      for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
+      // 用户自定义钩子函数
+      if (isDef(i = data.hook) && isDef(i = i.update)) i(oldVnode, vnode)
+    }
+     
+     // 判断新节点没有文本
+    if (isUndef(vnode.text)) {
+      if (isDef(oldCh) && isDef(ch)) {
+        // 新老节点都有子节点并且子节点不同
+        // 对子节点进行 diff 操作，调用 updateChildren 
+        if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
+      } else if (isDef(ch)) 
+        if (process.env.NODE_ENV !== 'production') {
+          checkDuplicateKeys(ch)
+        }
+        // 新节点存在子节点，老节点不存在子节点
+        // 先清空老节点 DOM 的文本内容，然后为当前 DOM 节点加入子节点
+        if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
+        addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)
+      } else if (isDef(oldCh)) {
+        // 老节点存在子节点，新节点没有子节点
+        // 删除老节点中的子节点
+        removeVnodes(oldCh, 0, oldCh.length - 1)
+      } else if (isDef(oldVnode.text)) {
+        // 老节点存在 text 属性，设置为空
+        nodeOps.setTextContent(elm, '')
+      }
+    } else if (oldVnode.text !== vnode.text) {
+      // 新旧节点都有文本节点且不一致、重新赋值修改文本
+      nodeOps.setTextContent(elm, vnode.text)
+    }
+    if (isDef(data)) {
+      // 获取 postpatch 钩子函数并执行
+      if (isDef(i = data.hook) && isDef(i = i.postpatch)) i(oldVnode, vnode)
+    }
+  }
+}
+```
+
+#### ☆ updateChildren
+
+pacthVnode 中，当新老节点都存在子节点，并且是相同节点，会调用 updateChildren 方法。
+
+```js
+// src/core/vdom/patch.js
+
+export function createPatchFunction (backend) {
+  let i, j
+  const cbs = {}
+		
+  // diff 算法，更新新旧节点的子节点
+  function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
+    let oldStartIdx = 0
+    let newStartIdx = 0
+    let oldEndIdx = oldCh.length - 1
+    let oldStartVnode = oldCh[0]
+    let oldEndVnode = oldCh[oldEndIdx]
+    let newEndIdx = newCh.length - 1
+    let newStartVnode = newCh[0]
+    let newEndVnode = newCh[newEndIdx]
+    let oldKeyToIdx, idxInOld, vnodeToMove, refElm
+
+    // removeOnly is a special flag used only by <transition-group>
+    // to ensure removed elements stay in correct relative positions
+    // during leaving transitions
+    const canMove = !removeOnly
+
+    if (process.env.NODE_ENV !== 'production') {
+      // 检查重复 key
+      checkDuplicateKeys(newCh)
+    }
+	
+    // diff 算法
+    while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      if (isUndef(oldStartVnode)) {
+        // 判断开始节点是否有值，如果不存在值，获取后一个节点作为开始节点
+        oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
+      } else if (isUndef(oldEndVnode)) {
+        // 判断结束节点是否有值，如果不存在值，获取前一个节点作为结束节点
+        oldEndVnode = oldCh[--oldEndIdx]
+      } else if (sameVnode(oldStartVnode, newStartVnode)) {
+        // 头头比较
+        patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+        oldStartVnode = oldCh[++oldStartIdx]
+        newStartVnode = newCh[++newStartIdx]
+      } else if (sameVnode(oldEndVnode, newEndVnode)) {
+        // 尾尾比较
+        patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
+        oldEndVnode = oldCh[--oldEndIdx]
+        newEndVnode = newCh[--newEndIdx]
+      } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
+        // 头尾比较
+        patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
+        canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
+        oldStartVnode = oldCh[++oldStartIdx]
+        newEndVnode = newCh[--newEndIdx]
+      } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
+        // 尾头比较
+        patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+        canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
+        oldEndVnode = oldCh[--oldEndIdx]
+        newStartVnode = newCh[++newStartIdx]
+      } else {
+        // 乱序对比
+        // 用新节点去老节点中依次比较
+        	
+        // 缓存老节点的 key 和 索引，创建映射表
+        if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
+        
+        // 如果新节点存在 key，去老节点索引中查找，如果没有找到，使用节点再去查找
+        idxInOld = isDef(newStartVnode.key)
+          ? oldKeyToIdx[newStartVnode.key]
+          : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx)
+        	
+        if (isUndef(idxInOld)) { // New element
+          // 如果没有找到，说明是新元素
+          // 创建新节点的 DOM 对象，并插入到老节点的 DOM 元素之前
+          createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
+        } else {
+          // 获取老节点
+          vnodeToMove = oldCh[idxInOld]
+          
+          if (sameVnode(vnodeToMove, newStartVnode)) {
+            // 如果新老节点相同，patchVnode
+            patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+            oldCh[idxInOld] = undefined
+            // 将老的节点移动到新节点之前
+            canMove && nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm)
+          } else {
+            // 如果 key 相同，但是是不同的元素，创建新元素
+            // same key but different element. treat as new element
+            createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
+          }
+        }
+        // 移动下标，依次处理
+        newStartVnode = newCh[++newStartIdx]
+      }
+    }
+    
+    if (oldStartIdx > oldEndIdx) {
+      // 新节点比老节点多的情况，把剩余新节点插入到老节点后面
+      refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
+      addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
+    } else if (newStartIdx > newEndIdx) {
+      // 新节点遍历完，老节点还存在，移除老节点
+      removeVnodes(oldCh, oldStartIdx, oldEndIdx)
+    }
+  }
+}
+```
+
+#### key 的作用
+
+vue 文档中说明可以在 v-for 的过程中给每一个节点设置 key 属性，以便于跟踪节点，元素复用。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>patch - no key</title>
+</head>
+<body>
+
+  <div id="app">
+    <button @click="handler">按钮</button>
+    <ul>
+      <li v-for="value in array">{{ value }}</li>
+    </ul>
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        array: ['a', 'b', 'c', 'd']
+      },
+      methods: {
+        handler() {
+          this.array.splice(1, 0, 'x')
+          // => this.array = ['a', 'x', 'b', 'c', 'd']
+        }
+      }
+    })
+  </script>
+
+</body>
+</html>
+```
+
+没有设置 key 的情况下，需要更新 3 次 DOM，还需要插入一次 DOM。会发生 4 次 DOM 操作。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>patch - has key</title>
+</head>
+<body>
+
+  <div id="app">
+    <button @click="handler">按钮</button>
+    <ul>
+      <li v-for="value in array" :key="value">{{ value }}</li>
+    </ul>
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        array: ['a', 'b', 'c', 'd']
+      },
+      methods: {
+        handler() {
+          this.array.splice(1, 0, 'x')
+          // => this.array = ['a', 'x', 'b', 'c', 'd']
+        }
+      }
+    })
+  </script>
+
+</body>
+</html>
+```
+
+ 存在 key 的情况下，整个过程中，只需要进行一次 DOM 插入操作。
+
+### 总结
+
+* vm._init()
+
+* vm.$mount()
+
+* mountComponent
+
+* 创建 watcher 对象
+
+* updateComponent()
+
+  * `vm._update(vm._render(), hydrating)`
+
+* vm._render
+
+  * `vnode = render.call(vm._renderProxy, vm.$creatElement)`
+  * vm.$createElement()
+    * h 函数，用户设置的 render 函数调用
+    * createElement(vm, a, b, c, d, true)
+  * vm._c
+    * h 函数，模板编译的 render 函数中调用
+    * createElement(vm, a, b, c, d, false)
+  * _createElement
+    * `vnode = new VNode(config, parsePlatformTagName(tag), data, children, undefiend, undefiend, context)`
+    * `vm._render() ` 结束，返回 vnode
+
+* vm._update()
+
+  * 负责将虚拟 DOM  渲染成真实 DOM
+  * 首次执行：`vm.__patch__(vm.$el, vnode, hydrating, false)`
+  * 数据更新：`vm.__patch__(prevVnode, vnode)`
+
+* `vm.__patch__()`
+
+  * runtime/index.js 中挂载 `Vue.prototype.__patch__`
+  * runtime/patch.js 的 patch 函数
+  * 设置 modules 和 nodeOps
+    * modules：平台相关的模块
+    * nodeOps：操作 DOM API
+  * 调用 createPatchFunction() 函数返回 patch 函数
+
+* patch()
+
+  * vdom/patch.js 中的 createPatchFunction 返回 patch 函数
+  * 挂载 cbs 节点的属性/事件/样式操作的钩子函数
+  * 判断第一个参数是真实 DOM 还是虚拟 DOM。首次加载，第一个参数就是真实 DOM，转换成 VNode，调用 createElm
+  * 如果是数据更新的时候，新旧节点是 sameVnode 执行 patchVnode，也就是 diff 过程
+  * 删除旧节点
+
+* createElm(vnode, InsertedVnodeQueue)
+
+  * 把虚拟节点转化为真实 DOM，并插入到 DOM 树
+  * 把虚拟节点的 children，转换为真实 DOM，并插入到 DOM 树
+
+* patchVnode
+
+  * 对比新旧 VNode，以及新旧 VNode 的子节点，更新差异
+  * 如果新旧 VNode 都有子节点并且子节点不同的话，会调用 updateChildren 对比子节点的差异
+  
+* updateChildren
+
+  * 从头和尾依次找到相同的子节点进行比较 patchVnode，总共有四种比较方式
+  * 在老节点的子节点中查找 newStartVnode，并进行处理
+  * 如果新节点比老节点多，把新增的子节点插入到 DOM 中
+  * 如果老节点比新节点多，把多余的老节点删除
+
+## 模板编译
+
+
+
+  

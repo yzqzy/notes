@@ -183,7 +183,7 @@ export function createPatchFunction (backend) {
         createChildren(vnode, children, insertedVnodeQueue)
         if (appendAsTree) {
           if (isDef(data)) {
-invokeCreateHooks(vnode, insertedVnodeQueue)
+            invokeCreateHooks(vnode, insertedVnodeQueue)
           }
           insert(parentElm, vnode.elm, refElm)
         }
@@ -281,18 +281,18 @@ invokeCreateHooks(vnode, insertedVnodeQueue)
     }
   }
 
-function createChildren (vnode, children, insertedVnodeQueue) {
-	if (Array.isArray(children)) {
-		if (process.env.NODE_ENV !== 'production') {
-			checkDuplicateKeys(children)
-		}
-		for (let i = 0; i < children.length; ++i) {
-			createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
-		}
-	} else if (isPrimitive(vnode.text)) {
-		nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)))
-	}
-}
+  function createChildren (vnode, children, insertedVnodeQueue) {
+    if (Array.isArray(children)) {
+      if (process.env.NODE_ENV !== 'production') {
+        checkDuplicateKeys(children)
+      }
+      for (let i = 0; i < children.length; ++i) {
+        createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
+      }
+    } else if (isPrimitive(vnode.text)) {
+      nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)))
+    }
+  }
 
   function isPatchable (vnode) {
     while (vnode.componentInstance) {

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>patch - has key</title>
+</head>
+<body>
+
+  <div id="app">
+    <button @click="handler">按钮</button>
+    <ul>
+      <li v-for="value in array" :key="value">{{ value }}</li>
+    </ul>
+  </div>
+
+  <script src="../../dist/vue.js"></script>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        array: ['a', 'b', 'c', 'd']
+      },
+      methods: {
+        handler() {
+          this.array.splice(1, 0, 'x')
+          // => this.array = ['a', 'x', 'b', 'c', 'd']
+        }
+      }
+    })
+  </script>
+
+</body>
+</html>
