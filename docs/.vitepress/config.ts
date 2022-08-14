@@ -3,7 +3,7 @@ import sidebars from './sidebar.json'
 
 // @ts-ignore
 export default defineConfig((ctx) => ({
-  base: ctx.mode == 'production' ? '/notes/' : '', 
+  // base: ctx.mode == 'production' ? '/notes/' : '', 
   lang: 'en-US',
   title: 'Personal Notes',
   titleTemplate: "月落 - Personal Notes",
