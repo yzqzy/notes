@@ -33,7 +33,10 @@
     - [自定义loader、plugins](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack源码实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack源码进阶实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write_plus) 已完成
-  + [Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
+  + Vite
+    - [Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
+    - [vite源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_vite) 已完成
+    - [Vite源码进阶实现](https://github.com/yw0525/notes/tree/master/vite/vite_source) 已完成
 * 代码规范
   + [JSDOC](https://github.com/yw0525/notes/tree/master/doc) 已完成
   + [Jest](https://github.com/yw0525/notes/tree/master/jest) 已完成
@@ -42,11 +45,11 @@
   + ~~[vue基础](https://github.com/yw0525/notes/tree/master/vue/vue_base) 已废弃~~ 😅
   + [vue3自定义渲染器](https://github.com/yw0525/notes/tree/master/vue/vue3_renderer) 已完成
   + [vue源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
+  + [vue源码进阶解析](https://github.com/yw0525/notes/tree/master/vue/vue_source_plus) 已完成
   + [vue源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_source_design) 已完成
   + [vue3 Diff过程分析](https://github.com/yw0525/notes/tree/master/vue/vue3_diff) 已完成
   + [vue3源码实现](https://github.com/yw0525/notes/tree/master/vue/vue3_source) 已完成
   + [vue-router源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_router) 已完成
-  + [vite源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_vite) 已完成
   + [vuex源码实现](https://github.com/yw0525/notes/tree/master/vue/vuex) 已完成
   + [vue-cli源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_cli) 已完成
   + [vue-ssr源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_ssr) 已完成
