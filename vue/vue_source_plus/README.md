@@ -7932,3 +7932,960 @@ h1 标签内容是静态根节点，另外两个 div 都不是静态根节点，
 
 ## 组件化
 
+一个 Vue 组件就是一个拥有预定义选项的一个 Vue 实例。
+
+一个组件可以组成页面上一个功能完备的区域，组件可以包含脚本、样式、模板。
+
+### 组件注册
+
+* 全局组件
+* 局部组件
+
+```html
+<div id="app"></div>
+
+<script>
+  const Comp = Vue.component('comp', {
+    template: '<div>Hello Component</div>'
+  })
+
+  const vm = new Vue({
+    el: '#app',
+    render(h) {
+      return h(Comp)
+    }
+  })
+</script>
+```
+
+
+
+#### src/core/global-api/assets.js
+
+全局组件注册
+
+```js
+// src/shared/constants.js
+
+export const ASSET_TYPES = [
+  'component',
+  'directive',
+  'filter'
+]
+```
+
+```js
+// src/core/global-api/assets.js
+
+import { ASSET_TYPES } from 'shared/constants'
+import { isPlainObject, validateComponentName } from '../util/index'
+
+export function initAssetRegisters (Vue: GlobalAPI) {
+  /**
+   * Create asset registration methods.
+   */
+  // Vue.component、Vue.directive、Vue.filter
+  ASSET_TYPES.forEach(type => {
+    Vue[type] = function (
+      id: string,
+      definition: Function | Object
+    ): Function | Object | void {
+      if (!definition) {
+        return this.options[type + 's'][id]
+      } else {
+        /* istanbul ignore if */
+        if (process.env.NODE_ENV !== 'production' && type === 'component') {
+          validateComponentName(id)
+        }
+        if (type === 'component' && isPlainObject(definition)) {
+          definition.name = definition.name || id
+          // vue.extend 方法，将组件配置转化为组件的构造函数
+          // _base 其实就是 Vue 构造函数
+          definition = this.options._base.extend(definition)
+        }
+        if (type === 'directive' && typeof definition === 'function') {
+          definition = { bind: definition, update: definition }
+        }
+        // 全局注册，存储资源并赋值
+    		// this.options['components']['comp'] = definition
+        this.options[type + 's'][id] = definition
+        return definition
+      }
+    }
+  })
+}
+```
+
+#### src/core/global-api/extend.js
+
+```js
+export function initExtend (Vue: GlobalAPI) {
+  /**
+   * Each instance constructor, including Vue, has a unique
+   * cid. This enables us to create wrapped "child
+   * constructors" for prototypal inheritance and cache them.
+   */
+  Vue.cid = 0
+  let cid = 1
+
+  /**
+   * Class inheritance
+   */
+  Vue.extend = function (extendOptions: Object): Function {
+    extendOptions = extendOptions || {}
+    // vue 构造函数
+    const Super = this
+    const SuperId = Super.cid
+    
+    // 缓存中加载组件的构造函数
+    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
+    if (cachedCtors[SuperId]) {
+      return cachedCtors[SuperId]
+    }
+	
+    const name = extendOptions.name || Super.options.name
+    if (process.env.NODE_ENV !== 'production' && name) {
+      // 开发环境验证组件名称是否合法
+      validateComponentName(name)
+    }
+
+    const Sub = function VueComponent (options) {
+      // 调用 _init() 初始化
+      this._init(options)
+    }
+    // 原型继承
+    Sub.prototype = Object.create(Super.prototype)
+    Sub.prototype.constructor = Sub
+    Sub.cid = cid++
+    // 合并 options
+    Sub.options = mergeOptions(
+      Super.options,
+      extendOptions
+    )
+    Sub['super'] = Super
+
+    // For props and computed properties, we define the proxy getters on
+    // the Vue instances at extension time, on the extended prototype. This
+    // avoids Object.defineProperty calls for each instance created.
+    if (Sub.options.props) {
+      initProps(Sub)
+    }
+    if (Sub.options.computed) {
+      initComputed(Sub)
+    }
+
+    // allow further extension/mixin/plugin usage
+    Sub.extend = Super.extend
+    Sub.mixin = Super.mixin
+    Sub.use = Super.use
+
+    // create asset registers, so extended classes
+    // can have their private assets too.
+    ASSET_TYPES.forEach(function (type) {
+      Sub[type] = Super[type]
+    })
+    // enable recursive self-lookup
+    // 把组件构造函数保存到 Ctor.options.components.comp = Ctor
+    if (name) {
+      // 因为缓存到 Vue.options.components 中，所以所有位置都可以访问
+      Sub.options.components[name] = Sub
+    }
+
+    // keep a reference to the super options at extension time.
+    // later at instantiation we can check if Super's options have
+    // been updated.
+    Sub.superOptions = Super.options
+    Sub.extendOptions = extendOptions
+    Sub.sealedOptions = extend({}, Sub.options)
+
+    // cache constructor
+    // 将组件的构造函数缓存到 options._Ctor
+    cachedCtors[SuperId] = Sub
+    return Sub
+  }
+}
+```
+
+### 创建过程
+
+页面首次渲染过程
+
+* Vue 构造函数
+* this._init()
+* this.$mount()
+* mouneComponent()
+* new Watcher() 渲染 watcher
+* updateComponent()
+* vm._render()，createElement()
+* vm._update()
+
+#### src/core/vdom/create-element.js
+
+```js
+const SIMPLE_NORMALIZE = 1
+const ALWAYS_NORMALIZE = 2
+
+// wrapper function for providing a more flexible interface
+// without getting yelled at by flow
+export function createElement (
+  context: Component,
+  tag: any,
+  data: any,
+  children: any,
+  normalizationType: any,
+  alwaysNormalize: boolean
+): VNode | Array<VNode> {
+  if (Array.isArray(data) || isPrimitive(data)) {
+    normalizationType = children
+    children = data
+    data = undefined
+  }
+  if (isTrue(alwaysNormalize)) {
+    normalizationType = ALWAYS_NORMALIZE
+  }
+  return _createElement(context, tag, data, children, normalizationType)
+}
+
+export function _createElement (
+  context: Component, // vue 实例或组件实例
+  tag?: string | Class<Component> | Function | Object,
+  data?: VNodeData,
+  children?: any,
+  normalizationType?: number
+) {
+ 	// ...
+  // object syntax in v-bind
+  if (isDef(data) && isDef(data.is)) {
+    tag = data.is
+  }
+  if (!tag) {
+    // in case of component :is set to falsy value
+    return createEmptyVNode()
+  }
+  // warn against non-primitive key
+  if (process.env.NODE_ENV !== 'production' &&
+    isDef(data) && isDef(data.key) && !isPrimitive(data.key)
+  ) {
+    if (!__WEEX__ || !('@binding' in data.key)) {
+      warn(
+        'Avoid using non-primitive value as key, ' +
+        'use string/number value instead.',
+        context
+      )
+    }
+  }
+  // support single function children as default scoped slot
+  if (Array.isArray(children) &&
+    typeof children[0] === 'function'
+  ) {
+    data = data || {}
+    data.scopedSlots = { default: children[0] }
+    children.length = 0
+  }
+  if (normalizationType === ALWAYS_NORMALIZE) {
+    children = normalizeChildren(children)
+  } else if (normalizationType === SIMPLE_NORMALIZE) {
+    children = simpleNormalizeChildren(children)
+  }
+  let vnode, ns
+  if (typeof tag === 'string') {
+    // 普通标签处理
+   	// ...
+  } else {
+    // direct component options / constructor
+    vnode = createComponent(tag, data, context, children)
+  }
+  if (Array.isArray(vnode)) {
+    return vnode
+  } else if (isDef(vnode)) {
+    if (isDef(ns)) applyNS(vnode, ns)
+    if (isDef(data)) registerDeepBindings(data)
+    return vnode
+  } else {
+    return createEmptyVNode()
+  }
+}
+```
+
+#### src/core/vdom/create-component.js
+
+```js
+// src/core/vdom/create-component.js
+
+export function createComponent (
+  Ctor: Class<Component> | Function | Object | void,
+  data: ?VNodeData,
+  context: Component, // vue 实例或当前组件实例
+  children: ?Array<VNode>,
+  tag?: string
+): VNode | Array<VNode> | void {
+  if (isUndef(Ctor)) {
+    return
+  }
+
+  const baseCtor = context.$options._base
+
+  // plain options object: turn it into a constructor
+  // 如果 Ctor 不是一个构造函数，是一个对象
+  // 使用 Vue.extend() 创造一个子组件的构造函数
+  if (isObject(Ctor)) {
+    Ctor = baseCtor.extend(Ctor)
+  }
+
+  // if at this stage it's not a constructor or an async component factory,
+  // reject.
+  if (typeof Ctor !== 'function') {
+    if (process.env.NODE_ENV !== 'production') {
+      warn(`Invalid Component definition: ${String(Ctor)}`, context)
+    }
+    return
+  }
+
+  // async component
+  let asyncFactory
+  // 如果 Ctor 没有 cid，被视为异步组件
+  if (isUndef(Ctor.cid)) {
+    asyncFactory = Ctor
+    Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
+    if (Ctor === undefined) {
+      // return a placeholder node for async component, which is rendered
+      // as a comment node but preserves all the raw information for the node.
+      // the information will be used for async server-rendering and hydration.
+      return createAsyncPlaceholder(
+        asyncFactory,
+        data,
+        context,
+        children,
+        tag
+      )
+    }
+  }
+
+  data = data || {}
+
+  // resolve constructor options in case global mixins are applied after
+  // component constructor creation 
+  // 合并组件和全局 mixins 混入的选项
+  resolveConstructorOptions(Ctor)
+
+  // transform component v-model data into props & events
+  // 处理组件上的 v-model 指令
+  if (isDef(data.model)) {
+    transformModel(Ctor.options, data)
+  }
+
+  // extract props
+  const propsData = extractPropsFromVNodeData(data, Ctor, tag)
+
+  // functional component
+  if (isTrue(Ctor.options.functional)) {
+    return createFunctionalComponent(Ctor, propsData, data, context, children)
+  }
+
+  // extract listeners, since these needs to be treated as
+  // child component listeners instead of DOM listeners
+  const listeners = data.on
+  // replace with listeners with .native modifier
+  // so it gets processed during parent component patch.
+  data.on = data.nativeOn
+
+  if (isTrue(Ctor.options.abstract)) {
+    // abstract components do not keep anything
+    // other than props & listeners & slot
+
+    // work around flow
+    const slot = data.slot
+    data = {}
+    if (slot) {
+      data.slot = slot
+    }
+  }
+
+  // install component management hooks onto the placeholder node
+  // 安装组件的钩子函数 init/prepatch/insert/destory
+  installComponentHooks(data)
+
+  // return a placeholder vnode
+  const name = Ctor.options.name || tag
+  // 创建自定义组件的 VNode，设置自定义组件名称
+  const vnode = new VNode(
+    // vue-component-1-comp
+    `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
+    data, undefined, undefined, undefined, context,
+    { Ctor, propsData, listeners, tag, children },
+    asyncFactory
+  )
+
+  // Weex specific: invoke recycle-list optimized @render function for
+  // extracting cell-slot template.
+  // https://github.com/Hanks10100/weex-native-directive/tree/master/component
+  /* istanbul ignore if */
+  if (__WEEX__ && isRecyclableComponent(vnode)) {
+    return renderRecyclableComponentTemplate(vnode)
+  }
+	
+	// 返回 vnode 对象
+  return vnode
+}
+
+// 安装组件构造函数
+function installComponentHooks (data: VNodeData) {
+  const hooks = data.hook || (data.hook = {})
+  // 用户可以传递自定义钩子函数
+  // 将用户传入的自定义钩子函数和 componentVNodeHooks 中预定义的钩子函数合并
+  for (let i = 0; i < hooksToMerge.length; i++) {
+    const key = hooksToMerge[i]
+    const existing = hooks[key]
+    const toMerge = componentVNodeHooks[key]
+    // 合并 hooks
+    if (existing !== toMerge && !(existing && existing._merged)) {
+      hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge
+    }
+  }
+}
+
+function mergeHook (f1: any, f2: any): Function {
+  const merged = (a, b) => {
+    // flow complains about extra args which is why we use any
+    f1(a, b)
+    f2(a, b)
+  }
+  merged._merged = true
+  return merged
+}
+
+// 创建组件实例
+export function createComponentInstanceForVnode (
+  // we know it's MountedComponentVNode but flow doesn't
+  vnode: any,
+  // activeInstance in lifecycle state
+  parent: any
+): Component {
+  const options: InternalComponentOptions = {
+    _isComponent: true,
+    _parentVnode: vnode,
+    parent
+  }
+  // check inline-template render functions
+  const inlineTemplate = vnode.data.inlineTemplate
+  if (isDef(inlineTemplate)) {
+    options.render = inlineTemplate.render
+    options.staticRenderFns = inlineTemplate.staticRenderFns
+  }
+  // 创建组件实例
+  return new vnode.componentOptions.Ctor(options)
+}
+```
+
+```js
+// src/core/vdom/create-component.js  
+
+// hooksToMerge
+
+// inline hooks to be invoked on component VNodes during patch
+const componentVNodeHooks = {
+  init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
+    if (
+      vnode.componentInstance &&
+      !vnode.componentInstance._isDestroyed &&
+      vnode.data.keepAlive
+    ) {
+      // kept-alive components, treat as a patch
+      const mountedNode: any = vnode // work around flow
+      componentVNodeHooks.prepatch(mountedNode, mountedNode)
+    } else {
+      const child = vnode.componentInstance = createComponentInstanceForVnode(
+        vnode,
+        activeInstance
+      )
+      child.$mount(hydrating ? vnode.elm : undefined, hydrating)
+    }
+  },
+
+  prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
+    const options = vnode.componentOptions
+    const child = vnode.componentInstance = oldVnode.componentInstance
+    updateChildComponent(
+      child,
+      options.propsData, // updated props
+      options.listeners, // updated listeners
+      vnode, // new parent vnode
+      options.children // new children
+    )
+  },
+
+  insert (vnode: MountedComponentVNode) {
+    const { context, componentInstance } = vnode
+    if (!componentInstance._isMounted) {
+      componentInstance._isMounted = true
+      callHook(componentInstance, 'mounted')
+    }
+    if (vnode.data.keepAlive) {
+      if (context._isMounted) {
+        // vue-router#1212
+        // During updates, a kept-alive component's child components may
+        // change, so directly walking the tree here may call activated hooks
+        // on incorrect children. Instead we push them into a queue which will
+        // be processed after the whole patch process ended.
+        queueActivatedComponent(componentInstance)
+      } else {
+        activateChildComponent(componentInstance, true /* direct */)
+      }
+    }
+  },
+
+  destroy (vnode: MountedComponentVNode) {
+    const { componentInstance } = vnode
+    if (!componentInstance._isDestroyed) {
+      if (!vnode.data.keepAlive) {
+        componentInstance.$destroy()
+      } else {
+        deactivateChildComponent(componentInstance, true /* direct */)
+      }
+    }
+  }
+}
+
+const hooksToMerge = Object.keys(componentVNodeHooks)
+```
+
+### 组件 patch 过程
+
+#### src/core/vdom/patch.js
+
+组件创建是由父到子，组件挂载是先挂载子组件再挂载父组件。
+
+组件的粒度也不是越小越好，嵌套一层组件会重复执行一次创建过程，比较消耗性能。组件的抽象过程要合理。
+
+```js
+// src/core/vdom/patch.js
+
+const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
+
+function sameVnode (a, b) {
+  return (
+    a.key === b.key && (
+      (
+        a.tag === b.tag &&
+        a.isComment === b.isComment &&
+        isDef(a.data) === isDef(b.data) &&
+        sameInputType(a, b)
+      ) || (
+        isTrue(a.isAsyncPlaceholder) &&
+        a.asyncFactory === b.asyncFactory &&
+        isUndef(b.asyncFactory.error)
+      )
+    )
+  )
+}
+
+export function createPatchFunction (backend) {
+  let i, j
+  const cbs = {}
+	
+  // modules 节点的属性/事件/样式属性
+  // nodeOps 节点操作
+  const { modules, nodeOps } = backend
+
+  for (i = 0; i < hooks.length; ++i) {
+    // cbs['create'] = []
+    cbs[hooks[i]] = []
+    for (j = 0; j < modules.length; ++j) {
+      if (isDef(modules[j][hooks[i]])) {
+        // cbs['create'] = [updateAttrs, updateClass, update...]
+        cbs[hooks[i]].push(modules[j][hooks[i]])
+      }
+    }
+  }
+	
+  
+  function createElm (
+    vnode,
+    insertedVnodeQueue,
+    parentElm,
+    refElm,
+    nested,
+    ownerArray,
+    index
+  ) {
+    if (isDef(vnode.elm) && isDef(ownerArray)) {
+      // This vnode was used in a previous render!
+      // now it's used as a new node, overwriting its elm would cause
+      // potential patch errors down the road when it's used as an insertion
+      // reference node. Instead, we clone the node on-demand before creating
+      // associated DOM element for it.
+      vnode = ownerArray[index] = cloneVNode(vnode)
+    }
+
+    vnode.isRootInsert = !nested // for transition enter check
+    if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+      return
+    }
+		
+    // ...
+  }
+
+  function createComponent (vnode, insertedVnodeQueue, parentElm, refElm) {
+    let i = vnode.data
+    if (isDef(i)) {
+      const isReactivated = isDef(vnode.componentInstance) && i.keepAlive
+      if (isDef(i = i.hook) && isDef(i = i.init)) {
+        // 调用 init() 方法，创建和挂载组件实例
+        // init() 的过程中创建了组件的真实 DOM，挂载到 vnode.elm 上
+        i(vnode, false /* hydrating */)
+      }
+      // after calling the init hook, if the vnode is a child component
+      // it should've created a child instance and mounted it. the child
+      // component also has set the placeholder vnode's elm.
+      // in that case we can just return the element and be done.
+      if (isDef(vnode.componentInstance)) {
+        // 调用钩子函数（VNode 的钩子函数初始化属性/事件/样式等，组件的钩子函数）
+        initComponent(vnode, insertedVnodeQueue)
+        // 把组件对应 DOM 插入到父元素中，先挂载子组件再挂载父组件
+        insert(parentElm, vnode.elm, refElm)
+        if (isTrue(isReactivated)) {
+          reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm)
+        }
+        return true
+      }
+    }
+  }
+	
+  // 返回 patch 函数
+  // createPatchFunction({ nodeOps, moduels }) 传入平台相关的两个参数
+  // core 中方法与平台无关，通过函数柯里化做到平台与核心逻辑分离
+  return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 新 VNode 不存在
+    if (isUndef(vnode)) {
+      // 老 VNode 存在，执行 destory 钩子函数
+      if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
+      return
+    }
+
+    let isInitialPatch = false
+    // 待插入节点队列
+    const insertedVnodeQueue = []
+    
+		// 老 VNode 不存在
+    if (isUndef(oldVnode)) {
+      // empty mount (likely as component), create new root element
+      isInitialPatch = true
+      // 创建新的 VNode，当前创建的 DOM 元素只是存在于内存中
+      createElm(vnode, insertedVnodeQueue)
+    } else {
+      // 新老节点都存在，更新
+      const isRealElement = isDef(oldVnode.nodeType)
+      	
+      if (!isRealElement && sameVnode(oldVnode, vnode)) {
+        // 不是真实 DOM 元素，并且新节点和旧节点相同，更新操作 diff 算法
+        // patch existing root node
+        patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
+      } else {
+       	// ...
+
+        // replacing existing element
+        // 获取存储的 DOM 元素
+        const oldElm = oldVnode.elm
+        // 获取 DOM 元素的父元素
+        const parentElm = nodeOps.parentNode(oldElm)
+
+        // create new node
+        // 创建 DOM 节点
+        createElm(
+          vnode,
+          insertedVnodeQueue,
+          // extremely rare edge case: do not insert if old element is in a
+          // leaving transition. Only happens when combining transition +
+          // keep-alive + HOCs. (#4590)
+          oldElm._leaveCb ? null : parentElm,
+          nodeOps.nextSibling(oldElm)
+        )
+				
+        // ...
+
+        // destroy old node（移除老节点）
+        if (isDef(parentElm)) {
+          // 判断 parentElm 是否存在，将 oldVNode 从界面中移除，并且触发相关的钩子函数
+          removeVnodes([oldVnode], 0, 0)
+        } else if (isDef(oldVnode.tag)) {
+          // 如果 ParentElm 不存在，并且 oldVNode 存在 tag 属性
+          invokeDestroyHook(oldVnode)
+        }
+      }
+    }
+	
+    // 触发队列中节点 insert 钩子函数
+    invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch)
+    return vnode.elm
+  }
+}
+```
+
+#### src/core/vdom/create-component.js
+
+```js
+// src/core/vdom/create-component.js  
+
+// inline hooks to be invoked on component VNodes during patch
+const componentVNodeHooks = {
+  // 创建子组件过程，父组件已经创建完毕，组件的创建过程是先父后子
+  init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
+    if (
+      vnode.componentInstance &&
+      !vnode.componentInstance._isDestroyed &&
+      vnode.data.keepAlive
+    ) {
+      // kept-alive components, treat as a patch
+      const mountedNode: any = vnode // work around flow
+      componentVNodeHooks.prepatch(mountedNode, mountedNode)
+    } else {
+      // 调用子组件构造函数，子组件构造函数调用 vue._init 方法，如果是子组件，没有 el 属性，不会调用 $mount 方法
+      const child = vnode.componentInstance = createComponentInstanceForVnode(
+        vnode,
+        activeInstance // 激活实例，当前组件对象的父组件对象
+      )
+      // 组件的 $mount
+      child.$mount(hydrating ? vnode.elm : undefined, hydrating)
+    }
+  },
+
+  prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
+    const options = vnode.componentOptions
+    const child = vnode.componentInstance = oldVnode.componentInstance
+    updateChildComponent(
+      child,
+      options.propsData, // updated props
+      options.listeners, // updated listeners
+      vnode, // new parent vnode
+      options.children // new children
+    )
+  },
+
+  insert (vnode: MountedComponentVNode) {
+    const { context, componentInstance } = vnode
+    if (!componentInstance._isMounted) {
+      componentInstance._isMounted = true
+      callHook(componentInstance, 'mounted')
+    }
+    if (vnode.data.keepAlive) {
+      if (context._isMounted) {
+        // vue-router#1212
+        // During updates, a kept-alive component's child components may
+        // change, so directly walking the tree here may call activated hooks
+        // on incorrect children. Instead we push them into a queue which will
+        // be processed after the whole patch process ended.
+        queueActivatedComponent(componentInstance)
+      } else {
+        activateChildComponent(componentInstance, true /* direct */)
+      }
+    }
+  },
+
+  destroy (vnode: MountedComponentVNode) {
+    const { componentInstance } = vnode
+    if (!componentInstance._isDestroyed) {
+      if (!vnode.data.keepAlive) {
+        componentInstance.$destroy()
+      } else {
+        deactivateChildComponent(componentInstance, true /* direct */)
+      }
+    }
+  }
+}
+
+const hooksToMerge = Object.keys(componentVNodeHooks)
+
+export function createComponentInstanceForVnode (
+  // we know it's MountedComponentVNode but flow doesn't
+  vnode: any,
+  // activeInstance in lifecycle state
+  parent: any
+): Component {
+  // 创建 options 对象
+  const options: InternalComponentOptions = {
+    _isComponent: true, // 标记当前是组件
+    _parentVnode: vnode, // 占位 vnode
+    parent // activeInstance，当前组件的父组件对象
+  }
+  // check inline-template render functions
+  const inlineTemplate = vnode.data.inlineTemplate
+  if (isDef(inlineTemplate)) {
+    options.render = inlineTemplate.render
+    options.staticRenderFns = inlineTemplate.staticRenderFns
+  }
+  // 创建组件对象
+  return new vnode.componentOptions.Ctor(options)
+}
+```
+
+```js
+// src/core/global-api/extend.js
+
+/**
+   * Class inheritance
+   */
+Vue.extend = function (extendOptions: Object): Function {
+  // ...
+
+  const Sub = function VueComponent (options) {
+    // 调用 _init() 初始化
+    this._init(options)
+  }
+
+  // ...
+
+  return Sub
+}
+```
+
+#### src/core/instance/init.js
+
+```js
+// src/core/instance/init.js
+
+export function initMixin (Vue: Class<Component>) {
+  Vue.prototype._init = function (options?: Object) {
+    // 定义 vm 常量记录 vue 实例
+    const vm: Component = this
+    // a uid
+    vm._uid = uid++
+
+    let startTag, endTag
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      startTag = `vue-perf-start:${vm._uid}`
+      endTag = `vue-perf-end:${vm._uid}`
+      mark(startTag)
+    }	
+
+    // a flag to avoid this being observed
+    // 标识当前实例是 vue 实例，不需要被 observe
+    vm._isVue = true
+    
+    // merge options 合并 options
+    if (options && options._isComponent) {
+      // optimize internal component instantiation
+      // since dynamic options merging is pretty slow, and none of the
+      // internal component options needs special treatment.
+      initInternalComponent(vm, options)
+    } else {
+      vm.$options = mergeOptions(
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      )
+    }
+    /* istanbul ignore else */
+    if (process.env.NODE_ENV !== 'production') {
+      initProxy(vm)
+    } else {
+      vm._renderProxy = vm
+    }
+    // expose real self
+    vm._self = vm
+    // 初始化
+    // 1. 初始化与生命周期相关的属性，记录组件的父子关系
+    initLifecycle(vm) 
+    // 2. vm 的事件监听初始化，父组件绑定在当前组件上事件
+    initEvents(vm) 
+    // 3. vm 编译 render 初始化
+    //    $slots、$scopedSlots、_c、$createElement、$attrs、#listeners
+    initRender(vm)
+    
+    callHook(vm, 'beforeCreate') // 调用 beforeCreate 钩子函数
+    
+    // 4. 依赖注入：把 inject 的成员定义到 vm 上
+    initInjections(vm) // resolve injections before data/props
+    // 5. 初始化 vm 的 _props/methods/_data/computed/watch
+    initState(vm)
+    // 6. 依赖注入：初始化 provide
+    initProvide(vm) // resolve provide after data/props
+    
+    callHook(vm, 'created') // 调用 created 钩子函数
+
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      vm._name = formatComponentName(vm, false)
+      mark(endTag)
+      measure(`vue ${vm._name} init`, startTag, endTag)
+    }
+		
+    // 子组件选项没有 el 属性，$mount 不会执行
+    if (vm.$options.el) {
+      // 页面挂载
+      vm.$mount(vm.$options.el)
+    }
+  }
+}
+```
+
+#### src/core/instance/lifecycle.js
+
+```js
+// src/core/instance/lifecycle.js
+
+// 初始化与生命周期相关的属性
+// 建立组件父子关系
+export function initLifecycle (vm: Component) {
+  const options = vm.$options
+
+  // locate first non-abstract parent
+  // 找到当前实例父组件，将当前实例添加到父组件的 $children 中
+  let parent = options.parent
+  if (parent && !options.abstract) {
+    while (parent.$options.abstract && parent.$parent) {
+      parent = parent.$parent
+    }
+    parent.$children.push(vm)
+  }
+
+  vm.$parent = parent
+  vm.$root = parent ? parent.$root : vm
+
+  vm.$children = []
+  vm.$refs = {}
+
+  vm._watcher = null
+  vm._inactive = null
+  vm._directInactive = false
+  vm._isMounted = false
+  vm._isDestroyed = false
+  vm._isBeingDestroyed = false
+}
+
+export function lifecycleMixin (Vue: Class<Component>) {
+  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
+    const vm: Component = this
+    const prevEl = vm.$el
+    const prevVnode = vm._vnode
+    // 把当前 VM 实例缓存起来，存储到 activeInstance 中
+    // 执行附件的 update 方法，调用 patch，patch 过程中创建子组件，从而调用子组件的 update 方法
+    const restoreActiveInstance = setActiveInstance(vm)
+    vm._vnode = vnode
+    // Vue.prototype.__patch__ is injected in entry points
+    // based on the rendering backend used.
+    if (!prevVnode) {
+      // initial render
+      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
+    } else {
+      // updates
+      vm.$el = vm.__patch__(prevVnode, vnode)
+    }
+    restoreActiveInstance()
+    // update __vue__ reference
+    if (prevEl) {
+      prevEl.__vue__ = null
+    }
+    if (vm.$el) {
+      vm.$el.__vue__ = vm
+    }
+    // if parent is an HOC, update its $el as well
+    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+      vm.$parent.$el = vm.$el
+    }
+    // updated hook is called by the scheduler to ensure that children are
+    // updated in a parent's updated hook.
+  }
+}
+```
+
