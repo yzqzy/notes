@@ -3,12 +3,11 @@ import sidebars from './sidebar.json'
 
 // @ts-ignore
 export default defineConfig((ctx) => ({
-  // base: ctx.mode == 'production' ? '/notes/' : '', 
   lang: 'en-US',
   title: 'Personal Notes',
   titleTemplate: "月落 - Personal Notes",
   head: [
-    ['link', { rel: 'icon', href: '/notes/favicon.ico' }]
+    ['link', { rel: 'icon', href: '/favicon.ico' }]
   ],
   description: 'Web Developer & JS Fancier',
   themeConfig: {
