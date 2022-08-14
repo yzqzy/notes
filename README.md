@@ -2,15 +2,15 @@
 
 * ECMAScript
   + [ECMA-262](https://www.ecma-international.org/publications-and-standards/standards/ecma-262/) 
-  + [ECMAScript](https://github.com/yw0525/notes/tree/master/ecmascript/base) 已完成
-  + [ES6](https://github.com/yw0525/notes/tree/master/ecmascript/es6) 已完成
+  + [ECMAScript](https://github.com/yw0525/notes/tree/master/ecma_script/base) 已完成
+  + [ES6](https://github.com/yw0525/notes/tree/master/ecma_script/es6) 已完成
   + [工具函数](https://github.com/yw0525/notes/tree/master/utils) 已完成
-  + [Promise源码实现](https://github.com/yw0525/notes/tree/master/ecmascript/promise) 已完成
+  + [Promise源码实现](https://github.com/yw0525/notes/tree/master/ecma_script/promise) 已完成
   + [碎片知识](https://github.com/yw0525/notes/tree/master/fragment) 已完成
-  + [内置对象](https://github.com/yw0525/notes/tree/master/ecmascript/Built_in_objects) 暂停中 😀
-  + [函数式编程](https://github.com/yw0525/notes/tree/master/ecmascript/functional) 已完成
-  + [JavaScript性能优化](https://github.com/yw0525/notes/tree/master/ecmascript/optimize) 已完成
-  + [前端性能优化](https://github.com/yw0525/notes/tree/master/ecmascript/front_end_optimize) 已完成
+  + [内置对象](https://github.com/yw0525/notes/tree/master/ecma_script/Built_in_objects) 暂停中 😀
+  + [函数式编程](https://github.com/yw0525/notes/tree/master/ecma_script/functional) 已完成
+  + [JavaScript性能优化](https://github.com/yw0525/notes/tree/master/ecma_script/optimize) 已完成
+  + [前端性能优化](https://github.com/yw0525/notes/tree/master/ecma_script/front_end_optimize) 已完成
 * [HTML5](https://github.com/yw0525/notes/tree/master/html5/base) 已完成
 * [CSS3](https://github.com/yw0525/notes/tree/master/css3) 已完成
 * 浏览器
