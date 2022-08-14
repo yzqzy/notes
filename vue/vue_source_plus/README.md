@@ -7059,7 +7059,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
 抽象语法树查看：[https://astexplorer.net](https://astexplorer.net)
 
-#### src/compiler/index
+#### src/compiler/index.js
 
 ```js
 /* @flow */
@@ -7096,7 +7096,13 @@ export const createCompiler = createCompilerCreator(function baseCompile (
 
 ### baseCompile - parse
 
-#### src/compiler/index
+parse 函数的作用是把模板字符串转为 AST 对象。
+
+parse 函数会依次遍历 html 模板字符串，将 html 模板字符串转换为 ast 对象。
+
+html 中的属性和指令都会记录在 ast 对象的相应属性上。
+
+#### src/compiler/index.js
 
 ```js
 /* @flow */
@@ -7130,4 +7136,799 @@ export const createCompiler = createCompilerCreator(function baseCompile (
   }
 })
 ```
+
+#### src/compiler/parser/index.js
+
+```js
+/**
+ * Convert HTML string to AST.
+ */
+export function parse (
+  template: string,
+  options: CompilerOptions
+): ASTElement | void {
+  warn = options.warn || baseWarn
+	
+  // ...
+  
+	// 2. 模板解析
+  parseHTML(template, {
+    warn,
+    expectHTML: options.expectHTML,
+    isUnaryTag: options.isUnaryTag,
+    canBeLeftOpenTag: options.canBeLeftOpenTag,
+    shouldDecodeNewlines: options.shouldDecodeNewlines,
+    shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
+    shouldKeepComment: options.comments,
+    outputSourceRange: options.outputSourceRange,
+    // 解析过程中的回调函数，生成 AST
+    start (tag, attrs, unary, start, end) {
+      // check namespace.
+      // inherit parent ns if there is one
+      const ns = (currentParent && currentParent.ns) || platformGetTagNamespace(tag)
+
+      // handle IE svg bug
+      /* istanbul ignore if */
+      if (isIE && ns === 'svg') {
+        attrs = guardIESVGBug(attrs)
+      }
+	
+      // 创建 AST 对象
+      let element: ASTElement = createASTElement(tag, attrs, currentParent)
+      if (ns) {
+        element.ns = ns
+      }
+	
+      /// ...
+   	
+      // apply pre-transforms
+      for (let i = 0; i < preTransforms.length; i++) {
+        element = preTransforms[i](element, options) || element
+      }
+	
+      // 开始处理指令 v-pre
+      if (!inVPre) {
+        processPre(element)
+        if (element.pre) {
+          inVPre = true
+        }
+      }
+      if (platformIsPreTag(element.tag)) {
+        inPre = true
+      }
+      if (inVPre) {
+        processRawAttrs(element)
+      } else if (!element.processed) {
+        // structural directives
+        // 处理结构化指令 v-for，v-if，v-once
+        processFor(element)
+        processIf(element)
+        processOnce(element)
+      }
+
+      if (!root) {
+        root = element
+        if (process.env.NODE_ENV !== 'production') {
+          checkRootConstraints(root)
+        }
+      }
+
+      if (!unary) {
+        currentParent = element
+        stack.push(element)
+      } else {
+        closeElement(element)
+      }
+    },
+
+    end (tag, start, end) {
+      const element = stack[stack.length - 1]
+      // pop stack
+      stack.length -= 1
+      currentParent = stack[stack.length - 1]
+      if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+        element.end = end
+      }
+      closeElement(element)
+    },
+
+    chars (text: string, start: number, end: number) {
+      if (!currentParent) {
+        if (process.env.NODE_ENV !== 'production') {
+          if (text === template) {
+            warnOnce(
+              'Component template requires a root element, rather than just text.',
+              { start }
+            )
+          } else if ((text = text.trim())) {
+            warnOnce(
+              `text "${text}" outside root element will be ignored.`,
+              { start }
+            )
+          }
+        }
+        return
+      }
+      // IE textarea placeholder bug
+      /* istanbul ignore if */
+      if (isIE &&
+        currentParent.tag === 'textarea' &&
+        currentParent.attrsMap.placeholder === text
+      ) {
+        return
+      }
+      const children = currentParent.children
+      if (inPre || text.trim()) {
+        text = isTextTag(currentParent) ? text : decodeHTMLCached(text)
+      } else if (!children.length) {
+        // remove the whitespace-only node right after an opening tag
+        text = ''
+      } else if (whitespaceOption) {
+        if (whitespaceOption === 'condense') {
+          // in condense mode, remove the whitespace node if it contains
+          // line break, otherwise condense to a single space
+          text = lineBreakRE.test(text) ? '' : ' '
+        } else {
+          text = ' '
+        }
+      } else {
+        text = preserveWhitespace ? ' ' : ''
+      }
+      if (text) {
+        if (!inPre && whitespaceOption === 'condense') {
+          // condense consecutive whitespaces into single space
+          text = text.replace(whitespaceRE, ' ')
+        }
+        let res
+        let child: ?ASTNode
+        if (!inVPre && text !== ' ' && (res = parseText(text, delimiters))) {
+          child = {
+            type: 2,
+            expression: res.expression,
+            tokens: res.tokens,
+            text
+          }
+        } else if (text !== ' ' || !children.length || children[children.length - 1].text !== ' ') {
+          child = {
+            type: 3,
+            text
+          }
+        }
+        if (child) {
+          if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+            child.start = start
+            child.end = end
+          }
+          children.push(child)
+        }
+      }
+    },
+    comment (text: string, start, end) {
+      // adding anything as a sibling to the root node is forbidden
+      // comments should still be allowed, but ignored
+      if (currentParent) {
+        const child: ASTText = {
+          type: 3,
+          text,
+          isComment: true
+        }
+        if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+          child.start = start
+          child.end = end
+        }
+        currentParent.children.push(child)
+      }
+    }
+  })
+  return root
+}
+```
+
+#### src/compiler/parser/html-parser.js
+
+```js
+// src/compiler/parser/html-parser.js
+
+/*!
+ * HTML Parser By John Resig (ejohn.org)
+ * Modified by Juriy "kangax" Zaytsev
+ * Original code by Erik Arvidsson (MPL-1.1 OR Apache-2.0 OR GPL-2.0-or-later)
+ * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
+ */
+
+// html-parser 借鉴的是一个开源库
+// http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
+
+export function parseHTML (html, options) {
+  const stack = []
+  const expectHTML = options.expectHTML
+  const isUnaryTag = options.isUnaryTag || no
+  const canBeLeftOpenTag = options.canBeLeftOpenTag || no
+  let index = 0
+  let last, lastTag
+  
+  while (html) {
+    last = html
+    // Make sure we're not in a plaintext content element like script/style
+    if (!lastTag || !isPlainTextElement(lastTag)) {
+      let textEnd = html.indexOf('<')
+      
+      if (textEnd === 0) {
+        // Comment:
+        if (comment.test(html)) {
+          const commentEnd = html.indexOf('-->')
+
+          if (commentEnd >= 0) {
+            if (options.shouldKeepComment) {
+              options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
+            }
+            advance(commentEnd + 3)
+            continue
+          }
+        }
+
+        // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+        if (conditionalComment.test(html)) {
+          const conditionalEnd = html.indexOf(']>')
+
+          if (conditionalEnd >= 0) {
+            advance(conditionalEnd + 2)
+            continue
+          }
+        }
+
+        // Doctype:
+        const doctypeMatch = html.match(doctype)
+        if (doctypeMatch) {
+          advance(doctypeMatch[0].length)
+          continue
+        }
+
+        // End tag:
+        const endTagMatch = html.match(endTag)
+        if (endTagMatch) {
+          const curIndex = index
+          advance(endTagMatch[0].length)
+          parseEndTag(endTagMatch[1], curIndex, index)
+          continue
+        }
+
+        // Start tag:
+        const startTagMatch = parseStartTag()
+        if (startTagMatch) {
+          handleStartTag(startTagMatch)
+          if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
+            advance(1)
+          }
+          continue
+        }
+      }
+
+      let text, rest, next
+      if (textEnd >= 0) {
+        rest = html.slice(textEnd)
+        while (
+          !endTag.test(rest) &&
+          !startTagOpen.test(rest) &&
+          !comment.test(rest) &&
+          !conditionalComment.test(rest)
+        ) {
+          // < in plain text, be forgiving and treat it as text
+          next = rest.indexOf('<', 1)
+          if (next < 0) break
+          textEnd += next
+          rest = html.slice(textEnd)
+        }
+        text = html.substring(0, textEnd)
+      }
+
+      if (textEnd < 0) {
+        text = html
+      }
+
+      if (text) {
+        advance(text.length)
+      }
+
+      if (options.chars && text) {
+        options.chars(text, index - text.length, index)
+      }
+    } else {
+      let endTagLength = 0
+      const stackedTag = lastTag.toLowerCase()
+      const reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'))
+      const rest = html.replace(reStackedTag, function (all, text, endTag) {
+        endTagLength = endTag.length
+        if (!isPlainTextElement(stackedTag) && stackedTag !== 'noscript') {
+          text = text
+            .replace(/<!\--([\s\S]*?)-->/g, '$1') // #7298
+            .replace(/<!\[CDATA\[([\s\S]*?)]]>/g, '$1')
+        }
+        if (shouldIgnoreFirstNewline(stackedTag, text)) {
+          text = text.slice(1)
+        }
+        if (options.chars) {
+          options.chars(text)
+        }
+        return ''
+      })
+      index += html.length - rest.length
+      html = rest
+      parseEndTag(stackedTag, index - endTagLength, index)
+    }
+
+    if (html === last) {
+      options.chars && options.chars(html)
+      if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
+        options.warn(`Mal-formatted tag at end of template: "${html}"`, { start: index + html.length })
+      }
+      break
+    }
+  }
+
+  // Clean up any remaining tags
+  parseEndTag()
+	
+  // 记录当前更新下标，消费字符串
+  function advance (n) {
+    index += n
+    html = html.substring(n)
+  }
+
+  function parseStartTag () {
+    const start = html.match(startTagOpen)
+    if (start) {
+      const match = {
+        tagName: start[1],
+        attrs: [],
+        start: index
+      }
+      advance(start[0].length)
+      let end, attr
+      while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
+        attr.start = index
+        advance(attr[0].length)
+        attr.end = index
+        match.attrs.push(attr)
+      }
+      if (end) {
+        match.unarySlash = end[1]
+        advance(end[0].length)
+        match.end = index
+        return match
+      }
+    }
+  }
+
+  function handleStartTag (match) {
+    const tagName = match.tagName
+    const unarySlash = match.unarySlash
+
+    if (expectHTML) {
+      if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
+        parseEndTag(lastTag)
+      }
+      if (canBeLeftOpenTag(tagName) && lastTag === tagName) {
+        parseEndTag(tagName)
+      }
+    }
+
+    const unary = isUnaryTag(tagName) || !!unarySlash
+
+    const l = match.attrs.length
+    const attrs = new Array(l)
+    for (let i = 0; i < l; i++) {
+      const args = match.attrs[i]
+      const value = args[3] || args[4] || args[5] || ''
+      const shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
+        ? options.shouldDecodeNewlinesForHref
+        : options.shouldDecodeNewlines
+      attrs[i] = {
+        name: args[1],
+        value: decodeAttr(value, shouldDecodeNewlines)
+      }
+      if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+        attrs[i].start = args.start + args[0].match(/^\s*/).length
+        attrs[i].end = args.end
+      }
+    }
+
+    if (!unary) {
+      stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
+      lastTag = tagName
+    }
+
+    if (options.start) {
+      options.start(tagName, attrs, unary, match.start, match.end)
+    }
+  }
+
+  function parseEndTag (tagName, start, end) {
+    let pos, lowerCasedTagName
+    if (start == null) start = index
+    if (end == null) end = index
+
+    // Find the closest opened tag of the same type
+    if (tagName) {
+      lowerCasedTagName = tagName.toLowerCase()
+      for (pos = stack.length - 1; pos >= 0; pos--) {
+        if (stack[pos].lowerCasedTag === lowerCasedTagName) {
+          break
+        }
+      }
+    } else {
+      // If no tag name is provided, clean shop
+      pos = 0
+    }
+
+    if (pos >= 0) {
+      // Close all the open elements, up the stack
+      for (let i = stack.length - 1; i >= pos; i--) {
+        if (process.env.NODE_ENV !== 'production' &&
+          (i > pos || !tagName) &&
+          options.warn
+        ) {
+          options.warn(
+            `tag <${stack[i].tag}> has no matching end tag.`,
+            { start: stack[i].start, end: stack[i].end }
+          )
+        }
+        if (options.end) {
+          options.end(stack[i].tag, start, end)
+        }
+      }
+
+      // Remove the open elements from the stack
+      stack.length = pos
+      lastTag = pos && stack[pos - 1].tag
+    } else if (lowerCasedTagName === 'br') {
+      if (options.start) {
+        options.start(tagName, [], true, start, end)
+      }
+    } else if (lowerCasedTagName === 'p') {
+      if (options.start) {
+        options.start(tagName, [], false, start, end)
+      }
+      if (options.end) {
+        options.end(tagName, start, end)
+      }
+    }
+  }
+}
+```
+
+### baseCompile - optimize
+
+#### src/compiler/index.js
+
+```js
+/* @flow */
+
+import { parse } from './parser/index'
+import { optimize } from './optimizer'
+import { generate } from './codegen/index'
+import { createCompilerCreator } from './create-compiler'
+
+// `createCompilerCreator` allows creating compilers that use alternative
+// parser/optimizer/codegen, e.g the SSR optimizing compiler.
+// Here we just export a default compiler using the default parts.
+export const createCompiler = createCompilerCreator(function baseCompile (
+  template: string,
+  options: CompilerOptions
+): CompiledResult {
+  // 将模板转换成 ast 抽象语法树（以树行方式描述代码结构）
+  const ast = parse(template.trim(), options)
+  if (options.optimize !== false) {
+    // 优化抽象语法树
+    optimize(ast, options)
+  }
+  // 将抽象语法树生成字符串形式的 js 代码
+  const code = generate(ast, options)
+  return {
+    ast,
+    // 渲染函数
+    render: code.render,
+    // 静态渲染函数，生成静态 VNode 树
+    staticRenderFns: code.staticRenderFns
+  }
+})
+```
+
+#### src/compiler/optimizer.js
+
+优化的目的是为了标记抽象语法树的静态节点
+
+* 对应的 DOM 子树永远不会发生变化
+* 标记为静态子树后，后续更新时就不需要重新渲染，patch 过程中可以直接跳过静态子树
+
+```js
+/**
+ * Goal of the optimizer: walk the generated template AST tree
+ * and detect sub-trees that are purely static, i.e. parts of
+ * the DOM that never needs to change.
+ *
+ * Once we detect these sub-trees, we can:
+ *
+ * 1. Hoist them into constants, so that we no longer need to
+ *    create fresh nodes for them on each re-render;
+ * 2. Completely skip them in the patching process.
+ */
+export function optimize (root: ?ASTElement, options: CompilerOptions) {
+  if (!root) return
+  isStaticKey = genStaticKeysCached(options.staticKeys || '')
+  isPlatformReservedTag = options.isReservedTag || no
+  // first pass: mark all non-static nodes.
+  // 标记静态节点
+  markStatic(root)
+  // second pass: mark static roots.
+  // 标记静态根节点
+  markStaticRoots(root, false)
+}
+
+function genStaticKeys (keys: string): Function {
+  return makeMap(
+    'type,tag,attrsList,attrsMap,plain,parent,children,attrs,start,end,rawAttrsMap' +
+    (keys ? ',' + keys : '')
+  )
+}
+
+function markStatic (node: ASTNode) {
+  // 判断节点是否是静态的
+  node.static = isStatic(node)
+  // 元素节点
+  if (node.type === 1) {
+    // do not make component slot content static. this avoids
+    // 1. components not able to mutate slot nodes
+    // 2. static slot content fails for hot-reloading
+    // 是组件，不是 slot，没有 inline-template
+    if (
+      !isPlatformReservedTag(node.tag) &&
+      node.tag !== 'slot' &&
+      node.attrsMap['inline-template'] == null
+    ) {
+      return
+    }
+    // 遍历 children
+    for (let i = 0, l = node.children.length; i < l; i++) {
+      const child = node.children[i]
+      // 标记静态
+      markStatic(child)
+      if (!child.static) {
+        // 如果有一个 child 不是 static，当前 node 不是 static
+        node.static = false
+      }
+    }
+    // 处理条件渲染的 ast 对象
+    if (node.ifConditions) {
+      for (let i = 1, l = node.ifConditions.length; i < l; i++) {
+        const block = node.ifConditions[i].block
+        markStatic(block)
+        if (!block.static) {
+          node.static = false
+        }
+      }
+    }
+  }
+}
+
+function markStaticRoots (node: ASTNode, isInFor: boolean) {
+  // 判断节点是否为元素
+  if (node.type === 1) {
+    if (node.static || node.once) {
+      node.staticInFor = isInFor
+    }
+    // For a node to qualify as a static root, it should have children that
+    // are not just static text. Otherwise the cost of hoisting out will
+    // outweigh the benefits and it's better off to just always render it fresh.
+    // 如果一个元素内只有文本节点，此时这个元素不是静态的 Root
+    // Vue 认为这种优化会带来负面影响
+    if (node.static && node.children.length && !(
+      node.children.length === 1 &&
+      node.children[0].type === 3
+    )) {
+      node.staticRoot = true
+      return
+    } else {
+      node.staticRoot = false
+    }
+    // 检测当前节点的子节点是否存在静态的 Root
+    if (node.children) {
+      for (let i = 0, l = node.children.length; i < l; i++) {
+        markStaticRoots(node.children[i], isInFor || !!node.for)
+      }
+    }
+    if (node.ifConditions) {
+      for (let i = 1, l = node.ifConditions.length; i < l; i++) {
+        markStaticRoots(node.ifConditions[i].block, isInFor)
+      }
+    }
+  }
+}
+
+// 判断是否为静态节点
+function isStatic (node: ASTNode): boolean {
+  if (node.type === 2) { // expression 插值表达式
+    return false
+  }
+  if (node.type === 3) { // text 文本
+    return true
+  }
+  return !!(node.pre || ( // pre
+    !node.hasBindings && // no dynamic bindings
+    !node.if && !node.for && // not v-if or v-for or v-else
+    !isBuiltInTag(node.tag) && // not a built-in
+    isPlatformReservedTag(node.tag) && // not a component
+    !isDirectChildOfTemplateFor(node) && // 不能是 v-for 下的直接子节点
+    Object.keys(node).every(isStaticKey)
+  ))
+}
+```
+
+### baseCompile - generate
+
+#### src/compiler/index.js
+
+```js
+/* @flow */
+
+import { parse } from './parser/index'
+import { optimize } from './optimizer'
+import { generate } from './codegen/index'
+import { createCompilerCreator } from './create-compiler'
+
+// `createCompilerCreator` allows creating compilers that use alternative
+// parser/optimizer/codegen, e.g the SSR optimizing compiler.
+// Here we just export a default compiler using the default parts.
+export const createCompiler = createCompilerCreator(function baseCompile (
+  template: string,
+  options: CompilerOptions
+): CompiledResult {
+  // 将模板转换成 ast 抽象语法树（以树行方式描述代码结构）
+  const ast = parse(template.trim(), options)
+  if (options.optimize !== false) {
+    // 优化抽象语法树
+    optimize(ast, options)
+  }
+  // 将抽象语法树生成字符串形式的 js 代码
+  const code = generate(ast, options)
+  return {
+    ast,
+    // 渲染函数
+    render: code.render,
+    // 静态渲染函数，生成静态 VNode 树
+    staticRenderFns: code.staticRenderFns
+  }
+})
+```
+
+#### src/compiler/codegen/index.js
+
+```js
+// src/compiler/codegen/index.js
+
+export class CodegenState {
+  options: CompilerOptions;
+  warn: Function;
+  transforms: Array<TransformFunction>;
+  dataGenFns: Array<DataGenFunction>;
+  directives: { [key: string]: DirectiveFunction };
+  maybeComponent: (el: ASTElement) => boolean;
+  onceId: number;
+  staticRenderFns: Array<string>;
+  pre: boolean;
+
+  constructor (options: CompilerOptions) {
+    this.options = options
+    this.warn = options.warn || baseWarn
+    this.transforms = pluckModuleFunction(options.modules, 'transformCode')
+    this.dataGenFns = pluckModuleFunction(options.modules, 'genData')
+    this.directives = extend(extend({}, baseDirectives), options.directives)
+    const isReservedTag = options.isReservedTag || no
+    this.maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
+    this.onceId = 0
+    this.staticRenderFns = [] // 存储静态根节点生成的代码
+    this.pre = false
+  }
+}
+```
+
+```js
+// src/compiler/codegen/index.js
+
+export function generate (
+  ast: ASTElement | void,
+  options: CompilerOptions
+): CodegenResult {
+  const state = new CodegenState(options)
+  const code = ast ? genElement(ast, state) : '_c("div")'
+  return {
+    render: `with(this){return ${code}}`,
+    staticRenderFns: state.staticRenderFns // 存储的是静态渲染函数
+  }
+}
+
+export function genElement (el: ASTElement, state: CodegenState): string {
+  if (el.parent) {
+    el.pre = el.pre || el.parent.pre
+  }
+
+  if (el.staticRoot && !el.staticProcessed) {
+    // 处理静态节点
+    return genStatic(el, state)
+  } else if (el.once && !el.onceProcessed) {
+    return genOnce(el, state)
+  } else if (el.for && !el.forProcessed) {
+    return genFor(el, state)
+  } else if (el.if && !el.ifProcessed) {
+    return genIf(el, state)
+  } else if (el.tag === 'template' && !el.slotTarget && !state.pre) {
+    return genChildren(el, state) || 'void 0'
+  } else if (el.tag === 'slot') {
+    return genSlot(el, state)
+  } else {
+    // component or element
+    let code
+    if (el.component) {
+      code = genComponent(el.component, el, state)
+    } else {
+      let data
+      if (!el.plain || (el.pre && state.maybeComponent(el))) {
+        // 生成元素的属性/指令/事件等
+        // 处理各种指令，包括 genDirectives(model/text/html)
+        data = genData(el, state)
+      }
+
+      const children = el.inlineTemplate ? null : genChildren(el, state, true)
+      code = `_c('${el.tag}'${
+        data ? `,${data}` : '' // data
+      }${
+        children ? `,${children}` : '' // children
+      })`
+    }
+    // module transforms
+    for (let i = 0; i < state.transforms.length; i++) {
+      code = state.transforms[i](el, code)
+    }
+    return code
+  }
+}
+```
+
+### 总结
+
+模板编译是把模板首先转换为 AST 对象，然后对 AST 对象进行优化（标记静态根节点），然后把优化后的 AST 对象生成字符串形式代码。最后将字符串形式代码通过 new Function 转换成匿名函数。这个匿名函数就是最终生成的 render 函数。
+
+模板编译就是把模板字符串转换为渲染函数。
+
+```html
+<div id="app">
+  <h1>Vue<span>Template Compile</span></h1>
+  <div>{{ message }}<p>hello</p></div>
+  <div>是否显示</div>
+</div>
+```
+
+h1 标签内容是静态根节点，另外两个 div 都不是静态根节点，对于标签内部直接包含 div 元素，vue 不会将其标记为静态根节点。
+
+* compileToFunctions(template, ...)
+  * 先从缓存加载编译好的 render 函数
+  * 缓存中没有则调用 compile(template, options)
+* compile(template, options)
+  * 合并 options
+  * baseCompile(template.trim(), finalOptions)
+* baseCompile(template.trim(), finalOptions)
+  * parse()
+    * 把 template 转换为 AST Tree
+  * optimize()
+    * 标记 AST Tree 中的静态节点 sub tree
+    * 检测到静态子树，设置为静态，不需要在每次重新渲染的时候重新生成节点
+    * patch 阶段跳过静态子树
+  * generate()
+    * 将 AST Tree 转换为字符串形式的 js 代码 
+* compileToFunctions(template, ...)
+  * 继续把上一步中生成的字符串形式 js 代码转换为函数
+  * createFunction()
+  * render 和 staticRenderFns 初始化完毕，挂载到 Vue 实例的 options 对应的属性中
+
+## 组件化
 
