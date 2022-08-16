@@ -50,6 +50,7 @@
   + [vue3 Diff过程分析](https://github.com/yw0525/notes/tree/master/vue/vue3_diff) 已完成
   + [vue3源码实现](https://github.com/yw0525/notes/tree/master/vue/vue3_source) 已完成
   + [vue-router源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_router) 已完成
+  + [vue-router源码进阶实现](https://github.com/yw0525/notes/tree/master/vue/vue_router_plus) 更新中... 😁
   + [vuex源码实现](https://github.com/yw0525/notes/tree/master/vue/vuex) 已完成
   + [vue-cli源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_cli) 已完成
   + [vue-ssr源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_ssr) 已完成
