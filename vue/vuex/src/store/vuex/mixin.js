@@ -10,6 +10,4 @@ function vuexInit () {
   } else {
     this.$store = this.$parent && this.$parent.$store;
   }
-
-  
 }
