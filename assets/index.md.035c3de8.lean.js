@@ -1,0 +1,1 @@
+import{_ as e,c as r,o as t,a}from"./app.43850fcb.js";const g=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"index.md"}'),o={name:"index.md"},n=a("",2),l=[n];function i(s,h,p,u,m,b){return t(),r("div",null,l)}var f=e(o,[["render",i]]);export{g as __pageData,f as default};
