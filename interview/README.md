@@ -6,25 +6,111 @@
   * remove axios，use $fetch
   * remove highlight.js
   * remove alicdn, use custom cdn
-
 * 自定义拆包
   * `rollupOptions.output.manualChunks`
-
 * preload
   * 字体文件预加载
-
 * Accessiblity 优化
   * `<a class="pc" aria-label="website">`
-
 * 代理服务器缓存
   * nginx 反向代理设置缓存
-
 * cdn 缓存
   * 静态资源开启 cdn 缓存
-
 * redis 缓存
   * 相同请求使用 redis 缓存处理
   * 更新/添加/删除文章，删除缓存
+
+## network
+
+### TCP/IP 网络分层模型
+
+从下向上划分。
+
+* 链接层（link layer）
+  * 以太网、Wifi 底层网络发送原始数据包，工作在网卡层次，使用 MAC 标记网络设备
+* 网际层或者网络互联层（internet layer），IP 协议就处于这一层
+  * IP 协议定义了 IP 地址，可以在链接层基础上，用 IP 地址取代 MAC 地址
+* 传输层（transport layer）
+  * TCP、UDP 协议工作层次
+* 应用层（application layer）
+  * HTTP、Telnet、SSH、FTP、SMTP 等
+
+### OSI 网络分层模型
+
+开放式系统互通通信参考模型（Open System Interconnection Reference Model）。仅是一个参考，并不是强制标准。
+
+从下向上划分。
+
+* 物理层，网络的物理形式
+* 数据链路层，相当于 TCP/IP 的链接层
+* 网络层，相当于 TCP/IP 的网际层
+* 传输层，相当于 TCP/IP 的传输层
+* 会话层，维护网络中连接状态，保持会话和同步
+* 表示层，把数据转换为合适、可理解的语法和语义
+* 应用层，面向具体的应用传输协议
+
+五六七层统一对应 TCP/IP 的应用层。
+
+### HTTP
+
+HTTP（HyperText Transfer Protocol） 是一个在计算机世界里用于专门在两点之间传输文本、图片、音频、视频等超文本数据的约定和规范。
+
+HTTP 跑在 TCP/IP 协议栈之上，依靠 IP 协议实现寻址和路由、TCP 协议实现可靠数据传输、DNS 协议实现域名查找、SSL/TLS 协议实现安全通信。
+
+特点：灵活可扩展、可靠的传输协议、应用层协议、使用请求-应答模式、无状态协议、明文传输（不安全）
+
+### WebSocket
+
+WebSocket 协议依赖于 HTTP。
+
+WebSocket 是一个 “全双工” 的通讯协议，与 TCP 一样，客户端和服务端都可以随时向对方发送数据。
+
+WebSocket 握手是一个标准的 HTTP Get 请求。
+
+但是要带上两个协议升级的头字段：
+
+* Connection: Upgrade，表示要求协议升级
+* Upgrade: websocket，表示要升级成 WebSocker 协议
+
+还增加了两个额外的认证头字段：
+
+* Sec-WebSocket-Key：一个 base64 编码的 16 字节随机数，作为简单的认证密钥
+* Sec-WebSocket-Version：协议版本号，当前必须是 13
+
+服务端会返回特殊的 “101 Switching Protocols” 响应报文，接下来请求就用 HTTP，改用 WebSocket 协议进行通信。
+
+### 状态码
+
+1xx：提示信息，目前是协议处理的状态，需要后续操作
+
+* 101 Switch Protocols，客户端使用 Upgrade 头字段，要求协议升级，比如 WebSocket 。
+
+2xx：成功态，报文已经收到并被正确处理
+
+* 200 OK，常见成功状态码，响应头后通常存在 body 数据
+* 204 No Content，常见成功状态码，响应头通常不存在 body 数据
+* 206 Partial Content，HTTP 分块下载或断点续传的基础，客户端发送范围请求，服务端成功处理后，返回部分资源
+  * 206 通常伴随头字段 Content-Range
+
+3xx：重定向，资源位置发生变动，需要客户端发送请求
+
+* 301 永久重定向
+* 302 临时重定向
+* 304 Not Modified 表示资源未修改
+
+4xx：客户端错误，请求报文错误，服务器无法处理
+
+* 400 Bad Request，通用的错误，表示请求报文错误
+* 403 Forbidden，服务端禁止访问资源
+* 404 Not Found，本意服务器无法提供资源，未找到资源
+* 405 Method Not Allowed，不允许使用某些方法操作资源
+* 408 Request Timeout，请求超时
+
+5xx：服务端错误，服务器处理时内部发生错误
+
+* 500 Internal Server Error，通用错误码
+* 502 Bad Gateway，服务器网关错误或者代理错误
+* 503 Service Unavailable，服务器正忙，无法响应服务，503 是一个临时状态
 
 ## browser
 
