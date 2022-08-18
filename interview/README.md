@@ -379,6 +379,41 @@ Windows：Ctrl + shift + R（Ctrl + F5）
 
 ## vue
 
+### cli
+
+#### vue-cli
+
+vue-cli 创建的项目使用 webpack 打包构建。
+
+目前处于维护状态，不会进行特性更新，推荐使用 create-vue 。
+
+> Vue CLI is now in maintenance mode. For new projects, please use [create-vue](https://github.com/vuejs/create-vue) to scaffold [Vite](https://vitejs.dev/)-based projects. `create-vue` supports both Vue 2 and Vue 3.
+
+cli：[https://github.com/vuejs/vue-cli](https://github.com/vuejs/vue-cli)
+
+模板是动态创建的。
+
+```js
+npm install -g @vue/cli
+```
+
+```js
+vue create hello-world
+```
+
+#### create-vue
+
+create-vue 创建的项目使用 vite 打包构建
+
+```js
+npm init vue@3 // vue3 项目
+npm init vue@2 // vue2 项目
+```
+
+cli：[https://github.com/vuejs/create-vue](https://github.com/vuejs/create-vue)
+
+template：[https://github.com/vuejs/create-vue-templates](https://github.com/vuejs/create-vue-templates)
+
 ### 响应式原理
 
 ### compiler  过程
