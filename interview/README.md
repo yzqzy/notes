@@ -59,27 +59,8 @@ HTTP 跑在 TCP/IP 协议栈之上，依靠 IP 协议实现寻址和路由、TCP
 
 特点：灵活可扩展、可靠的传输协议、应用层协议、使用请求-应答模式、无状态协议、明文传输、不安全
 
-### WebSocket
 
-WebSocket 协议依赖于 HTTP。
-
-WebSocket 是一个 “全双工” 的通讯协议，与 TCP 一样，客户端和服务端都可以随时向对方发送数据。
-
-WebSocket 握手是一个标准的 HTTP Get 请求。
-
-但是要带上两个协议升级的头字段：
-
-* Connection: Upgrade，表示要求协议升级
-* Upgrade: websocket，表示要升级成 WebSocker 协议
-
-还增加了两个额外的认证头字段：
-
-* Sec-WebSocket-Key：一个 base64 编码的 16 字节随机数，作为简单的认证密钥
-* Sec-WebSocket-Version：协议版本号，当前必须是 13
-
-服务端会返回特殊的 “101 Switching Protocols” 响应报文，接下来请求就用 HTTP，改用 WebSocket 协议进行通信。
-
-### 状态码
+响应状态码
 
 1xx：提示信息，目前是协议处理的状态，需要后续操作
 
@@ -111,6 +92,28 @@ WebSocket 握手是一个标准的 HTTP Get 请求。
 * 500 Internal Server Error，通用错误码
 * 502 Bad Gateway，服务器网关错误或者代理错误
 * 503 Service Unavailable，服务器正忙，无法响应服务，503 是一个临时状态
+
+
+
+### WebSocket
+
+WebSocket 协议依赖于 HTTP。
+
+WebSocket 是一个 “全双工” 的通讯协议，与 TCP 一样，客户端和服务端都可以随时向对方发送数据。
+
+WebSocket 握手是一个标准的 HTTP Get 请求。
+
+但是要带上两个协议升级的头字段：
+
+* Connection: Upgrade，表示要求协议升级
+* Upgrade: websocket，表示要升级成 WebSocker 协议
+
+还增加了两个额外的认证头字段：
+
+* Sec-WebSocket-Key：一个 base64 编码的 16 字节随机数，作为简单的认证密钥
+* Sec-WebSocket-Version：协议版本号，当前必须是 13
+
+服务端会返回特殊的 “101 Switching Protocols” 响应报文，接下来请求就用 HTTP，改用 WebSocket 协议进行通信。
 
 ### HTTPS、SSL\TLS
 
@@ -302,7 +305,6 @@ Handshake Protocol: Client Key Exchange
 * 使用 ECDHE 实现密钥交换，而不是 RSA，所以在服务端会发出 “Server Key Exchange” 消息。
 * 因为使用 ECDHE，客户端可以不用等到服务器返回 “Finished” 确认握手完毕，立即就发出 HTTP 报文，省去一个消息往返的时间。不等连接完全建立就提前发送应用数据，提高传输的效率。
 
-
 <img src="./images/rsa.webp" style="zoom: 80%" />
 
 #### 双向认证
@@ -315,7 +317,114 @@ Handshake Protocol: Client Key Exchange
 
 ### TLS 1.3  特性分析
 
+TLS 1.3 与 2018 年发布，它有三个主要改进目标：兼容、安全与性能。
 
+#### 最大化兼容性
+
+TLS 1.3 在保持 TLS 1.2 现有的记录格式不变的前提下，通过 “伪装” 实现兼容。
+
+TLS 1.3 使用一个新的扩展协议（Extension Protocol），通过在记录末尾添加一系列的 “扩展字段” 来增加新的功能，并实现 “向后兼容”。
+
+记录头的 Version 字段被固定的前提下，TLS 1.3 协议握手的 “Hello” 消息后面都会有 “supported_versions” 扩展，它用于标记 TLS 版本号，使用它就可以区分新旧协议。
+
+```
+Handshake Protocol: Client Hello
+    Version: TLS 1.2 (0x0303)
+    Extension: supported_versions (len=11)
+        Supported Version: TLS 1.3 (0x0304)
+        Supported Version: TLS 1.2 (0x0303)
+```
+
+TLS 1.3 利用扩展实现了许多重要功能，比如 “supported_groups”、“key_share”、“signature_algorthms”、“server_name” 等。
+
+#### 强化安全
+
+TLS 1.2 也有很多漏洞和加密算法的弱点，TLS 1.3 在协议里修补了这些不安全因素。
+
+* 伪随机数函数由 PRF 升级为 HKDF（HMAC-based Extract-and-Expand Key Derivation Function）；
+* 明确禁止在记录协议里使用压缩；
+* 废除了 RC4、DES 对称加密算法；
+* 废除了 ECB、CBC 等传统分组模式；
+* 废除了 MD5、SHA1、SHA-224 摘要算法；
+* 废除了 RSA、DH 密钥交换算法和许多命名曲线。
+
+TLS 1.3 只保留了 AES、ChaCha20 对称加密算法，分组模式只能用 AEAD 的 GCM、CCM 和 Poly1305，摘要算法只能用 SHA256、SHA384，密钥交换算法只有 ECDHE 和 DHE，椭圆曲线只剩下 P-256 和 x25519 等 5 种。
+
+废除 RSA 和 DH 密钥交换算法的原因：
+
+RSA 不具备 “前向安全”（Forward Secrecy）。如果一个黑客一直在长期收集混合加密系统收发的所有报文，一旦私钥泄露或被破解，那么黑客就能够使用私钥解密出之前所有报文的 “Pre-Master”，再算出会话密钥，破解所有密文。
+
+ECDHE 算法会在每次握手时都生成一对临时的公钥和私钥，每次通信的密钥对都是不同的，即使黑客破解这一次的会话密钥，也只是这次通信被攻击，历史消息不会受到影响，仍然是安全的。
+
+#### 提升性能
+
+HTTPS 建立连接时不仅要做 TCP 握手，还要做 TLS 握手，在 TLS 1.2 中会多花两个消息往返时间（2-RTT），可能会导致几十毫秒甚至上百毫秒的延迟，在移动网络中延迟还会更加严重。
+
+TLS 1.3 压缩了以前的 “Hello” 协商过程，删除 “Key Exchange” 消息，把握手时间减少到 “1-RTT”，效率提升一倍。客户端在 “Client Hello” 消息里直接用 “suppported_groups” 带上支持的曲线，比如 P-256、X25519，用 “key_share” 带上曲线对应的客户端公钥参数，用 “signuture_algorithms” 带上签名算法。
+
+服务器收到后会在这些扩展里选定一个曲线和参数，再用 “key_share” 扩展返回服务器这边的公钥参数，就实现了双方的密钥交换。
+
+<img src="./images/tls1.3.webp" style="zoom: 30%" />
+
+### TLS 1.3 握手分析
+
+<img src="./images/tls1.3_02.webp" style="zoom: 80%" />
+
+TCP 建立连接后，浏览器首先还是会发一个 “Client Hello”。
+
+因为 1.3 的消息兼容 1.2，所以开头的版本号、支持的密码套件和随机数（Client Random）结构都是一样的（随机数是 32 个字节）。
+
+```
+Handshake Protocol: Client Hello
+    Version: TLS 1.2 (0x0303)
+    Random: cebeb6c05403654d66c2329…
+    Cipher Suites (18 suites)
+        Cipher Suite: TLS_AES_128_GCM_SHA256 (0x1301)
+        Cipher Suite: TLS_CHACHA20_POLY1305_SHA256 (0x1303)
+        Cipher Suite: TLS_AES_256_GCM_SHA384 (0x1302)
+    Extension: supported_versions (len=9)
+        Supported Version: TLS 1.3 (0x0304)
+        Supported Version: TLS 1.2 (0x0303)
+    Extension: supported_groups (len=14)
+        Supported Groups (6 groups)
+            Supported Group: x25519 (0x001d)
+            Supported Group: secp256r1 (0x0017)
+    Extension: key_share (len=107)
+        Key Share extension
+            Client Key Share Length: 105
+            Key Share Entry: Group: x25519
+            Key Share Entry: Group: secp256r1
+```
+
+> “supported_versions” 表示这是 TLS 1.3，“supported_groups” 是支持的曲线，“key_share” 是曲线对应的参数。
+
+服务器收到 “Client Hello” 消息后，会返回 “Server Hello” 消息，还要给出一个随机数（Server Random）和选定的密码套件。
+
+```
+Handshake Protocol: Server Hello
+    Version: TLS 1.2 (0x0303)
+    Random: 12d2bce6568b063d3dee2…
+    Cipher Suite: TLS_AES_128_GCM_SHA256 (0x1301)
+    Extension: supported_versions (len=2)
+        Supported Version: TLS 1.3 (0x0304)
+    Extension: key_share (len=36)
+        Key Share extension
+            Key Share Entry: Group: x25519, Key Exchange length: 32
+```
+
+> “supported_versions” 确认使用 TLS 1.3，“key_share” 扩展中带上曲线和对应的公钥参数。
+
+这时只交换了两条消息，客户端和服务端就拿到四个共享信息：Client Random 和 Server Random、Client Params 和 Server Params，两边就可以各自利用 ECDHE 算出 “Pre-Master”，再用 HKDF 生成主密钥 “Master Secret”，效率比 TLS 1.2 提高很多。
+
+算出主密钥后，服务器立刻发出 “Change Cipher Spec” 消息，比 TLS 1.2 提早进入加密通信，后面的证书等就是加密的，减少了握手时的明文信息泄露。
+
+这里 TLS 1.3 还有一个安全强化措施，多了个 “Certificate Verify” 消息，用服务器的私钥把前面的曲线、套件、参数等数据加了签名，作用和 “Finished” 消息差不多。但因为是私钥签名，所以强化了身份认证和防篡改。
+
+这两个 “Hello” 消息之后，客户端验证服务器证书，再发 “Finished” 消息，就正式完成握手，开发收发 HTTP 报文。
+
+### HTTPS 优化
+
+HTTP 连接大致上可以划分为两部分，一部分是建立连接时的非对称加密握手，
 
 ### 单点登录（SSO）
 
