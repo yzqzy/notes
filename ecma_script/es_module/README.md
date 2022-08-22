@@ -537,5 +537,137 @@ console.log(readme.toString())
 
 ### 与 CommonJS 交互
 
+```js
+// commonjs
+
+module.exports = {
+  foo: 'commonjs exports value'
+}
+
+exports.foo = 'commonjs exports value'
+```
+
+```js
+// es module
+
+import mod from './commonjs.js'
+console.log(mod)
+```
+
+可以直接提取 common.js 模块内容。
+
+```js
+// es module
+
+import { foo } from './commonjs.js'
+
+console.log(foo)
+```
+
+
+
+```js
+// es_module.mjs
+
+export const foo = 'commonjs exports value'
+```
+
+```js
+// commonjs.js
+
+const mod = require('./es_module.mjs')
+console.log(mod)
+```
+
+> throw new ERR_REQUIRE_ESM(filename, true);
+
+不能在 common js 模块中通过 require 载入 es module（node 原生环境）
+
+### 与 CommonJS 差异
+
+```js
+// cjs.js
+
+// 加载模块函数
+console.log(require)
+
+// 模块对象
+console.log(module)
+
+// 导出对象别名
+console.log(exports)
+
+// 当前文件的绝对路径
+console.log(__filename)
+
+// 当前文件所在目录
+console.log(__dirname)
+```
+
+
+
+es module 中无法使用以下成员，这些成员实际是函数的形参，伪全局对象。
+
+> [cjs loader.js](https://github.com/nodejs/node/blob/main/lib/internal/modules/cjs/loader.js#L208)
+
+```js
+// esm.mjs
+
+// 加载模块函数
+console.log(require)
+
+// 模块对象
+console.log(module)
+
+// 导出对象别名
+console.log(exports)
+
+// 当前文件的绝对路径
+console.log(__filename)
+
+// 当前文件所在目录
+console.log(__dirname)
+```
+
+可以使用 import、export 代替 require 与 exports。可以使用以下方法获取文件绝对路径和目录。
+
+```js
+// 获取文件路径
+import { fileURLToPath } from 'url'
+console.log(fileURLToPath(import.meta.url))
+
+// 获取文件所在目录
+import { dirname } from 'path'
+console.log(dirname(fileURLToPath(import.meta.url)))
+```
+
+### 新版本支持
+
+可以给当前工作目录的 `package.json` 增加 type 字段
+
+```json
+// package.json
+
+{
+  "type": "module"
+}
+```
+
+这样当前目录下所有 js 文件也都是以 es module 的方式进行工作，不需要再修改扩展名。
+
+如果当前目录下还想使用 common js 内置模块，需要修改扩展名为 `.cjs`。
+
+### Babel 兼容方案
+
+如果使用早期 node.js 版本，可以使用 babel 实现兼容。
+
+```bash
+pnpm i @babel/node @babel/core @babel/preset-env -D
+```
+
+```
+pnpm babel-node .\index.mjs
+```
+
 
 

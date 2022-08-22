@@ -1,5 +1,5 @@
 {
-  "name": "module",
+  "name": "es_module",
   "version": "1.0.0",
   "description": "模块化开发是当下最重要的前端开发范式之一。",
   "main": "module.js",
@@ -10,6 +10,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@babel/node": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
     "lodash": "^4.17.21"
   }
 }
