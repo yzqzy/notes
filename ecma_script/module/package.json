@@ -1,0 +1,15 @@
+{
+  "name": "module",
+  "version": "1.0.0",
+  "description": "模块化开发是当下最重要的前端开发范式之一。",
+  "main": "module.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "lodash": "^4.17.21"
+  }
+}

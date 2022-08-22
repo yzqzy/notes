@@ -134,3 +134,408 @@ require(['./moduel-b'], function (moduleB) {
 })
 ```
 
+自动创建 script 标签去发送对应脚本文件请求，并且执行相应的模块代码。目前绝大多数第三方库都支持 AMD 规范。
+
+* AMD 使用相对复杂
+* 模块 JS 文件请求频繁
+
+### CMD 规范
+
+通用模块定义规范。淘宝 Sea.js 实现了 CMD 规范。
+
+```js
+// CMD 规范（类似 CommonJS 规范），减少心智负担
+
+define(function (require, exports, module) {
+	var $ = require('jquery')
+  
+  module.exports = function () {
+    console.log('module')
+    $('body').append('<p>module</p>')
+  }
+})
+```
+
+## 模块化标准规范
+
+Node 环境中使用 CommonJS 规范，浏览器环境中使用 ES Modules。
+
+## ES Modules
+
+### 基本特性
+
+只需要给页面的 script 标签增加 type=module 的属性，就可以使用 ES Module 标准执行 JS 代码。
+
+```html
+<script type="module">
+  console.log('this is es module')
+</script>
+```
+
+* ESM 自动采用严格模式，忽略 'use strict'
+* 每个 ESM 都是单独的私有作用域
+* ESM 通过 CORS 的方式请求外部 JS 模块的（web 地址必须支持 cors）
+* ESM 的 script 标签会自动延迟执行脚本（等同于 script 标签的 defer 属性，不会阻塞 HTML 解析）
+
+### 导出
+
+```js
+// ./module.js
+const foo = 'es modules'
+export { foo }
+
+// ./app.js
+import { foo } from './module.js'
+console.log(foo)
+```
+
+导入模块，浏览器会自动发起网络请求获取对应资源。
+
+```js
+var name = 'foo module'
+
+function hello() {}
+
+export {
+	name as fooName,
+  hello as fooHello
+}
+```
+
+
+
+模块导入不等于字面量对象
+
+```js
+var name = 'heora'
+var age = 18
+
+export { name, age } // 固定语法，不是对象字面量
+```
+
+```js
+import { name, age } from './module.js' // 并不是解构，固定用法
+
+console.log(name, age)
+```
+
+`export {}` 只是一种固定语法，如果确实想要导出对象，需要使用默认导出
+
+```js
+var name = 'heora'
+var age = 18
+
+export default { name, age } // 对象字面量
+```
+
+
+
+导出的是成员的引用，即引用关系
+
+```js
+let name = 'heora'
+let age = 24
+
+export { name, age }
+
+setTimeout(() => {
+  name = 'yueluo'
+}, 1000)
+```
+
+```js
+import { name, age } from './module.js'
+
+console.log(name, age) // heora 24
+
+setTimeout(() => {
+  console.log(name, age) // yueluo 24
+}, 2000)
+```
+
+
+
+导出的引用关系是只读的
+
+```js
+let name = 'heora'
+let age = 24
+
+export { name, age }
+```
+
+```js
+import { name, age } from './module.js'
+
+setTimeout(() => {
+  age = 34 //  Uncaught TypeError: Assignment to constant variable.
+}, 2000)
+```
+
+### 导入
+
+import 导入模块时 from 后面的是一个路径，字符串必须是完整的名称，不能省略文件扩展名
+
+```js
+import { name, age } from './module' // 404 (Not Found)
+
+console.log(name, age)
+
+import utils from './utils' // 报错
+```
+
+对于路径名称，当使用打包工具时，可以省略扩展名和文件夹的默认文件名
+
+
+
+相对路径，不能省略 `./`
+
+```js
+import { name, age } from 'module.js'
+console.log(name, age)
+//  Failed to resolve module specifier "module.js". 
+// Relative references must start with either "/", "./", or "../".
+```
+
+
+
+可以使用绝对路径或者完整的 URL
+
+```js
+import { name, age } from './module.js'
+console.log(name, age)
+```
+
+```js
+import { name, age } from '/ecma_script/module/module.js'
+console.log(name, age)
+```
+
+```js
+import { name, age } from 'http://127.0.0.1:5500/ecma_script/module/module.js'
+console.log(name, age)
+```
+
+
+
+如果只是想执行模块，不使用模块内容
+
+```js
+import { } from './module.js'
+```
+
+```js
+import './module.js'
+```
+
+
+
+如果导入模块特别多，并且模块内容都要使用
+
+```js
+import * as module from './module.js'
+console.log(module.name, module.age)
+```
+
+
+
+import 关键字需要在开发阶段就明确路径
+
+```js
+var modulePath = './module.js'
+import { name } from modulePath
+// app.js:37 Uncaught SyntaxError: Unexpected identifier
+```
+
+```js
+if (true) {
+  import { name } from './module.js'
+}
+// Uncaught SyntaxError: Unexpected token '{'
+```
+
+如果遇到以上两种情况，需要动态导入模块，使用全局 import 函数
+
+```js
+var modulePath = './module.js'
+import(modulePath).then(modue => {
+  console.log(modue)
+})
+```
+
+
+
+如果一个模块中同时导出命名成员和默认成员
+
+```js
+let name = 'heora'
+let age = 24
+
+export { name, age }
+export default 'default'
+```
+
+```js
+import { name, age, default as title } from './module.js'
+console.log(name, age, title)
+```
+
+```js
+import title, { name, age } from './module.js'
+console.log(name, age, title)
+```
+
+### 导出导入成员
+
+```js
+export { name, age } from './module.js'
+```
+
+
+
+```js
+// src/components/button.js
+export const Button = 'Button Component'
+
+// src/components/avatar.js
+export const Avatar = 'Avatar Component'
+
+// src/components/index.js
+export { Button } from './button.js'
+export { Avatar } from './avatar.js'
+
+// app.js
+import { Buttpn, Avatar } from './component/index.js'
+```
+
+
+
+```js
+// src/components/button.js
+export default Button = 'Button Component'
+
+// src/components/index.js
+export { default as Button } from './button.js'
+```
+
+### Polyfill
+
+早期浏览器不支持 ES Module 。
+
+```html
+<script type="module">
+  console.log('this is es module')
+</script>
+```
+
+Polyfill 可以在浏览器直接支持 ES Module 中绝大多数特性。
+
+[https://unpkg.com/browse/browser-es-module-loader@0.4.1/dist/](https://unpkg.com/browse/browser-es-module-loader@0.4.1/dist/)
+
+```bash
+npm install browser-es-module-loader
+```
+
+```html
+<script src="https://unpkg.com/browser-es-module-loader@0.4.1/dist/babel-browser-build.js"></script>
+<script src="https://unpkg.com/browser-es-module-loader@0.4.1/dist/https://unpkg.com/browser-es-module-loader@0.4.1/dist/browser-es-module-loader.js"></script>
+```
+
+如果提示不支持 Promise，还需要引入 Promise 的 Polyfill。
+
+[https://unpkg.com/promise-polyfill@8.2.3/dist/polyfill.min.js](https://unpkg.com/promise-polyfill@8.2.3/dist/polyfill.min.js)
+
+
+
+支持 ES Module 特性的浏览器代码会被执行两次，可以借助 script 标签的 nomodule 机制。
+
+```js
+<script nomodule src="https://unpkg.com/browser-es-module-loader@0.4.1/dist/babel-browser-build.js"></script>
+<script nomodule src="https://unpkg.com/browser-es-module-loader@0.4.1/dist/https://unpkg.com/browser-es-module-loader@0.4.1/dist/browser-es-module-loader.js"></script>
+```
+
+
+
+这种兼容 ES Module 的方式只适合本地测试，不建议生产环境使用。
+
+## ES Modules in Node.js
+
+### 支持情况
+
+Node.js 已经开始逐步支持 ES Module 特性。
+
+Node.js 8.5 版本之后，就已经以实验特性的方式去支持 ES Module。
+
+[https://github.com/nodejs/node/tree/main/lib/internal/modules](https://github.com/nodejs/node/tree/main/lib/internal/modules)
+
+
+
+在 node 环境中直接使用 ES Module 需要使用 `.mjs` 扩展名。
+
+```js
+// module.mjs
+
+const name = 'heora'
+const age = 24
+
+export { name, age }
+```
+
+```js
+// index.mjs
+
+import { name, age } from './module.mjs'
+
+console.log(name, age)
+```
+
+
+
+导入原生模块
+
+```js
+// index.mjs
+
+import fs from 'fs'
+
+const md = fs.readFileSync('README.md')
+console.log(md.toString())
+```
+
+
+
+导入第三方 NPM 模块
+
+```bash
+pnpm install lodash -D
+```
+
+```js
+// index.mjs
+
+import _ from 'lodash'
+
+console.log(_.camelCase('ES Module')) // esModule
+```
+
+```JS
+import { camelCase } from 'lodash'
+console.log(camelCase('ES Module'))
+// SyntaxError: Named export 'camelCase' not found. The requested module 'lodash' is a CommonJS module, which may not support all module.exports as named exports.
+
+// import {} 并不是解构，第三方模块都是导出一个对象，必须使用默认导入的方式导入成员
+```
+
+```js
+const { readFileSync } = fs
+
+const readme = readFileSync('README.md')
+console.log(readme.toString())
+
+// 可以通过 {} 的方式提取系统内置模块中的成员，系统内置模块官方都做了兼容
+```
+
+### 与 CommonJS 交互
+
+
+
