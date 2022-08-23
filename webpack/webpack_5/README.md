@@ -1,4 +1,4 @@
-# webpack
+# webpack 5
 
 模块化的问题
 
@@ -149,4 +149,61 @@ production（默认）、development、node
 ```
 
 ## 资源模块加载
+
+JavaScript 驱动前端应用
+
+* 逻辑合理，JS 导入资源文件
+* 确保上线资源不缺失，都是必要的
+
+webpack5 使用  assets modules 可以实现定制功能
+
+```js
+const path = require('path')
+
+module.exports = {
+  mode: 'development',
+  entry: './src/main.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 10 * 1024 // 10 KB
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+针对图片资源
+
+* 超出 10 KB 文件单独提取存放
+* 小于 10 KB 文件转换为 Data URLs 嵌入代码中
+
+Data URLs
+
+<img src="./images/data_urls.png" />
+
+```
+data:text/html;charset=UTF-8,<h1>html content<h1>
+```
+
+```
+data:image/png;base64,ivadsadadakdasda...
+```
 
