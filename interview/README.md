@@ -20,6 +20,32 @@
   * 相同请求使用 redis 缓存处理
   * 更新/添加/删除文章，删除缓存
 
+## ECMAScript
+
+### delete
+
+delete 语法设计是删除一个表达式的结果
+
+delete x 是在删除一个表达式的、引用类型的结果（result），而不是再删除 x 表达式，或者这个删除表达式的值（Value）。
+
+当 x 是全局对象 global 的属性时，delete x 其实只需要返回 global.x 这个引用就可以。
+当它不是全局对象 global 的属性时，那么就需要从当前环境下找到一个名为 x 的引用。
+找到这两种不同的引用的过程，称为 ResolveBinding，这两种不同的 x，称为不同环境下绑定的标识符/名字。
+
+```js
+const name = "123";
+age = 18;
+
+Object.getOwnPropertyDescriptor(window, 'name'); // { configurable: true, value: '123', enumerable: true }
+Object.getOwnPropertyDescriptor(window, 'age'); // { configurable: true, enumerable: true, value: 18, writable: true }
+
+console.log(delete name) // false
+console.log(delete age) // true
+console.log(typeof age) // undefined
+```
+
+[深入分析 delete](http://perfectionkills.com/understanding-delete/)
+
 ## network
 
 ### TCP/IP 网络分层模型
@@ -821,77 +847,7 @@ compiler.run(function(err, stats) {
 
 webpack 初始化的时候，就已经定义好一系列钩子供我们使用。
 
-```js
-// Compiler.js
-class Compiler extends Tapable {
-	constructor(context) {
-		super();
-		this.hooks = {
-			/** @type {SyncBailHook<Compilation>} */
-			shouldEmit: new SyncBailHook(["compilation"]),
-			/** @type {AsyncSeriesHook<Stats>} */
-			done: new AsyncSeriesHook(["stats"]),
-			/** @type {AsyncSeriesHook<>} */
-			additionalPass: new AsyncSeriesHook([]),
-			/** @type {AsyncSeriesHook<Compiler>} */
-			beforeRun: new AsyncSeriesHook(["compiler"]),
-			/** @type {AsyncSeriesHook<Compiler>} */
-			run: new AsyncSeriesHook(["compiler"]),
-			/** @type {AsyncSeriesHook<Compilation>} */
-			emit: new AsyncSeriesHook(["compilation"]),
-			/** @type {AsyncSeriesHook<string, Buffer>} */
-			assetEmitted: new AsyncSeriesHook(["file", "content"]),
-			/** @type {AsyncSeriesHook<Compilation>} */
-			afterEmit: new AsyncSeriesHook(["compilation"]),
-
-			/** @type {SyncHook<Compilation, CompilationParams>} */
-			thisCompilation: new SyncHook(["compilation", "params"]),
-			/** @type {SyncHook<Compilation, CompilationParams>} */
-			compilation: new SyncHook(["compilation", "params"]),
-			/** @type {SyncHook<NormalModuleFactory>} */
-			normalModuleFactory: new SyncHook(["normalModuleFactory"]),
-			/** @type {SyncHook<ContextModuleFactory>}  */
-			contextModuleFactory: new SyncHook(["contextModulefactory"]),
-
-			/** @type {AsyncSeriesHook<CompilationParams>} */
-			beforeCompile: new AsyncSeriesHook(["params"]),
-			/** @type {SyncHook<CompilationParams>} */
-			compile: new SyncHook(["params"]),
-			/** @type {AsyncParallelHook<Compilation>} */
-			make: new AsyncParallelHook(["compilation"]),
-			/** @type {AsyncSeriesHook<Compilation>} */
-			afterCompile: new AsyncSeriesHook(["compilation"]),
-
-			/** @type {AsyncSeriesHook<Compiler>} */
-			watchRun: new AsyncSeriesHook(["compiler"]),
-			/** @type {SyncHook<Error>} */
-			failed: new SyncHook(["error"]),
-			/** @type {SyncHook<string, string>} */
-			invalid: new SyncHook(["filename", "changeTime"]),
-			/** @type {SyncHook} */
-			watchClose: new SyncHook([]),
-
-			/** @type {SyncBailHook<string, string, any[]>} */
-			infrastructureLog: new SyncBailHook(["origin", "type", "args"]),
-
-			// TODO the following hooks are weirdly located here
-			// TODO move them for webpack 5
-			/** @type {SyncHook} */
-			environment: new SyncHook([]),
-			/** @type {SyncHook} */
-			afterEnvironment: new SyncHook([]),
-			/** @type {SyncHook<Compiler>} */
-			afterPlugins: new SyncHook(["compiler"]),
-			/** @type {SyncHook<Compiler>} */
-			afterResolvers: new SyncHook(["compiler"]),
-			/** @type {SyncBailHook<string, Entry>} */
-			entryOption: new SyncBailHook(["context", "entry"])
-		}
-  }
-}
-```
-
-编译流程如下：
+编译流程分析：
 
 * 开始
 * 配置合并
@@ -900,7 +856,48 @@ class Compiler extends Tapable {
 * 挂载 plugins
 * 处理 webpack 内部插件（入口文件处理）
 
+make 前流程分析：
 
+- 实例化 compiler 对象（贯穿整个 webpack 工作过程）、由 compiler 调用 run 方法
+- compiler 实例化操作
+  - compiler 继承 tapable，因此它具备钩子的操作能力（监听事件、触发事件、webpack 是一个事件流）
+  - 实例化 compiler 对象之后向它的身上挂载很多属性，其中 NodeEnvironmentPlugin 这个操作让它具备了文件读写能力
+  - 具备文件读写能力之后，然后将 plugins 中的插件挂载到 compiler 对象上
+  - 将内部默认的插件与 compiler 建立关系，其中 EntryOptionPlugin 用来处理模块 ID
+  - 在实例化 compiler 的时候，只是监听 make 钩子（SingleEntryPlugin）
+    - SingleEntryPlugin 模块的 apply 中存在二个钩子的监听
+    - 其中 compilation 钩子就是 compilation 具备了利用 normalModuleFactory 工厂创建一个普通模块的能力，因为它就是利用一个自己创建的模块来加载需要被打包的模块
+    - 其中 make 钩子在 compiler.run 时会被触发，意味着某个模块打包之前的准备工作就完成了
+    - addEntry 方法调用
+- run 方法执行
+  - run 方法里就是一堆钩子按照顺序触发（beforeRun、run、compile）
+  - compile 方法执行
+    - 准备参数（其中 normalModuleFactory 是后续用于创建模块）
+    - 触发 beforeCompile
+    - 将第一个参数传给一个函数，创建一个 compilation（newCompilation）
+    - 在调用 newCompilation 的内部
+      - 调用了 createCompilation
+      - 触发 this.compilation 钩子和 compilation 的监听
+    - 当创建 compilation 对象之后，触发 make 钩子
+    - 当触发 make 钩子监听时，将 comilation 对象传递作为参数传递
+
+addEntry 流程分析：
+
+- make 钩子在被触发时，接收 compilation 实例，它由很多属性。
+- 从 compilation 解构三个值
+  - entry：当前需要被打包的模块的相对路径（./src/index.js）
+  - name：main
+  - context：当前项目的根路径
+- dep 是对当前入口模块的依赖关系进行处理
+- 调用 addEntry 方法。
+- 在 compilation 实例身上存在一个 addEntry 方法，然后内部调用 _addModuleChain 方法去处理依赖
+- 在 compilation 中可以通过 NormalModuleFactory 工厂来创建一个普通的模块对象
+- 在 webpack 内部默认开启了一个 100 并发量的打包操作，我们看到的是 normalModule.create()
+- 在 beforeResolve 内部会触发一个 factory 钩子监听（这部分操作用来处理 loader，不会重点分析）
+- 上述操作完成之后，获取到一个函数存在 factory 中，然后对它进行立即调用，在这个函数调用里又触发了一个 resolver 的钩子（处理 loader，拿到 resolver 方法之后意味着所有的 loader 处理完毕）
+- 调用 resolver() 方法之后，就会进入到 afterResolve 这个钩子里，然后就会触发 new NormalModule
+- 完成上述操作之后就将 module 进行保存和一些其他属性参加
+- 调用 buildModule 方法开始编译，内部调用 build 方法，内部返回并调用 doBuild
 
 ## vite
 
