@@ -774,4 +774,199 @@ vue.js 3 编译器会把编译时关键信息添加到虚拟 DOM 上，渲染器
 
 [https://github.com/yw0525/notes/blob/master/vue/vue_router/src/router/vue-router.js](https://github.com/yw0525/notes/blob/master/vue/vue_router/src/router/vue-router.js)
 
-## build tools
+## webpack
+
+### 编译过程
+
+webpack 的执行过程可以看作是一种事件驱动的事件工作流机制，这个机制可以将不同的插件串联起来，完成所有工作。
+
+* 配置初始化
+* 内容编译
+* 输出编译后内容
+
+webpack 最核心的两个部分就是负责编译的 compiler 和负责创建 bundles 的 compilation。
+
+```js
+ pnpm i webpack@^4.44.2 webpack-cli@^3.3.12 html-webpack-plugin@^4.5.0 -D
+```
+
+```json
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+  mode: 'development',
+  entry: './src/index.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  plugins: [
+    new HtmlWebpackPlugin()
+  ]
+}
+```
+
+```js
+const webpack = require('webpack')
+const options = require('./webpack.config')
+
+const compiler = webpack(options)
+
+compiler.run(function(err, stats) {
+  console.log(err)
+  // console.log(stats.toJson())
+})
+```
+
+webpack 初始化的时候，就已经定义好一系列钩子供我们使用。
+
+```js
+// Compiler.js
+class Compiler extends Tapable {
+	constructor(context) {
+		super();
+		this.hooks = {
+			/** @type {SyncBailHook<Compilation>} */
+			shouldEmit: new SyncBailHook(["compilation"]),
+			/** @type {AsyncSeriesHook<Stats>} */
+			done: new AsyncSeriesHook(["stats"]),
+			/** @type {AsyncSeriesHook<>} */
+			additionalPass: new AsyncSeriesHook([]),
+			/** @type {AsyncSeriesHook<Compiler>} */
+			beforeRun: new AsyncSeriesHook(["compiler"]),
+			/** @type {AsyncSeriesHook<Compiler>} */
+			run: new AsyncSeriesHook(["compiler"]),
+			/** @type {AsyncSeriesHook<Compilation>} */
+			emit: new AsyncSeriesHook(["compilation"]),
+			/** @type {AsyncSeriesHook<string, Buffer>} */
+			assetEmitted: new AsyncSeriesHook(["file", "content"]),
+			/** @type {AsyncSeriesHook<Compilation>} */
+			afterEmit: new AsyncSeriesHook(["compilation"]),
+
+			/** @type {SyncHook<Compilation, CompilationParams>} */
+			thisCompilation: new SyncHook(["compilation", "params"]),
+			/** @type {SyncHook<Compilation, CompilationParams>} */
+			compilation: new SyncHook(["compilation", "params"]),
+			/** @type {SyncHook<NormalModuleFactory>} */
+			normalModuleFactory: new SyncHook(["normalModuleFactory"]),
+			/** @type {SyncHook<ContextModuleFactory>}  */
+			contextModuleFactory: new SyncHook(["contextModulefactory"]),
+
+			/** @type {AsyncSeriesHook<CompilationParams>} */
+			beforeCompile: new AsyncSeriesHook(["params"]),
+			/** @type {SyncHook<CompilationParams>} */
+			compile: new SyncHook(["params"]),
+			/** @type {AsyncParallelHook<Compilation>} */
+			make: new AsyncParallelHook(["compilation"]),
+			/** @type {AsyncSeriesHook<Compilation>} */
+			afterCompile: new AsyncSeriesHook(["compilation"]),
+
+			/** @type {AsyncSeriesHook<Compiler>} */
+			watchRun: new AsyncSeriesHook(["compiler"]),
+			/** @type {SyncHook<Error>} */
+			failed: new SyncHook(["error"]),
+			/** @type {SyncHook<string, string>} */
+			invalid: new SyncHook(["filename", "changeTime"]),
+			/** @type {SyncHook} */
+			watchClose: new SyncHook([]),
+
+			/** @type {SyncBailHook<string, string, any[]>} */
+			infrastructureLog: new SyncBailHook(["origin", "type", "args"]),
+
+			// TODO the following hooks are weirdly located here
+			// TODO move them for webpack 5
+			/** @type {SyncHook} */
+			environment: new SyncHook([]),
+			/** @type {SyncHook} */
+			afterEnvironment: new SyncHook([]),
+			/** @type {SyncHook<Compiler>} */
+			afterPlugins: new SyncHook(["compiler"]),
+			/** @type {SyncHook<Compiler>} */
+			afterResolvers: new SyncHook(["compiler"]),
+			/** @type {SyncBailHook<string, Entry>} */
+			entryOption: new SyncBailHook(["context", "entry"])
+		}
+  }
+}
+```
+
+编译流程如下：
+
+* 开始
+* 配置合并
+* 实例化 compiler
+* 初始化 node 读写能力
+* 挂载 plugins
+* 处理 webpack 内部插件（入口文件处理）
+
+
+
+## vite
+
+### 架构原理
+
+Vite 底层使用两个构建引擎，Esbuild 和 Rollup。
+
+<img src="https://img.yueluo.club/blog/img/9ec8d4ef359e2495104f3201c99c289bf.png" style="zoom: 80%" />
+
+#### EsBuild
+
+* 依赖预构建阶段，作为 bundler（打包工具） 使用
+
+* 语法转译，将 Esbuild 作为 transformer 使用
+  * TS 或者 JSX 文件转译，生产环境和开发环境都会执行
+  * 替换原来的 Babel 和 TSC 功能
+* 代码压缩，作为压缩工具使用
+  * 在生产环境通过插件的形式融入到 Rollup 的打包流程
+  * JS 和 CSS 代码压缩
+
+Vite 利用 EsBuild 各个垂直方向的能力（Bundler、Transformer、Minifier），给 Vite 的高性能提供了有利的保证。
+
+Vite 3.0 支持通过配置将 EsBuild 预构建同时用于开发环境和生产环境，默认不会开启，属于实验性质的特性。
+
+#### Rollup
+
+* 生产环境下，Vite 利用 Rollup 打包，并基于 Rollup 本身的打包能力进行扩展和优化。
+  * CSS 代码分割
+    * 将异步模块 CSS 代码抽离成单独文件，提高线上产物的缓存复用率
+  * 自动预加载
+    * 为 入口 chunk 的依赖自动生成 `<link rel="modulepreload" >`，提前下载资源，优化页面性能
+    * 关于 [modulepreload](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/modulepreload)
+  * 异步 chunk 加载优化
+    * 自动预加载公共依赖，优化 Rollup 产物依赖加载方式
+* 兼容插件机制
+  * 无论是开发阶段还是生产环境，Vite 都根植于 Rollup 的插件机制和生态
+
+在 Vite 中，无论是插件机制还是打包手段，都基于 Rollup 来实现，可以说 Vite 是对于 Rollup 的一种场景化的深度拓展。
+
+### 插件流水线
+
+在开发阶段 Vite 实现了一个按需加载的服务器，每一个文件都会经历一系列的编译流程，然后再将编译结果响应给浏览器。
+在生产环境中，Vite 同样会执行一系列编译过程，将编译结果交给 Rollup 进行模块打包。
+
+这一系列的编译过程指的就是 Vite 的插件工作流水线（Pipeline），插件功能是 Vite 构建的核心。
+
+在生产环境中 Vite 直接调用 Rollup 进行打包，由 Rollup 调度各种插件。
+在开发环境中，Vite 模拟了 Rollup 的插件机制，设计了一个 `PluginContainer` 对象来调度各个插件。
+
+PluginContainer 的实现主要分为两部分：
+
+* 实现 Rollup 插件钩子的调度
+* 实现插件钩子内部的 Context 上下文对象
+
+Vite 插件的具体执行顺序如下：
+
+* 别名插件：`vite:pre-alias` 和 `@rollup/plugin-alias` ，用于路径别名替换。
+* 用户自定义 pre 插件，即带有 `enforce: "pre"` 属性的自定义插件。
+* vite 核心构建插件。
+* 用户自定义普通插件，即不带有 `enforce` 属性的自定义插件。
+* vite 生产环境插件和用户插件中带有 `enforce: "post"` 属性的插件。
+* 开发阶段特有的插件，包括环境变量注入插件 `clientInjectionsPlugin` 和 import 语句分析及重写插件 `importAnalysisPlugin`。
+
+Vite 内置的插件包括四大类：
+
+* 别名插件
+* 核心构建插件
+* 生产环境特有插件
+* 开发环境特有插件
