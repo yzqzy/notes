@@ -207,3 +207,143 @@ data:text/html;charset=UTF-8,<h1>html content<h1>
 data:image/png;base64,ivadsadadakdasda...
 ```
 
+## 常用加载器分类
+
+编译转换
+
+* css-loader
+
+文件操作
+
+* file-loader
+
+代码检查
+
+* eslint-loader
+
+## webpack 与 ES 2015
+
+因为模块打包需要， webpack 会处理 import 和 export，但是并不会转换 ES6 特性，进行语法降级。
+
+* babel-loader
+* @babel/core
+* @babel/preset-env
+
+```
+pnpm i babel-loader @babel/core @babel/preset-env -D
+```
+
+* webpack 只是打包工具
+* 加载器可以用来编译转换代码
+
+## 模块加载方式
+
+遵循 ES Modules 标准的 import 声明
+
+```js
+import createHeading from './headling'
+import Avator from './avator.jpg'
+
+import './main.css'
+
+const headling = createHeading()
+document.body.append(headling)
+
+const img = new Image()
+img.src = Avator
+document.body.append(img)
+```
+
+遵循 CommonJS 标准的 require 函数
+
+```js
+const createHeading = require('./headling').default
+const Avator = require('./avator.jpg')
+
+require('./main.css')
+
+const headling = createHeading()
+document.body.append(headling)
+
+const img = new Image()
+img.src = Avator
+document.body.append(img)
+```
+
+遵循 AMD 标准的 define 函数和 require 函数
+
+```js
+define(['./headling.js', './avator.jpg', './main.css'], (createHeading, Avator) => {
+  const headling = createHeading.default()
+  document.body.append(headling)
+
+  const img = new Image()
+  img.src = Avator
+  document.body.append(img)
+})
+```
+
+webpack 兼容多种模块化标准，但是不推荐混合使用。
+
+
+Loader 加载的非 JavaScript 也会触发资源加载。
+
+css-loader 加载的样式代码中的 @import 指令和 url 函数。
+
+```css
+body {
+  min-height: 100vh;
+  background: #ecf5ff;
+  background-image: url(baclground.png);
+  background-size: cover;
+}
+```
+
+html-loader 加载的 HTML 代码中图片标签的 src 属性。
+
+```js
+import footerHtml from './footer.html'
+document.wirte(footerHtml)
+```
+
+```js
+{
+  test: /.html$/,
+  use: {
+    loader: 'html-loader',
+    options: {
+      // default only support img:src 
+      attrs: ['img:src', 'a:href']
+    }
+  }
+}
+```
+
+
+
+webpack 模块加载方式
+
+* 遵循 ES Modules 标准的 import 声明
+* 遵循 CommonJS 标准的 require 函数
+* 遵循 AMD 标准的 define 函数和 require 函数
+* 样式代码中的 @import 指令和 url 函数
+*  HTML 代码中图片标签的 src 属性
+
+## 核心工作原理
+
+由 entry 触发，解析所有需要的依赖，最终形成具有依赖关系的依赖树。
+
+webpack 会递归依赖树，获取每个节点对应的资源文件，根据配置文件中的 rules 属性去找到模块对应的加载器进行处理。
+
+最后将加载到的结果放入到打包结果中，从而实现整个项目的打包。
+
+
+
+Loader 机制是 webpack 的核心。
+
+## 开发 Loader
+
+
+
+
+
