@@ -337,11 +337,74 @@ webpack 会递归依赖树，获取每个节点对应的资源文件，根据配
 
 最后将加载到的结果放入到打包结果中，从而实现整个项目的打包。
 
-
-
 Loader 机制是 webpack 的核心。
 
 ## 开发 Loader
+
+```js
+// md-loader
+
+const marked = require('marked')
+
+module.exports = source => {
+  const html = marked.parse(source)
+
+  // return `module.exports = ${ JSON.stringify(html) }`
+  // return `export default ${ JSON.stringify(html) }`
+
+  // 返回 html 字符串，交给下一个 loader 处理
+  return html
+}
+```
+
+Loader 负责资源文件从输入到输出的转换，对于同一个资源可以依次使用多个 Loader
+
+```js
+// webpack.config.js
+
+const path = require('path')
+
+module.exports = {
+  mode: 'development',
+  entry: './src/main.js',
+  output: {
+    publicPath: 'dist/',
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.md$/,
+        use: [
+          'html-loader',
+          path.resolve(__dirname, 'md-loader')
+        ]
+      }
+    ]
+  }
+}
+```
+
+## 插件机制
+
+增强 webpack 自动化能力。
+
+Loader 专注实现资源模块加载，Plugin 解决项目中处理资源加载的其他自动化工作。
+
+eg：
+
+* 自动在打包之前清除 dist 目录
+* 拷贝静态文件至输出目录
+* 压缩输出代码
+
+Loader + Plugin 可以实现大多数前端工程化工作。
+
+
+
+自动清除输出目录插件
+
+
 
 
 
