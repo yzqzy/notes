@@ -555,3 +555,59 @@ module.exports = {
 > [DEP_WEBPACK_COMPILATION_ASSETS] DeprecationWarning: 
 > Compilation.assets will be frozen in future, all modifications are deprecated.
 > BREAKING CHANGE: No more changes should happen to Compilation.assets after sealing the Compilation.
+
+## DevServer
+
+* HTTP 服务运行
+* 自动编译、自动刷新浏览器
+
+```bash
+pnpm i webpack-dev-server -D
+```
+
+默认只会 serve 打包输出文件，如果其他资源文件也需要 serve。
+
+```js
+// webpack.config.js
+
+module.exports = {
+  devServer: {
+    // Allows to configure options for serving static files from directory (by default 'public' directory).
+    static: './public'
+  }
+}
+
+```
+
+[webpack-dev-server](https://github.com/webpack/webpack-dev-server)
+
+提供配置代理解决开发阶段接口跨域问题。
+
+```js
+// webpack.config.js
+
+module.exports = {
+  devServer: {
+    static: './public',
+    proxy: {
+      '/api': {
+        // https://localhost:8080/api/users -> https://api.github.com/api/users
+        target: 'https://api.github.com',
+        // https://api.github.com/api/users -> https://api.github.com/users
+        pathRewrite: {
+          '^/api': ''
+        },
+        // 不能使用 localhost:8080 作为请求 GitHub 主机名
+        changeOrigin: true
+      }
+    }
+  }
+}
+```
+
+## Source Map
+
+
+
+
+
