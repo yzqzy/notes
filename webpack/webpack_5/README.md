@@ -607,6 +607,184 @@ module.exports = {
 
 ## Source Map
 
+生产环境运行代码和源代码之间完全不同，如果需要调试应用，或者运行过程中出现错误都将无法定位。调试和报错都是基于运行代码。
+
+Source Map 就是用于解决此类问题最好的办法，用来映射转换后代码与源代码之间的关系。
+
+可以通过 source map 文件逆向解析源代码。
+
+```js
+//# sourceMappingURL=xxxx.map
+```
+
+source map 解决了源代码与运行代码不一致所产生的问题。
+
+
+
+配置 source map
+
+```js
+const path = require('path')
+
+module.exports = {
+  mode: 'development',
+  entry: './src/main.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  devtool: 'source-map',
+}
+```
+
+webpack 支持很多种 [source map](https://webpack.js.org/configuration/devtool/) 的实现方式，每种方式的效率和效果各不相同。
+
+
+
+eval：将模块转换后代码放到 eval 函数中，并且在 eval 函数字符串最后通过 sourceURL 方式说明对应文件路径。
+
+> 这种模式下不会生成 source map 文件，不存在行列信息
+
+```js
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _headling__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./headling */ \"./src/headling.js\");\n/* harmony import */ var _avator_jpg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./avator.jpg */ \"./src/avator.jpg\");\n/* harmony import */ var _main_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./main.css */ \"./src/main.css\");\n\n\n\nvar headling = (0,_headling__WEBPACK_IMPORTED_MODULE_0__[\"default\"])();\ndocument.body.append(headling);\nvar img = new Image();\nimg.src = _avator_jpg__WEBPACK_IMPORTED_MODULE_1__;\ndocument.body.append(img);\nconsole.log2('222');\n\n//# sourceURL=webpack://01_helloworld/./src/main.js?");
+```
+
+
+
+配置 webpack.config.js 查看多种模式结果
+
+> The pattern is: `[inline-|hidden-|eval-][nosources-][cheap-[module-]]source-map`.
+
+```js
+const path = require('path')
+const { merge } = require('webpack-merge')
+
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+const allModes = [
+  'eval',
+  'eval-cheap-source-map',
+  'eval-cheap-module-source-map',
+  'eval-source-map',
+  'cheap-source-map',
+  'cheap-module-source-map',
+  'inline-cheap-source-map',
+  'inline-cheap-module-source-map',
+  'source-map',
+  'inline-source-map',
+  'hidden-source-map',
+  'nosources-source-map'
+]
+
+const baseConfig =  {
+  entry: './src/main.js',
+  module: {
+    rules: [
+      {
+        test: /.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        },
+      }
+    ]
+  },
+  plugins: [
+    // bug: clean failed
+    new CleanWebpackPlugin()
+  ],
+  devServer: {
+    static: './public'
+  }
+}
+
+module.exports = allModes.map(mode => merge(baseConfig, {
+  mode: 'none',
+  devtool: mode,
+  output: {
+    filename: `js/${ mode }.js`
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: '月落 - Web Developer & JS Fancier',
+      meta: {
+        keywords: '月落,博客,月落博客,个人博客,月落个人博客,个人网站,程序员,程序员博客,程序员个人博客',
+        description: '月落个人博客，记载前端学习历程。'
+      },
+      filename: `${ mode }.html`,
+      template: 'index.html'
+    })
+  ]
+}))
+```
+
+可以使用 `server dist` 启动 server，预览不同的文件，对比差异。
+
+
+
+
+
+> The pattern is: `[inline-|hidden-|eval-][nosources-][cheap-[module-]]source-map`.
+
+eval：不会生成 source map 文件（不存在行列信息），可以定位文件错误
+
+eval-source-map：生成 source map 文件（存在行列信息），可以定位文件错误
+
+eval-cheap-source-map：生成 source map 文件（阉割版，存在行，缺失列信息），可以定位文件错误
+
+eval-cheap-module-source-map：生成 source map 文件（阉割版，存在行，缺失列信息，未经过转化的源代码），可以定位文件错误
+
+
+> eval：是否使用 eval 执行模块代码
+>
+> cheap：source map 是否包含行信息
+>
+> module：是否能够得到 Loader 处理之前的代码
+
+
+
+inline-source-map：source-map 的文件是以 data url 的方式存在，以 data url 方式嵌入到代码中
+
+hidden-source-map：看不到 source-map 效果，确实会生成 source-map 文件，但是不会引入文件（开发第三方包时比较有用）
+
+nosources-source-map：可以看到错误出现位置（存在行列信息），但是不能看到源代码，生产环境中保护源代码不被暴露
+
+
+
+官方推荐
+
+* 开发环境
+
+  * eval
+
+  * eval-source-map
+
+  * eval-cheap-source-map
+
+  * eval-cheap-module-source-map（个人推荐）
+    * 代码经过 loader 转换过后的代码差异比较大（ module）
+    * 首次打包速度慢无所谓，重写打包相对较快（cheap）
+
+* 生产环境
+
+  * none（个人推荐）
+
+  * source-map
+
+  * hidden-source-map
+
+  * nosources-source-map（个人推荐）
+
+
+
+调试是开发阶段的事情，而不是生产环境让用户帮忙测试。
+
+理解不同模式的差异，适配不同的环境。开发时并没有绝对的通用法则。
+
 
 
 
