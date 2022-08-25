@@ -484,9 +484,74 @@ module.exports = {
 
 Loader 只是在加载模块的环节中工作，插件的作用范围可以在 webpack 的每一个环节。
 
-Plugin 通过钩子机制实现，我们在开发插件的时候就是使用 webpack 提供的钩子进行扩展各项能力。
+Plugin 通过钩子机制实现，我们开发插件就是在 webpack 提供的钩子中挂载函数实现扩展。
 
 [https://webpack.js.org/api/](https://webpack.js.org/api/)
 
 插件必须是一个函数或者是一个包含 apply 方法的对象。
 
+```js
+// webpack.config.js
+
+const path = require('path')
+const { sources, Compilation } = require('webpack')
+
+class MyPlugin {
+  apply(compiler) {
+    // compiler.hooks.emit.tap('MyPlugin', compilation => {
+    //   // compilation 可以理解成此次打包的上下文
+    //   for (const name in compilation.assets) {
+    //     if (name.endsWith('.js')) {
+    //       const contents = compilation.assets[name].source()
+    //       const withoutComments = contents.replace(/\/\*+\*\//g, '')
+
+    //       compilation.assets[name] = {
+    //         source: () => withoutComments,
+    //         size: () => withoutComments.length
+    //       }
+    //     }
+    //   }
+    // })
+    compiler.hooks.compilation.tap('MyPlugin', (compilation) => {
+      compilation.hooks.processAssets.tapPromise(
+        {
+          name: 'MyPlugin',
+          // https://github.com/webpack/webpack/blob/master/lib/Compilation.js#L3280
+          stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+        },
+        (assets) => {
+          for (const name in assets) {
+            if (name.endsWith('.js')) {
+              const contents = assets[name].source()
+
+              const withoutComments = contents.replace(/\/\*+\*\//g, '')
+
+              assets[name] = {
+                source: () => withoutComments,
+                ...assets[name]
+              }
+            }
+          }
+          return Promise.resolve(assets)
+        }
+      )
+    })
+  }
+}
+
+module.exports = {
+  mode: 'development',
+  entry: './src/main.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  plugins: [
+    new MyPlugin()
+  ]
+}
+```
+
+> [DEP_WEBPACK_COMPILATION_ASSETS] DeprecationWarning: 
+> Compilation.assets will be frozen in future, all modifications are deprecated.
+> BREAKING CHANGE: No more changes should happen to Compilation.assets after sealing the Compilation.
