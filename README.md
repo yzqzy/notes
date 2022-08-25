@@ -30,6 +30,7 @@
   + webpack
     - [webpack基础](https://github.com/yw0525/notes/tree/master/webpack/webpack) 已完成
     - [webpack提升](https://github.com/yw0525/notes/tree/master/webpack/webpack_tencent) 已完成
+    - [webpack5](https://github.com/yw0525/notes/tree/master/webpack/webpack_5) 更新中... 😁
     - [自定义loader、plugins](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack源码实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack源码进阶实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write_plus) 已完成
@@ -50,7 +51,7 @@
   + [vue3 Diff过程分析](https://github.com/yw0525/notes/tree/master/vue/vue3_diff) 已完成
   + [vue3源码实现](https://github.com/yw0525/notes/tree/master/vue/vue3_source) 已完成
   + [vue-router源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_router) 已完成
-  + [vue-router源码进阶实现](https://github.com/yw0525/notes/tree/master/vue/vue_router_plus) 更新中... 😁
+  + [vue-router源码进阶实现](https://github.com/yw0525/notes/tree/master/vue/vue_router_plus) 已完成
   + [vuex源码实现](https://github.com/yw0525/notes/tree/master/vue/vuex) 已完成
   + [vue-cli源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_cli) 已完成
   + [vue-ssr源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_ssr) 已完成
@@ -104,5 +105,5 @@
   + [透视HTTP协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
   + [Vue源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
   * [Vue.js设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 已完成
-  + [深入浅出Vite](https://github.com/yw0525/notes/tree/master/vite) 更新中... 😁
+  + [深入浅出Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
   * [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
