@@ -724,7 +724,7 @@ module.exports = allModes.map(mode => merge(baseConfig, {
 
 可以使用 `server dist` 启动 server，预览不同的文件，对比差异。
 
-
+<img src="./images/devtool.png" />
 
 
 
