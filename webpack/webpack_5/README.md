@@ -404,9 +404,89 @@ Loader + Plugin 可以实现大多数前端工程化工作。
 
 自动清除输出目录插件
 
+```bash
+pnpm i clean-webpack-plugin -D
+```
+
+
+自动生成使用打包结果的 HTML
+
+```bash
+pnpm i html-webpack-plugin -D
+```
+
+```json
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+	// ...
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: '月落 - Web Developer & JS Fancier',
+      meta: {
+        keywords: '月落,博客,月落博客,个人博客,月落个人博客,个人网站,程序员,程序员博客,程序员个人博客',
+        description: '月落个人博客，记载前端学习历程。'
+      },
+      template: 'index.html'
+    })
+  ]
+}
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= htmlWebpackPlugin.options.title %>
+  </title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+```
 
 
 
+复制文件夹
 
+```js
+pnpm i copy-webpack-plugin -D
+```
 
+```json
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+module.exports = {
+  plugins: [
+		// ...
+    new CopyWebpackPlugin({
+      patterns: ['public']
+    })
+  ]
+}
+
+```
+
+## 开发 Plugin
+
+相对于 Loader，Plugin 拥有更宽的能力范围。
+
+Loader 只是在加载模块的环节中工作，插件的作用范围可以在 webpack 的每一个环节。
+
+Plugin 通过钩子机制实现，我们在开发插件的时候就是使用 webpack 提供的钩子进行扩展各项能力。
+
+[https://webpack.js.org/api/](https://webpack.js.org/api/)
+
+插件必须是一个函数或者是一个包含 apply 方法的对象。
 
