@@ -1,9 +1,6 @@
-const path = require('path')
 const { merge } = require('webpack-merge')
 
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const allModes = [
   'eval',
@@ -35,10 +32,6 @@ const baseConfig =  {
       }
     ]
   },
-  plugins: [
-    // bug: clean failed
-    new CleanWebpackPlugin()
-  ],
   devServer: {
     static: './public'
   }
@@ -48,6 +41,7 @@ module.exports = allModes.map(mode => merge(baseConfig, {
   mode: 'none',
   devtool: mode,
   output: {
+    clean: true,
     filename: `js/${ mode }.js`
   },
   plugins: [
