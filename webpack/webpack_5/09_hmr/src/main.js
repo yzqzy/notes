@@ -13,9 +13,8 @@ document.body.appendChild(img)
 
 // ========== hot module replacement
 
-let lasEditor = editor
-
 if (module.hot) {
+  let lasEditor = editor
   module.hot.accept('./editor', () => {
     const value = lasEditor.innerHTML
     document.body.removeChild(lasEditor)
@@ -25,5 +24,9 @@ if (module.hot) {
     document.body.appendChild(newEditor)
 
     lasEditor = newEditor
-  })  
+  })
+  
+  module.hot.accept('./avator.jpg', () => {
+    img.src = Avator
+  })
 }

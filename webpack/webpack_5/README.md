@@ -948,6 +948,24 @@ if (module.hot) {
 
 图片模块热替换：
 
+```js
+if (module.hot) {
+  module.hot.accept('./avator.jpg', () => {
+    img.src = Avator
+  })
+}
+```
+
+
+
+注意事项:
+
+* 处理 HMR 的代码报错会导致自动刷新，且错误信息被清除
+  * 推荐使用 hot: 'only'，HMR 代码报错，不会自动刷新
+* 代码中多了与业务无关的代码
+  * 生产环境不开启热替换功能，`module.hot` 变量为 false，会被 tree-shaking
+
+## 生产环境优化
 
 
 
