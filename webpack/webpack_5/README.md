@@ -1106,3 +1106,71 @@ module.exports = merge(baseConfig, {
 
 ## DefinePlugin
 
+为代码注入全局成员，webpack 内置插件。
+
+```js
+// webpack.common.js
+
+const webpack = require('webpack')
+
+module.exports = {
+	// ...
+  plugins: [
+		// ...
+    new webpack.DefinePlugin({
+      API_BASE_URL: JSON.stringify('https://api.github.com')
+    })
+  ]
+}
+```
+
+```js
+// main.js
+
+// ...
+
+// ========== fetch proxy api example
+const isProd = process.env.NODE_ENV === 'production'
+const url = isProd ? `${ API_BASE_URL }/users` : '/api/users'
+
+const ul = document.createElement('ul')
+
+fetch(url)
+  .then(res => res.json())
+  .then(data => {
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        const li = document.createElement('li')        
+        li.textContent = item.login
+        ul.append(li)
+      })
+
+      document.body.append(ul)
+    }
+  })
+```
+
+## Tree Shaking
+
+摇树优化，“摇掉” 代码中未引用代码（dead-code）。生产环境默认开启。
+
+Tree Shaking 并不单指 webpack 某个配置选项，是一组功能搭配使用后的优化效果。
+
+[Tree Shaking](https://webpack.js.org/guides/tree-shaking/)
+
+
+
+```js
+// webpack.config.js
+
+module.exports = {
+  mode: 'development',
+  optimization: {
+    usedExports: true, // 标记 “枯树叶”
+    minimize: true // 负责 “摇掉” 它们
+  }
+}
+```
+
+## 合并模块
+

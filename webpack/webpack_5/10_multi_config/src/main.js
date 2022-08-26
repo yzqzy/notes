@@ -12,7 +12,7 @@ document.body.append(img)
 
 // ========== fetch proxy api example
 const isProd = process.env.NODE_ENV === 'production'
-const url = isProd ? 'https://api.github.com/users' : '/api/users'
+const url = isProd ? `${ API_BASE_URL }/users` : '/api/users'
 
 const ul = document.createElement('ul')
 

@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const webpack = require('webpack')
 
 module.exports = {
   entry: './src/main.js',
@@ -46,5 +47,8 @@ module.exports = {
       },
       template: 'index.html'
     }),
+    new webpack.DefinePlugin({
+      API_BASE_URL: JSON.stringify('https://api.github.com')
+    })
   ]
 }
