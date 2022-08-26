@@ -785,6 +785,168 @@ nosources-source-map：可以看到错误出现位置（存在行列信息），
 
 理解不同模式的差异，适配不同的环境。开发时并没有绝对的通用法则。
 
+## HMR
+
+webpack Dev Server 提供对开发者友好的开发服务器。使我们更加关注与业务编码。
+
+
+dev server：
+
+* 文本内容丢失问题
+
+解决措施：
+
+* 代码中写死编辑器内容
+* 额外代码实现刷新前保存，刷新后读取
+
+问题核心：自动刷新导致页面状态丢失
+
+更好的解决办法是在页面不刷新的前提下，模块也可以及时更新
+
+
+
+HMR（Hot Module Replacement）：模块热替换，或者模块热更新
+
+热拔插：在一个正在运行的机器上随时插拔设备，机器的运行状态不受插拔设备的影响
+
+模块热替换指应用程序运行过程中实时替换某个模块，应用运行状态不会改变
+
+HMR 是 webpack 中最强大的功能之一。可以极大程度提高开发者的工作效率。
+
+
+
+[webpack dev server](https://webpack.js.org/configuration/dev-server/)  默认已开启模块热替换。
+
+> `only`、`boolean = true`
+>
+> Enable webpack's [Hot Module Replacement](https://webpack.js.org/concepts/hot-module-replacement/) feature:
+>
+> Since webpack-dev-server v4, HMR is enabled by default. It automatically applies [`webpack.HotModuleReplacementPlugin`](https://webpack.js.org/plugins/hot-module-replacement-plugin/) which is required to enable HMR. So you don't have to add this plugin to your `webpack.config.js` when `hot` is set to `true` in config or via the CLI option `--hot`. See the [HMR concepts page](https://webpack.js.org/concepts/hot-module-replacement/) for more information.
+
+webpack 5
+
+```js
+devServer: {
+  static: './public',
+  hot: true
+}
+```
+
+webpack4
+
+```js
+const webpack = require('webpack')
+
+module.exports = {
+	// ...
+  plugins: [
+  	// ...
+    new webpack.HotModuleReplacementPlugin()
+  ],
+  devServer: {
+    static: './public',
+    hot: true
+  }
+}
+```
+
+
+
+开启模块热替换且 `hot：true ` 状态下，仍然存在修改 JS 页面状态丢失的情况，CSS 修改不会丢失状态。
+
+webpack 中的 HMR 并不可以开箱即用，还需要手动处理模块热替换逻辑。
+
+
+为什么样式文件支持热更新
+
+* 样式文件是经过 loader 处理的，style-loader 中自动处理了样式文件的热更新
+
+```js
+if (module.hot) {
+  if (!content.locals || module.hot.invalidate) {
+    var isEqualLocals = function isEqualLocals(a, b, isNamedExport) {
+ 			// ...
+    };
+    var isNamedExport = !content.locals;
+    var oldLocals = isNamedExport ? namedExport : content.locals;
+
+    module.hot.accept(
+      "!!../node_modules/.pnpm/css-loader@6.7.1_webpack@5.74.0/node_modules/css-loader/dist/cjs.js!./editor.css",
+      function () {
+        if (!isEqualLocals(oldLocals, isNamedExport ? namedExport : content.locals, isNamedExport)) {
+          module.hot.invalidate();
+
+          return;
+        }
+
+        oldLocals = isNamedExport ? namedExport : content.locals;
+
+        update(content);
+      }
+    )
+  }
+
+  module.hot.dispose(function () {
+    update();
+  });
+}
+```
+
+
+为什么脚本文件不能自动处理
+
+* 样式模块更新后，只需要将更新过后的 CSS 及时替换到页面中，就可以覆盖掉原有样式，实现样式更新。
+* JavaScript 模块实现并没有任何规律，无法做到通用的模块替换方案。
+
+没有手动处理，JS 也支持热替换
+
+* 使用的框架或者 CLI 中项目中，每种文件都是有规律的，就可以制定通用的替换办法
+* 通过脚手架创建的项目内部都集成了 HMR 方案
+
+
+
+[HMR Guides](https://webpack.js.org/guides/hot-module-replacement)、[HMR APIs](https://webpack.js.org/api/hot-module-replacement/)
+
+
+
+JS 模块热替换：
+
+```js
+import createEditor from './editor'
+import Avator from './avator.jpg'
+
+import './main.css'
+
+const editor = createEditor()
+document.body.appendChild(editor)
+
+const img = new Image()
+img.src = Avator
+document.body.appendChild(img)
+
+
+// ========== hot module replacement
+
+let lasEditor = editor
+
+if (module.hot) {
+  module.hot.accept('./editor', () => {
+    const value = lasEditor.innerHTML
+    document.body.removeChild(lasEditor)
+
+    const newEditor = createEditor()
+    newEditor.innerHTML = value
+    document.body.appendChild(newEditor)
+
+    lasEditor = newEditor
+  })  
+}
+```
+
+不同的模块有不同的逻辑，不同的业务逻辑处理过程也是不同的，所以 webpack 没办法提供通用的热替换方案。
+
+
+图片模块热替换：
 
 
 
