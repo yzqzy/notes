@@ -37,6 +37,10 @@
 
 
 
+<div><img src="./images/config.png" style="zoom: 90%" /></div>
+
+
+
 项目通用配置：
 
 ```json
