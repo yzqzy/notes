@@ -967,5 +967,142 @@ if (module.hot) {
 
 ## 生产环境优化
 
+生产环境注重运行效率，开发环境注重开发效率。
 
+
+模式（mode）
+
+* production
+* development
+
+
+
+配置文件根据环境不同导出不同配置
+
+```js
+module.exports = (env, argv) => {
+  if (argv.mode === 'development') {
+  }
+  if (argv.mode === 'production') {
+  }
+  return config
+}
+```
+
+
+一个环境对应一个配置文件
+
+```json
+// package.json
+
+"scripts": {
+  "dev": "webpack serve --config webpack.dev.js",
+  "build": "webpack --config webpack.prod.js"
+}
+```
+
+```js
+// webpack.common.js
+
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  entry: './src/main.js',
+  output: {
+    clean: true,
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        },
+      },
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 10 * 1024 // 10 KB
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: '月落 - Web Developer & JS Fancier',
+      meta: {
+        keywords: '月落,博客,月落博客,个人博客,月落个人博客,个人网站,程序员,程序员博客,程序员个人博客',
+        description: '月落个人博客，记载前端学习历程。'
+      },
+      template: 'index.html'
+    }),
+  ]
+}
+```
+
+```js
+// webpack.dev.js
+
+const { merge } = require('webpack-merge')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+const baseConfig = require('./webpack.common')
+
+module.exports = merge(baseConfig, {
+  mode: 'development',
+  devtool: 'eval-cheap-module-source-map',
+  devServer: {
+    static: './public',
+    proxy: {
+      '/api': {
+        // https://localhost:8080/api/users -> https://api.github.com/api/users
+        target: 'https://api.github.com',
+        // https://api.github.com/api/users -> https://api.github.com/users
+        pathRewrite: {
+          '^/api': ''
+        },
+        // 不能使用 localhost:8080 作为请求 GitHub 主机名
+        changeOrigin: true
+      }
+    }
+  }
+})
+```
+
+```js
+// webpack.prod.js
+
+const { merge } = require('webpack-merge')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+const baseConfig = require('./webpack.common')
+
+module.exports = merge(baseConfig, {
+  mode: 'production',
+  devtool: 'nosources-source-map',
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: ['public']
+    })
+  ]
+})
+```
+
+## DefinePlugin
 
