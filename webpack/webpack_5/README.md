@@ -967,6 +967,8 @@ if (module.hot) {
 
 ## 生产环境优化
 
+### 配置文件拆分
+
 生产环境注重运行效率，开发环境注重开发效率。
 
 
@@ -1104,7 +1106,7 @@ module.exports = merge(baseConfig, {
 })
 ```
 
-## DefinePlugin
+### DefinePlugin
 
 为代码注入全局成员，webpack 内置插件。
 
@@ -1150,7 +1152,7 @@ fetch(url)
   })
 ```
 
-## Tree Shaking
+### Tree Shaking
 
 摇树优化，“摇掉” 代码中未引用代码（dead-code）。生产环境默认开启。
 
@@ -1172,5 +1174,141 @@ module.exports = {
 }
 ```
 
-## 合并模块
+
+
+很多资源说使用 babel-loader 会导致 tree-shaking 失效，其实这种说法是不恰当的。
+
+Tree Shaking 实现的前提是 ES Modules，使用 import、export 关键字，也就是说交由 webpack 打包的代码必须使用 ESM。
+
+webpack 在打包模块之前会先将模块根据配置交由不同的 loader 去处理，最新再将所有 loader 处理的结果进行打包。
+
+
+为了转换代码中的 ECMAScript 新特性，很多时候我们都会选择 babel-loader 去处理 JS，babel 在转换代码时根据配置就有可能将 ES Modules 转换为 Common JS 。类如 `@bebel/preset-env` 这个插件集合就存在这样的功能。
+
+
+最新版本的 babel-loader 已经帮我们关闭了自动转换语法的插件。
+
+```js
+// 强制开启插件
+
+module.exports = {
+	// ...
+  module: {
+    rules: [
+      {
+        test: /.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [['@babel/preset-env', { modules: 'commonjs' }]]
+          }
+        }
+      }
+      // ...
+  }
+}
+```
+
+### 合并模块
+
+[concatenateModules](https://webpack.js.org/configuration/optimization/#optimizationconcatenatemodules)
+
+```js
+// webpack.config.js
+
+module.exports = {
+  mode: 'development',
+  optimization: {
+		concatenateModules: true
+  }
+}
+```
+
+尽可能将所有模块合并输出到一个函数中，既提升运行效率，又减少代码体积，这个特性也被称为 Scope Hoisting（作用域提升）。
+
+### sideEffects
+
+[sideEffects](https://webpack.js.org/configuration/optimization/#optimizationsideeffects)
+
+[tree-shaking-and-sideeffects](https://webpack.js.org/guides/tree-shaking/#clarifying-tree-shaking-and-sideeffects)
+
+标识代码是否有副作用，为 tree shaking 提供更大的压缩空间。
+
+副作用：模块执行时除了导出成员之外所做的事情
+
+sideEffects 通常用于 npm 包标记是否存在副作用
+
+```js
+// webpack.config.js
+
+module.exports = {
+  mode: 'development',
+  optimization: {
+    // 开启功能
+		sodeEffects: true
+  }
+}
+```
+
+此特性在 production 模式默认也是开启的。
+
+```json
+// package.json
+
+{
+  // 标记所有代码都没有副作用（没有使用的模块打包后会被 tree shaking）
+  "sideEffects": false
+}
+```
+
+使用这个功能之前要确保你的代码真的没有副作用，否则 webpack 打包后会误删掉具有副作用的代码。
+
+解决方法就是在 package.json 中关闭副作用，或者标识哪些文件是存在副作用的。
+
+```js
+// package.json
+
+{
+  // 标记存在副作用的文件
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss",
+    "./esnext/index.js",
+    "./esnext/configure.js"
+  ]
+}
+```
+
+## 代码分割
+
+项目中所有代码最终都会被打包到一起，bundle 体积过大。
+
+模块打包是必要的，当应用越来越大之后，代码分割也是必要的。
+
+大多数时候并不是每个模块都需要在启动时加载，所以就需要代码分割，按需加载。
+
+
+目前主流的 HTTP/1.1 版本本身存在很多缺陷，例如：
+
+* 同域名并行请求限制
+* 每次请求都会有一定的延迟
+* 请求的 header 浪费带宽流量
+  
+
+通过把模块按照设计规则打包到不到的 bundle 中，从而提高应用响应速度。
+
+目前 webpack 实现分包的方式主要有两种：
+
+* 多入口打包
+* 动态导入
+
+### 多入口打包
+
+适用于传统的多页应用程序。
+
+一个页面对应一个打包入口，公共部分单独提取。
+
+
+
+
 
