@@ -965,6 +965,8 @@ if (module.hot) {
 * 代码中多了与业务无关的代码
   * 生产环境不开启热替换功能，`module.hot` 变量为 false，会被 tree-shaking
 
+[example: 09_hmr](https://github.com/yw0525/notes/tree/master/webpack/webpack_5/09_hmr)
+
 ## 生产环境优化
 
 ### 配置文件拆分
@@ -1357,6 +1359,8 @@ module.exports = {
 }
 ```
 
+[example: 11_multi_entry](https://github.com/yw0525/notes/tree/master/webpack/webpack_5/11_multi_entry)
+
 ### 提取公共模块
 
 不同打包入口中肯定会有公共模块，按照上述配置就会出现不同的打包结果中会有相同的模块出现。
@@ -1393,6 +1397,8 @@ module.exports = merge(baseConfig, {
 })
 ```
 
+[example: 11_multi_entry](https://github.com/yw0525/notes/tree/master/webpack/webpack_5/11_multi_entry)
+
 ### 动态导入
 
 按需加载。需要用到某个模块时，再加载模块。
@@ -1400,4 +1406,81 @@ module.exports = merge(baseConfig, {
 webpack 支持以动态导入的方式实现按需加载，并且所有动态导入的模块会被自动分包。
 
 相对于多入口方式，动态导入更加灵活，我们可以通过代码逻辑控制模块加载时机。
+
+```js
+// index.js
+
+// import posts from './posts/posts'
+// import album from './album/album'
+
+const render = () => {
+  const hash = window.location.hash || '#posts'
+
+  const mainElement = document.querySelector('.main')
+
+  mainElement.innerHTML = ''
+
+  if (hash === '#posts') {
+    // mainElement.appendChild(posts())
+    import('./posts/posts').then(({ default: posts }) => {
+      mainElement.appendChild(posts())
+    })
+  } else if (hash === '#album') {
+    // mainElement.appendChild(album())
+    import('./album/album').then(({ default: album }) => {
+      mainElement.appendChild(album())
+    })
+  }
+}
+
+render()
+
+window.addEventListener('hashchange', render)
+```
+
+[example: 12_dynamic_import](https://github.com/yw0525/notes/tree/master/webpack/webpack_5/12_dynamic_import)
+
+如果你使用的是单页应用开发框架，例如 react 或者 vue，路由映射组件就可以通过这种动态导入的方式实现按需加载。
+
+### 魔法注释
+
+Magic Comments.
+
+默认通过动态导入产生的 bundle 文件文件，名称只是一个序号。
+
+使用魔法注释可以对分包产生的 bundle 进行命名。
+
+```js
+// index.js
+
+const render = () => {
+  const hash = window.location.hash || '#posts'
+
+  const mainElement = document.querySelector('.main')
+
+  mainElement.innerHTML = ''
+
+  if (hash === '#posts') {
+    import(/* webpackChunkName: 'components' */ './posts/posts').then(
+      ({ default: posts }) => {
+        mainElement.appendChild(posts())
+      }
+    )
+  } else if (hash === '#album') {
+    import(/* webpackChunkName: 'components' */ './album/album').then(
+      ({ default: album }) => {
+        mainElement.appendChild(album())
+      }
+    )
+  }
+}
+
+render()
+
+window.addEventListener('hashchange', render)
+```
+
+## 提取 CSS 文件
+
+### MiniCssExtractPlugin
 
