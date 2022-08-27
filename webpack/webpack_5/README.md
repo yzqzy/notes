@@ -1308,7 +1308,96 @@ module.exports = {
 
 一个页面对应一个打包入口，公共部分单独提取。
 
+```js
+// webpack.common.js
 
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
+module.exports = {
+  entry: {
+    index: './src/index.js',
+    album: './src/album.js'
+  },
+  output: {
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: 'Multi Entry',
+      template: './src/index.html',
+      filename: 'index.html',
+      chunks: ['index']
+    }),
+    new HtmlWebpackPlugin({
+      title: 'Multi Entry',
+      template: './src/album.html',
+      filename: 'album.html',
+      chunks: ['album']
+    })
+  ]
+}
+```
 
+### 提取公共模块
+
+不同打包入口中肯定会有公共模块，按照上述配置就会出现不同的打包结果中会有相同的模块出现。
+
+webpack 中提取工共模块也非常简单，只需要开启 splitChunks 功能即可。
+
+```js
+// webpack.prod.js
+
+const { merge } = require('webpack-merge')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+
+const baseConfig = require('./webpack.common')
+
+module.exports = merge(baseConfig, {
+  mode: 'production',
+  output: {
+    clean: true
+  },
+  devtool: 'nosources-source-map',
+  optimization: {
+    // https://webpack.js.org/plugins/split-chunks-plugin/
+    splitChunks: {
+      chunks: 'all',
+      minChunks: 2,
+      minSize: 10000
+    }
+  },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: ['public']
+    })
+  ]
+})
+```
+
+### 动态导入
+
+按需加载。需要用到某个模块时，再加载模块。
+
+webpack 支持以动态导入的方式实现按需加载，并且所有动态导入的模块会被自动分包。
+
+相对于多入口方式，动态导入更加灵活，我们可以通过代码逻辑控制模块加载时机。
 
