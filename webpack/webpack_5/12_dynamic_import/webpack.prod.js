@@ -1,5 +1,7 @@
 const { merge } = require('webpack-merge')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 
 const baseConfig = require('./webpack.common')
 
@@ -15,11 +17,21 @@ module.exports = merge(baseConfig, {
       chunks: 'all',
       minChunks: 2,
       minSize: 10000
-    }
+    },
+    minimizer: [new CssMinimizerPlugin(), '...']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
+      }
+    ]
   },
   plugins: [
     new CopyWebpackPlugin({
       patterns: ['public']
-    })
+    }),
+    new MiniCssExtractPlugin()
   ]
 })

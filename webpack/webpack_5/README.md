@@ -1480,7 +1480,104 @@ render()
 window.addEventListener('hashchange', render)
 ```
 
-## 提取 CSS 文件
+## CSS 文件
 
 ### MiniCssExtractPlugin
+
+提取 css 文件。
+
+将 css 代码从打包结果中提取出来，通过这个插件可以实现 css 模块按需加载。
+
+```bash
+pnpm i mini-css-extract-plugin -D
+```
+
+```js
+// webpack.prod.js
+
+const { merge } = require('webpack-merge')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+
+const baseConfig = require('./webpack.common')
+
+module.exports = merge(baseConfig, {
+	// ...
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
+      }
+    ]
+  },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: ['public']
+    }),
+    new MiniCssExtractPlugin()
+  ]
+})
+```
+
+如果样式文件体积不是很大，提取单个文件其实并没有必要。
+
+个人建议，如果 css 文件超过 150kb 左右才需要考虑是否要提取到单独文件中。
+
+不过这样提取 css 样式文件存在一个问题，提取后的 css 文件并没有被压缩，即使开启 `mode: production`。
+
+webpack 内置的压缩插件仅针对于 JS 文件，对于其他资源文件压缩都需要额外的插件支持。
+
+### CssMinimizerPlugin
+
+[css-minimizer-webpack-plugin](https://webpack.js.org/plugins/css-minimizer-webpack-plugin/)
+
+压缩输出的 CSS 文件。支持多进程压缩。
+
+```js
+pnpm i css-minimizer-webpack-plugin -D
+```
+
+```js
+// webpack.prod.js
+
+const { merge } = require('webpack-merge')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+
+const baseConfig = require('./webpack.common')
+
+module.exports = merge(baseConfig, {
+	// ...
+  optimization: {
+  	// ...
+    minimizer: [new CssMinimizerPlugin(), '...']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
+      }
+    ]
+  },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: ['public']
+    }),
+    new MiniCssExtractPlugin()
+  ]
+})
+```
+
+webpack 通过将压缩类的插件配置到 `optimization.minimizer` 中，只会在 `optimization.minimize = true` 的场景下启用。
+
+> minimizer: [new CssMinimizerPlugin(), '...']
+>
+> For webpack@5 you can use the `...` syntax to extend existing minimizers (i.e. `terser-webpack-plugin`), uncomment the next line
+
+## 输出文件名 Hash
+
+substitutions
 
