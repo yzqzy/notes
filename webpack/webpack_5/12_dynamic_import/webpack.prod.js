@@ -8,7 +8,8 @@ const baseConfig = require('./webpack.common')
 module.exports = merge(baseConfig, {
   mode: 'production',
   output: {
-    clean: true
+    clean: true,
+    filename: '[name]-[contenthash:8].bundle.js'
   },
   devtool: 'nosources-source-map',
   optimization: {

@@ -1579,5 +1579,44 @@ webpack 通过将压缩类的插件配置到 `optimization.minimizer` 中，只�
 
 ## 输出文件名 Hash
 
-substitutions
+[output.filename](https://webpack.js.org/configuration/output/#outputfilename)
+
+通常我们部署前端资源文件时都会启动服务器静态资源缓存，对于用户浏览器而言就可以缓存应用中静态资源，后续就不再需要请求服务器得到静态资源文件，应用响应速度会有所提升。
+
+不过开启静态资源的客户端缓存也会存在一定缺陷，如果缓存失效时间设置过长，一旦应用发生更新重新部署没有办法及时更新到客户端，为了解决这个问题，通常会在生产模式下给输出的文件名增加 hash，当文件发生改变，文件名称也会发生变化。
+
+对于客户端而言，全新的文件名就是全新的请求，不会命中浏览器缓存。
+
+webpack 的 filename 属性和绝大多数插件的 filename 属性都支持通过占位符的方式为文件名设置 hash。
+
+存在三种 hash，效果各不相同。
+
+* [hash]
+  * 项目级别，项目中任何地方发生改动，这一次打包过程中的 hash 值就会改变
+  * `filename: '[name]-[hash].bundle.js'`
+* [chunkhash]
+  * 打包过程中，只要同一入口，chunkhash 都是相同的
+  * 动态导入的 chunk 也有自己的 hash
+  * 相对于普通的 hash，chunkhash 的控制更精确
+  * `filename: '[name]-[chunkhash].bundle.js'`
+* [contenthash]
+  * 文件级别的 hash，根据输出文件的内容生成的 hash
+  * 不同的文件有不同的 hash 值
+  * webpack 允许指定 hash 长度
+  * `[name]-[contenthash:8].bundle.js`
+
+```js
+// webpack.prod.js
+
+module.exports = merge(baseConfig, {
+  mode: 'production',
+  output: {
+    clean: true,
+    filename: '[name]-[contenthash:8].bundle.js'
+  }
+	// ...
+})
+```
+
+如果控制缓存的话，8 位的 contenthash 其实是比较合适的选择。
 
