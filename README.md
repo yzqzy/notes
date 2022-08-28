@@ -30,7 +30,7 @@
   - webpack
     - [webpack 基础](https://github.com/yw0525/notes/tree/master/webpack/webpack) 已完成
     - [webpack 提升](https://github.com/yw0525/notes/tree/master/webpack/webpack_tencent) 已完成
-    - [webpack5](https://github.com/yw0525/notes/tree/master/webpack/webpack_5) 更新中... 😁
+    - [webpack5](https://github.com/yw0525/notes/tree/master/webpack/webpack_5) 已完成
     - [自定义 loader、plugins](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack 源码实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack 源码进阶实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write_plus) 已完成
@@ -74,6 +74,7 @@
   - [TypeScipt 基础](https://github.com/yw0525/notes/tree/master/typescript/base) 已完成
   - [TypeScipt 案例](https://github.com/yw0525/notes/tree/master/typescript/examples/test/src) 已完成
   - [TypeScipt 进阶](https://github.com/yw0525/notes/tree/master/typescript/plus) 已完成
+  - [TypeScipt 全面进阶](https://github.com/yw0525/notes/tree/master/typescript/review) 更新中... 😁
 - Node
   - [Node 基础](https://github.com/yw0525/notes/tree/master/node/base) 已完成
   - ~~[Node 进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
@@ -104,6 +105,7 @@
   - [数据结构与算法之美](https://github.com/yw0525/notes/tree/master/alg/algorithm_google) 已完成
   - [透视 HTTP 协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
   - [Vue 源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
-  * [Vue.js 设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 已完成
+  - [Vue.js 设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 已完成
   - [深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
-  * [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
+  - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 更新中... 😁
+  - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
