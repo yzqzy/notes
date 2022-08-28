@@ -625,6 +625,238 @@ https://mp.weixin.qq.com/s/6d_16hfd5Fz8pZvdpO3BEw
 
 <img src="./images/sso.jpg" />
 
+## typescript
+
+typescript 是拥有类型系统的超集，可以编译为 JavaScript。
+
+typescript 支持类型检查，语言扩展，可以帮助团队成员重塑 “类型思维”，接口提供方可以被迫思考 API 边界，从代码编写者变为代码设计者。
+
+javascript 是一门动态类型、弱类型的语言。
+
+### 基础类型
+
+最新的 ECMAScript 标准定义了8种数据类型
+
+- 基本数据类型：boolean、null、undefined、number、BigInt、string、symbol
+- 引用类型：Object
+
+```
+Boolen、null、undefined、Number、String、Symbol、Object、Array、Function
+```
+
+TypeScript 数据类型：
+
+```
+Boolen、null、undefined、Number、String、Symbol、Object、Array、Function
+void、any、never、元组、枚举、高级类型等
+```
+
+### 枚举
+
+一组有名字的常量集合
+
+枚举成员分为两类：
+
+* 常量枚举（const enum），它会在编译的时候计算出结果，然后以常量的形式出现在运行时环境
+
+* 计算枚举（computed enum），是一些非常量的表达式 ，这些类型的值不会再编译时计算，而是会保留到程序的执行阶段
+
+```typescript
+enum Char {
+  a,
+  b = Char.a,
+  c = 1 + 3,
+
+  d = Math.random(),
+  e = '123'.length
+}
+```
+
+我们可以将程序中不容易记忆的硬编码或者在未来中可能改变的常量，抽离出来定义成枚举类型，可以提高程序的可读性和可维护性。
+
+
+
+给定字符串 “a”，获取 `Test.A`
+
+```typescript
+enum Test {
+  A = 'a',
+  B = 'b',
+  c = 'C'
+}
+
+function getKey(value: string) {
+  let key: keyof typeof Test
+
+  for (key in Test) {
+    if (value === Test[key]) return key
+  }
+
+  return null
+}
+```
+
+### 接口
+
+接口可以用来约束对象、函数以及类的结构和类型，它是一种代码协作的契约，我们必须遵守，而且不能改变。
+
+### 泛型
+
+使用泛型的好处：
+
+- 函数和类可以轻松地支持多种类型，增强程序的扩展性
+- 不必写多条函数重载，冗长的联合类型声明，增强代码可读性
+- 灵活控制类型之间的约束关系
+
+泛型不仅可以保持类型的一致性，又不失程序的灵活性，同时也可以通过泛型约束，控制类型之间的约束。从代码的上来看，可读性，简洁性，远优于函数重载，联合类型声明以及 any 类型的声明。
+
+### 类型检查机制
+
+#### 类型推断
+
+不需要指定变量的类型（函数的返回值类型），TypeScript 可以根据某些规则自动地为其推断出一个类型。
+
+- 基础类型推断
+- 最佳通用类型推断
+- 上下文类型推断
+
+#### 类型兼容性
+
+- 结构之间兼容：成员少的兼容成员多的。
+- 函数之间兼容：参数多的兼容参数少的
+
+#### 类型保护
+
+类型保护就是，TypeScript 能够在特定的区块中保证变量属于某种确认的类型。
+
+-  instanceof 判断实例是否属于某个类
+- in 关键字
+- typeof
+- 通过类型保护函数
+
+
+
+ts 的类型检查机制，分别是类型推断、类型兼容性、类型保护。
+
+利用这些机制，再配合 IDE 的自动补全提示功能能够极大地提高我们的开发效率，需要我们善加利用。
+
+### 高级类型
+
+[ts 进阶](https://www.yueluo.club/detail?articleId=62940d421b72002733d9c606#_469)
+
+高级类型就是 ts 为了保持灵活性所引入的一些元特性。这些特性有助于我们应对复杂多变的开发场景。
+
+#### 交叉类型与联合类型
+
+`|`、`&`
+
+* 交叉类型指将多个类型合并为一个类型，新的类型具有所有类型的特性，交叉类型特别适合对象混用的场景
+* 交叉类型取所有类型的并集
+*  联合类型指声明的类型并不确定，可以为多个类型中的一个
+
+#### 索引类型
+
+`keyof`、`extends`
+
+* 索引类型的查询操作符：`keyof T` ，表示类型 T 的所有公共属性的字面量的联合类型
+* 索引访问操作符：`T[K]`，表示对象 T 的属性 K 所代表的类型
+* 泛型约束：`T extends U` ，表示泛型变量可以通过继承某个类型获得某些属性
+
+```js
+// 使用索引类型改造 getValues 函数
+// 索引类型可以实现对对象属性的查询和访问，然后再配合泛型约束就可以建立对象、对象属性以及属性值之间的约束关系。
+
+function getValues<T, K extends keyof T>(obj: T, keys: K[]): T[K][] {
+  return keys.map(key => obj[key])
+}
+```
+
+#### 映射类型
+
+`in `
+
+* 通过映射类型我们可以从一个旧的类型生成一个新的类型，比如说把一个类型的所有属性变为只读。
+* 映射类型本质上是一种泛型接口，通常会结合索引类型获取对象属性和属性值，从而将一个对象映射成我们想要的结构。
+
+```typescript
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+}
+// readonly 是一个泛型接口，而且是一个可索引的泛型接口
+// 索引签名是 P in keyof T，T 是一个索引类型的查询操作符，表示类型 T 所有属性的联合类型
+// P in 相当于执行了一次遍历，会把变量 P 依次的绑定到 T 的所有属性上
+// 索引签名的返回值就是一个索引访问操作符，T[P] 这里代表属性 P 所指定的类型
+// 最后再加上 readonly，就可以把所有的属性变成只读，这就是 Readonly 的实现原理
+
+type Partial<T> = {
+    [P in keyof T]?: T[P];
+}
+// Partial 的实现几乎和 Readonly 一致，只不过把只读的属性变成可选
+
+type Pick<T, K extends keyof T> = {
+    [P in K]: T[P];
+}
+// 第一个参数 T 指定对象，第二个参数 K 存在一个约束，K 一定要来自 T 所有属性字面量的联合类型
+// 新的属性的类型一定要在 K 的属性中选取
+
+// 以上三种类型，Readonly，Partial，Pick，官方有一个称呼，把它们称为同态。
+// 含义就是它们不会引入新的属性，只会用到目标类型属性（两个代数结构保持了结构不变的映射，则称这两个代数结构是同态的）。
+```
+
+```js
+type RecordObj = Record<'x' | 'y', Obj>
+// type RecordObj = {
+//   x: Obj;
+//   y: Obj;
+// }
+```
+
+#### 条件类型
+
+条件类型是一种由条件表达式所决定的类型。
+它的形式是 `T extends U ? X : Y` 。如果类型 T 可以被赋值给类型 U，结果类型就是 X 类型，否则就是 Y 类型。
+
+条件类型使类型具有了不唯一性，同样也增加了语言的灵活性。
+
+```typescript
+// 条件类型：T extends U ? X : Y
+// 条件类型嵌套，依次判断 T 类型，然后返回不同的字符串
+type TypeName<T> = 
+  T extends string ? 'string' :
+  T extends number ? 'number' :
+  T extends boolean ? 'boolean' :
+  T extends undefined ? 'undefined' :
+  T extends Function ? 'function' :
+  "object"
+type T1 = TypeName<string> // type T1 = "string"  字面量类型 "string"
+type T2 = TypeName<string[]> // type T2 = "object"
+```
+
+```typescript
+// 分布式条件类型：(A | B) extends U ? X : Y
+// (A extends U ? X : Y) | (B extends U ? X : Y)
+type T3 = TypeName<string | string[]> // type T3 = "string" | "object"
+
+// 利用这个特性可以帮助我们实现类型的过滤
+type Diff<T, U> = T extends U ? never : T
+type T4 = Diff<"a" | "b" | "c", "a" | "e"> // type T4 = "b" | "c"
+// => (Diff<"a", "a" | "e">) | (Diff<"b", "a" | "e">) | (Diff<"c", "a" | "e">)
+// => never | "b" | "c"
+// => "b" | "c"
+// 所以 diff 的作用就是从类型 T 中过滤掉可以赋值给类型 U 的类型
+```
+
+### 题目
+
+#### type 和 interface 区别
+
+type 和 interface 多数情况下有相同的功能，就是定义类型。
+
+type：不是创建新的类型，只是为一个给定的类型起一个名字。
+type还可以进行联合、交叉等操作，引用起来更简洁。
+
+interface：创建新的类型，接口之间可以继承、声明合并。
+
 ## browser
 
 ### cache
@@ -676,6 +908,8 @@ Windows：Ctrl + shift + R（Ctrl + F5）
 硬盘重新加载不会清空缓存而是禁用缓存，类似开发者工具 Network 面板的 Disable cache 选项。
 
 ## vue
+
+[vue_source_plus](https://notes.yueluo.club/vue/vue_source_plus/index.html)
 
 ### cli
 
