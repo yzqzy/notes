@@ -106,3 +106,5 @@ name('reactivity')
 ## summary
 
 相比较于 vue 和 react，solid 的源码很有学习和借鉴意义，没有过多的兼容和无奈的写法，都是很明确的实现，可以作为相关学习的优秀范本。
+
+[精读 《SolidJS》](https://github.com/ascoders/weekly/blob/master/%E5%89%8D%E6%B2%BF%E6%8A%80%E6%9C%AF/255.%E7%B2%BE%E8%AF%BB%E3%80%8ASolidJS%E3%80%8B.md)

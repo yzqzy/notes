@@ -294,3 +294,30 @@ class Login {
     Login.handlerMap[type].handler()
   }
 }
+
+type log = (message?: any, ...optionalParams: any[]) => void
+
+let unknownVar: unknown
+;(unknownVar as { foo: () => {} }).foo()
+
+// const str: string = 'heora'
+
+// ;(str as unknown as { handler: () => {} }).handler()
+// ;(<{ handler: () => {} }>(<unknown>str)).handler()
+
+declare const foo: {
+  func?: () => {
+    prop?: number | null
+  }
+}
+
+foo.func!().prop!.toFixed()
+foo.func?.().prop?.toFixed()
+
+const element = document.querySelector('#id')!
+
+const target = [1, 2, 3, 599].find(item => item === 599)!
+
+const str: string = 'heora'
+
+;(str as string | { handler: () => {} } as { handler: () => {} }).handler()

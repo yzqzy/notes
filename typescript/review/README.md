@@ -588,5 +588,96 @@ D，**依赖倒置原则**，这是实现开闭原则的基础，它的核心思
 
 ## 内置类型
 
+TypeScript 中提供了一个内置类型 any ，表示任意类型，我们就可以使用 any 作为参数的类型：
+
+```typescript
+type log = (message?: any, ...optionalParams: any[]) => void
+```
+
+一个被标记为 any 类型的参数可以接受任意类型的值。
+
+any 类型的变量几乎无所不能，它可以在声明后再次接受任意类型的值，同时可以被赋值给任意其它类型的变量。
+
+* 如果是类型不兼容报错导致你使用 any，考虑用类型断言替代
+* 如果是类型太复杂导致你不想全部声明而使用 any，考虑将这一处的类型去断言为你需要的最简类型
+* 如果你是想表达一个未知类型，更合理的方式是使用 unknown
+
+unknown 类型和 any 类型有些类似，一个 unknown 类型的变量可以再次赋值为任意其它类型，但只能赋值给 any 与 unknown 类型的变量。
 
 
+
+never 类型被称为 **Bottom Type**，是**整个类型系统层级中最底层的类型**。和 null、undefined 一样，它是所有类型的子类型，但只有 never 类型的变量能够赋值给另一个 never 类型变量。
+
+
+**类型断言**能够显式告知类型检查程序当前这个变量的类型，可以进行类型分析地修正、类型。
+
+```typescript
+let unknownVar: unknown
+
+;(unknownVar as { foo: () => {} }).foo()
+```
+
+
+如果在使用类型断言时，原类型与断言类型之间差异过大，就要使用**双重断言**。
+
+```typescript
+const str: string = 'heora'
+
+;(str as unknown as { handler: () => {} }).handler()
+
+;(<{ handler: () => {} }>(<unknown>str)).handler()
+```
+
+> 使用 <> 也可以用来表示断言，不过虽然书写更简洁，但是在 TSX 中尖括号断言并不能很好地被分析出来。
+
+**非空断言**其实是类型断言的简化，它使用 `!` 语法（剔除了 null 和 undefined 类型）。
+
+```typescript
+declare const foo: {
+  func?: () => {
+    prop?: number | null
+  }
+}
+
+foo.func!().prop!.toFixed()
+
+// 类似可选链用法
+foo.func?.().prop?.toFixed()
+```
+
+非空断言的常见场景有很多，例如：
+
+```typescript
+const element = document.querySelector('#id')!
+
+const target = [1, 2, 3, 599].find(item => item === 599)!     
+```
+
+
+
+**类型层级**
+
+any 与 unknown 属于 **Top Type**，表现在它们包含了所有可能的类型。
+never 属于 **Bottom Type**，表现在它是一个虚无的、不存在的类型。
+
+类型层级关系
+
+* 最顶级的类型，any 与 unknown
+* 特殊的 Object ，它也包含了所有的类型
+* String、Boolean、Number装箱类型
+* 原始类型与对象类型
+* 字面量类型，即更精确的原始类型与对象类型
+  * null 和 undefined 并不是字面量类型的子类型
+* 最底层的 never
+
+> 这个层级链并不完全，还有联合类型、交叉类型、函数类型的情况
+
+类型断言的工作原理也和类型层级有关，在判断断言是否成立，即差异是否能接受时，实际上判断的即是这两个类型是否能够找到一个公共的父类型。如果找不到具有意义的公共父类型呢，这个时候就需要使用 **Top Type** ，我们把它先断言到 **Top Type**，那么就拥有了公共父类型 **Top Type**，再断言到具体的类型。
+
+```typescript
+const str: string = 'heora'
+
+;(str as string | { handler: () => {} } as { handler: () => {} }).handler()
+```
+
+## 类型编程
