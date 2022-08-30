@@ -54,17 +54,10 @@
     "*.wxss": "css",
     "*.wxs": "javascript"
   },
-  "minapp-vscode.disableAutoConfig": true,
   "prettier.semi": false,
   "prettier.singleQuote": true,
   "prettier.arrowParens": "avoid",
   "prettier.trailingComma": "none",
-  "minapp-vscode.prettier": {
-    "parser": "html",
-    "useTabs": false,
-    "tabWidth": 2,
-    "printWidth": 100
-  },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -91,9 +84,11 @@
       "strings": "off"
     },
     "editor.formatOnSave": false
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
-
 ```
 
 commit 规范可以由规范自己制定，社区都有成熟的包支持。

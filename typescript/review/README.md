@@ -680,4 +680,402 @@ const str: string = 'heora'
 ;(str as string | { handler: () => {} } as { handler: () => {} }).handler()
 ```
 
-## 类型编程
+## 类型工具
+
+按照使用方式来划分，类型工具可以分成三类：**操作符、关键字与专用语法**。
+
+按照使用目的来划分，类型工具可以分为 **类型创建** 与 **类型安全保护** 两类。
+
+### 类型别名
+
+类型别名可以说是 TypeScript 类型编程中最重要的一个功能，从一个简单的函数类型别名，到让你眼花缭乱的类型体操，都离不开类型别名。
+
+```typescript
+type A = string
+
+type StatusCode = 200 | 301 | 400 | 500 | 502
+type PossibleDataTypes = string | number | (() => unknown)
+
+type Handler = (e: Event) => void
+const clickHandler: Handler = e => {}
+const moveHandler: Handler = e => {}
+const dragHandler: Handler = e => {}
+
+type ObjType = {
+  name: string
+  age: number
+}
+```
+
+类型别名还能作为工具类型。**工具类同样基于类型别名，只是多了个泛型**。
+
+> 类型别名一旦接受了泛型，我们就叫它工具类型。
+
+```typescript
+type MaybeArray<T> = T | T[]
+
+function ensureArray<T>(input: MaybeArray<T>): T[] {
+  return Array.isArray(input) ? input : [input]
+}
+```
+
+### 联合类型、交叉类型
+
+联合类型的符号是`|`，即只需要符合联合类型中的一个类型。
+
+交叉类型的符号是`&`，即只**需要同时满足 A 与 B 两个类型**。
+
+```typescript
+interface NameStruct {
+  name: string
+}
+
+interface AgeStruct {
+  age: number
+}
+
+type ProfileStruct = NameStruct & AgeStruct
+
+const profile: ProfileStruct = {
+  name: 'heora',
+  age: 24
+}
+```
+
+联合类型组成的交叉类型，取联合类型的交集
+
+```typescript
+type UnionIntersection1 = (1 | 2 | 3) & (1 | 2) // 1 | 2
+type UnionIntersection2 = (string | number | symbol) & string // string
+```
+
+### 索引类型
+
+**索引类型**指的不是某一个特定的类型工具，它包含三个部分：**索引签名类型**、**索引类型查询**与**索引类型访问**。
+
+**它们都通过索引的形式来进行类型操作**，但索引签名类型是**声明**，后两者则是**读取**。
+
+**1. 索引签名类型**
+
+```typescript
+
+interface AllStringTypes {
+  [key: string]: string
+}
+
+type AllStringTypes = {
+  [key: string]: string
+}
+
+interface AnyTypeHere {
+  [key: string]: any
+}
+const foo: AnyTypeHere['heora'] = 'any value'
+```
+
+**2. 索引类型查询**
+
+索引类型查询，即 keyof 操作符。它可以将对象中的所有键转换为对应字面量类型，然后再组合成联合类型。
+
+>  keyof 的产物必定是一个联合类型
+
+```typescript
+interface Foo {
+  heora: 1
+  24: 2
+}
+
+type FooKeys = keyof Foo // 'heora' | 24
+```
+
+**3. 索引类型访问**
+
+```typescript
+interface Foo {
+  propA: number
+  propB: boolean
+}
+
+type PropAType = Foo['propA']
+type PropBType = Foo['propB']
+```
+
+看起来这里就是普通的值访问，但实际上这里的`'propA'`和`'propB'`都是**字符串字面量类型**，**而不是一个 JavaScript 字符串值**。
+
+索引类型查询的本质其实就是，**通过键的字面量类型（`'propA'`）访问这个键对应的键值类型（`number`）**
+
+```typescript
+interface Foo {
+  propA: number
+  propB: boolean
+  propC: string
+}
+
+type PropTypeUnion = Foo[keyof Foo] //  string | number | boolean
+```
+
+使用字面量联合类型进行索引类型访问时，其结果就是将联合类型每个分支对应的类型进行访问后的结果，重新组装成联合类型。
+
+**索引类型查询、索引类型访问通常会和映射类型一起搭配使用**，前两者负责访问键，而映射类型在其基础上访问键值类型。
+
+### 映射类型
+
+映射类型的主要作用即是**基于键名映射到键值类型**。
+
+```typescript
+type Stringify<T> = {
+  [K in keyof T]: string
+}
+```
+
+假设这个工具类型只会接受一个对象类型，使用 keyof 获得这个对象类型的键名组成字面量联合类型，然后通过映射类型（即这里的 in 关键字）将这个联合类型的每一个成员映射出来，并将其键值类型设置为 string。
+
+```typescript
+interface Foo {
+  prop1: string
+  prop2: number
+  prop3: boolean
+  prop4: () => void
+}
+
+type StringifiedFoo = Stringify<Foo>
+// type StringifiedFoo = {
+//   prop1: string;
+//   prop2: string;
+//   prop3: string;
+//   prop4: string;
+// }
+
+// 等价于
+interface StringifiedFoo {
+  prop1: string
+  prop2: string
+  prop3: string
+  prop4: string
+}
+```
+
+我们应该很少会需要把一个接口的所有属性类型映射到 string，既然拿到了键，我们也可以获取值。
+
+```typescript
+type Clone<T> = {
+  [K in keyof T]: T[K]
+}
+
+type ClonedFoo = Clone<Foo>
+```
+
+ `T[K]` 其实就是上面说到的索引类型访问，我们使用键的字面量类型访问到了键值的类型，这里就相当于克隆了一个接口。
+
+ `K in ` 属于映射类型语法，`keyof T ` 属于 keyof 操作符，`[K in keyof T]` 的 `[]` 属于索引签名类型，`T[K]` 属于索引类型访问。
+
+
+
+类型别名、联合类型、索引类型、映射类型创建新类型实现方式与的常见搭配：
+
+| 类型工具     | 创建新类型的方式                                             | 常见搭配           |
+| ------------ | ------------------------------------------------------------ | ------------------ |
+| 类型别名     | 将一组类型/类型结构封装，作为一个新的类型                    | 联合类型、映射类型 |
+| 工具类型     | 在类型别名的基础上，基于泛型去动态创建新类型                 | 基本所有类型工具   |
+| 联合类型     | 创建一组类型集合，满足其中一个类型即满足这个联合类型（\|\|） | 类型别名、工具类型 |
+| 交叉类型     | 创建一组类型集合，满足其中所有类型才满足映射联合类型（&&）   | 类型别名、工具类型 |
+| 索引签名类型 | 声明一个拥有任意属性，键值类型一致的接口结构                 | 映射类型           |
+| 索引类型查询 | 从一个接口结构，创建一个由其键名字符串字面量组成的联合类型   | 映射类型           |
+| 索引类型访问 | 从一个接口结构，使用键名字符串字面量访问到对应的键值类型     | 类型别名、映射类型 |
+| 映射类型     | 从一个联合类型依次映射到其内部的每一个类型                   | 工具类型           |
+
+### 类型查询操作符
+
+TypeScript 存在两种功能不同的 typeof 操作符。
+
+一种 typeof 操作符就是 JavaScript 中，用于检查变量类型的 typeof 。
+
+另一种是 TypeScipt 新增的用于类型查询的 typeof，即 **Type Query Operator**，这个 typeof 返回的是一个 TypeScript 类型。
+
+TypeScript 的 typeof 返回的是一个 TypeScript 类型。
+
+```typescript
+const author = 'heora'
+
+const authorObj = { name: 'heora' }
+
+const nullVar = null
+const undefinedVar = undefined
+
+const func = (input: string) => {
+  return input.length > 10
+}
+
+type Str = typeof author // "heora"
+type Obj = typeof authorObj // { name: string; }
+type Null = typeof nullVar // null
+type Undefined = typeof undefined // undefined
+type Func = typeof func // (input: string) => boolean
+```
+
+我们不仅可以直接在类型标注中使用 typeof，还能在工具类型中使用 typeof。
+
+```typescript
+const func = (input: string) => {
+  return input.length > 10
+}
+// const func: (input: string) => boolean
+const func2: typeof func = (name: string) => {
+  return name === 'heora'
+}
+```
+
+绝大部分情况下，typeof 返回的类型就是当你把鼠标悬浮在变量名上时出现的推导后的类型，并且是**最窄的推导程度（即到字面量类型的级别**
+
+在逻辑代码中使用的 typeof 是 JavaScript 中的 typeof，类型代码（如类型标注、类型别名中等）中的是类型查询的 typeof 。
+
+### 类型守卫
+
+TypeScript 中提供了非常强大的类型推导能力，它会随着你的代码逻辑不断尝试收窄类型，这一能力称之为**类型的控制流分析**。
+
+```typescript
+function foo(input: string | number) {
+  if (typeof input === 'string') {
+  }
+  if (typeof input === 'number') {
+  }
+  // ...
+}
+```
+
+我们通过 if 条件中的表达式进行了**类型保护**，即告知了流过这里的分析程序每个 if 语句代码块中变量会是何类型。这即是编程语言的类型能力中最重要的一部分：**与实际逻辑紧密关联的类型**。
+
+
+
+
+```typescript
+function isString(input: unknown): boolean {
+  return typeof input === 'string'
+}
+
+function foo(input: string | number) {
+  if (isString(input)) {
+    // 类型“string | number”上不存在属性“replace”。
+    input.replace('linbudu', 'heora')
+  }
+  if (typeof input === 'number') {
+  }
+  // ...
+}
+```
+
+if 条件中的表达式被提取出来，理想情况下，如果 isString 返回了 true，那 input 肯定也是 string 类型。
+
+ts 类型控制流分析做不到跨函数上下文来进行类型的信息收集，为了解决这一类型控制流分析的能力不足， TypeScript 引入了 **is 关键字**来显式地提供类型信息。
+
+```typescript
+function isString(input: unknown): input is string {
+  return typeof input === 'string'
+}
+
+function foo(input: string | number) {
+  if (isString(input)) {
+    // 类型“string | number”上不存在属性“replace”。
+    input.replace('linbudu', 'heora')
+  }
+  if (typeof input === 'number') {
+  }
+  // ...
+}
+```
+
+**isString 函数称为类型守卫**，在它的返回值中，我们不再使用 boolean 作为类型标注，而是使用 `input is string`：
+
+* input 是函数的参数
+* `is string`，即 **is 关键字 + 预期类型**，即如果这个函数成功返回为 true，那么 is 关键字前这个入参的类型，就会**被这个类型守卫调用方后续的类型控制流分析收集到**。
+
+类型守卫函数中并不会对判断逻辑和实际类型的关联进行检查：
+
+```typescript
+function isString(input: unknown): input is number {
+  return typeof input === 'string'
+}
+
+function foo(input: string | number) {
+  if (isString(input)) {
+    // 类型“number”上不存在属性“replace”
+    input.replace('linbudu', 'heora')
+  }
+  if (typeof input === 'number') {
+  }
+  // ...
+}
+```
+
+**类型守卫有些类似于类型断言，你指定什么类型，它就是什么类型。**
+
+
+
+[`in` 操作符](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FJavaScript%2FReference%2FOperators%2Fin) 并不是 TypeScript 中新增的概念，而是 JavaScript 中已有的部分，它可以通过 `key in object` 的方式来判断 key 是否存在于 object 或其原型链上。
+
+```typescript
+interface Foo {
+  foo: string
+  fooOnly: boolean
+  shared: number
+}
+
+interface Bar {
+  bar: string
+  barOnly: boolean
+  shared: number
+}
+
+function handle(input: Foo | Bar) {
+  if ('foo' in input) {
+    input.fooOnly
+  } else {
+    input.barOnly
+  }
+}
+```
+
+JavaScript 中还存在一个功能类似于 typeof 与 in 的操作符：[instanceof](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FJavaScript%2FReference%2FOperators%2Finstanceof)，它判断的是原型级别的关系。同样的，instanceof 也可以用来进行类型保护：
+
+```typescript
+class FooBase {}
+
+class BarBase {}
+
+class Foo extends FooBase {
+  fooOnly() {}
+}
+class Bar extends BarBase {
+  barOnly() {}
+}
+
+function handle(input: Foo | Bar) {
+  if (input instanceof FooBase) {
+    input.fooOnly()
+  } else {
+    input.barOnly()
+  }
+}
+```
+
+
+
+**类型断言守卫**
+
+**断言守卫和类型守卫最大的不同点在于，在判断条件不通过时，断言守卫需要抛出一个错误，类型守卫只需要剔除掉预期的类型。**
+
+```typescript
+let usernmae: any = 'heora'
+
+function assertIsNumber(val: any): asserts val is number {
+  if (typeof val !== 'number') {
+    throw new Error('Not a number!')
+  }
+}
+
+assertIsNumber(usernmae)
+
+// number 类型！
+usernmae.toFixed()
+```
+

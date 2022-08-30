@@ -124,19 +124,19 @@ function bar(): undefined {
   return
 }
 
-function func(foo: number, bar: true): string
-function func(foo: number, bar?: false): number
-function func(foo: number, bar?: boolean): string | number {
-  if (bar) {
-    return String(foo)
-  } else {
-    return foo * 599
-  }
-}
+// function func(foo: number, bar: true): string
+// function func(foo: number, bar?: false): number
+// function func(foo: number, bar?: boolean): string | number {
+//   if (bar) {
+//     return String(foo)
+//   } else {
+//     return foo * 599
+//   }
+// }
 
-const res1 = func(599) // number
-const res2 = func(599, true) // string
-const res3 = func(599, false) // number
+// const res1 = func(599) // number
+// const res2 = func(599, true) // string
+// const res3 = func(599, false) // number
 
 async function asyncFunc(): Promise<void> {}
 
@@ -231,9 +231,9 @@ async function* asyncGenFunc(): AsyncIterable<void> {}
 
 // const foo = new NewableFoo()
 
-class Foo {
-  private constructor() {}
-}
+// class Foo {
+//   private constructor() {}
+// }
 
 class Utils {
   public static identifier = 'heora'
@@ -305,14 +305,14 @@ let unknownVar: unknown
 // ;(str as unknown as { handler: () => {} }).handler()
 // ;(<{ handler: () => {} }>(<unknown>str)).handler()
 
-declare const foo: {
-  func?: () => {
-    prop?: number | null
-  }
-}
+// declare const foo: {
+//   func?: () => {
+//     prop?: number | null
+//   }
+// }
 
-foo.func!().prop!.toFixed()
-foo.func?.().prop?.toFixed()
+// foo.func!().prop!.toFixed()
+// foo.func?.().prop?.toFixed()
 
 const element = document.querySelector('#id')!
 
@@ -321,3 +321,211 @@ const target = [1, 2, 3, 599].find(item => item === 599)!
 const str: string = 'heora'
 
 ;(str as string | { handler: () => {} } as { handler: () => {} }).handler()
+
+type A = string
+
+type StatusCode = 200 | 301 | 400 | 500 | 502
+type PossibleDataTypes = string | number | (() => unknown)
+
+type Handler = (e: Event) => void
+
+const clickHandler: Handler = e => {}
+const moveHandler: Handler = e => {}
+const dragHandler: Handler = e => {}
+
+type ObjType = {
+  name: string
+  age: number
+}
+
+// type MaybeArray<T> = T | T[]
+
+// function ensureArray<T>(input: MaybeArray<T>): T[] {
+//   return Array.isArray(input) ? input : [input]
+// }
+
+// interface NameStruct {
+//   name: string
+// }
+
+// interface AgeStruct {
+//   age: number
+// }
+
+// type ProfileStruct = NameStruct & AgeStruct
+
+// const profile: ProfileStruct = {
+//   name: 'heora',
+//   age: 24
+// }
+
+// type UnionIntersection1 = (1 | 2 | 3) & (1 | 2) // 1 | 2
+// type UnionIntersection2 = (string | number | symbol) & string // string
+
+// interface AllStringTypes {
+//   [key: string]: string
+// }
+
+// type AllStringTypes = {
+//   [key: string]: string
+// // }
+
+// interface AnyTypeHere {
+//   [key: string]: any
+// }
+
+// const foo: AnyTypeHere['heora'] = 'any value'
+
+// interface Foo {
+//   heora: 1
+//   599: 2
+// }
+
+// type FooKeys = keyof Foo // 'heora' | 599
+
+// interface Foo {
+//   propA: number
+//   propB: boolean
+// }
+
+// type PropAType = Foo['propA']
+// type PropBType = Foo['propB']
+
+// interface Foo {
+//   propA: number
+//   propB: boolean
+//   propC: string
+// }
+
+// type PropTypeUnion = Foo[keyof Foo] //  string | number | boolean
+
+// type Stringify<T> = {
+//   [K in keyof T]: string
+// }
+
+interface Foo {
+  prop1: string
+  prop2: number
+  prop3: boolean
+  prop4: () => void
+}
+
+// type StringifiedFoo = Stringify<Foo>
+// // type StringifiedFoo = {
+// //   prop1: string;
+// //   prop2: string;
+// //   prop3: string;
+// //   prop4: string;
+// // }
+
+// interface StringifiedFoo {
+//   prop1: string
+//   prop2: string
+//   prop3: string
+//   prop4: string
+// }
+
+// type Clone<T> = {
+//   [K in keyof T]: T[K]
+// }
+
+// type ClonedFoo = Clone<Foo>
+
+// const author = 'heora'
+
+// const authorObj = { name: 'heora' }
+
+// const nullVar = null
+// const undefinedVar = undefined
+
+// const func = (input: string) => {
+//   return input.length > 10
+// }
+
+// type Str = typeof author // "heora"
+// type Obj = typeof authorObj // { name: string; }
+// type Null = typeof nullVar // null
+// type Undefined = typeof undefined // undefined
+// type Func = typeof func // (input: string) => boolean
+
+// const func = (input: string) => {
+//   return input.length > 10
+// }
+// // const func: (input: string) => boolean
+// const func2: typeof func = (name: string) => {
+//   return name === 'heora'
+// }
+
+// function foo(input: string | number) {
+//   if (typeof input === 'string') {
+//   }
+//   if (typeof input === 'number') {
+//   }
+//   // ...
+// }
+
+// function isString(input: unknown): input is number {
+//   return typeof input === 'string'
+// }
+
+// function foo(input: string | number) {
+//   if (isString(input)) {
+//     // 类型“number”上不存在属性“replace”
+//     input.replace('linbudu', 'heora')
+//   }
+//   if (typeof input === 'number') {
+//   }
+//   // ...
+// }
+
+// interface Foo {
+//   foo: string
+//   fooOnly: boolean
+//   shared: number
+// }
+
+// interface Bar {
+//   bar: string
+//   barOnly: boolean
+//   shared: number
+// }
+
+// function handle(input: Foo | Bar) {
+//   if ('foo' in input) {
+//     input.fooOnly
+//   } else {
+//     input.barOnly
+//   }
+// }
+
+// class FooBase {}
+
+// class BarBase {}
+
+// class Foo extends FooBase {
+//   fooOnly() {}
+// }
+// class Bar extends BarBase {
+//   barOnly() {}
+// }
+
+// function handle(input: Foo | Bar) {
+//   if (input instanceof FooBase) {
+//     input.fooOnly()
+//   } else {
+//     input.barOnly()
+//   }
+// }
+
+let usernmae: any = 'heora'
+
+function assertIsNumber(val: any): asserts val is number {
+  if (typeof val !== 'number') {
+    throw new Error('Not a number!')
+  }
+}
+
+assertIsNumber(usernmae)
+
+// number 类型！
+usernmae.toFixed()

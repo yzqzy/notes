@@ -89,17 +89,86 @@ packages
 solid.js 中 reactive 源码部分实现参考了 S.js 这个库，[S.js](https://github.com/adamhaile/S) 是一个很轻量的响应式库。
 
 ```js
-let greeting = S.data('Hello')
-let name = S.data('world')
+const hello = S.data('Hello')
+const world = S.data('world')
 
-S(() => (document.body.textContent = `${greeting()}, ${name()}!`))
+S(() => (document.body.textContent = `${hello()}, ${world()}!`))
 
-name('reactivity')
+world('reactivity')
 ```
 
 [https://github.dev/adamhaile/S](https://github.dev/adamhaile/S)
 
+[npm s-js](https://www.npmjs.com/package/s-js)
+
 基于发布订阅方式实现响应式效果。
+
+
+
+```typescript
+S.data = function data<T>(value: T): (value?: T) => T {
+  var node = new DataNode(value)
+
+  return function data(value?: T): T {
+    if (arguments.length === 0) {
+      return node.current()
+    } else {
+      return node.next(value)
+    }
+  }
+}
+```
+
+传入的 value 会被封装为 DataNode 对象，最终返回的是一个函数，这个函数根据参数个数进行处理，不传参数是 getter 函数，传参数变为 setter 函数。
+
+```typescript
+class DataNode {
+  pending = NOTPENDING as any
+  log = null as Log | null
+
+  constructor(public value: any) {}
+
+  current() {
+    if (Listener !== null) {
+      logDataRead(this)
+    }
+    return this.value
+  }
+
+  next(value: any) {
+    if (RunningClock !== null) {
+      if (this.pending !== NOTPENDING) {
+        // value has already been set once, check for conflicts
+        if (value !== this.pending) {
+          throw new Error(
+            'conflicting changes: ' + value + ' !== ' + this.pending
+          )
+        }
+      } else {
+        // add to list of changes
+        this.pending = value
+        RootClock.changes.add(this)
+      }
+    } else {
+      // not batching, respond to change now
+      if (this.log !== null) {
+        this.pending = value
+        RootClock.changes.add(this)
+        event()
+      } else {
+        this.value = value
+      }
+    }
+    return value!
+  }
+
+  clock() {
+    return RootClockProxy
+  }
+}
+```
+
+
 
 
 
