@@ -1079,3 +1079,216 @@ assertIsNumber(usernmae)
 usernmae.toFixed()
 ```
 
+## 泛型
+
+### 类型别名中的泛型
+
+类型别名中的泛型大多是用来进行工具类型封装。
+
+```typescript
+type Stringify<T> = {
+  [K in keyof T]: string
+}
+
+type Clone<T> = {
+  [K in keyof T]: T[K]
+}
+```
+
+Stringify 会将一个对象类型的所有属性类型置为 string ，Clone 则会进行类型的完全复制。
+
+```typescript
+type Partial<T> = {
+  [P in keyof T]?: T[P]
+}
+```
+
+> Constructs a type with all properties of `Type` set to optional. 
+
+类型别名与泛型的结合中，除了映射类型、索引类型等类型工具以外，还有一个非常重要的工具：条件类型。
+
+```typescript
+type IsEqual<T> = T extends true ? 1 : 2
+
+type A = IsEqual<true> // 1
+type B = IsEqual<false> // 2
+type C = IsEqual<'heora'> // 2
+```
+
+在条件类型参与的情况下，通常泛型会被作为条件类型中的判断条件（`T extends Condition`，或者 `Type extends T`）以及返回值（即 `:` 两端的值），这也是我们筛选类型需要依赖的能力之一。
+
+
+
+**泛型约束与默认值**
+
+像函数可以声明一个参数的默认值一样，泛型同样有着默认值的设定
+
+```typescript
+type Factory<T = boolean> = T | number | string
+```
+
+除了声明默认值以外，泛型还能做到一样函数参数做不到的事：**泛型约束**。
+
+我们可以使用 `extends` 关键字来约束传入的泛型参数必须符合要求。
+
+```typescript
+type ResStatus<ResCode extends number> = ResCode extends 10000 | 10001 | 10002
+  ? 'success'
+  : 'failure'
+
+type Res1 = ResStatus<10000> // "success"
+type Res2 = ResStatus<20000> // "failure"
+
+type Res3 = ResStatus<'10000'> // 类型“string”不满足约束“number”。
+```
+
+如果我们想让这个类型别名可以无需显式传入泛型参数也能调用，还可以为这个泛型参数声明一个默认值：
+
+```typescript
+type ResStatus<ResCode extends number = 10000> = ResCode extends
+  | 10000
+  | 10001
+  | 10002
+  ? 'success'
+  : 'failure'
+
+type Res4 = ResStatus // "success"
+```
+
+
+
+**多泛型关联**
+
+我们不仅可以同时传入多个泛型参数，还可以让这几个泛型参数之间也存在联系。
+
+```typescript
+type Conditional<Type, Condition, TruthyResult, FalsyResult> =
+  Type extends Condition ? TruthyResult : FalsyResult
+
+//  "passed!"
+type Result1 = Conditional<'heora', string, 'passed!', 'rejected!'>
+
+// "rejected!"
+type Result2 = Conditional<'heora', boolean, 'passed!', 'rejected!'>
+```
+
+**多泛型参数其实就像接受更多参数的函数，其内部的运行逻辑（类型操作）会更加抽象，表现在参数（泛型参数）需要进行的逻辑运算（类型操作）会更加复杂。**
+
+### 对象类型中的泛型
+
+泛型提供了对类型结构的复用能力，我们可以在对象类型结构中使用泛型。
+
+```typescript
+interface IRes<TData = unknown> {
+  code: number
+  error?: string
+  data: TData
+}
+```
+
+```typescript
+interface UserProfileRes {
+  name: string
+  homepage: string
+  avatar: string
+}
+
+function fetchUserProfile(): Promise<IRes<UserProfileRes>> {}
+
+type StatusSucceed = boolean
+function handleOperation(): Promise<IRes<StatusSucceed>> {}
+```
+
+泛型嵌套的场景也非常常用，比如对存在分页结构的数据，我们也可以将其分页的响应结构抽离出来
+
+```typescript
+interface IPaginationRes<TItem = unknown> {
+  data: TItem[]
+  page: number
+  totalCount: number
+  hasNextPage: boolean
+}
+
+function fetchUserProfileList(): Promise<
+  IRes<IPaginationRes<IUserProfileRes>>
+> {}
+```
+
+### 函数中的泛型
+
+```typescript
+function handle<T>(input: T): T {
+  return input
+}
+
+const author = 'heora'
+const authorAge = 24
+
+handle(author) // 填充为字面量类型 "heora"
+handle(authorAge) // 填充为基础类型 number
+```
+
+```typescript
+function swap<T, U>([start, end]: [T, U]): [U, T] {
+  return [end, start]
+}
+
+const swapped1 = swap(['heora', 24])
+const swapped2 = swap([null, 24])
+const swapped3 = swap([{ name: 'heora' }, {}])
+```
+
+
+
+函数的泛型参数也会被内部的逻辑消费，如：
+
+```typescript
+function handle<T>(payload: T): Promise<[T]> {
+  return new Promise<[T]>((resolve, reject) => {
+    resolve([payload])
+  })
+}
+```
+
+对于箭头函数的泛型，其书写方式是这样的：
+
+```typescript
+const handle = <T>(input: T): T => input
+```
+
+在 tsx 文件中泛型的尖括号可能会造成报错，编译器无法识别这是一个组件还是一个泛型，此时你可以让它长得更像泛型一些
+
+```typescript
+const handle = <T extends unknown>(input: T): T => input
+```
+
+### Class 中的泛型
+
+Class 中的泛型和函数中的泛型非常类似，只不过函数中泛型参数的消费方是参数和返回值类型，Class 中的泛型消费方则是属性、方法、乃至装饰器等。
+
+```typescript
+class Queue<TElement> {
+  private _list: TElement[]
+
+  constructor(initial: TElement[]) {
+    this._list = initial
+  }
+
+  enqueue<TType extends TElement>(ele: TType): TElement[] {
+    this._list.push(ele)
+    return this._list
+  }
+
+  enqueueWithUnknownType<TType>(element: TType): (TElement | TType)[] {
+    return [...this._list, element]
+  }
+
+  dequeue(): TElement[] {
+    this._list.shift()
+    return this._list
+  }
+}
+```
+
+## 结构化类型系统（鸭子类型）
+

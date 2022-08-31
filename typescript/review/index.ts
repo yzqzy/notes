@@ -314,29 +314,29 @@ let unknownVar: unknown
 // foo.func!().prop!.toFixed()
 // foo.func?.().prop?.toFixed()
 
-const element = document.querySelector('#id')!
+// const element = document.querySelector('#id')!
 
-const target = [1, 2, 3, 599].find(item => item === 599)!
+// const target = [1, 2, 3, 599].find(item => item === 599)!
 
-const str: string = 'heora'
+// const str: string = 'heora'
 
-;(str as string | { handler: () => {} } as { handler: () => {} }).handler()
+// ;(str as string | { handler: () => {} } as { handler: () => {} }).handler()
 
-type A = string
+// type A = string
 
-type StatusCode = 200 | 301 | 400 | 500 | 502
-type PossibleDataTypes = string | number | (() => unknown)
+// type StatusCode = 200 | 301 | 400 | 500 | 502
+// type PossibleDataTypes = string | number | (() => unknown)
 
-type Handler = (e: Event) => void
+// type Handler = (e: Event) => void
 
-const clickHandler: Handler = e => {}
-const moveHandler: Handler = e => {}
-const dragHandler: Handler = e => {}
+// const clickHandler: Handler = e => {}
+// const moveHandler: Handler = e => {}
+// const dragHandler: Handler = e => {}
 
-type ObjType = {
-  name: string
-  age: number
-}
+// type ObjType = {
+//   name: string
+//   age: number
+// }
 
 // type MaybeArray<T> = T | T[]
 
@@ -517,15 +517,154 @@ interface Foo {
 //   }
 // }
 
-let usernmae: any = 'heora'
+// let usernmae: any = 'heora'
 
-function assertIsNumber(val: any): asserts val is number {
-  if (typeof val !== 'number') {
-    throw new Error('Not a number!')
+// function assertIsNumber(val: any): asserts val is number {
+//   if (typeof val !== 'number') {
+//     throw new Error('Not a number!')
+//   }
+// }
+
+// assertIsNumber(usernmae)
+
+// // number 类型！
+// usernmae.toFixed()
+
+// type Stringify<T> = {
+//   [K in keyof T]: string
+// }
+
+// type Clone<T> = {
+//   [K in keyof T]: T[K]
+// }
+
+// type Partial<T> = {
+//   [P in keyof T]?: T[P]
+// }
+
+// type IsEqual<T> = T extends true ? 1 : 2
+
+// type A = IsEqual<true> // 1
+// type B = IsEqual<false> // 2
+// type C = IsEqual<'heora'> // 2
+
+// type Factory<T = boolean> = T | number | string
+
+// type ResStatus<ResCode extends number> = ResCode extends 10000 | 10001 | 10002
+//   ? 'success'
+//   : 'failure'
+
+// type Res1 = ResStatus<10000> // "success"
+// type Res2 = ResStatus<20000> // "failure"
+
+// type Res3 = ResStatus<'10000'> // 类型“string”不满足约束“number”。
+
+// type ResStatus<ResCode extends number = 10000> = ResCode extends
+//   | 10000
+//   | 10001
+//   | 10002
+//   ? 'success'
+//   : 'failure'
+
+// type Res4 = ResStatus // "success"
+
+// type Conditional<Type, Condition, TruthyResult, FalsyResult> =
+//   Type extends Condition ? TruthyResult : FalsyResult
+
+// //  "passed!"
+// type Result1 = Conditional<'heora', string, 'passed!', 'rejected!'>
+
+// // "rejected!"
+// type Result2 = Conditional<'heora', boolean, 'passed!', 'rejected!'>
+
+// interface IRes<TData = unknown> {
+//   code: number
+//   error?: string
+//   data: TData
+// }
+
+// interface UserProfileRes {
+//   name: string
+//   homepage: string
+//   avatar: string
+// }
+
+// function fetchUserProfile(): Promise<IRes<UserProfileRes>> {
+//   return new Promise(resolve =>
+//     resolve({
+//       code: 200,
+//       data: { name: 'heora', homepage: '', avatar: '' }
+//     })
+//   )
+// }
+
+// type StatusSucceed = boolean
+// function handleOperation(): Promise<IRes<StatusSucceed>> {
+//   return new Promise(resolve =>
+//     resolve({
+//       code: 200,
+//       data: false
+//     })
+//   )
+// }
+
+// interface IPaginationRes<TItem = unknown> {
+//   data: TItem[]
+//   page: number
+//   totalCount: number
+//   hasNextPage: boolean
+// }
+
+// function fetchUserProfileList(): Promise<
+//   IRes<IPaginationRes<IUserProfileRes>>
+// > {}
+
+// function handle<T>(input: T): T {
+//   return input
+// }
+
+// const author = 'heora'
+// const authorAge = 24
+
+// handle(author) // 填充为字面量类型 "heora"
+// handle(authorAge) // 填充为基础类型 number
+
+// function swap<T, U>([start, end]: [T, U]): [U, T] {
+//   return [end, start]
+// }
+
+// const swapped1 = swap(['heora', 24])
+// const swapped2 = swap([null, 24])
+// const swapped3 = swap([{ name: 'heora' }, {}])
+
+// function handle<T>(payload: T): Promise<[T]> {
+//   return new Promise<[T]>((resolve, reject) => {
+//     resolve([payload])
+//   })
+// }
+
+// const handle = <T>(input: T): T => input
+
+// const handle = <T extends unknown>(input: T): T => input
+
+class Queue<TElement> {
+  private _list: TElement[]
+
+  constructor(initial: TElement[]) {
+    this._list = initial
+  }
+
+  enqueue<TType extends TElement>(ele: TType): TElement[] {
+    this._list.push(ele)
+    return this._list
+  }
+
+  enqueueWithUnknownType<TType>(element: TType): (TElement | TType)[] {
+    return [...this._list, element]
+  }
+
+  dequeue(): TElement[] {
+    this._list.shift()
+    return this._list
   }
 }
-
-assertIsNumber(usernmae)
-
-// number 类型！
-usernmae.toFixed()
