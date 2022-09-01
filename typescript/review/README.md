@@ -1290,5 +1290,173 @@ class Queue<TElement> {
 }
 ```
 
-## 结构化类型系统（鸭子类型）
+## 类型系统
+
+### 结构化类型系统（鸭子类型）
+
+```typescript
+class Cat {
+  eat() {}
+}
+
+class Dog {
+  eat() {}
+}
+
+function feedCat(cat: Cat) {}
+
+feedCat(new Dog())
+```
+
+Cat 与 Dog 类型上的方法是一致的，所以它们虽然是两个名字不同的类型，但仍然被视为结构一致，这就是结构化类型系统的特性。
+
+结构类型的别称**鸭子类型（Duck Typing）**，，这个名字来源于**鸭子测试（Duck Test）**。其核心理念是，**如果你看到一只鸟走起来像鸭子，游泳像鸭子，叫得也像鸭子，那么这只鸟就是鸭子**。
+
+ 面向对象编程中的里氏替换原则也提到了鸭子测试：***如果它看起来像鸭子，叫起来也像鸭子，但是却需要电池才能工作，那么你的抽象很可能出错了。***
+
+
+
+在比较对象类型的属性时，会采用结构化类型系统进行判断。对结构中的函数类型（即方法）进行比较时，同样存在类型的兼容性比较：
+
+```typescript
+class Cat {
+  eat(): boolean {
+    return true
+  }
+}
+
+class Dog {
+  eat(): number {
+    return 24
+  }
+}
+
+function feedCat(cat: Cat) {}
+
+// 报错！
+feedCat(new Dog())
+```
+
+这就是结构化类型系统的核心理念，即基于类型结构进行判断类型兼容性。
+
+除了**基于类型结构进行兼容性判断的结构化类型系统**以外，还有一种**基于类型名进行兼容性判断的类型系统**，标称类型系统。
+
+### 标称类型系统
+
+标称类型系统（**Nominal Typing System**）要求，两个可兼容的类型，**其名称必须是完全一致的**，比如以下代码：
+
+```typescript
+type USD = number
+type CNY = number
+
+const CNYCount: CNY = 200
+const USDCount: USD = 200
+
+function addCNY(source: CNY, input: CNY) {
+  return source + input
+}
+
+addCNY(CNYCount, USDCount)
+```
+
+在结构化类型系统中，USD 与 CNY （分别代表美元单位与人民币单位）被认为是两个完全一致的类型，因此在 `addCNY` 函数中可以传入 USD 类型的变量。但是人民币与美元这两个单位实际的意义并不一致，怎么能进行相加？
+
+在标称类型系统中，CNY 与 USD 被认为是两个完全不同的类型，因此能够避免这一情况发生。
+
+上面我们可以通过类型的结构，来让结构化类型系统认为两个类型具有父子类型关系，而对于标称类型系统，父子类型关系只能通过显式的继承来实现，称为**标称子类型（Nominal Subtyping）**。
+
+```typescript
+class Cat {}
+// 实现一只短毛猫！
+class ShorthairCat extends Cat {}
+```
+
+C++、Java、Rust 等语言中都主要使用标称类型系统。那么，我们是否可以在 TypeScript 中模拟出标称类型系统？
+
+### 模拟标称类型系统
+
+**类型的重要意义之一是限制了数据的可用操作与实际意义**。
+
+这往往是通过类型附带的**额外信息**来实现的（类似于元数据），要在 TypeScript 中实现，其实我们也只需要为类型额外附加元数据即可，比如 CNY 与 USD，我们分别附加上它们的单位信息即可，但同时又需要保留原本的信息（即原本的 number 类型）。
+
+我们可以通过交叉类型的方式来实现信息的附加：
+
+```typescript
+declare class TagProtector<T extends string> {
+  protected __tag__: T
+}
+
+type Nominal<T, U extends string> = T & TagProtector<U>
+```
+
+我们使用 TagProtector 声明了一个具有 `protected` 属性的类，使用它来携带额外的信息，并和原本的类型合并到一起，就得到了 Nominal 工具类型。
+
+```typescript
+type CNY = Nominal<number, 'CNY'>
+
+type USD = Nominal<number, 'USD'>
+
+const CNYCount = 100 as CNY
+
+const USDCount = 100 as USD
+
+function addCNY(source: CNY, input: CNY) {
+  return (source + input) as CNY
+}
+
+addCNY(CNYCount, CNYCount)
+
+// 报错了！
+addCNY(CNYCount, USDCount)
+```
+
+这一实现方式本质上只在类型层面做了数据的处理，在运行时无法进行进一步的限制。我们还可以从逻辑层面入手进一步确保安全性：
+
+```typescript
+class CNY {
+  private __tag!: void;
+  constructor(public value: number) {}
+}
+class USD {
+  private __tag!: void;
+  constructor(public value: number) {}
+}
+```
+
+相应的，现在使用方式也要进行变化：
+
+```typescript
+const CNYCount = new CNY(100)
+const USDCount = new USD(100)
+
+function addCNY(source: CNY, input: CNY) {
+  return source.value + input.value
+}
+
+addCNY(CNYCount, CNYCount)
+// 报错了！
+addCNY(CNYCount, USDCount)
+```
+
+通过这种方式，我们可以在运行时添加更多的检查逻辑，同时在类型层面也得到了保障。
+
+这两种方式的本质都是通过非公开（即 `private` / `protected` ）的额外属性实现了类型信息的附加，从而使得结构化类型系统将结构一致的两个类型也视为不兼容的。
+
+在 TypeScript 中我们可以通过类型或者逻辑的方式来模拟标称类型，这两种方式其实并没有非常明显的优劣之分，基于类型实现更加轻量，你的代码逻辑不会受到影响，但难以进行额外的逻辑检查工作。而使用逻辑实现稍显繁琐，但你能够进行更进一步或更细致的约束。
+
+### 类型、类型系统与类型检查
+
+对于类型、类型系统、类型检查，你可以认为它们是不同的概念。
+
+- 类型：限制了数据的可用操作、意义、允许的值的集合，总的来说就是**访问限制**与**赋值限制**。在 TypeScript 中即是原始类型、对象类型、函数类型、字面量类型等基础类型，以及类型别名、联合类型等经过类型编程后得到的类型。
+- 类型系统：一组为变量、函数等结构分配、实施类型的规则，通过显式地指定或类型推导来分配类型。同时类型系统也定义了如何判断类型之间的兼容性：在 TypeScript 中即是结构化类型系统。
+- 类型检查：确保**类型遵循类型系统下的类型兼容性**，对于静态类型语言，在**编译时**进行，而对于动态语言，则在**运行时**进行。TypeScript 就是在编译时进行类型检查的。
+
+静态类型与动态类型指的是**类型检查发生的时机**，并不等于这门语言的类型能力。比如 JavaScript 实际上是动态类型语言，它的类型检查发生在运行时。
+
+另外一个静态类型与动态类型的重要区别体现在变量赋值时，如在 TypeScript 中无法给一个声明为 number 的变量使用字符串赋值，因为这个变量在声明时的类型就已经确定了。而在 JavaScript 中则没有这样的限制，你可以随时切换一个变量的类型。
+
+## 类型系统层级
+
+
 
