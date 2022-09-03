@@ -81,23 +81,23 @@ const info = {
 //   };
 // }
 
-interface Tmp {
-  user:
-    | {
-        vip: true
-        expires: string
-      }
-    | {
-        vip: false
-        promotion: string
-      }
-}
+// interface Tmp {
+//   user:
+//     | {
+//         vip: true
+//         expires: string
+//       }
+//     | {
+//         vip: false
+//         promotion: string
+//       }
+// }
 
-declare var tmp: Tmp
+// declare var tmp: Tmp
 
-if (tmp.user.vip) {
-  console.log(tmp.user.expires)
-}
+// if (tmp.user.vip) {
+//   console.log(tmp.user.expires)
+// }
 
 // const foo: (name: string) => number = name => {
 //   return name.length
@@ -130,13 +130,13 @@ function bar(): undefined {
 //   if (bar) {
 //     return String(foo)
 //   } else {
-//     return foo * 599
+//     return foo * 24
 //   }
 // }
 
-// const res1 = func(599) // number
-// const res2 = func(599, true) // string
-// const res3 = func(599, false) // number
+// const res1 = func(24) // number
+// const res2 = func(24, true) // string
+// const res3 = func(24, false) // number
 
 async function asyncFunc(): Promise<void> {}
 
@@ -316,7 +316,7 @@ let unknownVar: unknown
 
 // const element = document.querySelector('#id')!
 
-// const target = [1, 2, 3, 599].find(item => item === 599)!
+// const target = [1, 2, 3, 24].find(item => item === 24)!
 
 // const str: string = 'heora'
 
@@ -378,10 +378,10 @@ let unknownVar: unknown
 
 // interface Foo {
 //   heora: 1
-//   599: 2
+//   24: 2
 // }
 
-// type FooKeys = keyof Foo // 'heora' | 599
+// type FooKeys = keyof Foo // 'heora' | 24
 
 // interface Foo {
 //   propA: number
@@ -471,7 +471,7 @@ interface Foo {
 // function foo(input: string | number) {
 //   if (isString(input)) {
 //     // 类型“number”上不存在属性“replace”
-//     input.replace('linbudu', 'heora')
+//     input.replace('heora', 'heora')
 //   }
 //   if (typeof input === 'number') {
 //   }
@@ -757,10 +757,140 @@ interface Foo {
 // // 报错了！
 // addCNY(CNYCount, USDCount)
 
-declare const tag: unique symbol
+// declare const tag: unique symbol
 
-declare type Tagged<Token> = {
-  readonly [tag]: Token
-}
+// declare type Tagged<Token> = {
+//   readonly [tag]: Token
+// }
 
-type Opaque<Type, Token = unknown> = Type & Tagged<Token>
+// type Opaque<Type, Token = unknown> = Type & Tagged<Token>
+
+// type Result = 'heora' extends string ? 1 : 2
+
+// declare let source: string
+
+// declare let anyType: any
+// declare let neverType: never
+
+// anyType = source
+
+// // 不能将类型“string”分配给类型“never”。
+// neverType = source
+
+// type Result1 = 'heora' extends string ? 1 : 2 // 1
+// type Result2 = 1 extends number ? 1 : 2 // 1
+// type Result3 = true extends boolean ? 1 : 2 // 1
+// type Result4 = { name: string } extends object ? 1 : 2 // 1
+// type Result5 = { name: 'heora' } extends object ? 1 : 2 // 1
+// type Result6 = [] extends object ? 1 : 2 // 1
+
+// type Result7 = 1 extends 1 | 2 | 3 ? 1 : 2 // 1
+// type Result8 = 'he' extends 'heo' | 'heora' | 'he' ? 1 : 2 // 1
+// type Result9 = true extends true | false ? 1 : 2 // 1
+// type Result10 = string extends string | false | number ? 1 : 2 // 1
+
+// type Result11 = 'heora' | 'yueluo' extends string ? 1 : 2 // 1
+// type Result12 = {} | (() => void) | [] extends object ? 1 : 2 // 1
+
+// type Result14 = string extends String ? 1 : 2 // 1
+// type Result15 = String extends {} ? 1 : 2 // 1
+// type Result16 = {} extends object ? 1 : 2 // 1
+// type Result18 = object extends Object ? 1 : 2 // 1
+
+// type Temp = string extends object ? 1 : 2 // 2
+
+// type Result16 = {} extends object ? 1 : 2 // 1
+// type Result18 = object extends {} ? 1 : 2 // 1
+
+// type Result17 = object extends Object ? 1 : 2 // 1
+// type Result20 = Object extends object ? 1 : 2 // 1
+
+// type Result19 = Object extends {} ? 1 : 2 // 1
+// type Result21 = {} extends Object ? 1 : 2 // 1
+
+// type Result22 = Object extends any ? 1 : 2 // 1
+// type Result23 = Object extends unknown ? 1 : 2 // 1
+
+// type Result24 = any extends Object ? 1 : 2 // 1 | 2
+// type Result25 = unknown extends Object ? 1 : 2 // 2
+
+// type Result26 = any extends 'heora' ? 1 : 2 // 1 | 2
+// type Result27 = any extends string ? 1 : 2 // 1 | 2
+// type Result28 = any extends {} ? 1 : 2 // 1 | 2
+// type Result29 = any extends never ? 1 : 2 // 1 | 2
+
+// type Result31 = any extends unknown ? 1 : 2 // 1
+// type Result32 = unknown extends any ? 1 : 2 // 1
+
+// type Result33 = never extends 'heora' ? 1 : 2 // 1
+
+// type Result34 = undefined extends 'heora' ? 1 : 2 // 2
+// type Result35 = null extends 'heora' ? 1 : 2 // 2
+// type Result36 = void extends 'heora' ? 1 : 2 // 2
+
+// type TypeChain = never extends 'heora'
+//   ? 'heora' extends 'heora' | '24'
+//     ? 'heora' | '24' extends string
+//       ? string extends String
+//         ? String extends Object
+//           ? Object extends any
+//             ? any extends unknown
+//               ? unknown extends any
+//                 ? 8
+//                 : 7
+//               : 6
+//             : 5
+//           : 4
+//         : 3
+//       : 2
+//     : 1
+//   : 0
+
+// type VerboseTypeChain = never extends 'heora'
+//   ? 'heora' extends 'heora' | 'yueluo'
+//     ? 'heora' | 'yueluo' extends string
+//       ? string extends {}
+//         ? string extends String
+//           ? String extends {}
+//             ? {} extends object
+//               ? object extends {}
+//                 ? {} extends Object
+//                   ? Object extends {}
+//                     ? object extends Object
+//                       ? Object extends object
+//                         ? Object extends any
+//                           ? Object extends unknown
+//                             ? any extends unknown
+//                               ? unknown extends any
+//                                 ? 8
+//                                 : 7
+//                               : 6
+//                             : 5
+//                           : 4
+//                         : 3
+//                       : 2
+//                     : 1
+//                   : 0
+//                 : -1
+//               : -2
+//             : -3
+//           : -4
+//         : -5
+//       : -6
+//     : -7
+//   : -8
+
+// type Result36 = 1 | 2 | 3 extends 1 | 2 | 3 | 4 ? 1 : 2 // 1
+// type Result37 = 2 | 4 extends 1 | 2 | 3 | 4 ? 1 : 2 // 1
+// type Result38 = 1 | 2 | 5 extends 1 | 2 | 3 | 4 ? 1 : 2 // 2
+// type Result39 = 1 | 5 extends 1 | 2 | 3 | 4 ? 1 : 2 // 2
+
+type Result40 = [number, number] extends number[] ? 1 : 2 // 1
+type Result41 = [number, string] extends number[] ? 1 : 2 // 2
+type Result42 = [number, string] extends (number | string)[] ? 1 : 2 // 1
+type Result43 = [] extends number[] ? 1 : 2 // 1
+type Result44 = [] extends unknown[] ? 1 : 2 // 1
+type Result45 = number[] extends (number | string)[] ? 1 : 2 // 1
+type Result46 = any[] extends number[] ? 1 : 2 // 1
+type Result47 = unknown[] extends number[] ? 1 : 2 // 2
+type Result48 = never[] extends number[] ? 1 : 2 // 1

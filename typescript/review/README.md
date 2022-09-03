@@ -15,7 +15,7 @@
 使用元组能帮助我们进一步提升**数组结构的严谨性**，包括基于位置的类型标注、避免出现越界访问等等。
 
 ```typescript
-const arr7: [name: string, age: number, male?: boolean] = ['heora', 599, true]
+const arr7: [name: string, age: number, male?: boolean] = ['heora', 24, true]
 
 const arr1: string[] = []
 const [ele1, ele2, ...rest] = arr1
@@ -286,13 +286,13 @@ function func(foo: number, bar?: boolean): string | number {
   if (bar) {
     return String(foo)
   } else {
-    return foo * 599
+    return foo * 24
   }
 }
 
-const res1 = func(599) // number
-const res2 = func(599, true) // string
-const res3 = func(599, false) // number
+const res1 = func(24) // number
+const res2 = func(24, true) // string
+const res3 = func(24, false) // number
 ```
 
 TypeScript 中的重载更像是伪重载，**它只有一个具体实现，其重载体现在方法调用的签名上而非具体实现上**。
@@ -650,7 +650,7 @@ foo.func?.().prop?.toFixed()
 ```typescript
 const element = document.querySelector('#id')!
 
-const target = [1, 2, 3, 599].find(item => item === 599)!     
+const target = [1, 2, 3, 24].find(item => item === 24)!     
 ```
 
 
@@ -956,7 +956,7 @@ function isString(input: unknown): boolean {
 function foo(input: string | number) {
   if (isString(input)) {
     // 类型“string | number”上不存在属性“replace”。
-    input.replace('linbudu', 'heora')
+    input.replace('yueluo', 'heora')
   }
   if (typeof input === 'number') {
   }
@@ -976,7 +976,7 @@ function isString(input: unknown): input is string {
 function foo(input: string | number) {
   if (isString(input)) {
     // 类型“string | number”上不存在属性“replace”。
-    input.replace('linbudu', 'heora')
+    input.replace('yueluo', 'heora')
   }
   if (typeof input === 'number') {
   }
@@ -999,7 +999,7 @@ function isString(input: unknown): input is number {
 function foo(input: string | number) {
   if (isString(input)) {
     // 类型“number”上不存在属性“replace”
-    input.replace('linbudu', 'heora')
+    input.replace('yueluo', 'heora')
   }
   if (typeof input === 'number') {
   }
@@ -1458,5 +1458,265 @@ addCNY(CNYCount, USDCount)
 
 ## 类型系统层级
 
+类型层级实际上指的是，**TypeScript 中所有类型的兼容关系，从最上面一层的 any 类型，到最底层的 never 类型。**
 
+### 类型兼容性
+
+使用条件类型来判断类型兼容性
+
+```typescript
+type Result = 'heora' extends string ? 1 : 2
+```
+
+通过赋值来进行兼容性检查
+
+```typescript
+declare let source: string
+
+declare let anyType: any
+declare let neverType: never
+
+anyType = source
+
+// 不能将类型“string”分配给类型“never”。
+neverType = source
+```
+
+### 原始类型
+
+```typescript
+type Result1 = 'heora' extends string ? 1 : 2 // 1
+type Result2 = 1 extends number ? 1 : 2 // 1
+type Result3 = true extends boolean ? 1 : 2 // 1
+type Result4 = { name: string } extends object ? 1 : 2 // 1
+type Result5 = { name: 'heora' } extends object ? 1 : 2 // 1
+type Result6 = [] extends object ? 1 : 2 // 1
+```
+
+一个基础类型和它们对应的字面量类型必定存在父子类型关系。
+
+object 代表**所有非原始类型的类型，即数组、对象与函数类型**，`[]`这个字面量类型也可以被认为是 object 的字面量类型。
+
+**字面量类型 < 对应的原始类型**。
+
+### 向上探索
+
+#### 联合类型
+
+在联合类型中，只需要符合其中一个类型，我们就可以认为实现了这个联合类型：
+
+```typescript
+type Result7 = 1 extends 1 | 2 | 3 ? 1 : 2 // 1
+type Result8 = 'he' extends 'heo' | 'heora' | 'he' ? 1 : 2 // 1
+type Result9 = true extends true | false ? 1 : 2 // 1
+type Result10 = string extends string | false | number ? 1 : 2 // 1
+```
+
+**字面量类型 < 包含此字面量类型的联合类型，原始类型 < 包含此原始类型的联合类型**
+
+```typescript
+type Result11 = 'heora' | 'yueluo' extends string ? 1 : 2 // 1
+type Result12 = {} | (() => void) | [] extends object ? 1 : 2 // 1
+```
+
+**同一基础类型的字面量联合类型 < 此基础类型**
+
+最终结论：**字面量类型 < 包含此字面量类型的联合类型（同一基础类型） < 对应的原始类型**
+
+#### 装箱类型
+
+```typescript
+type Result14 = string extends String ? 1 : 2 // 1
+type Result15 = String extends {} ? 1 : 2 // 1
+type Result16 = {} extends object ? 1 : 2 // 1
+type Result18 = object extends Object ? 1 : 2 // 1
+```
+
+**在结构化类型系统的比较下，String 会被认为是 `{}` 的子类型**。
+
+这里从 `string < {} < object` 看起来构建了一个类型链，但实际上 `string extends object` 并不成立：
+
+```typescript
+type Temp = string extends object ? 1 : 2 // 2
+```
+
+由于结构化类型系统这一特性的存在，我们能得到一些看起来矛盾的结论：
+
+```typescript
+type Result16 = {} extends object ? 1 : 2 // 1
+type Result18 = object extends {} ? 1 : 2 // 1
+
+type Result17 = object extends Object ? 1 : 2 // 1
+type Result20 = Object extends object ? 1 : 2 // 1
+
+type Result19 = Object extends {} ? 1 : 2 // 1
+type Result21 = {} extends Object ? 1 : 2 // 1
+```
+
+这里的 `{} extends `和 `extends {}` 实际上是两种完全不同的比较方式。
+
+`{} extends object` 和 `{} extends Object` 意味着， `{}` 是 object 和 Object 的字面量类型，是从**类型信息的层面**出发的，即**字面量类型在基础类型之上提供了更详细的类型信息**。
+
+`object extends {}` 和 `Object extends {}` 则是从**结构化类型系统的比较**出发的，即 `{}` 作为一个一无所有的空对象，几乎可以被视作是所有类型的基类。
+
+`object extends Object` 和 `Object extends object` 这两者的情况就要特殊一些，它们是因为“系统设定”的问题，Object 包含了所有除 Top Type 以外的类型（基础类型、函数类型等），object 包含了所有非原始类型的类型，即数组、对象与函数类型。
+
+类型信息层面出发，结论为：**原始类型 < 原始类型对应的装箱类型 < Object 类型。**
+
+#### Top Type
+
+any 与 unknown 是系统中设定为 Top Type 的两个类型。Object 类型自然会是 any 与 unknown 类型的子类型。
+
+```typescript
+type Result22 = Object extends any ? 1 : 2 // 1
+type Result23 = Object extends unknown ? 1 : 2 // 1
+```
+
+```typescript
+type Result24 = any extends Object ? 1 : 2 // 1 | 2
+type Result25 = unknown extends Object ? 1 : 2 // 2
+```
+
+```typescript
+type Result26 = any extends 'heora' ? 1 : 2 // 1 | 2
+type Result27 = any extends string ? 1 : 2 // 1 | 2
+type Result28 = any extends {} ? 1 : 2 // 1 | 2
+type Result29 = any extends never ? 1 : 2 // 1 | 2
+```
+
+any 代表了任何可能的类型，当我们使用 `any extends` 时，它包含了“**让条件成立的一部分**”，以及“**让条件不成立的一部分**”。
+
+在 TypeScript 内部代码的条件类型处理中，如果接受判断的是 any，那么会直接**返回条件类型结果组成的联合类型**。
+
+any 类型和 unknown 类型的比较也是互相成立
+
+```typescript
+type Result31 = any extends unknown ? 1 : 2 // 1
+type Result32 = unknown extends any ? 1 : 2 // 1
+```
+
+结论为：**Object < any / unknown**。
+
+### 向下探索
+
+#### never
+
+never 类型是任何类型的子类型，当然也包括字面量类型：
+
+```typescript
+type Result33 = never extends 'heora' ? 1 : 2 // 1
+type Result34 = undefined extends 'heora' ? 1 : 2 // 2
+type Result35 = null extends 'heora' ? 1 : 2 // 2
+type Result36 = void extends 'heora' ? 1 : 2 // 2
+```
+
+在 TypeScript 中，void、undefined、null 都是**切实存在、有实际意义的类型**。
+
+结论：**never < 字面量类型**。
+
+### 类型层级链
+
+结合我们上面得到的结论，可以书写出这样一条类型层级链：
+
+```typescript
+// 8
+type TypeChain = never extends 'heora'
+  ? 'heora' extends 'heora' | '24'
+    ? 'heora' | '24' extends string
+      ? string extends String
+        ? String extends Object
+          ? Object extends any
+            ? any extends unknown
+              ? unknown extends any
+                ? 8
+                : 7
+              : 6
+            : 5
+          : 4
+        : 3
+      : 2
+    : 1
+  : 0
+```
+
+其返回的结果为 8 ，也就意味着所有条件均成立。
+
+结合上面的结构化类型系统与类型系统设定，我们还可以构造出一条更长的类型层级链：
+
+```typescript
+
+type VerboseTypeChain = never extends 'heora'
+  ? 'heora' extends 'heora' | 'yueluo'
+    ? 'heora' | 'yueluo' extends string
+      ? string extends {}
+        ? string extends String
+          ? String extends {}
+            ? {} extends object
+              ? object extends {}
+                ? {} extends Object
+                  ? Object extends {}
+                    ? object extends Object
+                      ? Object extends object
+                        ? Object extends any
+                          ? Object extends unknown
+                            ? any extends unknown
+                              ? unknown extends any
+                                ? 8
+                                : 7
+                              : 6
+                            : 5
+                          : 4
+                        : 3
+                      : 2
+                    : 1
+                  : 0
+                : -1
+              : -2
+            : -3
+          : -4
+        : -5
+      : -6
+    : -7
+  : -8
+```
+
+结果仍然为 8 。
+
+### 其他比较场景
+
+对于基类和派生类，通常情况下**派生类会完全保留基类的结构**，而只是自己新增新的属性与方法。在结构化类型的比较下，其类型自然会存在子类型关系。更何况派生类本身就是 extends 基类得到的。
+
+对于联合类型地类型层级比较，我们只需要比较**一个联合类型是否可被视为另一个联合类型的子集**，即**这个联合类型中所有成员在另一个联合类型中都能找到**。
+
+```typescript
+type Result36 = 1 | 2 | 3 extends 1 | 2 | 3 | 4 ? 1 : 2 // 1
+type Result37 = 2 | 4 extends 1 | 2 | 3 | 4 ? 1 : 2 // 1
+type Result38 = 1 | 2 | 5 extends 1 | 2 | 3 | 4 ? 1 : 2 // 2
+type Result39 = 1 | 5 extends 1 | 2 | 3 | 4 ? 1 : 2 // 2
+```
+
+数组和元组是一个比较特殊的部分
+
+```typescript
+type Result40 = [number, number] extends number[] ? 1 : 2 // 1
+type Result41 = [number, string] extends number[] ? 1 : 2 // 2
+type Result42 = [number, string] extends (number | string)[] ? 1 : 2 // 1
+type Result43 = [] extends number[] ? 1 : 2 // 1
+type Result44 = [] extends unknown[] ? 1 : 2 // 1
+type Result45 = number[] extends (number | string)[] ? 1 : 2 // 1
+type Result46 = any[] extends number[] ? 1 : 2 // 1
+type Result47 = unknown[] extends number[] ? 1 : 2 // 2
+type Result48 = never[] extends number[] ? 1 : 2 // 1
+```
+
+* 40，这个元组类型可以确定其内部成员全部为 number 类型，因此是 `number[]` 的子类型。 41 中混入了别的类型元素，因此认为不成立。
+* 42 混入了别的类型，但其判断条件为 `(number | string)[]` ，即其成员需要为 number 或 string 类型。
+* 43 的成员是未确定的，等价于 `never[] extends number[]`，44 同理。
+* 45 类似于41，即可能存在的元素类型是符合要求的。
+* 46、47，unknown 可以再次赋值为任意其它类型，但只能赋值给 any 与 unknown 类型的变量。
+* 8，类似于 43、44，由于 never 类型本就位于最下方，这里显然成立。`never[]` 类型的数组也就无法再填充值了。
+
+<img src="./images/type_level.png" />
+
+## 条件类型与 infer
 
