@@ -1,38 +1,36 @@
-const context = []
+let Listener
 
-function getCurrentObserver() {
-  return context[context.length - 1]
-}
-
-export function createSignal(value) {
-  const subscribles = new Set()
-
-  const read = () => {
-    const current = getCurrentObserver()
-    if (current) subscribles.add(current)
-
-    return value
+function useState(value) {
+  const state = {
+    value,
+    observers: []
   }
 
-  const write = nextValue => {
-    value = nextValue
-    for (const sub of subscribles) {
-      sub()
+  const read = () => {
+    if (Listener) {
+      Listener.sources.push(this)
+      state.observers.push(Listener)
     }
+    return state.value
+  }
+
+  const write = value => {
+    state.value = value
+
+    for (const observer of state.observers) {
+      observer()
+    }
+
+    return value
   }
 
   return [read, write]
 }
 
-export function createEffect(fn) {
-  const execute = () => {
-    context.push(execute)
-    try {
-      fn()
-    } catch (error) {
-      context.pop()
-    }
-  }
+const [usernmae, setUsernmae] = useState('heora')
 
-  execute()
-}
+console.log(usernmae())
+
+setUsernmae('yueluo')
+
+console.log(usernmae())
