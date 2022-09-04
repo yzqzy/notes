@@ -1720,3 +1720,372 @@ type Result48 = never[] extends number[] ? 1 : 2 // 1
 
 ## 条件类型与 infer
 
+### 条件类型
+
+条件类型的语法类似于我们平时常用的三元表达式，它的基本语法如下
+
+```
+TypeA extends TypeB ? Result1 : Result2
+```
+
+条件类型中使用 extends 判断类型的兼容性，而非判断类型的全等性。
+
+在类型层面中，对于能够进行赋值操作的两个变量，我们**并不需要它们的类型完全相等，只需要具有兼容性**，而两个完全相同的类型，其 extends 自然也是成立的。
+
+条件类型绝大部分场景下会和泛型一起使用：
+
+```typescript
+type LiteralType<T> = T extends string ? 'string' : 'other'
+
+type Res1 = LiteralType<'heora'> // "string"
+type Res2 = LiteralType<24> // "other"
+```
+
+同三元表达式可以嵌套一样，条件类型中也常见多层嵌套
+
+```typescript
+export type LiteralType<T> = T extends string
+  ? 'string'
+  : T extends number
+  ? 'number'
+  : T extends boolean
+  ? 'boolean'
+  : T extends null
+  ? 'null'
+  : T extends undefined
+  ? 'undefined'
+  : never
+
+type Res1 = LiteralType<'heora'> // "string"
+type Res2 = LiteralType<24> // "number"
+```
+
+条件类型可以用来对复杂的类型进行比较
+
+```typescript
+type Func = (...args: any[]) => any
+
+type FunctionConditionType<T extends Func> = T extends (
+  ...args: any[]
+) => string
+  ? 'A string return func!'
+  : 'A non-string return func!'
+
+//  "A string return func!"
+type StringResult = FunctionConditionType<() => string>
+// 'A non-string return func!';
+type NonStringResult1 = FunctionConditionType<() => boolean>
+// 'A non-string return func!';
+type NonStringResult2 = FunctionConditionType<() => number>
+```
+
+上面讲到的这些条件类型，本质上就是在泛型基于调用填充类型信息的基础上，新增了**基于类型信息的条件判断**。
+
+### infer 关键字
+
+TypeScript 中支持通过 infer 关键字来**在条件类型中提取类型的某一部分信息**
+
+```typescript
+type Func = (...args: any[]) => any
+
+type FunctionReturnType<T extends Func> = T extends (...args: any[]) => infer R
+  ? R
+  : never
+```
+
+当传入的类型参数满足 `T extends (...args: any[] ) => infer R` 这样一个结构，返回 `infer R `位置的值，即 R。否则，返回 never。
+
+`infer`是 `inference` 的缩写，意为推断，如 `infer R` 中 `R` 就表示 **待推断的类型**。 `infer` 只能在条件类型中使用，因为我们实际上仍然需要**类型结构是一致的**，比如上例中类型信息需要是一个函数类型结构，我们才能提取出它的返回值类型。如果连函数类型都不是，那我只会给你一个 never 。
+
+这里的**类型结构**当然并不局限于函数类型结构，还可以是数组：
+
+```typescript
+type Swap<T extends any[]> = T extends [infer A, infer B] ? [B, A] : T
+
+type SwapResult1 = Swap<[1, 2]> // 符合元组结构，首尾元素替换[2, 1]
+type SwapResult2 = Swap<[1, 2, 3]> // 不符合结构，没有发生替换，仍是 [1, 2, 3]
+```
+
+由于我们声明的结构是一个仅有两个元素的元组，因此三个元素的元组就被认为是不符合类型结构了。
+
+我们可以使用 rest 操作符来处理任意长度的情况：
+
+```typescript
+// 提取首尾两个
+type ExtractStartAndEnd<T extends any[]> = T extends [
+  infer start,
+  ...any[],
+  infer end
+]
+  ? [start, end]
+  : T
+
+// 调换首尾两个
+type SwapStartAndEnd<T extends any[]> = T extends [
+  infer start,
+  ...infer args,
+  infer end
+]
+  ? [end, ...args, start]
+  : T
+
+// 调换开头两个
+type SwapFirstTwo<T extends any[]> = T extends [
+  infer start1,
+  infer start2,
+  ...infer args
+]
+  ? [start2, start1, ...args]
+  : T
+```
+
+infer 可以和 rest 操作符一样同时提取一组不定长的类型。上面的输入输出仍然都是数组，实际上我们完全可以进行结构层面的转换。
+
+比如从数组到联合类型：
+
+```typescript
+type ArrayItemType<T> = T extends Array<infer ElementType> ? ElementType : never
+
+type ArrayItemTypeResult1 = ArrayItemType<[]> // never
+type ArrayItemTypeResult2 = ArrayItemType<string[]> // string
+type ArrayItemTypeResult3 = ArrayItemType<[string, number]> // string | number
+```
+
+除了数组，infer 结构也可以是接口：
+
+```typescript
+// 提取对象的属性类型
+type PropType<T, K extends keyof T> = T extends { [Key in K]: infer R }
+  ? R
+  : never
+
+type PropTypeResult1 = PropType<{ name: string }, 'name'> // string
+type PropTypeResult2 = PropType<{ name: string; age: number }, 'name' | 'age'> // string | number
+```
+
+```typescript
+// 反转键名与键值
+type ReverseKeyValue<T extends Record<string, unknown>> = T extends Record<
+  infer K,
+  infer V
+>
+  ? Record<V & string, K>
+  : never
+
+type ReverseKeyValueResult1 = ReverseKeyValue<{ key: 'value' }> // { "value": "key" }
+```
+
+infer 结构还可以是 Promise 结构
+
+```typescript
+type PromiseValue<T> = T extends Promise<infer V> ? V : T
+
+type PromiseValueResult1 = PromiseValue<Promise<number>> // number
+type PromiseValueResult2 = PromiseValue<number> // number
+```
+
+就像条件类型可以嵌套一样，infer 关键字也经常被使用在嵌套的场景中，包括对类型结构深层信息地提取，以及对提取到类型信息的筛选等。比如上面的 PromiseValue，如果传入了一个嵌套的 Promise 类型就失效了：
+
+```typescript
+type PromiseValueResult3 = PromiseValue<Promise<Promise<boolean>>> // Promise<boolean>
+```
+
+这种时候我们就需要进行嵌套地提取：
+
+```typescript
+type PromiseValue<T> = T extends Promise<infer V>
+  ? V extends Promise<infer N>
+    ? N
+    : V
+  : T
+```
+
+这时可以使用递归来处理任意嵌套深度：
+
+```typescript
+type PromiseValue<T> = T extends Promise<infer V> ? PromiseValue<V> : T
+```
+
+条件类型在泛型的基础上支持了基于类型信息的动态条件判断，但无法直接消费填充类型信息，而 infer 关键字则为它补上了这一部分的能力，让我们可以进行更多奇妙的类型操作。
+
+### 分布式条件类型
+
+**分布式条件类型（Distributive Conditional Type），也称条件类型的分布式特性**，是条件类型在满足一定情况下会执行的逻辑。
+
+```typescript
+type Condition<T> = T extends 1 | 2 | 3 ? T : never
+
+// 1 | 2 | 3
+type Res1 = Condition<1 | 2 | 3 | 4 | 5>
+
+// never
+type Res2 = 1 | 2 | 3 | 4 | 5 extends 1 | 2 | 3 ? 1 | 2 | 3 | 4 | 5 : never
+```
+
+这个例子在某些地方似乎和我们学习的知识并不一样？
+
+仔细观察这两个类型别名的差异你会发现，唯一的差异就是在 Res1 中，进行判断的联合类型被作为泛型参数传入给另一个独立的类型别名，而 Res2 中直接对这两者进行判断。
+
+记住第一个差异：**是否通过泛型参数传入**。我们再看一个例子：
+
+```typescript
+type Naked<T> = T extends boolean ? 'Y' : 'N'
+type Wrapped<T> = [T] extends [boolean] ? 'Y' : 'N'
+
+// "N" | "Y"
+type Res3 = Naked<number | boolean>
+
+// "N"
+type Res4 = Wrapped<number | boolean>
+```
+
+现在我们都是通过泛型参数传入了，但是第一个还是个联合类型。第二组的成员有可能是数字类型，显然不兼容于 `[boolean]`。
+
+仔细观察这两个例子你会发现，它们唯一的差异是条件类型中的**泛型参数是否被数组包裹**了。
+
+同时，你会发现在 Res3 的判断中，其联合类型的两个分支，恰好对应于分别使用 number 和 boolean 去作为条件类型判断时的结果。
+
+把上面的线索理一下，其实我们就大致得到了条件类型分布式起作用的条件。
+
+首先，你的类型参数需要是一个联合类型 。其次，类型参数需要通过泛型参数的方式传入，而不能直接在外部进行判断（如 Res2 中）。最后，条件类型中的泛型参数不能被包裹。
+
+条件类型分布式特性会产生的效果也很明显了，即将这个联合类型拆开来，每个分支分别进行一次条件类型判断，再将最后的结果合并起来。官方解释：
+
+> **对于属于裸类型参数的检查类型，条件类型会在实例化时期自动分发到联合类型上。**（***Conditional types in which the checked type is a naked type parameter are called distributive conditional types. Distributive conditional types are automatically distributed over union types during instantiation.***）
+
+这里的自动分发，我们可以这么理解：
+
+```typescript
+type Naked<T> = T extends boolean ? 'Y' : 'N'
+
+// (number extends boolean ? "Y" : "N") | (boolean extends boolean ? "Y" : "N")
+// "N" | "Y"
+type Res3 = Naked<number | boolean>
+```
+
+这里的裸类型参数，其实指的就是泛型参数是否完全裸露，我们上面使用数组包裹泛型参数只是其中一种方式，还可以这么做：
+
+```typescript
+type NoDistribute<T> = T & {}
+
+type Wrapped<T> = NoDistribute<T> extends [boolean] ? 'Y' : 'N'
+```
+
+需要注意的是，我们并不是只会通过裸露泛型参数，来确保分布式特性能够发生。
+在某些情况下，我们也会需要包裹泛型参数来禁用掉分布式特性。
+
+最常见的场景也许还是联合类型的判断，即我们不希望进行联合类型成员的分布判断，而是希望直接判断这两个联合类型的兼容性判断，就像在最初的 Res2 中那样：
+
+```typescript
+type CompareUnion<T, U> = [T] extends [U] ? true : false
+
+type CompareRes1 = CompareUnion<1 | 2, 1 | 2 | 3> // true
+type CompareRes2 = CompareUnion<1 | 2, 1> // false
+```
+
+通过将参数与条件都包裹起来的方式，我们对联合类型的比较就变成了数组成员类型的比较，在此时就会严格遵守类型层级一文中联合类型的类型判断。
+
+另外一种情况则是，当我们想判断一个类型是否为 never 时，也可以通过类似的手段：
+
+```typescript
+type IsNever<T> = T extends never ? true : false
+
+type IsNeverRes1 = IsNever<never> // never
+type IsNeverRes2 = IsNever<'heora'> // false
+```
+
+```typescript
+type IsNever<T> = [T] extends [never] ? true : false
+
+type IsNeverRes1 = IsNever<never> // true
+type IsNeverRes2 = IsNever<'heora'> // false
+```
+
+这里的原因并不是因为分布式条件类型。当条件类型的判断参数为 any，会直接返回条件类型两个结果的联合类型。在这里其实类似，当通过泛型传入的参数为 never，则会直接返回 never。
+
+这里的 never 与 any 的情况并不完全相同，any 在直接**作为判断参数时**、**作为泛型参数时**都会产生这一效果：
+
+```typescript
+// 直接使用，返回联合类型
+type Tmp1 = any extends string ? 1 : 2 // 1 | 2
+
+type Tmp2<T> = T extends string ? 1 : 2
+// 通过泛型参数传入，同样返回联合类型
+type Tmp2Res = Tmp2<any> // 1 | 2
+
+// 如果判断条件是 any，那么仍然会进行判断
+type Special1 = any extends any ? 1 : 2 // 1
+
+type Special2<T> = T extends any ? 1 : 2
+type Special2Res = Special2<any> // 1
+```
+
+ never 仅在作为泛型参数时才会产生：
+
+```typescript
+// 直接使用，仍然会进行判断
+type Tmp3 = never extends string ? 1 : 2 // 1
+
+type Tmp4<T> = T extends string ? 1 : 2
+// 通过泛型参数传入，会跳过判断
+type Tmp4Res = Tmp4<never> // never
+
+// 如果判断条件是 never，还是仅在作为泛型参数时才跳过判断
+type Special3 = never extends never ? 1 : 2 // 1
+
+type Special4<T> = T extends never ? 1 : 2
+type Special4Res = Special4<never> // never
+```
+
+这里的 any、never 两种情况都不会实际地执行条件类型，我们通过包裹的方式可以让他能够去执行判断。
+
+通过使用分布式条件类型，我们能轻易地进行集合之间的运算，比如交集：
+
+```typescript
+type Intersection<A, B> = A extends B ? A : never
+
+type IntersectionRes = Intersection<1 | 2 | 3, 2 | 3 | 4> // 2 | 3
+```
+
+当联合类型的组成是一个对象的属性名（`keyof IObject`），此时对这样的两个类型集合进行处理，得到属性名的交集，那我们就可以在此基础上获得两个对象类型结构的交集。
+
+除此以外，还有许多相对复杂的场景可以降维到类型集合，即联合类型的层面，然后我们就可以使用分布式条件类型进行各种处理。
+
+### IsAny、IsUnknown
+
+```typescript
+type IsNever<T> = [T] extends [never] ? true : false
+```
+
+```typescript
+type IsAny<T> = 0 extends 1 & T ? true : false
+```
+
+作为代表任意类型的 any ，如果交叉类型的其中一个成员是 any，此时最终类型必然是 any 。
+
+```typescript
+type IsUnknown<T> = IsNever<T> extends false
+  ? T extends unknown
+    ? unknown extends T
+      ? IsAny<T> extends false
+        ? true
+        : false
+      : false
+    : false
+  : false
+```
+
+首先过滤掉 never 类型，然后对于 `T extends unknown` 和 `unknown extends T`，只有 any 和 unknown 类型能够同时符合，再过滤掉 any，那肯定就只剩下 unknown 类型。
+
+```typescript
+type IsUnknown<T> = unknown extends T
+  ? IsAny<T> extends true
+    ? false
+    : true
+  : false
+```
+
+利用 `unknown extends T` 时仅有 T 为 any 或 unknown 时成立这一点，我们可以直接将类型收窄到 any 与 unknown，然后在去掉 any 类型时，剩下的就是 unknown 类型。
+
+## 内置工具类型
+

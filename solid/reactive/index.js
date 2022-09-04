@@ -10,12 +10,12 @@ export function createSignal(value) {
   const read = () => {
     const current = getCurrentObserver()
     if (current) subscribles.add(current)
+
     return value
   }
 
   const write = nextValue => {
     value = nextValue
-
     for (const sub of subscribles) {
       sub()
     }
