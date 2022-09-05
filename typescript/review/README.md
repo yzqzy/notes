@@ -2089,3 +2089,376 @@ type IsUnknown<T> = unknown extends T
 
 ## 内置工具类型
 
+工具类型分类
+
+* 属性修饰工具类型
+  * 对属性的修饰，包括对象属性和数组元素的可选/必选、只读/可写。
+* 结构工具类型
+  * 对既有类型的裁剪、拼接、转换等，比如使用对一个对象类型裁剪得到一个新的对象类型，将联合类型结构转换到交叉类型结构。
+* 集合工具类型
+  * 对集合（即联合类型）的处理，即交集、并集、差集、补集。
+* 模式匹配工具类型
+  * 基于 infer 的模式匹配，即对一个既有类型特定位置类型的提取，比如提取函数类型签名中的返回值类型。
+* 模板字符串工具类型
+  * 模板字符串专属的工具类型，比如将一个对象类型中的所有属性名转换为大驼峰的形式。
+
+### 属性修饰工具类型
+
+这一部分的工具类型主要使用**属性修饰**、**映射类型**与**索引类型**。
+
+```typescript
+type Partial<T> = {
+  [P in keyof T]?: T[P]
+}
+
+type Required<T> = {
+  [P in keyof T]-?: T[P]
+}
+
+type Readonly<T> = {
+  readonly [P in keyof T]: T[P]
+}
+```
+
+Partial 与 Required 可以认为是一对工具类型，它们的功能是相反的。
+
+在实现上，它们的唯一差异是在索引类型签名处的可选修饰符，Partial 是 `?`，即标记属性为可选，而 Required 则是 `-?`，相当于在原本属性上如果有 `?` 这个标记，则移除它。
+
+ TypeScript 中并没有提供 Readonly 的另一半工具类型，我们可以自己实现它。
+
+```typescript
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P]
+}
+```
+
+现在我们了已经了解 Partial、Readonly 这一类属性修饰的工具类型，不妨想想它们是否能满足我们的需要？
+
+假设场景逐渐开始变得复杂，比如以下这些情况：
+
+* 现在的属性修饰是浅层的，如果我想将**嵌套在里面的对象类型**也进行修饰，需要怎么改进？
+* 现在的属性修饰是全量的，如果我只想**修饰部分属性**呢？这里的部分属性，可能是**基于传入已知的键名**来确定（比如属性a、b），也可能是**基于属性类型**来确定(比如所有函数类型的值)？
+
+### 结构工具类型
+
+这一部分的工具类型主要使用**条件类型**以及**映射类型**、**索引类型**。
+
+结构工具类型可以分为两类，**结构声明**和**结构处理**。
+
+结构声明工具类型即快速声明一个结构，比如内置类型中的 Record：
+
+```typescript
+type Record<K extends keyof any, T> = {
+  [P in K]: T
+}
+```
+
+其中，`K extends keyof any` 即为键的类型，这里使用 `extends keyof any` 标明，传入的 K 可以是单个类型，也可以是联合类型，而 T 即为属性的类型。
+
+```typescript
+// 键名均为字符串，键值类型未知
+type Record1 = Record<string, unknown>
+// 键名均为字符串，键值类型任意
+type Record2 = Record<string, any>
+// 键名为字符串或数字，键值类型任意
+type Record3 = Record<string | number, any>
+```
+
+其中，`Record<string, unknown>` 和 `Record<string, any>` 是日常使用较多的形式，通常我们使用这两者来代替 object 。
+
+
+在一些工具类库源码中其实还存在类似的结构声明工具类型，如：
+
+```typescript
+type Dictionary<T> = {
+  [index: string]: T
+}
+
+type NumericDictionary<T> = {
+  [index: number]: T
+}
+```
+
+Dictionary （字典）结构只需要一个作为属性类型的泛型参数即可。
+
+
+
+
+对于结构处理工具类型，在 TypeScript 中主要是 Pick、Omit 。
+
+```typescript
+type Pick<T, K extends keyof T> = {
+  [P in K]: T[P]
+}
+
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+```
+
+首先来看 Pick，它接受两个泛型参数，T 即是我们会进行结构处理的原类型（一般是对象类型），而 K 则被约束为 T 类型的键名联合类型。
+
+```typescript
+interface Foo {
+  name: string
+  age: number
+  job: string
+}
+
+type PickedFoo = Pick<Foo, 'age' | 'job'>
+```
+
+然后 Pick 会将传入的联合类型作为需要保留的属性，使用这一联合类型配合映射类型，即上面的例子等价于：
+
+```typescript
+type Pick<T> = {
+  [P in 'name' | 'age']: T[P]
+}
+```
+
+联合类型的成员会被依次映射，并通过索引类型访问来获取到它们原本的类型。
+
+**Pick 是保留这些传入的键**，比如从一个庞大的结构中选择少数字段保留，需要的是这些少数字段，而 **Omit 则是移除这些传入的键**，也就是从一个庞大的结构中剔除少数字段，需要的是剩余的多数部分。
+
+```typescript
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+```
+
+Omit 是基于 Pick 实现的，这也是 TypeScript 中成对工具类型的另一种实现方式。
+
+上面的 Partial 与 Required 使用类似的结构，**在关键位置使用一个相反操作来实现反向**，而这里的 Omit 类型则是基于 Pick 类型实现，也就是**反向工具类型基于正向工具类型实现**。
+
+
+**思考**
+
+* Pick 和 Omit 是基于键名的，如果我们需要**基于键值类型**呢？比如仅对函数类型的属性？
+
+* 除了将一个对象结构拆分为多个子结构外，对这些子结构的**互斥处理**也是结构工具类型需要解决的问题之一。
+
+  * 互斥处理指的是，假设你的对象存在三个属性 A、B、C ，其中 A 与 C 互斥，即 A 存在时不允许 C 存在。而 A 与 B 绑定，即 A 存在时 B 也必须存在，A 不存在时 B 也不允许存在。此时应该如何实现？
+
+  
+
+Pick 会约束第二个参数的联合类型来自于对象属性，而 Omit 并没有这么要求。
+
+```typescript
+type Omit1<T, K> = Pick<T, Exclude<keyof T, K>>
+type Omit2<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
+// 这里就不能用严格 Omit 了
+declare function combineSpread<T1, T2>(
+  obj: T1,
+  otherObj: T2,
+  rest: Omit1<T1, keyof T2>
+): void
+
+type Point3d = { x: number; y: number; z: number }
+
+declare const p1: Point3d
+
+// 能够检测出错误，rest 中缺少了 y
+combineSpread(p1, { x: 10 }, { z: 2 })
+```
+
+这里我们使用 `keyof Obj2` 去剔除 Obj1，此时如果声明约束反而不符合预期。
+
+### 集合工具类型
+
+这一部分的工具类型主要使用条件类型、条件类型分布式特性。
+
+内置工具类型中提供了交集与差集的实现：
+
+```typescript
+type Extract<T, U> = T extends U ? T : never
+
+type Exclude<T, U> = T extends U ? never : T
+```
+
+当 T、U 都是联合类型（视为一个集合）时，T 的成员会依次被拿出来进行 `extends U ? T1 : T2 `的计算，然后将最终的结果再合并成联合类型。
+
+比如对于交集 Extract ，其运行逻辑是这样的：
+
+```typescript
+type AExtractB = Extract<1 | 2 | 3, 1 | 2 | 4> // 1 | 2
+
+type _AExtractB =
+  | (1 extends 1 | 2 | 4 ? 1 : never) // 1
+  | (2 extends 1 | 2 | 4 ? 2 : never) // 2
+  | (3 extends 1 | 2 | 4 ? 3 : never) // never
+```
+
+差集 Exclude 也是类似，但需要注意的是，差集存在相对的概念，即 A 相对于 B 的差集与 B 相对于 A 的差集并不一定相同，而交集则一定相同。
+
+```typescript
+type SetA = 1 | 2 | 3 | 5
+type SetB = 0 | 1 | 2 | 4
+
+type AExcludeB = Exclude<SetA, SetB> // 3 | 5
+type BExcludeA = Exclude<SetB, SetA> // 0 | 4
+
+type _AExcludeB =
+  | (1 extends 0 | 1 | 2 | 4 ? never : 1) // never
+  | (2 extends 0 | 1 | 2 | 4 ? never : 2) // never
+  | (3 extends 0 | 1 | 2 | 4 ? never : 3) // 3
+  | (5 extends 0 | 1 | 2 | 4 ? never : 5) // 5
+
+type _BExcludeA =
+  | (0 extends 1 | 2 | 3 | 5 ? never : 0) // 0
+  | (1 extends 1 | 2 | 3 | 5 ? never : 1) // never
+  | (2 extends 1 | 2 | 3 | 5 ? never : 2) // never
+  | (4 extends 1 | 2 | 3 | 5 ? never : 4) // 4
+```
+
+除了差集和交集，我们也可以很容易实现并集与补集：
+
+```typescript
+// 并集
+type Concurrence<A, B> = A | B
+
+// 交集
+type Intersection<A, B> = A extends B ? A : never
+
+// 差集
+type Difference<A, B> = A extends B ? never : A
+
+// 补集
+type Complement<A, B extends A> = Difference<A, B>
+```
+
+补集基于差集实现，我们只需要约束**集合 B 为集合 A 的子集**即可。
+
+内置工具类型中还有一个场景比较明确的集合工具类型：
+
+```typescript
+type NonNullable<T> = T extends null | undefined ? never : T
+
+type _NonNullable<T> = Difference<T, null | undefined>
+```
+
+它的本质就是集合 T 相对于 `null | undefined` 的差集，因此我们可以用之前的差集来进行实现。
+
+> 联合类型中会自动合并相同的元素，因此我们可以默认这里指的类型集合全部都是类似 Set 那样的结构，不存在重复元素。
+
+**思考：**
+
+* 目前为止我们的集合类型都停留在一维的层面，即联合类型之间的集合运算。如果现在我们要处理**对象类型结构的集合运算**呢？
+* 在处理对象类型结构运算时，可能存在不同的需求，比如合并时，我们可能希望**保留原属性或替换原属性**，可能希望**替换原属性的同时并不追加新的属性**进来（即仅使用新的对象类型中的属性值覆盖原本对象类型中的同名属性值），此时要如何灵活地处理这些情况？
+
+### 模式匹配工具类型
+
+这一部分的工具类型主要使用**条件类型**与 **infer 关键字**。
+
+ infer 其实代表了一种 **模式匹配（pattern matching）** 的思路，如正则表达式、Glob 中等都体现了这一概念。
+
+首先是对函数类型签名的模式匹配：
+
+```typescript
+type FunctionType = (...args: any) => any
+
+type Parameters<T extends FunctionType> = T extends (...args: infer P) => any
+  ? P
+  : never
+
+type ReturnType<T extends FunctionType> = T extends (...args: any) => infer R
+  ? R
+  : any
+```
+
+根据 infer 的位置不同，我们就能够获取到不同位置的类型，在函数这里则是参数类型与返回值类型。
+
+我们还可以更进一步，比如只匹配第一个参数类型：
+
+```typescript
+type FirstParameter<T extends FunctionType> = T extends (
+  arg: infer P,
+  ...args: any
+) => any
+  ? P
+  : never
+
+type FuncFoo = (arg: number) => void
+type FuncBar = (...args: string[]) => void
+
+type FooFirstParameter = FirstParameter<FuncFoo> // number
+type BarFirstParameter = FirstParameter<FuncBar> // string
+```
+
+除了对函数类型进行模式匹配，内置工具类型中还有一组对 Class 进行模式匹配的工具类型：
+
+```typescript
+type ClassType = abstract new (...args: any) => any
+
+type ConstructorParameters<T extends ClassType> = T extends abstract new (
+  ...args: infer P
+) => any
+  ? P
+  : never
+
+type InstanceType<T extends ClassType> = T extends abstract new (
+  ...args: any
+) => infer R
+  ? R
+  : any
+```
+
+Class 的通用类型签名可能看起来比较奇怪，但实际上它就是声明了可实例化（new）与可抽象（abstract）。
+
+我们也可以使用接口来进行声明：
+
+```typescript
+interface ClassType<T = any> {
+  new (...args: any[]): T
+}
+```
+
+对 Class 的模式匹配思路类似于函数，或者说这是一个通用的思路，即基于放置位置的匹配。放在参数部分，那就是构造函数的参数类型，放在返回值部分，那当然就是 Class 的实例类型。
+
+思考：
+
+* infer 和条件类型的搭配看起来会有奇效，比如在哪些场景？比如随着条件类型的嵌套每个分支会提取不同位置的 infer ？
+* infer 在某些特殊位置下应该如何处理？比如上面我们写了第一个参数类型，不妨试着来写写**最后一个参数类型**？
+
+**infer 约束**
+
+在某些时候，我们可能对 infer 提取的类型值有些要求，比如我只想要数组第一个为字符串的成员，如果第一个成员不是字符串，那我就不要了。
+
+先写一个提取数组第一个成员的工具类型：
+
+```typescript
+type FirstArrayItemType<T extends any[]> = T extends [infer P, ...any[]]
+  ? P
+  : never
+```
+
+加上对提取字符串的条件类型：
+
+```typescript
+type FirstArrayItemType<T extends any[]> = T extends [infer P, ...any[]]
+  ? P extends string
+    ? P
+    : never
+  : never
+```
+
+试用一下：
+
+```typescript
+type Tmp1 = FirstArrayItemType<[24, 'heora']> // never
+type Tmp2 = FirstArrayItemType<['heora', 599]> // 'heora'
+type Tmp3 = FirstArrayItemType<['heora']> // 'heora'
+```
+
+这样可以满足需求。不过既然泛型可以声明约束，只允许传入特定的类型，那 infer 中能否也添加约束，只提取特定的类型？
+
+TypeScript 4.7 就支持了 infer 约束功能来实现**对特定类型地提取**，比如上面的例子可以改写为这样：
+
+```typescript
+type FirstArrayItemType<T extends any[]> = T extends [
+  infer P extends string,
+  ...any[]
+]
+  ? P
+  : never
+```
+
+实际上，infer + 约束的场景是非常常见的，尤其是在某些连续嵌套的情况下，一层层的 infer 提取再筛选会严重地影响代码的可读性，而 infer 约束这一功能无疑带来了更简洁直观的类型编程代码。
+
+## 类型编程进阶

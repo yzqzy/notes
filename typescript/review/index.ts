@@ -103,7 +103,7 @@ const info = {
 //   return name.length
 // }
 
-type FuncFoo = (name: string) => number
+// type FuncFoo = (name: string) => number
 
 // const foo: FuncFoo = name => {
 //   return name.length
@@ -403,12 +403,12 @@ let unknownVar: unknown
 //   [K in keyof T]: string
 // }
 
-interface Foo {
-  prop1: string
-  prop2: number
-  prop3: boolean
-  prop4: () => void
-}
+// interface Foo {
+//   prop1: string
+//   prop2: number
+//   prop3: boolean
+//   prop4: () => void
+// }
 
 // type StringifiedFoo = Stringify<Foo>
 // // type StringifiedFoo = {
@@ -900,7 +900,7 @@ interface Foo {
 // type Res1 = LiteralType<'heora'> // "string"
 // type Res2 = LiteralType<24> // "other"
 
-// export type LiteralType<T> = T extends string
+// type LiteralType<T> = T extends string
 //   ? 'string'
 //   : T extends number
 //   ? 'number'
@@ -1100,3 +1100,199 @@ interface Foo {
 //     ? false
 //     : true
 //   : false
+
+// type Partial<T> = {
+//   [P in keyof T]?: T[P]
+// }
+
+// type Required<T> = {
+//   [P in keyof T]-?: T[P]
+// }
+
+// type Readonly<T> = {
+//   readonly [P in keyof T]: T[P]
+// }
+
+// type Mutable<T> = {
+//   -readonly [P in keyof T]: T[P]
+// }
+
+// type Record<K extends keyof any, T> = {
+//   [P in K]: T
+// }
+
+// // 键名均为字符串，键值类型未知
+// type Record1 = Record<string, unknown>
+// // 键名均为字符串，键值类型任意
+// type Record2 = Record<string, any>
+// // 键名为字符串或数字，键值类型任意
+// type Record3 = Record<string | number, any>
+
+// type Dictionary<T> = {
+//   [index: string]: T
+// }
+
+// type NumericDictionary<T> = {
+//   [index: number]: T
+// }
+
+// type Pick<T, K extends keyof T> = {
+//   [P in K]: T[P]
+// }
+
+// type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+
+// interface Foo {
+//   name: string
+//   age: number
+//   job: string
+// }
+// type PickedFoo = Pick<Foo, 'age' | 'job'>
+
+// type Pick<T> = {
+//   [P in 'name' | 'age']: T[P]
+// }
+
+// type Omit1<T, K> = Pick<T, Exclude<keyof T, K>>
+// type Omit2<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
+// // 这里就不能用严格 Omit 了
+// declare function combineSpread<T1, T2>(
+//   obj: T1,
+//   otherObj: T2,
+//   rest: Omit1<T1, keyof T2>
+// ): void
+
+// type Point3d = { x: number; y: number; z: number }
+
+// declare const p1: Point3d
+
+// // 能够检测出错误，rest 中缺少了 y
+// combineSpread(p1, { x: 10 }, { z: 2 })
+
+// type Extract<T, U> = T extends U ? T : never
+
+// type Exclude<T, U> = T extends U ? never : T
+
+// type AExtractB = Extract<1 | 2 | 3, 1 | 2 | 4> // 1 | 2
+
+// type _AExtractB =
+//   | (1 extends 1 | 2 | 4 ? 1 : never) // 1
+//   | (2 extends 1 | 2 | 4 ? 2 : never) // 2
+//   | (3 extends 1 | 2 | 4 ? 3 : never) // never
+
+// type AExcludeB = Exclude<1 | 2 | 3, 1 | 2 | 4> // 3
+
+// type _AExcludeB =
+//   | (1 extends 1 | 2 | 4 ? never : 1) // never
+//   | (2 extends 1 | 2 | 4 ? never : 2) // never
+//   | (3 extends 1 | 2 | 4 ? never : 3) // 3
+
+// type A = number | never // number
+
+// type Condition<T> = T extends 1 | 2 | 3 ? T : never
+
+// type Res1 = Condition<1 | 2 | 3 | 4 | 5> // // 1 | 2 | 3
+
+// type Res2 = 1 | 2 | 3 | 4 | 5 extends 1 | 2 | 3 ? 1 | 2 | 3 | 4 | 5 : never // never
+
+// type Naked<T> = T extends boolean ? 'Y' : 'N'
+// type Wrapped<T> = [T] extends [boolean] ? 'Y' : 'N'
+
+// type Res3 = Naked<number | boolean> // "N" | "Y"
+// type Res4 = Wrapped<number | boolean> // // "N"
+
+// type SetA = 1 | 2 | 3 | 5
+// type SetB = 0 | 1 | 2 | 4
+
+// type AExcludeB = Exclude<SetA, SetB> // 3 | 5
+// type BExcludeA = Exclude<SetB, SetA> // 0 | 4
+
+// type _AExcludeB =
+//   | (1 extends 0 | 1 | 2 | 4 ? never : 1) // never
+//   | (2 extends 0 | 1 | 2 | 4 ? never : 2) // never
+//   | (3 extends 0 | 1 | 2 | 4 ? never : 3) // 3
+//   | (5 extends 0 | 1 | 2 | 4 ? never : 5) // 5
+
+// type _BExcludeA =
+//   | (0 extends 1 | 2 | 3 | 5 ? never : 0) // 0
+//   | (1 extends 1 | 2 | 3 | 5 ? never : 1) // never
+//   | (2 extends 1 | 2 | 3 | 5 ? never : 2) // never
+//   | (4 extends 1 | 2 | 3 | 5 ? never : 4) // 4
+
+// // 并集
+// type Concurrence<A, B> = A | B
+
+// // 交集
+// type Intersection<A, B> = A extends B ? A : never
+
+// // 差集
+// type Difference<A, B> = A extends B ? never : A
+
+// // 补集
+// type Complement<A, B extends A> = Difference<A, B>
+
+// // type NonNullable<T> = T extends null | undefined ? never : T
+
+// type _NonNullable<T> = Difference<T, null | undefined>
+
+type FunctionType = (...args: any) => any
+
+// // type Parameters<T extends FunctionType> = T extends (...args: infer P) => any
+// //   ? P
+// //   : never
+
+// // type ReturnType<T extends FunctionType> = T extends (...args: any) => infer R
+// //   ? R
+// //   : any
+
+// type FirstParameter<T extends FunctionType> = T extends (
+//   arg: infer P,
+//   ...args: any
+// ) => any
+//   ? P
+//   : never
+
+// type FuncFoo = (arg: number) => void
+// type FuncBar = (...args: string[]) => void
+
+// type FooFirstParameter = FirstParameter<FuncFoo> // number
+// type BarFirstParameter = FirstParameter<FuncBar> // string
+
+// type ClassType = abstract new (...args: any) => any
+
+// type ConstructorParameters<T extends ClassType> = T extends abstract new (
+//   ...args: infer P
+// ) => any
+//   ? P
+//   : never
+
+// type InstanceType<T extends ClassType> = T extends abstract new (
+//   ...args: any
+// ) => infer R
+//   ? R
+//   : any
+
+// interface ClassType<T = any> {
+//   new (...args: any[]): T
+// }
+
+// type FirstArrayItemType<T extends any[]> = T extends [infer P, ...any[]]
+//   ? P
+//   : never
+
+// type FirstArrayItemType<T extends any[]> = T extends [infer P, ...any[]]
+//   ? P extends string
+//     ? P
+//     : never
+//   : never
+type FirstArrayItemType<T extends any[]> = T extends [
+  infer P extends string,
+  ...any[]
+]
+  ? P
+  : never
+
+type Tmp1 = FirstArrayItemType<[24, 'heora']> // never
+type Tmp2 = FirstArrayItemType<['heora', 599]> // 'heora'
+type Tmp3 = FirstArrayItemType<['heora']> // 'heora'
