@@ -1,4 +1,6 @@
-let Listener
+module.exports = { useState, useEffect }
+
+let Listener = null
 
 function useState(value) {
   const state = {
@@ -18,7 +20,7 @@ function useState(value) {
     state.value = value
 
     for (const observer of state.observers) {
-      observer()
+      observer && observer.fn()
     }
 
     return value
@@ -27,10 +29,22 @@ function useState(value) {
   return [read, write]
 }
 
-const [usernmae, setUsernmae] = useState('heora')
+function useEffect(fn) {
+  const computation = {
+    fn,
+    sources: []
+  }
 
-console.log(usernmae())
+  let listener = Listener
+  Listener = computation
 
-setUsernmae('yueluo')
+  let nextValue
 
-console.log(usernmae())
+  try {
+    nextValue = computation.fn()
+  } catch (error) {
+    console.log(error)
+  }
+
+  Listener = listener
+}
