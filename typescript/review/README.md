@@ -2461,63 +2461,87 @@ type FirstArrayItemType<T extends any[]> = T extends [
 
 实际上，infer + 约束的场景是非常常见的，尤其是在某些连续嵌套的情况下，一层层的 infer 提取再筛选会严重地影响代码的可读性，而 infer 约束这一功能无疑带来了更简洁直观的类型编程代码。
 
-## 函数类型：协变与逆变
-
-### 比较函数签名类型
-
-对于函数类型比较，实际上我们要比较的即是参数类型与返回值类型。
-
-```typescript
-class Animal {
-  asPet() {}
-}
-
-class Dog extends Animal {
-  bark() {}
-}
-
-class Corgi extends Dog {
-  cute() {}
-}
-```
-
-它们之间可以存在以下组合：
-
-```typescript
-type DogFactory = (args: Dog) => Dog
-type DogWithAnimalFactory = (args: Dog) => Animal
-type DogWithCorgiFactory = (args: Dog) => Corgi
-
-type AnimalFactory = (args: Animal) => Animal
-type AnimalWithDogFactory = (args: Animal) => Dog
-type AnimalWithCorgiFactory = (args: Animal) => Corgi
-
-type CorgiFactory = (args: Corgi) => Corgi
-type CorgiWithAnimalFactory = (agrs: Corgi) => Animal
-type CorgiWithDogFactory = (args: Corgi) => Dog
-```
-
-我们可以引入一个辅助函数进行：它接收一个 `DogFactory` 类型的参数：
-
-```typescript
-function transformDogAndBark(dogFactory: DogFactory) {
-  const dog = dogFactory(new Dog())
-  dog.bark()
-}
-```
-
-> **如果一个值能够被赋值给某个类型的变量，那么可以认为这个值的类型为此变量类型的子类型**。
->
-> **里氏替换原则：子类可以扩展父类的功能，但不能改变父类原有的功能，子类型（subtype）必须能够替换掉他们的基类型（base type）**
-
-这个函数会实例化一只狗，并传入 Factory，然后让它叫。实际上，这个函数同时约束了此类型的参数与返回值。
-
-首先，只能传入一只正常的狗，它可以是任何品种。其次，返回必须也是一只狗，可以是任何品种。
-
-对于这两条约束依次进行检查：
-
-* 对于 `DogWithAnimalFactory`、`AnimalFactory`、`CorgiWithAnimalFactory` 类型，无论它的参数类型是什么，它的返回值类型都不满足条件。因为它的返回值的不一定是合法的狗，即它不是 `DogFactory` 的子类型。
-* 
-
 ## 类型编程进阶
+
+### 属性修饰进阶
+
+对属性修饰工具类型的进阶主要分为这么几个方向：
+
+* 深层的属性修饰；
+* 基于已知属性的部分修饰，以及基于属性类型的部分修饰。
+
+首先是深层属性修饰，我们在使用 infer 关键字首次接触到递归的工具类型。
+
+```typescript
+type PromiseValue<T> = T extends Promise<infer V> ? PromiseValue<V> : T
+```
+
+我们只是在条件类型成立时，再次调用了这个工具类型，在某一次递归到条件类型不成立时，就会直接返回这个类型值。
+
+对于 Partial、Required，其实我们也可以进行这样地处理：
+
+```typescript
+type DeepPartial<T extends object> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
+}
+```
+
+```typescript
+type DeepRequired<T extends object> = {
+  [K in keyof T]-?: T[K] extends object ? DeepRequired<T[K]> : T[K]
+}
+
+type DeepReadonly<T extends object> = {
+  readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K]
+}
+
+type DeepMutable<T extends object> = {
+  -readonly [K in keyof T]: T[K] extends object ? DeepMutable<T[K]> : T[K]
+}
+```
+
+在 [内置工具类型](https://www.yueluo.club/detail?articleId=6315dfc50066526da888d5a2) 的结构工具类型中，存在一个从联合类型中剔除 `null | undefined` 的工具类型 NonNullable：
+
+```typescript
+type NonNullable<T> = T extends null | undefined ? never : T
+```
+
+我们也可以像访问性修饰工具类型那样，实现一个 DeepNonNullable 来递归剔除所有属性的 null 与 undefined：
+
+```typescript
+type DeepNonNullable<T extends object> = {
+  [K in keyof T]: T[K] extends object
+    ? DeepNonNullable<T[K]>
+    : NonNullable<T[K]>
+}
+```
+
+搞定递归属性修饰，接着就是**基于已知属性进行部分修饰了**。这其实也很简单。
+
+如果我们要让一个对象的三个已知属性为可选的，那只要把这个对象拆成 A、B 两个对象结构，分别由三个属性和其他属性组成。然后让对象 A 的属性全部变为可选的，和另外一个对象 B 组合起来就可以了。
+
+* 拆分对象结构，即**结构工具类型**，Pick 与 Omit；
+* 三个属性的对象全部变为可选，即属性修饰，或者使用递归属性修饰；
+* 组合两个对象类型，得到一个同时符合这两个对象类型的新结构，即交叉类型。
+
+分析出了需要用到的工具和方法，执行起来就简单多了。这也是使用最广泛的一种类型编程思路：**将复杂的工具类型，拆解为由基础工具类型、类型工具的组合**。
+
+直接来看基于已知属性的部分修饰，MarkPropsAsOptional 会将一个对象的部分属性标记为可选：
+
+```typescript
+type MarkPropsAsOptional<
+  T extends object,
+  K extends keyof T = keyof T
+> = Partial<Pick<T, K>> & Omit<T, K>
+```
+
+T 为需要处理的对象类型，而 K 为需要标记为可选的属性。由于此时 K 必须为 T 内部的属性，因此我们将其约束为 keyof T，即对象属性组成的字面量联合类型。同时为了让它能够直接代替掉 Partial，我们为其指定默认值也为 keyof T，这样在不传入第二个泛型参数时，它的表现就和 Partial 一致，即全量的属性可选。
+
+
+
+
+
+
+
+
 

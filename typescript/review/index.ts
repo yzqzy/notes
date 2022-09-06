@@ -1304,31 +1304,62 @@ type FunctionType = (...args: any) => any
 // // 也推导出了参数类型
 // const handler: CustomHandler = (arg1, arg2) => true
 
-class Animal {
-  asPet() {}
+// class Animal {
+//   asPet() {}
+// }
+
+// class Dog extends Animal {
+//   bark() {}
+// }
+
+// class Corgi extends Dog {
+//   cute() {}
+// }
+
+// type DogFactory = (args: Dog) => Dog
+// type DogWithAnimalFactory = (args: Dog) => Animal
+// type DogWithCorgiFactory = (args: Dog) => Corgi
+
+// type AnimalFactory = (args: Animal) => Animal
+// type AnimalWithDogFactory = (args: Animal) => Dog
+// type AnimalWithCorgiFactory = (args: Animal) => Corgi
+
+// type CorgiFactory = (args: Corgi) => Corgi
+// type CorgiWithAnimalFactory = (agrs: Corgi) => Animal
+// type CorgiWithDogFactory = (args: Corgi) => Dog
+
+// function transformDogAndBark(dogFactory: DogFactory) {
+//   const dog = dogFactory(new Dog())
+//   dog.bark()
+// }
+
+// type PromiseValue<T> = T extends Promise<infer V> ? PromiseValue<V> : T
+
+// type DeepPartial<T extends object> = {
+//   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
+// }
+
+// type DeepRequired<T extends object> = {
+//   [K in keyof T]-?: T[K] extends object ? DeepRequired<T[K]> : T[K]
+// }
+
+// type DeepReadonly<T extends object> = {
+//   readonly [K in keyof T]: T[K] extends object ? DeepReadonly<T[K]> : T[K]
+// }
+
+// type DeepMutable<T extends object> = {
+//   -readonly [K in keyof T]: T[K] extends object ? DeepMutable<T[K]> : T[K]
+// }
+
+// type NonNullable<T> = T extends null | undefined ? never : T
+
+type DeepNonNullable<T extends object> = {
+  [K in keyof T]: T[K] extends object
+    ? DeepNonNullable<T[K]>
+    : NonNullable<T[K]>
 }
 
-class Dog extends Animal {
-  bark() {}
-}
-
-class Corgi extends Dog {
-  cute() {}
-}
-
-type DogFactory = (args: Dog) => Dog
-type DogWithAnimalFactory = (args: Dog) => Animal
-type DogWithCorgiFactory = (args: Dog) => Corgi
-
-type AnimalFactory = (args: Animal) => Animal
-type AnimalWithDogFactory = (args: Animal) => Dog
-type AnimalWithCorgiFactory = (args: Animal) => Corgi
-
-type CorgiFactory = (args: Corgi) => Corgi
-type CorgiWithAnimalFactory = (agrs: Corgi) => Animal
-type CorgiWithDogFactory = (args: Corgi) => Dog
-
-function transformDogAndBark(dogFactory: DogFactory) {
-  const dog = dogFactory(new Dog())
-  dog.bark()
-}
+type MarkPropsAsOptional<
+  T extends object,
+  K extends keyof T = keyof T
+> = Partial<Pick<T, K>> & Omit<T, K>
