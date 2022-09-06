@@ -2461,4 +2461,63 @@ type FirstArrayItemType<T extends any[]> = T extends [
 
 实际上，infer + 约束的场景是非常常见的，尤其是在某些连续嵌套的情况下，一层层的 infer 提取再筛选会严重地影响代码的可读性，而 infer 约束这一功能无疑带来了更简洁直观的类型编程代码。
 
+## 函数类型：协变与逆变
+
+### 比较函数签名类型
+
+对于函数类型比较，实际上我们要比较的即是参数类型与返回值类型。
+
+```typescript
+class Animal {
+  asPet() {}
+}
+
+class Dog extends Animal {
+  bark() {}
+}
+
+class Corgi extends Dog {
+  cute() {}
+}
+```
+
+它们之间可以存在以下组合：
+
+```typescript
+type DogFactory = (args: Dog) => Dog
+type DogWithAnimalFactory = (args: Dog) => Animal
+type DogWithCorgiFactory = (args: Dog) => Corgi
+
+type AnimalFactory = (args: Animal) => Animal
+type AnimalWithDogFactory = (args: Animal) => Dog
+type AnimalWithCorgiFactory = (args: Animal) => Corgi
+
+type CorgiFactory = (args: Corgi) => Corgi
+type CorgiWithAnimalFactory = (agrs: Corgi) => Animal
+type CorgiWithDogFactory = (args: Corgi) => Dog
+```
+
+我们可以引入一个辅助函数进行：它接收一个 `DogFactory` 类型的参数：
+
+```typescript
+function transformDogAndBark(dogFactory: DogFactory) {
+  const dog = dogFactory(new Dog())
+  dog.bark()
+}
+```
+
+> **如果一个值能够被赋值给某个类型的变量，那么可以认为这个值的类型为此变量类型的子类型**。
+>
+> **里氏替换原则：子类可以扩展父类的功能，但不能改变父类原有的功能，子类型（subtype）必须能够替换掉他们的基类型（base type）**
+
+这个函数会实例化一只狗，并传入 Factory，然后让它叫。实际上，这个函数同时约束了此类型的参数与返回值。
+
+首先，只能传入一只正常的狗，它可以是任何品种。其次，返回必须也是一只狗，可以是任何品种。
+
+对于这两条约束依次进行检查：
+
+* 对于 `DogWithAnimalFactory`、`AnimalFactory`、`CorgiWithAnimalFactory` 类型，无论它的参数类型是什么，它的返回值类型都不满足条件。因为它的返回值的不一定是合法的狗，即它不是 `DogFactory` 的子类型。
+* 
+
 ## 类型编程进阶
+

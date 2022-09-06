@@ -1286,13 +1286,49 @@ type FunctionType = (...args: any) => any
 //     ? P
 //     : never
 //   : never
-type FirstArrayItemType<T extends any[]> = T extends [
-  infer P extends string,
-  ...any[]
-]
-  ? P
-  : never
+// type FirstArrayItemType<T extends any[]> = T extends [
+//   infer P extends string,
+//   ...any[]
+// ]
+//   ? P
+//   : never
 
-type Tmp1 = FirstArrayItemType<[24, 'heora']> // never
-type Tmp2 = FirstArrayItemType<['heora', 599]> // 'heora'
-type Tmp3 = FirstArrayItemType<['heora']> // 'heora'
+// type Tmp1 = FirstArrayItemType<[24, 'heora']> // never
+// type Tmp2 = FirstArrayItemType<['heora', 599]> // 'heora'
+// type Tmp3 = FirstArrayItemType<['heora']> // 'heora'
+
+// window.onerror = (event, source, line, col, err) => {}
+
+// type CustomHandler = (name: string, age: number) => boolean
+
+// // 也推导出了参数类型
+// const handler: CustomHandler = (arg1, arg2) => true
+
+class Animal {
+  asPet() {}
+}
+
+class Dog extends Animal {
+  bark() {}
+}
+
+class Corgi extends Dog {
+  cute() {}
+}
+
+type DogFactory = (args: Dog) => Dog
+type DogWithAnimalFactory = (args: Dog) => Animal
+type DogWithCorgiFactory = (args: Dog) => Corgi
+
+type AnimalFactory = (args: Animal) => Animal
+type AnimalWithDogFactory = (args: Animal) => Dog
+type AnimalWithCorgiFactory = (args: Animal) => Corgi
+
+type CorgiFactory = (args: Corgi) => Corgi
+type CorgiWithAnimalFactory = (agrs: Corgi) => Animal
+type CorgiWithDogFactory = (args: Corgi) => Dog
+
+function transformDogAndBark(dogFactory: DogFactory) {
+  const dog = dogFactory(new Dog())
+  dog.bark()
+}
