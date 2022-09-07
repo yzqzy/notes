@@ -2566,9 +2566,48 @@ type MarkPropsAsOptionalStruct = MarkPropsAsOptionalWithFlattern<
 
 > 你也可以使用 `DeepPartial<Pick<T, K>>`，来把这些属性标记为深层的可选状态
 
+我们来实现其它类型的部分修饰：
 
+```typescript
+type Nullable<T> = T | null
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P]
+}
 
+type MarkPropsAsRequired<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<Omit<T, K> & Required<Pick<T, K>>>
 
+type MarkPropsAsReadonly<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<Omit<T, K> & Readonly<Pick<T, K>>>
+
+type MarkPropsAsMutable<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<Omit<T, K> & Mutable<Pick<T, K>>>
+
+type MarkPropsAsNullable<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<Omit<T, K> & Nullable<Pick<T, K>>>
+
+type MarkPropsAsNonNullable<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<Omit<T, K> & NonNullable<Pick<T, K>>>
+```
+
+### 结构工具类型进阶
+
+对结构工具类型有两个进阶方向：
+
+- 基于键值类型的 Pick 与 Omit；
+- 子结构的互斥处理。
+
+首先是基于键值类型的 Pick 与 Omit。它的实现方式其实还是类似部分属性修饰中那样，将对象拆分为两个部分，处理完毕再组装。
 
 
 

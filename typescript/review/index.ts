@@ -1359,23 +1359,53 @@ type FunctionType = (...args: any) => any
 //     : NonNullable<T[K]>
 // }
 
-type MarkPropsAsOptional<
-  T extends object,
-  K extends keyof T = keyof T
-> = Partial<Pick<T, K>> & Omit<T, K>
+// type MarkPropsAsOptional<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Partial<Pick<T, K>> & Omit<T, K>
 
-// test
+// // test
 type Flatten<T> = { [K in keyof T]: T[K] }
-type MarkPropsAsOptionalWithFlattern<
-  T extends object,
-  K extends keyof T = keyof T
-> = Flatten<MarkPropsAsOptional<T, K>>
+// type MarkPropsAsOptionalWithFlattern<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Flatten<MarkPropsAsOptional<T, K>>
 
-type MarkPropsAsOptionalStruct = MarkPropsAsOptionalWithFlattern<
-  {
-    foo: string
-    bar: number
-    baz: boolean
-  },
-  'bar'
->
+// type MarkPropsAsOptionalStruct = MarkPropsAsOptionalWithFlattern<
+//   {
+//     foo: string
+//     bar: number
+//     baz: boolean
+//   },
+//   'bar'
+// >
+
+// type Nullable<T> = T | null
+// type Mutable<T> = {
+//   -readonly [P in keyof T]: T[P]
+// }
+
+// type MarkPropsAsRequired<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Flatten<Omit<T, K> & Required<Pick<T, K>>>
+
+// type MarkPropsAsReadonly<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Flatten<Omit<T, K> & Readonly<Pick<T, K>>>
+
+// type MarkPropsAsMutable<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Flatten<Omit<T, K> & Mutable<Pick<T, K>>>
+
+// type MarkPropsAsNullable<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Flatten<Omit<T, K> & Nullable<Pick<T, K>>>
+
+// type MarkPropsAsNonNullable<
+//   T extends object,
+//   K extends keyof T = keyof T
+// > = Flatten<Omit<T, K> & NonNullable<Pick<T, K>>>
