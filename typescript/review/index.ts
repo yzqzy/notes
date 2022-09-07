@@ -1353,13 +1353,29 @@ type FunctionType = (...args: any) => any
 
 // type NonNullable<T> = T extends null | undefined ? never : T
 
-type DeepNonNullable<T extends object> = {
-  [K in keyof T]: T[K] extends object
-    ? DeepNonNullable<T[K]>
-    : NonNullable<T[K]>
-}
+// type DeepNonNullable<T extends object> = {
+//   [K in keyof T]: T[K] extends object
+//     ? DeepNonNullable<T[K]>
+//     : NonNullable<T[K]>
+// }
 
 type MarkPropsAsOptional<
   T extends object,
   K extends keyof T = keyof T
 > = Partial<Pick<T, K>> & Omit<T, K>
+
+// test
+type Flatten<T> = { [K in keyof T]: T[K] }
+type MarkPropsAsOptionalWithFlattern<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<MarkPropsAsOptional<T, K>>
+
+type MarkPropsAsOptionalStruct = MarkPropsAsOptionalWithFlattern<
+  {
+    foo: string
+    bar: number
+    baz: boolean
+  },
+  'bar'
+>

@@ -2516,6 +2516,8 @@ type DeepNonNullable<T extends object> = {
 }
 ```
 
+
+
 搞定递归属性修饰，接着就是**基于已知属性进行部分修饰了**。这其实也很简单。
 
 如果我们要让一个对象的三个已知属性为可选的，那只要把这个对象拆成 A、B 两个对象结构，分别由三个属性和其他属性组成。然后让对象 A 的属性全部变为可选的，和另外一个对象 B 组合起来就可以了。
@@ -2537,7 +2539,32 @@ type MarkPropsAsOptional<
 
 T 为需要处理的对象类型，而 K 为需要标记为可选的属性。由于此时 K 必须为 T 内部的属性，因此我们将其约束为 keyof T，即对象属性组成的字面量联合类型。同时为了让它能够直接代替掉 Partial，我们为其指定默认值也为 keyof T，这样在不传入第二个泛型参数时，它的表现就和 Partial 一致，即全量的属性可选。
 
+`Partial<Pick<T, K>>` 为需要标记为可选的属性组成的对象子结构，`Omit<T, K>` 则为不需要处理的部分，使用交叉类型将其组合即可。
 
+```typescript
+// testing
+type Flatten<T> = { [K in keyof T]: T[K] }
+type MarkPropsAsOptionalWithFlattern<
+  T extends object,
+  K extends keyof T = keyof T
+> = Flatten<MarkPropsAsOptional<T, K>>
+
+type MarkPropsAsOptionalStruct = MarkPropsAsOptionalWithFlattern<
+  {
+    foo: string
+    bar: number
+    baz: boolean
+  },
+  'bar'
+>
+// type MarkPropsAsOptionalStruct = {
+//   bar?: number | undefined;
+//   foo: string;
+//   baz: boolean;
+// }
+```
+
+> 你也可以使用 `DeepPartial<Pick<T, K>>`，来把这些属性标记为深层的可选状态
 
 
 
