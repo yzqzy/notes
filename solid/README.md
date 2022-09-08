@@ -17,6 +17,10 @@ solid.js 采用了 jsx 的写法，加上类似 hooks 的语法，写出来看�
 
 solid.js 和 react 有本质的区别，它们只是看上去像，从原理上来说，solid.js 和 svelte.js 更接近。
 
+## solid.js
+
+> Solid is a JavaScript framework for making interactive web applications. With Solid, you can use your existing HTML and JavaScript knowledge to build components that can be reused throughout your app. Solid provides the tools to enhance your components with *reactivity*: declarative JavaScript code that links the user interface with the data that it uses and creates.
+
 ## solid vs react
 
 计时器案例对比
