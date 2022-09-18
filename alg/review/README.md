@@ -2,7 +2,7 @@
 
 [https://leetcode.com/heora/](https://leetcode.com/heora/)
 
-## 不同路径
+## 路径问题
 
 ### Unique Paths
 
