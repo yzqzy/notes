@@ -74,7 +74,7 @@
   - [TypeScipt 基础](https://github.com/yw0525/notes/tree/master/typescript/base) 已完成
   - [TypeScipt 案例](https://github.com/yw0525/notes/tree/master/typescript/examples/test/src) 已完成
   - [TypeScipt 进阶](https://github.com/yw0525/notes/tree/master/typescript/plus) 已完成
-  - [TypeScipt 全面进阶](https://github.com/yw0525/notes/tree/master/typescript/review) 更新中... 😁
+  - [TypeScipt 全面进阶](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
 - Node
   - [Node 基础](https://github.com/yw0525/notes/tree/master/node/base) 已完成
   - ~~[Node 进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
@@ -99,6 +99,9 @@
   - [JS 数据结构与算法](https://github.com/yw0525/notes/tree/master/alg/algorithm) 已完成
   - [数据结构与算法](https://github.com/yw0525/notes/tree/master/alg/algorithm_google) 已完成
   - [算法训练营](https://github.com/yw0525/notes/tree/master/alg/training) 已完成
+  - [JavaScript算法](https://github.com/yw0525/notes/tree/master/alg/javascript) 已完成
+  - [LeetCode-75](https://github.com/yw0525/notes/tree/master/alg/leetcode75) 已完成
+  - [LeetCode刷题笔记](https://github.com/yw0525/notes/tree/master/alg/training) 更新中... 😁
 - 读书笔记
   - [玩转 Git 三剑客](https://github.com/yw0525/notes/tree/master/git) 已完成
   - [玩转 Webpack](https://github.com/yw0525/notes/tree/master/webpack/webpack_tencent) 已完成
@@ -107,5 +110,5 @@
   - [Vue 源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
   - [Vue.js 设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 已完成
   - [深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
-  - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 更新中... 😁
+  - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
   - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成

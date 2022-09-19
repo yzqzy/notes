@@ -10,22 +10,22 @@
 
 ```typescript
 function uniquePaths(m: number, n: number): number {
-  const grid = Array.from({ length: m }).map(() => new Array(n))
+  const dp: number[][] = Array.from({ length: m }).map(() => new Array(n))
   
   for (let i = 0; i < m; i++) {
-    grid[i][0] = 1
+    dp[i][0] = 1
   }
   for (let j = 0; j < n; j++) {
-    grid[0][j] = 1
+    dp[0][j] = 1
   }
   
   for (let i = 1; i < m; i++) {
     for (let j = 1; j < n; j++) {
-      grid[i][j] = grid[i - 1][j] + grid[i][j - 1]
+      dp[i][j] = dp[i - 1][j] + dp[i][j - 1]
     }
   }
   
-  return grid[m - 1][n - 1]
+  return dp[m - 1][n - 1]
 }
 ```
 
@@ -38,30 +38,30 @@ function uniquePathsWithObstacles(obstacleGrid: number[][]): number {
   const m = obstacleGrid.length
   const n = obstacleGrid[0].length
 
-  const grid: number[][] = Array.from({ length: m }).map(() =>
+  const dp: number[][] = Array.from({ length: m }).map(() =>
     new Array(n).fill(0)
   )
 
   for (let i = 0; i < m; i++) {
     if (obstacleGrid[i][0] === 1) break
-    grid[i][0] = 1
+    dp[i][0] = 1
   }
   for (let j = 0; j < n; j++) {
     if (obstacleGrid[0][j] === 1) break
-    grid[0][j] = 1
+    dp[0][j] = 1
   }
 
   for (let i = 1; i < m; i++) {
     for (let j = 1; j < n; j++) {
       if (obstacleGrid[i][j] === 1) {
-        grid[i][j] = 0
+        dp[i][j] = 0
       } else {
-        grid[i][j] = grid[i - 1][j] + grid[i][j - 1]
+        dp[i][j] = dp[i - 1][j] + dp[i][j - 1]
       }
     }
   }
 
-  return grid[m - 1][n - 1]
+  return dp[m - 1][n - 1]
 }
 ```
 
@@ -70,29 +70,29 @@ function uniquePathsWithObstacles(obstacleGrid: number[][]): number {
   const m = obstacleGrid.length
   const n = obstacleGrid[0].length
 
-  const grid: number[][] = Array.from({ length: m }).map(() =>
+  const dp: number[][] = Array.from({ length: m }).map(() =>
     new Array(n).fill(0)
   )
 
   // optimize
   for (let i = 0; i < m && obstacleGrid[i][0] === 0; i++) {
-    grid[i][0] = 1
+    dp[i][0] = 1
   }
   for (let j = 0; j < n && obstacleGrid[0][j] === 0; j++) {
-    grid[0][j] = 1
+    dp[0][j] = 1
   }
 
   for (let i = 1; i < m; i++) {
     for (let j = 1; j < n; j++) {
       if (obstacleGrid[i][j] === 1) {
-        grid[i][j] = 0
+        dp[i][j] = 0
       } else {
-        grid[i][j] = grid[i - 1][j] + grid[i][j - 1]
+        dp[i][j] = dp[i - 1][j] + dp[i][j - 1]
       }
     }
   }
 
-  return grid[m - 1][n - 1]
+  return dp[m - 1][n - 1]
 }
 ```
 
@@ -101,5 +101,27 @@ function uniquePathsWithObstacles(obstacleGrid: number[][]): number {
 [https://leetcode.com/problems/minimum-path-sum/](https://leetcode.com/problems/minimum-path-sum/)
 
 ```typescript
-```
+function minPathSum(grid: number[][]): number {
+  const m = grid.length
+  const n = grid[0].length
 
+  const dp: number[][] = Array.from({ length: m }).map(() => new Array(n))
+
+  dp[0][0] = grid[0][0]
+
+  for (let i = 1; i < m; i++) {
+    dp[i][0] = grid[i][0] + dp[i - 1][0]
+  }
+  for (let j = 1; j < n; j++) {
+    dp[0][j] = grid[0][j] + dp[0][j - 1]
+  }
+
+  for (let i = 1; i < m; i++) {
+    for (let j = 1; j < n; j++) {
+      dp[i][j] = grid[i][j] + Math.min(dp[i - 1][j], dp[i][j - 1])
+    }
+  }
+
+  return dp[m - 1][n - 1]
+}
+```
