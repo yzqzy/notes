@@ -125,3 +125,52 @@ function minPathSum(grid: number[][]): number {
   return dp[m - 1][n - 1]
 }
 ```
+
+### Triangle
+
+[https://leetcode.com/problems/triangle/](https://leetcode.com/problems/triangle/)
+
+```typescript
+// o(m * m) extra space
+
+function minimumTotal(triangle: number[][]): number {
+  const n = triangle.length
+
+  const dp: number[][] = Array.from({ length: n }).map(() => new Array(n))
+
+  for (let i = 0; i < n; i++) {
+    dp[n - 1][i] = triangle[n - 1][i]
+  }
+
+  for (let i = n - 2; i >= 0; i--) {
+    for (let j = 0; j <= i; j++) {
+      dp[i][j] = triangle[i][j] + Math.min(dp[i + 1][j], dp[i + 1][j + 1])
+    }
+  }
+
+  return dp[0][0]
+}
+```
+
+```typescript
+// o(n) extra space
+
+function minimumTotal(triangle: number[][]): number {
+  const n = triangle.length
+
+  const dp: number[] = new Array(n)
+
+  for (let i = 0; i < n; i++) {
+    dp[i] = triangle[n - 1][i]
+  }
+
+  for (let i = n - 2; i >= 0; i--) {
+    for (let j = 0; j <= i; j++) {
+      dp[j] = triangle[i][j] + Math.min(dp[j], dp[j + 1])
+    }
+  }
+
+  return dp[0]
+}
+```
+
