@@ -174,6 +174,8 @@ function minimumTotal(triangle: number[][]): number {
 }
 ```
 
+我们还可以将 dp 数组优化至 O(n)。
+
 ```typescript
 // o(n) extra space
 
@@ -199,6 +201,14 @@ function minimumTotal(triangle: number[][]): number {
 ### Minimum Falling Path Sum
 
 [https://leetcode.com/problems/minimum-falling-path-sum/](https://leetcode.com/problems/minimum-falling-path-sum/)
+
+这道题目和之前都不一样，我们需要求多条路径的最小和。
+
+所以我们也不能向之前那样初始化首行首列的值，而是需要动态判断边界条件，进行求值。
+
+其次我们还需要比较三个数，即上+中，上+左，上+右，然后将最小值赋值给 `dp[i][j]`。
+
+最后需要比较 dp 数组最后一行数组，取它们的最小值。
 
 ```typescript
 function minFallingPathSum(matrix: number[][]): number {
