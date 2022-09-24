@@ -5,10 +5,10 @@ const entry = process.cwd()
 const output = path.resolve(entry, 'docs')
 
 interface MdNode {
-  name: string;
-  path: string;
-  mark: boolean;
-  parent?: MdNode,
+  name: string
+  path: string
+  mark: boolean
+  parent?: MdNode
   children?: MdNode[]
 }
 
@@ -35,13 +35,13 @@ const cleanDocs = (entry: string) => {
 }
 
 const buildModule = (entry: string): MdNode => {
-  let ans: MdNode 
-  
+  let ans: MdNode
+
   const removeNodes: MdNode[] = []
 
   const isMarkdown = (path: string) => path.includes('README.md')
   const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs']
-  const isValid = (dir: string) => 
+  const isValid = (dir: string) =>
     // valid file and large file or build failed file
     ![...validFiles, 'Vue.js设计与实现'].some(_ => dir.includes(_))
 
@@ -55,13 +55,13 @@ const buildModule = (entry: string): MdNode => {
       parent,
       children: []
     }
-      
+
     const dirs = fs.readdirSync(entry)
-  
+
     dirs.forEach(dir => {
       const _entry = path.resolve(entry, dir)
       const stat = fs.statSync(_entry)
-  
+
       if (stat.isDirectory() && isValid(_entry)) {
         const needRemove = layer >= 2
         const child = getModules(_entry, layer + 1, module)
@@ -69,12 +69,12 @@ const buildModule = (entry: string): MdNode => {
         if (needRemove) {
           child.mark = false
         }
-        
+
         module.children?.push(child)
         return
       }
-      
-      if(isMarkdown(_entry)) {
+
+      if (isMarkdown(_entry)) {
         let m = module
         while (m && m.parent) {
           m.mark = true
@@ -87,7 +87,7 @@ const buildModule = (entry: string): MdNode => {
         })
         return
       }
-      
+
       removeNodes.push(module)
     })
 
@@ -99,20 +99,23 @@ const buildModule = (entry: string): MdNode => {
   removeNodes.forEach(m => {
     while (m && m.parent) {
       if (!m.mark) {
-        m.parent.children = m.parent.children?.filter((item) => item.path != m.path)
+        m.parent.children = m.parent.children?.filter(
+          item => item.path != m.path
+        )
       }
       m = m.parent
     }
   })
-  
+
   return ans
 }
 
 interface Sidebar {
-  text: string;
-  link?: string;
+  text: string
+  link?: string
   items?: Sidebar[]
-  collapsible?: boolean;
+  collapsible?: boolean
+  remove?: boolean
 }
 
 const generateDocs = (module: MdNode) => {
@@ -131,17 +134,17 @@ const generateDocs = (module: MdNode) => {
         if (!fs.existsSync(destDir)) {
           fs.mkdirSync(destDir)
         }
-        
+
         const files = fs.readdirSync(dir)
         files.forEach(file => {
           const source = path.join(dir, file)
           const target = path.join(destDir, file)
           const stat = fs.statSync(source)
-          
+
           if (stat.isFile()) {
             const readStream = fs.createReadStream(source)
             const writeStream = fs.createWriteStream(target)
-            readStream.pipe(writeStream);
+            readStream.pipe(writeStream)
           } else {
             copy(source, target)
           }
@@ -168,9 +171,7 @@ const generateDocs = (module: MdNode) => {
   } else {
     fs.copyFileSync(module.path, normalizeText(currentDir))
     sidebar.link = normalizeText(
-      module.path
-      .replace(entry, '')
-      .replace(/\\/g, '/')
+      module.path.replace(entry, '').replace(/\\/g, '/')
     )
   }
 
@@ -180,22 +181,27 @@ const generateDocs = (module: MdNode) => {
 const genrateSidebarConfig = (sideber: Sidebar) => {
   let config = sideber.items
 
-  // remove root 
+  // remove root
   config = config?.filter(node => node.text !== 'README.md')
 
-  const clear = (_sidebar: Sidebar) => {
+  const clear = (_sidebar: Sidebar, l: number) => {
     if (Array.isArray(_sidebar.items)) {
       _sidebar.items.forEach(item => {
         if (item.text === 'README.md' || item.text === 'index.md') {
           _sidebar.link = item.link
           item.text = _sidebar.text
+
+          l > 1 && (item.remove = true)
         }
       })
     }
-    _sidebar.items?.forEach(clear)
+
+    _sidebar.items = _sidebar.items?.filter(item => !item.remove)
+
+    _sidebar.items?.forEach(item => clear(item, l + 1))
   }
 
-  clear(sideber)
+  clear(sideber, 0)
 
   fs.writeFileSync(
     path.resolve(output, '.vitepress/sidebar.json'),
@@ -211,6 +217,5 @@ const buildEntry = (entry: string) => {
 
   genrateSidebarConfig(sidebar)
 }
-
 
 buildEntry(entry)
