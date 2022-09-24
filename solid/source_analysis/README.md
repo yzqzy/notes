@@ -3087,9 +3087,188 @@ export function writeSignal(node: SignalState<any> | Memo<any>, value: any, isCo
 
 然后判断 `node.observers` 是否存在，这里的 observers 是存在的，是我们的 render computation 对象。
 
-然后会调用 runUpdates 方法，内部匿名函数会将 computation 添加到 Effects 数组中。
-
 ##### runUpdates
 
+然后会调用 runUpdates 方法，内部匿名函数会将 computation 添加到 Effects 数组中。
 
+```typescript
+function runUpdates<T>(fn: () => T, init: boolean) {
+  if (Updates) return fn();
+  let wait = false;
+  if (!init) Updates = [];
+  if (Effects) wait = true;
+  else Effects = [];
+  ExecCount++;
+  try {
+    const res = fn();
+    completeUpdates(wait);
+    return res;
+  } catch (err) {
+    if (!Updates) Effects = null;
+    handleError(err);
+  }
+}
+```
+
+接着调用 completeUpdates 方法完成更新。
+
+##### completeUpdates 
+
+```typescript
+function completeUpdates(wait: boolean) {
+  if (Updates) {
+    if (Scheduler && Transition && Transition.running) scheduleQueue(Updates);
+    else runQueue(Updates);
+    Updates = null;
+  }
+  if (wait) return;
+  let res;
+	// ...
+  const e = Effects!;
+  Effects = null;
+  if (e!.length) runUpdates(() => runEffects(e), false);
+  else if ("_SOLID_DEV_") globalThis._$afterUpdate && globalThis._$afterUpdate();
+  if (res) res();
+}
+```
+
+缓存 Effects，重置 Effects 为 null，然后调用 runUpdates 方法，传入 runEffects，顾名思义，就是执行副作用函数的意思。
+
+值的注意的是，这里的 runEffects 不再是 runUserEffects，我们在使用 createEffect API 创建 computation 对象时会将 runEffects 重新赋值为 runUserEffects，在使用 createRenderEffect 时，并不是这样处理，这里的 runEffects 就是默认值 runQueue。
+
+```typescript
+let runEffects = runQueue;
+```
+
+##### runEffects（runQueue）
+
+```typescript
+function runQueue(queue: Computation<any>[]) {
+  for (let i = 0; i < queue.length; i++) runTop(queue[i]);
+}
+```
+
+然后就是遍历 computation 数组，调用 runTop 方法，参数为 computation 对象。
+
+##### runTop
+
+```typescript
+function runTop(node: Computation<any>) {
+	// ....
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    node = ancestors[i];
+    if (runningTransition) {
+      let top = node,
+        prev = ancestors[i + 1];
+      while ((top = top.owner as Computation<any>) && top !== prev) {
+        if (Transition!.disposed.has(top)) return;
+      }
+    }
+    if (
+      (!runningTransition && node.state === STALE) ||
+      (runningTransition && node.tState === STALE)
+    ) {
+      updateComputation(node);
+    } else if (
+      (!runningTransition && node.state === PENDING) ||
+      (runningTransition && node.tState === PENDING)
+    ) {
+      const updates = Updates;
+      Updates = null;
+      runUpdates(() => lookUpstream(node, ancestors[0]), false);
+      Updates = updates;
+    }
+  }
+}
+```
+
+调用 updateComputation 方法更新视图。
+
+##### updateComputation
+
+```typescript
+function updateComputation(node: Computation<any>) {
+  if (!node.fn) return;
+  cleanNode(node);
+  const owner = Owner,
+    listener = Listener,
+    time = ExecCount;
+  Listener = Owner = node;
+  runComputation(
+    node,
+    Transition && Transition.running && Transition.sources.has(node as Memo<any>)
+      ? (node as Memo<any>).tValue
+      : node.value,
+    time
+  );
+
+  if (Transition && !Transition.running && Transition.sources.has(node as Memo<any>)) {
+    queueMicrotask(() => {
+      runUpdates(() => {
+        Transition && (Transition.running = true);
+        runComputation(node, (node as Memo<any>).tValue, time);
+      }, false);
+    });
+  }
+  Listener = listener;
+  Owner = owner;
+}
+```
+
+内部继续调用 runComputation 方法，将 computation 对象传入。
+
+##### runComputation 
+
+```typescript
+function runComputation(node: Computation<any>, value: any, time: number) {
+  let nextValue;
+  try {
+    nextValue = node.fn(value);
+  } catch (err) {
+    if (node.pure) Transition && Transition.running ? (node.tState = STALE) : (node.state = STALE);
+    handleError(err);
+  }
+  if (!node.updatedAt || node.updatedAt <= time) {
+    if (node.updatedAt != null && "observers" in (node as Memo<any>)) {
+      writeSignal(node as Memo<any>, nextValue, true);
+    } else if (Transition && Transition.running && node.pure) {
+      Transition.sources.add(node as Memo<any>);
+      (node as Memo<any>).tValue = nextValue;
+    } else node.value = nextValue;
+    node.updatedAt = time;
+  }
+}
+```
+
+然后执行 `node.fn` 方法。
+
+```typescript
+export function insert(parent, accessor, marker, initial) {
+  if (marker !== undefined && !initial) initial = [];
+  if (typeof accessor !== "function") return insertExpression(parent, accessor, initial, marker);
+  effect(current => insertExpression(parent, accessor(), current, marker), initial);
+}
+```
+
+这里的 `node.fn` 就是 `current => insertExpression(parent, accessor(), current, marker)`。
+
+后续流程其实我们已经很熟悉，就是获取到当前最新值，并且将值赋值给 div 元素，然后页面就会被更新，这就是 solid 的点对点更新。
+
+#### 总结
+
+当我们使用 render 函数时返回模板时，solid 会对模板进行解析，生成可执行的代码片段。
+
+如果存在响应式数据，会解析出响应式变量，调用 insert 方法，这时 solid 内部会自动创建一个 computation 对象，帮助我们把模板和副作用函数进行关联，只有这样我们在为响应式变量赋值时才可以达到更新视图的目的。
+
+```typescript
+export function insert(parent, accessor, marker, initial) {
+  if (marker !== undefined && !initial) initial = [];
+  if (typeof accessor !== "function") return insertExpression(parent, accessor, initial, marker);
+  effect(current => insertExpression(parent, accessor(), current, marker), initial);
+}
+```
+
+另外 solid 的模板解析是实现真实 DOM 细粒度更新的核心步骤，我们会在后面再点分析它是如何实现的。
+
+[调试案例](https://github.com/yw0525/solid/blob/feat-read/packages/examples/02_rendering/render.html)
 
