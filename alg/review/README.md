@@ -307,7 +307,24 @@ dp[i][c] = max(dp[i - 1][c], dp[i - 1][c - v[i]] + w[i])
 代码实现如下：
 
 ```typescript
+function maxValue(N: number, V: number, v: number[], w: number[]) {
+  const dp = Array.from({ length: N }).map(() => new Array(V))
 
+  for (let i = 0; i <= V; i++) {
+    dp[0][i] = i > v[0] ? w[0] : 0
+  }
+
+  for (let i = 1; i < N; i++) {
+    for (let j = 0; j < V + 1; j++) {
+      let x = dp[i - 1][j]
+      let y = j >= v[i] ? dp[i - 1][j - v[i]] + w[i] : 0
+
+      dp[i][j] = Math.max(x, y)
+    }
+  }
+
+  return dp[N - 1][V]
+}
 ```
 
 

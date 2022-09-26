@@ -27,6 +27,23 @@ function dfs(v: number[], w: number[], i: number, c: number) {
   return 0
 }
 
-function maxValue(N: number, C: number, v: number[], w: number[]) {
-  const dp = Array.from({ length: N }).map(() => new Array(C))
+function maxValue(N: number, V: number, v: number[], w: number[]) {
+  const dp = Array.from({ length: N }).map(() => new Array(V))
+
+  for (let i = 0; i <= V; i++) {
+    dp[0][i] = i > v[0] ? w[0] : 0
+  }
+
+  for (let i = 1; i < N; i++) {
+    for (let j = 0; j < V + 1; j++) {
+      let x = dp[i - 1][j]
+      let y = j >= v[i] ? dp[i - 1][j - v[i]] + w[i] : 0
+
+      dp[i][j] = Math.max(x, y)
+    }
+  }
+
+  return dp[N - 1][V]
 }
+
+console.log(maxValue(3, 4, [4, 2, 3], [4, 2, 3]))
