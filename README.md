@@ -53,7 +53,7 @@
   - [vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
   - [vite 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_vite) 已完成
   - [vite 源码进阶实现](https://github.com/yw0525/notes/tree/master/vite/vite_source) 已完成
-  - [vue 面试相关](https://github.com/yw0525/notes/tree/master/vue/vue_inteview)
+  - [vue 面试相关](https://github.com/yw0525/notes/tree/master/vue/vue_inteview) 已完成
 - react
   - [react 基础](https://github.com/yw0525/notes/tree/master/react/react_base) 已完成
   - [react-hooks](https://github.com/yw0525/notes/tree/master/react/react_hooks) 已完成
