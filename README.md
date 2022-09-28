@@ -34,27 +34,26 @@
     - [自定义 loader、plugins](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack 源码实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write) 已完成
     - [webpack 源码进阶实现](https://github.com/yw0525/notes/tree/master/webpack/webpack_write_plus) 已完成
-  - Vite
-    - [Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
-    - [vite 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_vite) 已完成
-    - [Vite 源码进阶实现](https://github.com/yw0525/notes/tree/master/vite/vite_source) 已完成
-- 代码规范
   - [JSDOC](https://github.com/yw0525/notes/tree/master/doc) 已完成
   - [Jest](https://github.com/yw0525/notes/tree/master/jest) 已完成
   - [ESLint](https://github.com/yw0525/notes/tree/master/eslint) 已完成
 - vue
   - ~~[vue 基础](https://github.com/yw0525/notes/tree/master/vue/vue_base) 已废弃~~ 😅
-  - [vue3 自定义渲染器](https://github.com/yw0525/notes/tree/master/vue/vue3_renderer) 已完成
   - [vue 源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
   - [vue 源码进阶解析](https://github.com/yw0525/notes/tree/master/vue/vue_source_plus) 已完成
   - [vue 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_source_design) 已完成
-  - [vue3 Diff 过程分析](https://github.com/yw0525/notes/tree/master/vue/vue3_diff) 已完成
-  - [vue3 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue3_source) 已完成
   - [vue-router 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_router) 已完成
   - [vue-router 源码进阶实现](https://github.com/yw0525/notes/tree/master/vue/vue_router_plus) 已完成
   - [vuex 源码实现](https://github.com/yw0525/notes/tree/master/vue/vuex) 已完成
   - [vue-cli 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_cli) 已完成
   - [vue-ssr 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_ssr) 已完成
+  - [vue3 基础](https://github.com/yw0525/notes/tree/master/vue/vue3) 已完成
+  - [vue3 diff过程分析](https://github.com/yw0525/notes/tree/master/vue/vue3_diff) 已完成
+  - [vue3 自定义渲染器](https://github.com/yw0525/notes/tree/master/vue/vue3_renderer) 已完成
+  - [vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
+  - [vite 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_vite) 已完成
+  - [vite 源码进阶实现](https://github.com/yw0525/notes/tree/master/vite/vite_source) 已完成
+  - [vue 面试相关](https://github.com/yw0525/notes/tree/master/vue/vue_inteview)
 - react
   - [react 基础](https://github.com/yw0525/notes/tree/master/react/react_base) 已完成
   - [react-hooks](https://github.com/yw0525/notes/tree/master/react/react_hooks) 已完成
