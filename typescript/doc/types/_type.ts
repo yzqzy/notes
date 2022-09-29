@@ -107,8 +107,3 @@ let numberOrString: number | string = Math.random() < 0.5 ? 'hello' : 100
 let typeAssertedNumber = /** @type {number} */ numberOrString
 
 let one = /** @type {const} */ 1
-
-// ------------------------------------
-
-// load more
-// https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html#param-and-returns
