@@ -80,6 +80,7 @@
   - [Node 基础](https://github.com/yw0525/notes/tree/master/node/base) 已完成
   - ~~[Node 进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
   - [koa 架构分析与源码重写](https://github.com/yw0525/notes/tree/master/node/koa) 已完成
+- [正则学习](https://github.com/yw0525/notes/tree/master/reg/learn) 已完成
 - 可视化
   - threejs
     - [跳一跳案例](https://github.com/yw0525/notes/tree/master/visualization/three.js/jump) 已完成
