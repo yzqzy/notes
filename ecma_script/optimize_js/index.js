@@ -54,7 +54,7 @@
 
 const registerForm = document.getElementById('J-registerForm')
 
-const strageies = {
+const strateies = {
   isNotEmpty: (val, errMsg) => {
     if (val === '') return errMsg
     return val
@@ -69,17 +69,51 @@ const strageies = {
   }
 }
 
+const validatorExecutor = () => {
+  const { username, password, mobile } = registerForm
+
+  const validator = new Validator()
+
+  validator.add(username, [
+    { strategy: 'isNotEmpty', errMsg: '用户名不能为空' },
+    { strategy: 'minLength:6', errMsg: '用户名的长度不能小于6位' }
+  ])
+  validator.add(password, [{ strategy: 'minLength:6', errMsg: '密码的长度不能小于6位' }])
+  validator.add(mobile, [{ strategy: 'mobileFormat', errMsg: '手机号码格式不正确' }])
+
+  return validator.start()
+}
+
 registerForm.onsubmit = e => {
   e.preventDefault()
 
-  const { username, password, mobile } = registerForm
+  const ans = validatorExecutor()
 
-  ;[
-    strageies['isNotEmpty'](username.value, '用户名不能为空'),
-    strageies['minLength'](username.value, 6, '用户名的长度不能小于6位'),
-    strageies['minLength'](password.value, 6, '密码的长度不能小于6位'),
-    strageies['mobileFormat'](mobile.value, '手机号码格式不正确')
-  ]
-
-  console.log(username.value, password.value, mobile.value)
+  console.log(ans)
 }
+
+class Validator {
+  constructor() {
+    this.cache = []
+  }
+
+  add(target, rules) {
+    rules.forEach(rule => {
+      const { errMsg } = rule
+
+      this.cache.push(() => {
+        const [strategy, ...otherArgs] = rule.strategy.split(':')
+        const args = [target.value, ...otherArgs, errMsg]
+
+        return strateies[strategy].apply(target, args)
+      })
+    })
+  }
+
+  start() {
+    return this.cache.map(item => item())
+  }
+}
+
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------

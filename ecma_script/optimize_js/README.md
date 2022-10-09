@@ -30,14 +30,14 @@ console.log(calculateBonus(10000, 'A')) // 40000
 优化后：
 
 ```js
-const strageyObj = {
+const strateyObj = {
   A: salary => salary * 4,
   B: salary => salary * 3,
   C: salary => salary * 2,
   d: salary => salary * 1
 }
 
-const calculateBonus = (salary, level) => strageyObj[level](salary)
+const calculateBonus = (salary, level) => strateyObj[level](salary)
 
 console.log(calculateBonus(10000, 'A')) // 40000
 ```
@@ -61,6 +61,8 @@ console.log(calculateBonus(10000, 'A')) // 40000
   <button type="submit">提交</button>
 </form>
 ```
+
+##### 原始代码
 
  ```js
  const registerForm = document.getElementById('J-registerForm')
@@ -89,8 +91,72 @@ console.log(calculateBonus(10000, 'A')) // 40000
  }
  ```
 
-优化后：
+##### 优化 - 1
 
 ```js
+class Validator {
+  constructor() {
+    this.cache = []
+  }
+
+  add(target, rules) {
+    rules.forEach(rule => {
+      const { errMsg } = rule
+
+      this.cache.push(() => {
+        const [strategy, ...otherArgs] = rule.strategy.split(':')
+        const args = [target.value, ...otherArgs, errMsg]
+
+        return strateies[strategy].apply(target, args)
+      })
+    })
+  }
+
+  start() {
+    return this.cache.map(item => item())
+  }
+}
+```
+
+```js
+const registerForm = document.getElementById('J-registerForm')
+
+const strateies = {
+  isNotEmpty: (val, errMsg) => {
+    if (val === '') return errMsg
+    return val
+  },
+  minLength: (val, len, errMsg) => {
+    if (val.length < len) return errMsg
+    return val
+  },
+  mobileFormat: (val, errMsg) => {
+    if (!/(^1[3|5|8][0-9]{9}$)/.test(val)) return errMsg
+    return val
+  }
+}
+
+const validatorExecutor = () => {
+  const { username, password, mobile } = registerForm
+
+  const validator = new Validator()
+
+  validator.add(username, [
+    { strategy: 'isNotEmpty', errMsg: '用户名不能为空' },
+    { strategy: 'minLength:6', errMsg: '用户名的长度不能小于6位' }
+  ])
+  validator.add(password, [{ strategy: 'minLength:6', errMsg: '密码的长度不能小于6位' }])
+  validator.add(mobile, [{ strategy: 'mobileFormat', errMsg: '手机号码格式不正确' }])
+
+  return validator.start()
+}
+
+registerForm.onsubmit = e => {
+  e.preventDefault()
+
+  const ans = validatorExecutor()
+
+  console.log(ans)
+}
 ```
 
