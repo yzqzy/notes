@@ -75,7 +75,7 @@ console.log(calculateBonus(10000, 'A')) // 40000
      return false
    }
    if (registerForm.password.length < 6) {
-     console.log('用户名不能为空')
+     console.log('密码的长度不能小于6位')
      return false
    }
    if (!/(^1[3|5|8][0-9]{9}$)/.test(registerForm.mobile.value)) {
