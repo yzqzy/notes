@@ -92,26 +92,75 @@ registerForm.onsubmit = e => {
   console.log(ans)
 }
 
-class Validator {
+// class Validator {
+//   constructor() {
+//     this.cache = []
+//   }
+
+//   add(target, rules) {
+//     rules.forEach(rule => {
+//       const { errMsg } = rule
+
+//       this.cache.push(() => {
+//         const [strategy, ...otherArgs] = rule.strategy.split(':')
+//         const args = [target.value, ...otherArgs, errMsg]
+
+//         return strateies[strategy].apply(target, args)
+//       })
+//     })
+//   }
+
+//   start() {
+//     return this.cache.map(item => item())
+//   }
+// }
+
+class $Event {
   constructor() {
-    this.cache = []
+    this.subs = []
   }
 
+  listen(key, fn) {
+    if (!this.subs[key]) this.subs[key] = []
+    this.subs[key].push(fn)
+  }
+
+  trigger() {
+    const key = [].shift.call(arguments)
+    const fns = this.subs[key]
+
+    const ans = []
+
+    fns.forEach(fn => {
+      ans.push(fn.apply(this, arguments))
+    })
+
+    return ans
+  }
+}
+
+class Validator extends $Event {
   add(target, rules) {
     rules.forEach(rule => {
       const { errMsg } = rule
+      const [strategy, ...otherArgs] = rule.strategy.split(':')
 
-      this.cache.push(() => {
-        const [strategy, ...otherArgs] = rule.strategy.split(':')
-        const args = [target.value, ...otherArgs, errMsg]
-
-        return strateies[strategy].apply(target, args)
-      })
+      this.listen(strategy, () =>
+        strateies[strategy].apply(target, [target.value, ...otherArgs, errMsg])
+      )
     })
   }
 
   start() {
-    return this.cache.map(item => item())
+    return Object.keys(strateies).reduce(
+      (prev, curr) => (
+        prev.push({
+          [curr]: this.trigger(curr)
+        }),
+        prev
+      ),
+      []
+    )
   }
 }
 

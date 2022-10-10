@@ -1,12 +1,10 @@
-# JS 代码优化
+# 设计模式实操
 
-## if-else 优化
+## if-else 优化 - 策略模式
 
 `if-else` 优化可以考虑两个方向，策略模式和责任链模式。
 
-### 策略模式优化
-
-#### 简单案例
+### 简单案例
 
 ```js
 const calculateBonus = function (salary, level) {
@@ -42,7 +40,7 @@ const calculateBonus = (salary, level) => strateyObj[level](salary)
 console.log(calculateBonus(10000, 'A')) // 40000
 ```
 
-#### 真实场景
+### 真实场景
 
 ```html
 <form action="htpp://www.baidu.com" id="J-registerForm" method="post">
@@ -62,7 +60,7 @@ console.log(calculateBonus(10000, 'A')) // 40000
 </form>
 ```
 
-##### 原始代码
+#### 原始代码
 
  ```js
  const registerForm = document.getElementById('J-registerForm')
@@ -91,7 +89,9 @@ console.log(calculateBonus(10000, 'A')) // 40000
  }
  ```
 
-##### 优化 - 1
+#### 优化 - 1
+
+封装 `Validator` 类，负责订阅策略和执行策略。
 
 ```js
 class Validator {
@@ -117,6 +117,8 @@ class Validator {
   }
 }
 ```
+
+定义策略对象和执行函数，只需要在 `onsubmit` 时调用函数即可。
 
 ```js
 const registerForm = document.getElementById('J-registerForm')
@@ -158,5 +160,92 @@ registerForm.onsubmit = e => {
 
   console.log(ans)
 }
+```
+
+#### 优化 - 2
+
+我们可以对 `Validator` 进一步优化。
+
+```js
+class $Event {
+  constructor() {
+    this.subs = []
+  }
+
+  listen(key, fn) {
+    if (!this.subs[key]) this.subs[key] = []
+    this.subs[key].push(fn)
+  }
+
+  trigger() {
+    const key = [].shift.call(arguments)
+    const fns = this.subs[key]
+
+    const ans = []
+
+    fns.forEach(fn => {
+      ans.push(fn.apply(this, arguments))
+    })
+
+    return ans
+  }
+}
+
+class Validator extends $Event {
+  add(target, rules) {
+    rules.forEach(rule => {
+      const { errMsg } = rule
+      const [strategy, ...otherArgs] = rule.strategy.split(':')
+
+      this.listen(strategy, () =>
+        strateies[strategy].apply(target, [target.value, ...otherArgs, errMsg])
+      )
+    })
+  }
+
+  start() {
+    return Object.keys(strateies).reduce(
+      (prev, curr) => (
+        prev.push({
+          [curr]: this.trigger(curr)
+        }),
+        prev
+      ),
+      []
+    )
+  }
+}
+```
+
+表单提交时打印结果如下：
+
+```json
+[
+  {
+    "isNotEmpty": [
+      "用户名不能为空"
+    ]
+  },
+  {
+    "minLength": [
+      "用户名的长度不能小于6位",
+      "密码的长度不能小于6位"
+    ]
+  },
+  {
+    "mobileFormat": [
+      "手机号码格式不正确"
+    ]
+  }
+]
+```
+
+## 链式调用优化 - 责任链模式
+
+责任链模式可以将待处理任务形成一个链条，根据不同的分支执行不同任务。
+
+### 原始代码
+
+```js
 ```
 

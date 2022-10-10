@@ -11,6 +11,7 @@
   - [函数式编程](https://github.com/yw0525/notes/tree/master/ecma_script/functional) 已完成
   - [JavaScript 性能优化](https://github.com/yw0525/notes/tree/master/ecma_script/optimize) 已完成
   - [前端性能优化](https://github.com/yw0525/notes/tree/master/ecma_script/front_end_optimize) 已完成
+  - [设计模式实操](https://github.com/yw0525/notes/tree/master/ecma_script/optimize_design_patterns) 更新中... 😁
 - [HTML5](https://github.com/yw0525/notes/tree/master/html5/base) 已完成
 - [CSS3](https://github.com/yw0525/notes/tree/master/css3) 已完成
 - 浏览器
@@ -70,7 +71,7 @@
   - [Fiber](https://github.com/yw0525/notes/tree/master/react/Fiber) 已完成
   - [react 源码阅读](https://github.com/yw0525/notes/tree/master/react/react_source) 暂停中 😀
 - solid
-  - [sold 源码解析](https://github.com/yw0525/notes/tree/master/solid/source_analysis) 更新中... 😁
+  - [solid 源码解析](https://github.com/yw0525/notes/tree/master/solid/source_analysis) 更新中... 😁
 - TypeScipt
   - [TypeScipt 基础](https://github.com/yw0525/notes/tree/master/typescript/base) 已完成
   - [TypeScipt 案例](https://github.com/yw0525/notes/tree/master/typescript/examples/test/src) 已完成
