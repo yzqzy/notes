@@ -240,6 +240,8 @@ class Validator extends $Event {
 ]
 ```
 
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/strategy/index.js#L55)
+
 ## 链式调用优化 - 责任链模式
 
 责任链模式可以将待处理任务形成一个链条，根据不同的分支执行不同任务。
@@ -247,5 +249,128 @@ class Validator extends $Event {
 ### 原始代码
 
 ```js
+const order = (orderType, isPay, count) => {
+  if (orderType === 1) {
+    // 充值 500
+    if (isPay) {
+      // 充值成功，100% 中奖
+      console.log('恭喜中奖 100 优惠券')
+    } else {
+      if (count > 0) {
+        console.log('恭喜中奖 10 优惠券')
+      } else {
+        console.log('很遗憾没有优惠券')
+      }
+    }
+  } else if (orderType === 2) {
+    // 充值 200
+    if (isPay) {
+      // 充值成功，100% 中奖
+      console.log('恭喜中奖 20 优惠券')
+    } else {
+      if (count > 0) {
+        console.log('恭喜中奖 10 优惠券')
+      } else {
+        console.log('很遗憾没有优惠券')
+      }
+    }
+  } else if (orderType === 3) {
+    if (count > 0) {
+      console.log('恭喜中奖 10 优惠券')
+    } else {
+      console.log('很遗憾没有优惠券')
+    }
+  }
+}
 ```
+
+### 优化 - 1
+
+```js
+const order500 = (orderType, isPay, count) => {
+  if (orderType === 1 && isPay) {
+    console.log('恭喜中奖 100 优惠券')
+  } else {
+    order200(orderType, isPay, count)
+  }
+}
+
+const order200 = (orderType, isPay, count) => {
+  if (orderType === 2 && isPay) {
+    console.log('恭喜中奖 20 优惠券')
+  } else {
+    orderNormal(orderType, isPay, count)
+  }
+}
+
+const orderNormal = (orderType, isPay, count) => {
+  if (count > 0) {
+    console.log('恭喜中奖 10 优惠券')
+  } else {
+    console.log('很遗憾没有优惠券')
+  }
+}
+```
+
+这种方式其实也不是特别好，当我们增加一个 `order100` 函数，需要改动 `order200` 函数的逻辑。
+
+### 优化 - 2
+
+```js
+const order500 = (orderType, isPay, count) => {
+  if (orderType === 1 && isPay) {
+    console.log('恭喜中奖 100 优惠券')
+  } else {
+    return 'next'
+  }
+}
+
+const order200 = (orderType, isPay, count) => {
+  if (orderType === 2 && isPay) {
+    console.log('恭喜中奖 40 优惠券')
+  } else {
+    return 'next'
+  }
+}
+
+const orderNormal = (orderType, isPay, count) => {
+  if (count > 0) {
+    console.log('恭喜中奖 10 优惠券')
+  } else {
+    console.log('很遗憾没有优惠券')
+  }
+}
+
+class Chain {
+  constructor(fn) {
+    this.fn = fn
+    this.next = null
+  }
+
+  setNext(nextChain) {
+    this.next = nextChain
+  }
+
+  run() {
+    const ans = this.fn.apply(this, arguments)
+
+    if (ans === 'next' && this.next) {
+      return this.next.run.apply(this.next, arguments)
+    }
+
+    return ans
+  }
+}
+
+const chainOrder500 = new Chain(order500)
+const chainOrder200 = new Chain(order200)
+const chainOrderNormal = new Chain(orderNormal)
+
+chainOrder500.setNext(chainOrder200)
+chainOrder200.setNext(chainOrderNormal)
+
+chainOrder500.run(2, true, 500)
+```
+
+### 优化 - 3
 
