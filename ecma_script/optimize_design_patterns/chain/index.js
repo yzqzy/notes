@@ -64,6 +64,63 @@
 // ---------------------------------------------------------------------
 // ---------------------------------------------------------------------
 
+// const order500 = (orderType, isPay, count) => {
+//   if (orderType === 1 && isPay) {
+//     console.log('恭喜中奖 100 优惠券')
+//   } else {
+//     return 'next'
+//   }
+// }
+
+// const order200 = (orderType, isPay, count) => {
+//   if (orderType === 2 && isPay) {
+//     console.log('恭喜中奖 40 优惠券')
+//   } else {
+//     return 'next'
+//   }
+// }
+
+// const orderNormal = (orderType, isPay, count) => {
+//   if (count > 0) {
+//     console.log('恭喜中奖 10 优惠券')
+//   } else {
+//     console.log('很遗憾没有优惠券')
+//   }
+// }
+
+// class Chain {
+//   constructor(fn) {
+//     this.fn = fn
+//     this.next = null
+//   }
+
+//   setNext(nextChain) {
+//     this.next = nextChain
+//   }
+
+//   run() {
+//     const ans = this.fn.apply(this, arguments)
+
+//     if (ans === 'next' && this.next) {
+//       return this.next.run.apply(this.next, arguments)
+//     }
+
+//     return ans
+//   }
+// }
+
+// const chainOrder500 = new Chain(order500)
+// const chainOrder200 = new Chain(order200)
+// const chainOrderNormal = new Chain(orderNormal)
+
+// chainOrder500.setNext(chainOrder200)
+// chainOrder200.setNext(chainOrderNormal)
+
+// chainOrder500.run(2, true, 0)
+
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+
 const order500 = (orderType, isPay, count) => {
   if (orderType === 1 && isPay) {
     console.log('恭喜中奖 100 优惠券')
@@ -88,32 +145,20 @@ const orderNormal = (orderType, isPay, count) => {
   }
 }
 
-class Chain {
-  constructor(fn) {
-    this.fn = fn
-    this.next = null
-  }
+Function.prototype.after = function (fn) {
+  const _this = this
 
-  setNext(nextChain) {
-    this.next = nextChain
-  }
+  return function () {
+    const ans = _this.apply(this, arguments)
 
-  run() {
-    const ans = this.fn.apply(this, arguments)
-
-    if (ans === 'next' && this.next) {
-      return this.next.run.apply(this.next, arguments)
+    if (ans === 'next') {
+      return fn.apply(this, arguments)
     }
 
     return ans
   }
 }
 
-const chainOrder500 = new Chain(order500)
-const chainOrder200 = new Chain(order200)
-const chainOrderNormal = new Chain(orderNormal)
+const order = order500.after(order200).after(orderNormal)
 
-chainOrder500.setNext(chainOrder200)
-chainOrder200.setNext(chainOrderNormal)
-
-chainOrder500.run(2, true, 0)
+order(2, true, 0)

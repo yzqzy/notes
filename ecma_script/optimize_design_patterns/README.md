@@ -372,5 +372,59 @@ chainOrder200.setNext(chainOrderNormal)
 chainOrder500.run(2, true, 500)
 ```
 
+虽然代码看起来清晰很多，但是增加很多额外操作，比较繁琐。
+
 ### 优化 - 3
+
+```js
+const order500 = (orderType, isPay, count) => {
+  if (orderType === 1 && isPay) {
+    console.log('恭喜中奖 100 优惠券')
+  } else {
+    return 'next'
+  }
+}
+
+const order200 = (orderType, isPay, count) => {
+  if (orderType === 2 && isPay) {
+    console.log('恭喜中奖 40 优惠券')
+  } else {
+    return 'next'
+  }
+}
+
+const orderNormal = (orderType, isPay, count) => {
+  if (count > 0) {
+    console.log('恭喜中奖 10 优惠券')
+  } else {
+    console.log('很遗憾没有优惠券')
+  }
+}
+
+Function.prototype.after = function (fn) {
+  const _this = this
+
+  return function () {
+    const ans = _this.apply(this, arguments)
+
+    if (ans === 'next') {
+      return fn.apply(this, arguments)
+    }
+
+    return ans
+  }
+}
+
+const order = order500.after(order200).after(orderNormal)
+
+order(2, true, 0)
+```
+
+我们可以使用 `aop` 的方式建立函数之间的调用关系，实现完整的责任链。
+
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/chain/index.js)
+
+## 状态机优化 - 状态模式
+
+
 
