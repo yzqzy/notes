@@ -422,9 +422,71 @@ order(2, true, 0)
 
 我们可以使用 `aop` 的方式建立函数之间的调用关系，实现完整的责任链。
 
-[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/chain/index.js)
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/chain/index.js#L124)
 
 ## 状态机优化 - 状态模式
 
+### 原始代码
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>state pattern</title>
+</head>
+<body>
+
+   <button id="J-btn">开关</button>
+
+   <script src="./index.js"></script>
+
+  
+</body>
+</html>
+```
+
+```js
+class Light {
+  constructor() {
+    this.state = 'off'
+    this.oBtn = document.getElementById('J-btn')
+  }
+
+  init() {
+    this.bindEvents()
+  }
+
+  bindEvents() {
+    this.oBtn.addEventListener('click', this.buttonWasPressed.bind(this), false)
+  }
+
+  buttonWasPressed() {
+    if (this.state === 'off') {
+      console.log('弱光')
+      this.state = 'weak'
+      return
+    }
+
+    if (this.state === 'weak') {
+      console.log('强光')
+      this.state = 'strong'
+      return
+    }
+
+    if (this.state === 'strong') {
+      console.log('关灯')
+      this.state = 'off'
+    }
+  }
+}
+
+new Light().init()
+```
+
+这种实现看似没有问题，但是随着业务拓展，复杂度会上升。当新增状态时，需要修改大量代码。
+
+### 优化 - 1
 
