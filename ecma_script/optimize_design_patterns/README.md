@@ -240,7 +240,7 @@ class Validator extends $Event {
 ]
 ```
 
-[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/strategy/index.js#L55)
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/strategy/index.js)
 
 ## 链式调用优化 - 责任链模式
 
@@ -422,7 +422,7 @@ order(2, true, 0)
 
 我们可以使用 `aop` 的方式建立函数之间的调用关系，实现完整的责任链。
 
-[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/chain/index.js#L124)
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/chain/index.js)
 
 ## 状态机优化 - 状态模式
 
@@ -442,7 +442,6 @@ order(2, true, 0)
    <button id="J-btn">开关</button>
 
    <script src="./index.js"></script>
-
   
 </body>
 </html>
@@ -488,5 +487,259 @@ new Light().init()
 
 这种实现看似没有问题，但是随着业务拓展，复杂度会上升。当新增状态时，需要修改大量代码。
 
+* 耦合程度很高，需要解耦；
+* 字符串记录业务状态，容易写错，不够友好；
+* 切换状态不明显；
+* context 会无线膨胀。
+
+
+设计原则（solid）
+
+* 单一职责原则
+  * 一个函数只做一件事情，小而美
+* 开闭原则
+  * 对拓展开放，对修改关闭
+  * 尽量少修改原有代码
+* 里氏替换原则
+  * 子类一定可以替代父类
+* 接口隔离原则
+* 依赖倒置原则
+
+前端开发中，我们仅需要关心单一职责原则和开闭原则。
+
 ### 优化 - 1
+
+状态模式是面向对象的设计模式。
+
+面向对象即万物皆对象，基于类的方式进行程序设计。
+
+```js
+class OffLightState {
+  constructor(light) {
+    this.light = light
+  }
+
+  buttonWasPressed() {
+    console.log('弱光')
+    this.light.setState(this.light.weakLightState)
+  }
+}
+class WeakLightState {
+  constructor(light) {
+    this.light = light
+  }
+
+  buttonWasPressed() {
+    console.log('强光')
+    this.light.setState(this.light.strongLightState)
+  }
+}
+class StrongLightState {
+  constructor(light) {
+    this.light = light
+  }
+
+  buttonWasPressed() {
+    console.log('关灯')
+    this.light.setState(this.light.offLightState)
+  }
+}
+
+class Light {
+  constructor() {
+    this.offLightState = new OffLightState(this)
+    this.weakLightState = new WeakLightState(this)
+    this.strongLightState = new StrongLightState(this)
+
+    this.currentState = this.offLightState
+    this.oBtn = document.getElementById('J-btn')
+  }
+
+  init() {
+    this.bindEvents()
+  }
+
+  bindEvents() {
+    this.oBtn.addEventListener('click', this.buttonWasPressed.bind(this), false)
+  }
+
+  buttonWasPressed() {
+    this.currentState.buttonWasPressed()
+  }
+
+  setState(newState) {
+    this.currentState = newState
+  }
+}
+
+new Light().init()
+```
+
+截至目前位置，代码其实依旧比较繁琐，我们可以进一步优化。
+
+### 优化 - 2
+
+```js
+class State {
+  constructor(light) {
+    this.light = light
+  }
+
+  buttonWasPressed() {
+    throw new Error('抽象类不允许使用')
+  }
+}
+
+class OffLightState extends State {
+  buttonWasPressed() {
+    console.log('弱光')
+    this.light.setState(this.light.weakLightState)
+  }
+}
+class WeakLightState extends State {
+  buttonWasPressed() {
+    console.log('强光')
+    this.light.setState(this.light.strongLightState)
+  }
+}
+class StrongLightState extends State {
+  buttonWasPressed() {
+    console.log('关灯')
+    this.light.setState(this.light.offLightState)
+  }
+}
+
+class Light {
+  constructor() {
+    this.offLightState = new OffLightState(this)
+    this.weakLightState = new WeakLightState(this)
+    this.strongLightState = new StrongLightState(this)
+
+    this.currentState = this.offLightState
+    this.oBtn = document.getElementById('J-btn')
+  }
+
+  init() {
+    this.bindEvents()
+  }
+
+  bindEvents() {
+    this.oBtn.addEventListener('click', this.buttonWasPressed.bind(this), false)
+  }
+
+  buttonWasPressed() {
+    this.currentState.buttonWasPressed()
+  }
+
+  setState(newState) {
+    this.currentState = newState
+  }
+}
+
+new Light().init()
+```
+
+可以利用抽象类的概念去优化代码。
+
+### 优化 - 3
+
+其实我们还可以去掉类，目前多个状态需要实例化多次，编写起来也比较繁琐。
+
+```js
+const FSM = {
+  off: {
+    buttonWasPressed() {
+      console.log('弱光')
+      this.currentState = FSM.weak
+    }
+  },
+  weak: {
+    buttonWasPressed() {
+      console.log('强光')
+      this.currentState = FSM.strong
+    }
+  },
+  strong: {
+    buttonWasPressed() {
+      console.log('关灯')
+      this.currentState = FSM.off
+    }
+  }
+}
+
+class Light {
+  constructor() {
+    this.currentState = FSM.off
+    this.oBtn = document.getElementById('J-btn')
+  }
+
+  init() {
+    this.bindEvents()
+  }
+
+  bindEvents() {
+    this.oBtn.addEventListener('click', this.buttonWasPressed.bind(this), false)
+  }
+
+  buttonWasPressed() {
+    this.currentState.buttonWasPressed.call(this)
+  }
+}
+
+new Light().init()
+```
+
+这种优化方式虽然不是面向对象的写法，但思想上是一致的。
+
+```js
+const FSM = {
+  off: {
+    buttonWasPressed() {
+      console.log('弱光')
+      this.setState(FSM.weak)
+    }
+  },
+  weak: {
+    buttonWasPressed() {
+      console.log('强光')
+      this.setState(FSM.strong)
+    }
+  },
+  strong: {
+    buttonWasPressed() {
+      console.log('关灯')
+      this.setState(FSM.off)
+    }
+  }
+}
+
+class Light {
+  constructor() {
+    this.currentState = FSM.off
+    this.oBtn = document.getElementById('J-btn')
+  }
+
+  init() {
+    this.bindEvents()
+  }
+
+  bindEvents() {
+    this.oBtn.addEventListener('click', this.buttonWasPressed.bind(this), false)
+  }
+
+  buttonWasPressed() {
+    this.currentState.buttonWasPressed.call(this)
+  }
+
+  setState(newState) {
+    this.currentState = newState
+  }
+}
+
+new Light().init()
+```
+
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/state/index.js)
+
+
 
