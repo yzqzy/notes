@@ -956,3 +956,121 @@ setTimeout(() => {
 ```
 
 [代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/subscribe/index.js)
+
+## 享元模式
+
+享元（flyweight）模式是解决性能优化的一个有效设计模式。
+
+享元：提取通用属性和方法进行共享，减少创建创建对象的目的，以便于性能优化。
+
+### 原始代码
+
+```js
+const Modal = function (sex, clothes) {
+  this.sex = sex
+  this.clothes = clothes
+}
+
+Modal.prototype.tablePhoto = function () {
+  console.log(`性别 = ${this.sex}, 衣服 = ${this.clothes}`)
+}
+
+for (let i = 0; i < 50; i++) {
+  const modal = new Modal('male', `clothes ${i}`)
+  modal.tablePhoto()
+}
+
+for (let i = 0; i < 50; i++) {
+  const modal = new Modal('female', `clothes ${i}`)
+  modal.tablePhoto()
+}
+```
+
+### 优化 - 1
+
+```js
+const Modal = function (sex) {
+  this.sex = sex
+}
+
+Modal.prototype.tablePhoto = function () {
+  console.log(`性别 = ${this.sex}, 衣服 = ${this.clothes}`)
+}
+
+const maleModal = new Modal('male')
+const femaleModal = new Modal('female')
+
+for (let i = 0; i < 50; i++) {
+  maleModal.clothes = `clothes ${i}`
+  maleModal.tablePhoto()
+}
+
+for (let i = 0; i < 50; i++) {
+  femaleModal.clothes = `clothes ${i}`
+  femaleModal.tablePhoto()
+}
+```
+
+其实我们只需要实例两个 Modal 对象，分别穿男款和女款衣服。
+
+但是目前这种使用方法并不好，我们需要给 Modal 对象动态添加 `clothes` 外部状态。
+
+### 优化 - 2
+
+```js
+const Modal = function (sex) {
+  this.sex = sex
+}
+
+Modal.prototype.tablePhoto = function () {
+  console.log(`性别 = ${this.sex}, 衣服 = ${this.clothes}`)
+}
+
+const ModalFactory = (function () {
+  const modalGender = {}
+
+  return {
+    createModal: function (sex) {
+      if (modalGender[sex]) return modalGender[sex]
+      return (modalGender[sex] = new Modal(sex))
+    }
+  }
+})()
+
+const ModalManager = (function () {
+  const modalObj = {}
+
+  return {
+    add: function (sex, i) {
+      modalObj[i] = {
+        clothes: `clothes ${i}`
+      }
+      return ModalFactory.createModal(sex)
+    },
+    setExternalState: function (modal, i) {
+      modal.clothes = modalObj[i].clothes
+    }
+  }
+})()
+
+for (let i = 0; i < 50; i++) {
+  const maleModal = ModalManager.add('male', i)
+  ModalManager.setExternalState(maleModal, i)
+  maleModal.tablePhoto()
+}
+
+for (let i = 0; i < 50; i++) {
+  const femaleModal = ModalManager.add('female', i)
+  ModalManager.setExternalState(femaleModal, i)
+  femaleModal.tablePhoto()
+}
+```
+
+我们可以使用单例模式，并抽象外部状态方法。
+
+这种代码组织方式就是使用享元模式来优化代码，区分内部状态和外部状态。
+
+内部状态使用工厂的方式创建，外部状态使用 `Manager` 的方式来创建。
+
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/flyweight/index.js)
+
