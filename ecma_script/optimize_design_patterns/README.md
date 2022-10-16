@@ -741,5 +741,218 @@ new Light().init()
 
 [代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/state/index.js)
 
+[模态框案例](https://github.com/yw0525/case/tree/main/state-pattern-modal)
 
+## 发布订阅模式
 
+绑定事件处理函数。
+
+```html
+<button id="J-btn">Click</button>
+
+<script>
+  const oBtn = document.getElementById('J-btn')
+
+  // DOM1 句柄写法
+  oBtn.onclick = () => {
+    console.log('trigger')
+  }
+
+  // DOM2 函数调用方法
+  oBtn.addEventListener('click', () => {
+    console.log('trigger')
+  })
+</script>
+```
+
+`addEventListener` 就是事件订阅的过程，当用户执行指定操作之后，浏览器会自动触发回调函数。
+
+`addEventListener` 方法继承自 `EventTarget` 。
+
+高内聚、低耦合
+
+* 代码耦合指的是代码之间的依赖关系
+* 内聚指的是代码的复用性
+* 高内聚、低耦合就是要减少代码的可依赖性，抽象通用代码
+
+如何代码存在时间上的依赖关系，理论上都可以使用发布订阅模式来优化。 
+
+### 原始代码
+
+```js
+const salesOffices = {}
+
+salesOffices.clientList = []
+
+salesOffices.listen = function (fn) {
+  this.clientList.push(fn)
+}
+
+salesOffices.trigger = function () {
+  this.clientList.forEach(fn => fn.apply(this, arguments))
+}
+
+// listen
+salesOffices.listen((price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+})
+salesOffices.listen((price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+})
+
+// trigger
+setTimeout(() => {
+  salesOffices.trigger(2000, 80)
+  salesOffices.trigger(3000, 110)
+}, 1000)
+
+// 房屋面积：80, 房屋价格：2000
+// 房屋面积：80, 房屋价格：2000
+// 房屋面积：110, 房屋价格：3000
+// 房屋面积：110, 房屋价格：3000
+```
+
+### 优化-1
+
+可以指定触发某个键。
+
+```js
+const salesOffices = {}
+
+salesOffices.clientList = []
+
+salesOffices.listen = function (key, fn) {
+  if (!this.clientList[key]) this.clientList[key] = []
+  this.clientList[key].push(fn)
+}
+
+salesOffices.trigger = function () {
+  const key = [].shift.call(arguments)
+  this.clientList[key].forEach(fn => fn.apply(this, arguments))
+}
+
+// listen
+salesOffices.listen('2000meter', (price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+})
+salesOffices.listen('3000meter', (price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+})
+
+// trigger
+setTimeout(() => {
+  salesOffices.trigger('2000meter', 2000, 80)
+  salesOffices.trigger('3000meter', 3000, 110)
+}, 1000)
+
+// 房屋面积：80, 房屋价格：2000
+// 房屋面积：110, 房屋价格：3000
+```
+
+### 优化-2
+
+增加移除订阅功能。
+
+```js
+
+const salesOffices = {}
+
+salesOffices.clientList = []
+
+salesOffices.listen = function (key, fn) {
+  if (!this.clientList[key]) this.clientList[key] = []
+  this.clientList[key].push(fn)
+}
+
+salesOffices.remove = function (key, fn) {
+  const fns = this.clientList[key]
+
+  if (!fns) return false
+
+  const idx = fns.findIndex(_fn => _fn === fn)
+
+  fns.splice(idx, 1)
+}
+
+salesOffices.trigger = function () {
+  const key = [].shift.call(arguments)
+  this.clientList[key].forEach(fn => fn.apply(this, arguments))
+}
+
+function test(price, square) {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+}
+
+// listen
+salesOffices.listen('2000meter', test)
+salesOffices.listen('3000meter', (price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+})
+
+// rmeove
+salesOffices.remove('2000meter', test)
+
+// trigger
+setTimeout(() => {
+  salesOffices.trigger('2000meter', 2000, 80)
+  salesOffices.trigger('3000meter', 3000, 110)
+}, 1000)
+
+// 房屋面积：110, 房屋价格：3000
+```
+
+### 优化-3
+
+抽离发布订阅通用类。
+
+```js
+class $Event {
+  constructor() {
+    this.clientList = []
+  }
+
+  listen(key, fn) {
+    if (!this.clientList[key]) this.clientList[key] = []
+    this.clientList[key].push(fn)
+  }
+
+  trigger() {
+    const key = [].shift.call(arguments)
+    this.clientList[key].forEach(fn => fn.apply(this, arguments))
+  }
+
+  remove(key, fn) {
+    const fns = this.clientList[key]
+
+    if (!fns) return false
+
+    const idx = fns.findIndex(_fn => _fn === fn)
+
+    fns.splice(idx, 1)
+  }
+}
+
+class SalesOffices extends $Event {}
+const salesOffices = new SalesOffices()
+
+const test = (price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+}
+
+// listen
+salesOffices.listen('2000meter', test)
+salesOffices.listen('3000meter', (price, square) => {
+  console.log(`房屋面积：${square}, 房屋价格：${price}`)
+})
+
+// rmeove
+salesOffices.remove('2000meter', test)
+
+// trigger
+setTimeout(() => {
+  salesOffices.trigger('2000meter', 2000, 80)
+  salesOffices.trigger('3000meter', 3000, 110)
+}, 1000)
+```
+
+[代码地址](https://github.com/yw0525/notes/blob/master/ecma_script/optimize_design_patterns/subscribe/index.js)
