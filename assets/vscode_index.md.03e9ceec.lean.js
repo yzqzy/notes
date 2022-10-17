@@ -1,1 +1,0 @@
-import{_ as s,c as n,o as a,a as o}from"./app.88700a8e.js";const l="/assets/config.9b2cb546.png",u=JSON.parse('{"title":"vscode","description":"","frontmatter":{},"headers":[],"relativePath":"vscode/index.md"}'),p={name:"vscode/index.md"},t=o("",16),e=[t];function r(c,D,F,y,C,A){return a(),n("div",null,e)}const d=s(p,[["render",r]]);export{u as __pageData,d as default};
