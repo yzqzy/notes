@@ -138,7 +138,7 @@ console.log(path.resolve('/a', '../b')) // D:\b
 console.log(path.resolve('index.html')) // D:\workspace\notes\index.html
 ```
 
-[代码地址](https://github.com/yw0525/notes/tree/master/node/core_module/_path)
+[代码地址](https://github.com/yw0525/notes/tree/master/node/core_module/_path/index.js)
 
 ## buffer
 
