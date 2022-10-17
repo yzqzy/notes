@@ -11,7 +11,7 @@
   - [函数式编程](https://github.com/yw0525/notes/tree/master/ecma_script/functional) 已完成
   - [JavaScript 性能优化](https://github.com/yw0525/notes/tree/master/ecma_script/optimize) 已完成
   - [前端性能优化](https://github.com/yw0525/notes/tree/master/ecma_script/front_end_optimize) 已完成
-  - [设计模式实操](https://github.com/yw0525/notes/tree/master/ecma_script/optimize_design_patterns) 更新中... 😁
+  - [设计模式实操](https://github.com/yw0525/notes/tree/master/ecma_script/optimize_design_patterns) 已完成
 - [HTML5](https://github.com/yw0525/notes/tree/master/html5/base) 已完成
 - [CSS3](https://github.com/yw0525/notes/tree/master/css3) 已完成
 - 浏览器
@@ -79,6 +79,7 @@
   - [TypeScipt 全面进阶](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
 - Node
   - [Node 基础](https://github.com/yw0525/notes/tree/master/node/base) 已完成
+  - [Node 核心模块](https://github.com/yw0525/notes/tree/master/node/core_module) 更新中... 😁
   - ~~[Node 进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
   - [koa 架构分析与源码重写](https://github.com/yw0525/notes/tree/master/node/koa) 已完成
 - [正则学习](https://github.com/yw0525/notes/tree/master/reg/learn) 已完成
