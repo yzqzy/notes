@@ -35,4 +35,74 @@ console.log(path.extname('/a/b/index.html.js.')) // .
 
 console.log('---------------------------------------------------------------------')
 
-// 4.
+// 4. 解析路径
+console.log(path.parse('/a/b/c/index.html'))
+// {
+//   root: '/',
+//   dir: '/a/b/c',
+//   base: 'index.html',
+//   ext: '.html',
+//   name: 'index'
+// }
+
+console.log(path.parse('/a/b/c'))
+// { root: '/', dir: '/a/b', base: 'c', ext: '', name: 'c' }
+console.log(path.parse('/a/b/c/'))
+// 路径结尾分隔符会被忽略
+// { root: '/', dir: '/a/b', base: 'c', ext: '', name: 'c' }
+
+console.log(path.parse('./a/b/c/'))
+// { root: '', dir: './a/b', base: 'c', ext: '', name: 'c' }
+
+console.log('---------------------------------------------------------------------')
+
+// 5. 序列化路径
+console.log(path.format(path.parse('./a/b/c/'))) // ./a/b\c
+
+console.log('---------------------------------------------------------------------')
+
+// 6. 判断当前路径是否为绝对路径
+console.log(path.isAbsolute('foo')) // false
+console.log(path.isAbsolute('/foo')) // true
+console.log(path.isAbsolute('///foo')) // true
+
+console.log(path.isAbsolute('')) // false
+console.log(path.isAbsolute('.')) // false
+console.log(path.isAbsolute('../bar')) // false
+
+console.log('---------------------------------------------------------------------')
+
+// 7. 拼接路径
+console.log(path.join('a/b', 'c', 'index.html')) // a\b\c\index.html
+console.log(path.join('/a/b', 'c', 'index.html')) // \a\b\c\index.html
+
+console.log(path.join('/a/b', 'c', '../', 'index.html')) // \a\b\index.html
+console.log(path.join('/a/b', 'c', './', 'index.html')) // \a\b\c\index.html
+console.log(path.join('/a/b', 'c', '', 'index.html')) // \a\b\c\index.html
+console.log(path.join('')) // .
+
+console.log('---------------------------------------------------------------------')
+
+// 8. 规范化路径
+console.log(path.normalize('a/b/c/d')) // a\b\c\d
+console.log(path.normalize('a////b/c../d')) // a\b\c..\d
+console.log(path.normalize('a//\\//b/c\\/d')) // a\b\c\d
+console.log(path.normalize('a//\\\b/c\\/d')) // a\c\d
+console.log(path.normalize('')) // .
+
+console.log('---------------------------------------------------------------------')
+
+// 9. 返回绝对路径
+console.log(path.resolve('')) // D:\workspace\notes
+console.log(path.resolve('a', 'b')) // D:\workspace\notes\a\b
+
+// resolve([from], to)
+// 如果传入多个参数，不要在第二个参数前面添加路径分隔符
+console.log(path.resolve('a', '/b')) // D:\b
+console.log(path.resolve('/a', '/b')) // D:\b
+console.log(path.resolve('/a', 'b')) // D:\a\b
+console.log(path.resolve('/a', '../b')) // D:\b
+console.log(path.resolve('/a', './b')) // D:\a\b
+
+// 正常用法
+console.log(path.resolve('index.html')) // D:\workspace\notes\index.html
