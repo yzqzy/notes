@@ -638,5 +638,90 @@ fs.watchFile(
 
 ### 文件操作
 
-#### md 转 html
+#### 文件打开与关闭
 
+readFile、writeFile 都是将文件中内容一次性全部读取或者写入到内存中，这种方式对于大体积的文件来讲是不合理的。
+
+因此我们需要一种边读边写或者编写边读的操作方式。
+
+我们需要将文件打开，写入，关闭看作是独立的环节，这也是我们为什么要使用 open 和 close。
+
+```js
+const fs = require('fs')
+const path = require('path')
+
+const data_path = path.resolve('data.txt')
+
+// open 打开文件
+fs.open(data_path, 'r', (err, fd) => {
+  console.log(fd)
+})
+
+fs.open(data_path, 'r', (err, fd) => {
+  console.log(fd)
+
+  // close 关闭文件
+  fs.close(fd, err => {
+    if (!err) {
+      console.log('close sucess')
+    }
+  })
+})
+```
+
+#### 大文件读写操作
+
+```js
+const fs = require('fs')
+const path = require('path')
+
+const data_path = path.resolve('data.txt')
+
+{
+  const buffer = Buffer.alloc(10)
+
+  // read 读操作就是将数据从磁盘文件写入到 buffer 中
+  fs.open(data_path, 'r', (err, fd) => {
+    // fd: 定位当前被打开的文件
+    // buffer：用于表示当前缓冲区
+    // offset：偏移量，表示从 buffer 的哪一个位置开启写入
+    // length：长度，表示当前次写入的长度
+    // position：表示当前从文件哪个位置开始读取
+    fs.read(fd, buffer, 1, 3, 0, (err, readBytes, data) => {
+      console.log(readBytes) // 3
+      console.log(data) // <Buffer 00 31 32 33 00 00 00 00 00 00>
+      console.log(data.toString()) // 123
+
+      // close
+      fs.close(fd)
+    })
+
+    console.log('----------------------------------')
+  })
+}
+
+{
+  // write 将缓存区内容写入到磁盘文件中
+  const buffer = Buffer.from('10987654321')
+
+  fs.open(path.resolve('test.txt'), 'w', (err, fd) => {
+    // fd: 定位当前被打开的文件
+    // buffer：用于表示当前缓冲区
+    // offset：偏移量，表示从 buffer 的哪一个位置开始取数据
+    // length：长度，表示当前次写入的长度
+    // position：表示当前从文件哪个位置开始执行写操作
+    fs.write(fd, buffer, 0, 4, 0, (err, written, buffer) => {
+      // 实际写入字节数
+      console.log(written)
+      // buffer 仅代表文件实际内容
+      console.log(buffer)
+      console.log(buffer.toString())
+
+      // close
+      fs.close(fd)
+    })
+  })
+}
+```
+
+#### 文件拷贝自定义实现
