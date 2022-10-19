@@ -528,3 +528,10 @@ console.log(bufferArr.map(buf => buf.toString())) // [ '月落', '学习', '工�
 
 ## fs
 
+Node.js 中存在 Buffer 和 Stream 两个非常重要的概念，一个缓冲区，一个是数据流。
+
+Buffer、Stream、FS 关系：
+
+* Buffer 和 Stream 操作的是二进制数据。
+* FS 是内置核心模块，提供文件系统操作的 API。 如果我们想要操作文件中的二进制数据，就需要使用 FS 提供的 API。
+
