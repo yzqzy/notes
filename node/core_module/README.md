@@ -528,10 +528,115 @@ console.log(bufferArr.map(buf => buf.toString())) // [ '月落', '学习', '工�
 
 ## fs
 
+### 基本概念
+
 Node.js 中存在 Buffer 和 Stream 两个非常重要的概念，一个缓冲区，一个是数据流。
 
 Buffer、Stream、FS 关系：
 
 * Buffer 和 Stream 操作的是二进制数据。
 * FS 是内置核心模块，提供文件系统操作的 API。 如果我们想要操作文件中的二进制数据，就需要使用 FS 提供的 API。
+
+### 模块结构
+
+<img src="./images/fs.png" />
+
+### 前置知识
+
+**权限位**
+
+用户对于文件所具备的操作权限。
+
+<img src="./images/permission.png" style="zoom: 80%" />
+
+上图代表满级权限 777。
+
+**标识位**
+
+Node.js 中 flag 表示对文件的操作方式。
+
+* r：表示可读
+* w：表示可写
+* s：表示同步
+* +：表示执行相反操作
+* x：表示排它操作
+* a：表示追加操作
+
+**文件操作符**
+
+fd 即操作系统分配给被打开文件的标识。
+
+### 常用 API
+
+Node.js 中 fs 任意 API 都有同步和异步两种操作方式。
+
+* readFile：从指定文件中读取数据
+* writeFile：向指定文件中写入数据
+* appendFile：以追加的方式向指定文件中写入数据
+* copyFile：将某个文件中的数据拷贝至另一文件
+* watchFile：对指定文件进行监控
+
+```js
+const path = require('path')
+const fs = require('fs')
+
+const data_path = path.resolve(__dirname, 'data.txt')
+
+// readFile 读取文件
+fs.readFile(data_path, 'utf8', (err, data) => {
+  if (!err) {
+    console.log(data)
+  }
+})
+
+// writeFile
+// 1. 默认使用覆盖写操作
+// 2. 如果路径不存在，会执行创建操作
+fs.writeFile(
+  data_path,
+  'hell node.js',
+  {
+    mode: 438,
+    flag: 'r+',
+    encoding: 'utf-8'
+  },
+  err => {
+    if (!err) {
+      console.log('write success')
+    }
+  }
+)
+
+// appendFile 追加写入操作
+fs.appendFile(data_path, ' yueluo', err => {
+  if (!err) {
+    console.log('append success')
+  }
+})
+
+// copyFile 拷贝文件
+fs.copyFile(data_path, path.resolve(__dirname, 'test.txt'), () => {
+  console.log('copy succes')
+})
+
+// watchFile 对目标文件进行监控
+fs.watchFile(
+  data_path,
+  {
+    interval: 300 // 每 300 ms 检测一次
+  },
+  (curr, prev) => {
+    if (curr.mtime !== prev.mtime) {
+      console.log('data.txt has been modified')
+
+      // 取消文件监控
+      fs.unwatchFile(data_path)
+    }
+  }
+)
+```
+
+### 文件操作
+
+#### md 转 html
 
