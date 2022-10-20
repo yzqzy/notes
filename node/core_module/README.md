@@ -725,3 +725,71 @@ const data_path = path.resolve('data.txt')
 ```
 
 #### 文件拷贝自定义实现
+
+Node.js 已经提供 `copyFile` API，不过这个 API 是基于 `writeFile` 和 `readFile` 的一次性读写操作，针对大体积文件是不合适的。
+
+简单案例
+
+```js
+const fs = require('fs')
+const path = require('path')
+
+const data_file = path.resolve(__dirname, 'a.txt')
+const dest_file = path.resolve(__dirname, 'b.txt')
+
+const buffer = Buffer.alloc(10)
+
+// 1. 打开指定文件，读取内容
+fs.open(data_file, 'r', (err, rfd) => {
+  // 2. 打开目标文件，用于执行数据写入操作
+  fs.open(dest_file, 'w', (err, wfd) => {
+    // 3. 从打开文件中读取数据
+    fs.read(rfd, buffer, 0, 10, 0, (err, readBytes) => {
+      // 4. 将 buffer 中数据写入到目标文件中
+      fs.write(wfd, buffer, 0, 10, 0, (err, wriiten) => {
+        console.log('write success')
+      })
+    })
+  })
+})
+```
+
+代码封装
+
+```js
+// 文件拷贝
+function copyFile(origin, target, size) {
+  const buffer = Buffer.alloc(size)
+
+  let readOffset = 0
+
+  fs.open(origin, 'r', (err, rfd) => {
+    fs.open(target, 'w', (err, wfd) => {
+      const next = () => {
+        fs.read(rfd, buffer, 0, size, readOffset, (err, readBytes) => {
+          if (!readBytes) {
+            fs.close(rfd, () => {})
+            fs.close(wfd, () => {})
+            console.log('copy success')
+            return
+          }
+
+          readOffset += readBytes
+
+          fs.write(wfd, buffer, 0, readBytes, (err, wriiten) => {
+            next()
+          })
+        })
+      }
+      next()
+    })
+  })
+}
+
+copyFile(data_file, dest_file, 20)
+```
+
+除了这种方式，我们还可以通过流的方式去操作大文件。
+
+### 目录操作 
+
