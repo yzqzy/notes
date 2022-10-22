@@ -566,7 +566,9 @@ Node.js 中 flag 表示对文件的操作方式。
 
 fd 即操作系统分配给被打开文件的标识。
 
-### 常用 API
+### 文件操作
+
+#### 常用 API
 
 Node.js 中 fs 任意 API 都有同步和异步两种操作方式。
 
@@ -636,7 +638,7 @@ fs.watchFile(
 )
 ```
 
-### 文件操作
+
 
 #### 文件打开与关闭
 
@@ -792,4 +794,81 @@ copyFile(data_file, dest_file, 20)
 除了这种方式，我们还可以通过流的方式去操作大文件。
 
 ### 目录操作 
+
+#### 常用 API
+
+* access：判断文件或目录是否具有操作权限
+* stat：获取目录及文件信息
+* mkdir：创建目录
+* rmdir：删除目录
+* readdir：读取目录中内容
+* unlink：删除指定文件
+
+```js
+const fs = require('fs')
+const path = require('path')
+
+const data_path = path.resolve(__dirname, 'data.txt')
+
+// 1. access
+fs.access(data_path, err => {
+  if (err) {
+    console.log(err)
+    return
+  }
+
+  console.log('有操作权限')
+})
+
+// 2. stat
+fs.stat(data_path, (err, statObj) => {
+  console.log(statObj.size)
+  console.log(statObj.isFile())
+  console.log(statObj.isDirectory())
+})
+
+// 3. mkdir
+// 默认情况下只能创建最后一级路径
+fs.mkdir(path.resolve(__dirname, 'a/b/c'), { recursive: true }, err => {
+  if (err) {
+    console.log(err)
+    return
+  }
+
+  console.log('mkdir success')
+})
+
+// 4. rmdir
+// 默认情况下只能删除非空目录，且只删除最后一级目录
+fs.rmdir(path.resolve(__dirname, 'a/b/c'), { recursive: true }, err => {
+  if (err) {
+    console.log(err)
+    return
+  }
+
+  console.log('remove dir success')
+})
+
+// 5. readdir
+fs.readdir(path.resolve(__dirname, 'test'), (err, files) => {
+  if (err) {
+    console.log(err)
+    return
+  }
+
+  console.log(files)
+})
+
+// 6. unlink
+fs.unlink(path.resolve(__dirname, 'test/data.txt'), err => {
+  if (err) {
+    console.log(err)
+    return
+  }
+
+  console.log('unlink success')
+})
+```
+
+#### 创建目录
 
