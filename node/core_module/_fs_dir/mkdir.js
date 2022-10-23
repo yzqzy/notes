@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const util = require('util')
 
 // 递归创建路径
 // 1. 接收路径，对路径进行分隔
@@ -45,6 +46,27 @@ const makeDirAsync = (dir_path, cb) => {
   next()
 }
 
-makeDirAsync('c/b/a', () => {
-  console.log('create success')
-})
+// makeDirAsync('c/b/a', () => {
+//   console.log('create success')
+// })
+
+const access = util.promisify(fs.access)
+const mkdir = util.promisify(fs.mkdir)
+
+const makeDirAsyncWithPromise = async (dir_path, cb) => {
+  const items = dir_path.split(path.sep)
+
+  for (let i = 1; i <= items.length; i++) {
+    const current = items.slice(0, i).join('/')
+
+    try {
+      await access(current)
+    } catch (error) {
+      await mkdir(current)
+    }
+  }
+
+  cb && cb()
+}
+
+makeDirAsyncWithPromise('b/c/d')

@@ -899,5 +899,61 @@ makeDirSync(path.normalize('a/b/c'))
 异步方法
 
 ```js
+// 异步处理 1
+
+const makeDirAsync = (dir_path, cb) => {
+  const items = dir_path.split(path.sep)
+
+  let index = 1
+
+  console.log(items.length, 1)
+
+  const next = () => {
+    if (index > items.length) return cb && cb()
+
+    let current = items.slice(0, index++).join(path.sep)
+
+    fs.access(current, err => {
+      if (err) {
+        fs.mkdir(current, next)
+      } else {
+        next()
+      }
+    })
+  }
+
+  next()
+}
+
+makeDirAsync('c/b/a', () => {
+  console.log('create success')
+})
 ```
+
+```js
+// 异步处理 2
+
+const access = util.promisify(fs.access)
+const mkdir = util.promisify(fs.mkdir)
+
+const makeDirAsyncWithPromise = async (dir_path, cb) => {
+  const items = dir_path.split(path.sep)
+
+  for (let i = 1; i <= items.length; i++) {
+    const current = items.slice(0, i).join('/')
+
+    try {
+      await access(current)
+    } catch (error) {
+      await mkdir(current)
+    }
+  }
+
+  cb && cb()
+}
+
+makeDirAsyncWithPromise('b/c/d')
+```
+
+#### 删除目录
 
