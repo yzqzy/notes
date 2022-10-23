@@ -19,4 +19,32 @@ const makeDirSync = dir_path => {
   }
 }
 
-makeDirSync(path.normalize('a/b/c'))
+// makeDirSync(path.normalize('a/b/c'))
+
+const makeDirAsync = (dir_path, cb) => {
+  const items = dir_path.split(path.sep)
+
+  let index = 1
+
+  console.log(items.length, 1)
+
+  const next = () => {
+    if (index > items.length) return cb && cb()
+
+    let current = items.slice(0, index++).join(path.sep)
+
+    fs.access(current, err => {
+      if (err) {
+        fs.mkdir(current, next)
+      } else {
+        next()
+      }
+    })
+  }
+
+  next()
+}
+
+makeDirAsync('c/b/a', () => {
+  console.log('create success')
+})
