@@ -872,7 +872,9 @@ fs.unlink(path.resolve(__dirname, 'test/data.txt'), err => {
 
 #### 创建目录
 
-同步方法
+> 模拟 API 实现
+
+**同步方法**
 
 ```js
 // 递归创建目录
@@ -896,7 +898,7 @@ const makeDirSync = dir_path => {
 makeDirSync(path.normalize('a/b/c'))
 ```
 
-异步方法
+**异步方法**
 
 ```js
 // 异步处理 1
@@ -956,4 +958,38 @@ makeDirAsyncWithPromise('b/c/d')
 ```
 
 #### 删除目录
+
+> 模拟 API 实现
+
+```js
+// 自定义函数，接收路径，执行删除操作
+// 1. 判断当前传入的路径是否为一个文件，删除当前文件
+// 2. 如果当前传入的是一个目录，需要继续读取目录中内容，然后再执行删除操作
+// 3. 将删除行为定义为一个函数，递归方式进行复用
+// 4. 将当前名称拼接成在删除时可使用的路径
+const rmdirAsync = (dir_path, cb) => {
+  fs.stat(dir_path, (err, statObj) => {
+    if (statObj.isDirectory()) {
+      fs.readdir(dir_path, (err, files) => {
+        const dirs = files.map(item => path.join(dir_path, item))
+
+        let index = 0
+
+        function next() {
+          if (index === dirs.length) return fs.rmdir(dir_path, cb)
+
+          const current = dirs[index++]
+
+          rmdirAsync(current, next)
+        }
+
+        next()
+      })
+    } else {
+      // remove
+      fs.unlink(dir_path, cb)
+    }
+  })
+}
+```
 
