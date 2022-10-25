@@ -1017,7 +1017,7 @@ const rmdirAsync = (dir_path, cb) => {
 
 模块化规范：
 
-* Commonjs 规范
+* CommonJS 规范
   * 规定每个 js 文件都是一个模块，且每个模块都有自己的作用域
   * 模块内部可以使用变量、函数、类等，都是内部私有，外部无法访问
   * 提供 `module.exports` 、`exports` 方式导出变量，使用 `require` 进行加载
@@ -1029,7 +1029,7 @@ const rmdirAsync = (dir_path, cb) => {
   * 提供  `define`、`require`  关键字
   * 经典实现就是 RequireJS
 * CMD 规范
-  * 整合 Commonjs 和 AMD 特点，专门用来实现浏览器异步加载
+  * 整合 CommonJS 和 AMD 特点，专门用来实现浏览器异步加载
   * 最经典的就是 CJS
 * ES Moudle 规范
   * 15 年 TC39 发布，即 ESM
@@ -1041,9 +1041,9 @@ const rmdirAsync = (dir_path, cb) => {
 
 然后经过社区或者个人推动，产出 Commonjs，AMD，CMD，UMD 等模块化规范。分别有自己的特点和优势。
 
-最后在 ES6 中将模块化纳入标准规范。当前常用规范就是 Commonjs 和 ES Module。
+最后在 ES6 中将模块化纳入标准规范。当前常用规范就是 CommonJS 和 ES Module。
 
-### Commonjs 规范
+### CommonJS 规范
 
 > not just for browsers any more！
 
@@ -1055,7 +1055,7 @@ const rmdirAsync = (dir_path, cb) => {
 * 模块定义
 * 模块标识
 
-#### Node.js 与 Commnjs
+#### Node.js 与 CommnJS
 
 * 任意一个文件都是模块，具有独立作用域
 * 使用 require 导入其他模块
