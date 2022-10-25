@@ -1045,3 +1045,56 @@ const rmdirAsync = (dir_path, cb) => {
 
 ### Commonjs 规范
 
+> not just for browsers any more！
+
+ Commonjs 规范主要应用于 Nodejs。它是语言层面上的规范，类似于 ECMAScript，模块化只是其中一部分。
+
+#### 模块化组成部分
+
+* 模块引用
+* 模块定义
+* 模块标识
+
+#### Node.js 与 Commnjs
+
+* 任意一个文件都是模块，具有独立作用域
+* 使用 require 导入其他模块
+* 将模块 ID 传入 require 实现目标模块定位
+
+#### module 属性
+
+* 任意一个 js 文件都是一个模块，可以直接使用 module 属性
+* id：返回模块标识符，一般是一个绝对路径
+* filename：返回文件模块的绝对路径
+* loaded：返回布尔值，表示模块是否完成加载
+* parent：返回当前存放调用当前模块的模块
+* children：返回数组，存放当前模块调用的其他模块
+* exports：返回当前模块需要暴露的内容
+* paths：返回数组，存放不同目录下的 `node_modules` 位置
+  * 分析 node.js 加载流程时可以用到
+
+#### module.exports 与 exports
+
+`module.exports` 和 `exports` 指向同一内存地址。
+
+需要注意的是我们不能给 `exports` 重新赋值，这样会使引用丢失。
+
+#### require 属性
+
+* 基本功能是读入并且执行一个模块文件
+* resolve：返回模块文件绝对路径
+* extensions：依据不同后缀名执行解析操作
+* main：返回主模块对象
+
+#### 总结
+
+* CommonJS 规范起初是为了弥补 JS 语言模块化缺陷
+* CommonJS 规范是语言层面的规范，主要应用于 Node.js
+* CommonJS 规定模块化分为引入、定义、标识符三个部分
+* Module 在任何模块中可以被直接使用，包含很多模块信息
+* Require 接收标识符，用于加载目标模块
+* Exports 与 module.exports 都可以导出模块数据，指向同一引用
+* CommonJS 规范定义模块加载是同步行为，正因为这个特点，所以并不适用于浏览器环境
+
+### Node.js 与 CommonJS
+
