@@ -1098,3 +1098,134 @@ const rmdirAsync = (dir_path, cb) => {
 
 ### Node.js 与 CommonJS
 
+* 使用 module.exports 与 require 实现模块导入与导出
+* module 属性及其常见信息获取
+* exports 导出数据及其与 module.exports 区别
+* CommonJS 规范下的模块同步加载
+
+```js
+// index.js
+
+const obj = require('./m')
+
+console.log(obj)
+console.log('index.js process')
+console.log(require.main === module) // true
+```
+
+```js
+// m.js
+
+const age = 24
+
+const addFn = (x, y) => x + y
+
+// module.exports = {
+//   age,
+//   addFn
+// }
+
+// 2. module
+console.log(module)
+// Module {
+//   id: '/usr/local/workspace/notes/node/core_module/_module/m.js',
+//   path: '/usr/local/workspace/notes/node/core_module/_module',
+//   exports: { age: 24, addFn: [Function: addFn] },
+//   filename: '/usr/local/workspace/notes/node/core_module/_module/m.js',
+//   loaded: false,
+//   children: [],
+//   paths: [
+//     '/usr/local/workspace/notes/node/core_module/_module/node_modules',
+//     '/usr/local/workspace/notes/node/core_module/node_modules',
+//     '/usr/local/workspace/notes/node/node_modules',
+//     '/usr/local/workspace/notes/node_modules',
+//     '/usr/local/workspace/node_modules',
+//     '/usr/local/node_modules',
+//     '/usr/node_modules',
+//     '/node_modules'
+//   ]
+// }
+
+// 3. exports
+exports.age = age
+exports.addFn = addFn
+
+// 注意，不能能给 epxorts 直接赋值
+// 这样赋值会导致 exports 和 module.exports 引用关系丢失
+// exports = {
+//   age: 13,
+//   name: 'heora'
+// }
+
+// 4. 同步加载
+const name = 'heora'
+const time = new Date()
+
+while (new Date() - time < 4000) {}
+
+exports.name = name
+
+console.log('m.js process')
+
+// 5. 判断是否为主模块
+console.log(require.main === module) // false
+```
+
+### 模块分类及加载流程
+
+#### 模块分类
+
+* 内置模块
+* 文件模块
+
+#### 加载速度
+
+* 核心模块：Node 源码编译时写入到二进制文件中
+* 文件模块：代码运行时，动态加载
+
+#### 加载流程
+
+##### 概述
+
+* 路径分析：依据标识符确定模块位置
+  * 标识符
+    * 路径标识符
+    * 非路径标识符：常见于核心模块，例如 fs、path
+* 文件定位：确定目标模块中具体文件及文件类型
+  * 项目下存在 `m.js` 模块，导入时使用 `require("m")` 语法
+  * 查找顺序：`m.js` => `m.json` => `m.node` 
+  * 如果没有找到上述文件，会将其作为一个包处理，查找 package.json 文件，使用 JSON.parse() 解析
+  * 查询 main 属性值，如果没有后缀，继续查找 `main.js` => `main.json` => `main.node`
+  * 如果 main 属性值指定的文件在补足之后也不存在，node 会将 index 作为目标模块中的具体文件名称
+  * 首先在当前目录查找，如果没有找到，会向上级查找，如果没有找到，会抛出异常
+* 编译执行：采用对应的方式完成文件的编译执行
+  * 将某个具体类型的文件按照相应的方式进行编译和执行
+  * 创建新对象，按路径载入，完成编译执行
+
+##### 编译执行
+
+JS 文件编译执行
+
+* 使用 fs 模块同步读入目标文件内容
+* 对内容进行语法包装，生成可执行 JS 函数
+* 调用函数时传入 `exports`、`module`、`require` 等属性值
+
+JSON 文件编译执行
+
+* 将读取到的内容通过 JSON.parse() 进行解析
+* 将解析结果返回给 `exports` 对象即可
+
+##### 缓存优化原则
+
+* 提高模块加载速度
+* 优先查找缓存，当前模块不存在，需要经历一次完整加载流程
+* 模块加载完成后，使用路径作为索引进行缓存
+
+##### 总结
+
+* 路径分析：确定目标模块位置
+* 文件定位：确定目标模块中的具体文件
+* 编译执行：对模块内容进行编译，返回可用 `exports` 对象
+
+### 模块加载源码分析
+
