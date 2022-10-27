@@ -1227,5 +1227,43 @@ JSON 文件编译执行
 * 文件定位：确定目标模块中的具体文件
 * 编译执行：对模块内容进行编译，返回可用 `exports` 对象
 
-### 模块加载源码分析
+#### VM 模块使用
+
+VM 模块是内置核心模块，在 NodeJS 中，底层 require 实现也用到了这个模块。
+
+它可以创建独立运行的沙箱环境，我们可以通过 VM 模块加载其他模块并执行。
+
+```js
+const fs = require('fs')
+const vm = require('vm')
+
+const content = fs.readFileSync('test.txt', 'utf-8')
+```
+
+```js
+// 1. evea
+eval(content)
+console.log(age)
+// eval 可以执行字符串形式代码，但是如果当前文件中还存在另一个 age 变量，就会报错
+```
+
+```js
+// 2. new Function
+const fn = new Function('age', 'return age + 1')
+console.log(fn(age))
+// 使用 new Function 也可以执行字符串形式的代码，但是操作比较繁琐
+```
+
+```js
+// 3. vm
+vm.runInThisContext(content)
+console.log(age)
+// 当我们使用 runInThisContext 方式运行代码时，函数内部环境和外部是隔离的
+// 不能使用局部变量（const、let），可以使用全局变量
+// 如果当前文件中存在 age 变量，不会产生冲突
+```
+
+#### 模块加载实现
+
+
 
