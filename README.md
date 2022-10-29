@@ -71,7 +71,7 @@
   - [Fiber](https://github.com/yw0525/notes/tree/master/react/Fiber) 已完成
   - [react 源码阅读](https://github.com/yw0525/notes/tree/master/react/react_source) 暂停中 😀
 - solid
-  - [solid 源码解析](https://github.com/yw0525/notes/tree/master/solid/source_analysis) 更新中... 😁
+  - [solid 源码解析](https://github.com/yw0525/notes/tree/master/solid/source_analysis) 暂停中 😀
 - TypeScipt
   - [TypeScipt 基础](https://github.com/yw0525/notes/tree/master/typescript/base) 已完成
   - [TypeScipt 案例](https://github.com/yw0525/notes/tree/master/typescript/examples/test/src) 已完成
