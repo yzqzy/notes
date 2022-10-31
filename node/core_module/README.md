@@ -1410,4 +1410,126 @@ Events 模块是 NodeJS 中非常重要的类，它有一个非常重要的类�
 * once：添加事件被触发时调用的回调函数，只会执行一次
 * off：移除指定监听器
 
+ ```js
+ const EventEmitter = require('events')
  
+ const event = new EventEmitter()
+ 
+ // on
+ event.on('event', () => {
+   console.log('event trigger 1')
+ })
+ event.on('event', () => {
+   console.log('event trigger 2')
+ })
+ 
+ // 相同事件触发多次，会执行多次
+ event.emit('event')
+ event.emit('event')
+ 
+ console.log('---------------------')
+ 
+ // once
+ event.once('event-one', () => {
+   console.log('event one trigger 1')
+ })
+ event.once('event-one', () => {
+   console.log('event one trigger 2')
+ })
+ 
+ // 相同事件触发多次，只会执行一次
+ event.emit('event-one')
+ event.emit('event-one')
+ 
+ console.log('---------------------')
+ 
+ const callback = (...args) => {
+   console.log('event off trigger', args)
+ }
+ 
+ event.on('event-off', callback)
+ 
+ // 函数传参
+ event.emit('event-off', 1, 2)
+ // 取消订阅
+ event.off('event-off', callback)
+ event.emit('event-off')
+ 
+ console.log('---------------------')
+ 
+ // 使用 function 定义的函数可以正确接收到 this
+ event.on('test', function () {
+   console.log('event test trigger', this)
+ })
+ 
+ event.emit('test')
+ 
+ console.log('---------------------')
+ ```
+
+很多内置模块已经继承了 EventEmitter 模块，所以我们将来在使用相关模块实例对象时，可以直接调用上述提到的 API。
+
+```js
+const fs = require('fs')
+
+const crt = fs.createWriteStream()
+
+crt.on('pipe', () => {})
+```
+
+内置模块通常已经预先定义了很多事件，所以我们可以通过事件驱动的方式来完成代码编写。
+
+### 发布订阅模式
+
+发布订阅模式定义对象间一对多的依赖关系，不同对象之间可以实现解耦。
+
+#### 发布订阅要素
+
+* 缓存队列，存放订阅者信息
+* 具有增加、删除订阅的能力
+* 状态改变时通知所有订阅者执行监听
+
+#### 发布订阅与观察者模式
+
+发布订阅存在调度中心，观察者不存在。
+
+状态发生改变时，发布订阅无须主动通知，由调度中心决定订阅内容如何执行。
+
+#### 代码实现
+
+```js
+class PubSub {
+  constructor() {
+    this._events = {}
+  }
+
+  subscribe(event, callback) {
+    if (!this._events[event]) this._events[event] = []
+
+    this._events[event].push(callback)
+  }
+
+  publish(event, ...args) {
+    const items = this._events[event]
+
+    Array.isArray(items) &&
+      items.forEach(function (callback) {
+        callback.call(this, ...args)
+      })
+  }
+}
+
+const ps = new PubSub()
+
+ps.subscribe('event', () => {
+  console.log('event trigger 01')
+})
+ps.subscribe('event', () => {
+  console.log('event trigger 02')
+})
+
+ps.publish('event')
+```
+
+### EventEmitter 模拟实现
+
