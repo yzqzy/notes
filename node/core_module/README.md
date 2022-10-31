@@ -1389,3 +1389,25 @@ module.exports = name
 }
 ```
 
+## 事件模块
+
+Events 模块是 NodeJS 中非常重要的类，它有一个非常重要的类，即 EventEmitter。对于 NodeJS 来说，它通过 EventEmitter 类实现事件统一管理。
+
+不过在实际开发，我们单独使用该模块的场景也不多，因为 NodeJS 本身就是基于事件驱动来实现异步操作。事件驱动底层的表现就是 EventEmitter 类。
+
+很多核心模块本身就继承了这个类，所以它们也具备事件注册和发布的能力，使用的时候就无需单独引入 Event 模块。
+
+### events 与 EventEmitter
+
+* node.js 是基于事件驱动的异步操作架构，内置 events 模块
+* events 模块提供了 EventEmitter 类
+* node.js 中很多内置核心模块继承自 EventEmitter 类，例如 fs、http 等
+
+### EventEmitter 常见 API
+
+* on：添加事件被触发时调用的回调函数
+* emit：触发事件，按照注册的顺序同步调用每个事件监听器
+* once：添加事件被触发时调用的回调函数，只会执行一次
+* off：移除指定监听器
+
+ 
