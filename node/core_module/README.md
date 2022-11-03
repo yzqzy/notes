@@ -1602,3 +1602,40 @@ ev.emit('event03', 1, 2)
 
 ## 事件环
 
+```js
+setTimeout(() => {
+  console.log('s1 ')
+
+  Promise.resolve().then(() => {
+    console.log('p1')
+  })
+  Promise.resolve().then(() => {
+    console.log('p2')
+  })
+})
+
+setTimeout(() => {
+  console.log('s2')
+
+  Promise.resolve().then(() => {
+    console.log('p3')
+  })
+  Promise.resolve().then(() => {
+    console.log('p4')
+  })
+})
+```
+
+ ### 浏览器中的事件环
+
+完整事件环执行顺序
+
+* 从上至下执行所有的同步代码
+* 执行过程中将遇到的宏任务与微任务添加至相应的队列
+* 同步代码执行完毕后，执行满足条件的微任务回调
+  * 每执行一个宏任务，都会检查当前批次是否有需要执行的微任务队列
+* 微任务执行完毕后执行所有满足需求的宏任务回调
+* 循环事件环操作
+
+### Node.js 中的事件环
+
