@@ -1628,7 +1628,7 @@ setTimeout(() => {
 
  ### 浏览器中的事件环
 
-完整事件环执行顺序
+事件环执行顺序
 
 * 从上至下执行所有的同步代码
 * 执行过程中将遇到的宏任务与微任务添加至相应的队列
@@ -1638,4 +1638,81 @@ setTimeout(() => {
 * 循环事件环操作
 
 ### Node.js 中的事件环
+
+#### 组成部分
+
+ ```
+ timers 
+ 
+ pending callbacks
+ 
+ idle, prepare
+ 
+ poll
+ 
+ check
+ 
+ close callbacks
+ ```
+
+* timers: 执行 setTimeout 与 setInterval 回调
+* pending callbacks：执行操作系统的回调，例如 tcp udp
+* idle，prepare：只在系统内部进行使用
+* poll：执行与 I/O 相关回调
+* check：执行  setImmediate 中的回调
+* close callbacks：执行 close 事件的回调
+
+#### 执行顺序
+
+* 执行同步代码，将不同的任务添加至相应的队列
+* 所有同步代码执行后会执行满足条件的微任务
+* 所有微任务代码执行后会执行 timer 队列中满足的宏任务
+* timer 中的所有宏任务执行完成后就会依次切换队列
+  * 完成队列切换之前会先清空微任务代码
+
+> 我们仅需要关心 timers、poll、check 队列。
+
+#### 代码分析
+
+```js
+setTimeout(() => {
+  console.log('s1')
+})
+
+Promise.resolve().then(() => {
+  console.log('p1')
+})
+
+console.log('start')
+
+process.nextTick(() => {
+  console.log('tick')
+})
+
+setImmediate(() => {
+  console.log('setImmediate')
+})
+
+console.log('end')
+
+// start
+// end
+// tick
+// p1
+// s1
+// setImmediate
+```
+
+**对于微任务来说，nextTick 的优先级要高于 Promise。**
+
+start end tick p1
+
+s1 - timers，null - poll，setImmeriate - check
+
+#### 执行步骤梳理
+
+ 通过一段代码分析事件换执行步骤。
+
+```js
+```
 
