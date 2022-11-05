@@ -1711,8 +1711,93 @@ s1 - timers，null - poll，setImmeriate - check
 
 #### 执行步骤梳理
 
- 通过一段代码分析事件换执行步骤。
+ 通过一段代码分析事件循环执行步骤。
 
 ```js
+setTimeout(() => {
+  console.log('s1')
+  Promise.resolve().then(() => {
+    console.log('p1')
+  })
+  process.nextTick(() => {
+    console.log('t1')
+  })
+})
+
+Promise.resolve().then(() => {
+  console.log('p2')
+})
+
+console.log('start')
+
+setTimeout(() => {
+  console.log('s2')
+  Promise.resolve().then(() => {
+    console.log('p3')
+  })
+  process.nextTick(() => {
+    console.log('t2')
+  })
+})
+
+console.log('end')
+
+// start
+// end
+// p2
+// s1
+// t1
+// p1
+// s2
+// t2
+// p3
 ```
+
+### Node 与浏览器事件环对比
+
+* 任务队列数不同
+  * 浏览器只有两个任务队列
+  * Node.js 中有 6 个事件队列
+* 微任务执行时机
+  * 二者都会在同步代码执行完毕后执行微任务
+* 微任务优先级不同
+  * 浏览器事件环中，微任务存放于事件队列，先进先出
+  * Node.js 中 process.nextTick  先于 promise.then
+
+### Node.js 常见问题
+
+ ```js
+ setTimeout(() => {
+   console.log('timeout')
+ })
+ 
+ setImmediate(() => {
+   console.log('immediate')
+ })
+ ```
+
+Node.js 中执行上述代码执行结果并不是唯一的，可能会先输出 timeout，也可能先输出 immediate。
+
+```js
+const fs = require('fs')
+
+fs.readFile('./test.txt', () => {
+  setTimeout(() => {
+    console.log('timeout')
+  })
+
+  setImmediate(() => {
+    console.log('immediate')
+  })
+})
+```
+
+如果将上述代码包裹在一个 IO 操作中，执行顺序就固定了，结果永远是先输出 immediate，然后再输出 timeout。
+
+这里会优先执行 poll 队列，然后再执行 check 队列，最后才能执行到 timers 事件队列。
+
+
+默认情况下 setTimeout 与 setImmediate 执行顺序是随机的，因为 setTimeout 后面的延时时间是不固定的。如果将它们放到 I/O 回调中，它们的执行顺序就会变成固定的，永远都是先输出 immediate 然后再输出 timeout。
+
+## Stream 模块
 
