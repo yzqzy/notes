@@ -1852,5 +1852,54 @@ rs.pipe(ws)
 
 上述案例就是一个简单的读取写入操作。
 
-### 可读流操作
+### 可读流
+
+可读流是专门生产供程序消费数据的流。
+
+Node.js 最常见的数据生产方式就是读取磁盘文件或者取网络请求中的内容。
+
+#### 自定义可读流
+
+* 继承 stream 里的 Readable 类
+* 重写 `_read` 方法调用 push 产出数据
+
+自定义可读流问题：
+
+* 底层数据读取完成之后如何处理？
+  * 可以在读取的时候传递 null 值，告知数据已经读取完毕
+* 消费者如何获取可读流中的数据？
+  * Readable 提供两种事件，readable 事件和 data 事件
+  * Readable 存在两种模式，分别是流动模式和暂停模式，对于使用者来说，两者的区别在于消费数据的时候是否需要主动调用 read 方法来读取数据
+
+```js
+const { Readable } = require('stream')
+
+// 定义数组存放数据，模拟底层数据
+const source = ['yueluo', 'heora', 'yzq']
+
+class $Readable extends Readable {
+  constructor(source) {
+    super()
+    this.source = source
+  }
+
+  _read() {
+    this.push(this.source.shift() || null)
+  }
+}
+
+const readIns = new $Readable(source)
+
+readIns.on('readable', () => {
+  let data = null
+
+  while ((data = readIns.read()) !== null) {
+    console.log('readable', data.toString())
+  }
+})
+
+readIns.on('data', data => {
+  console.log('data', data.toString())
+})
+```
 
