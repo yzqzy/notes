@@ -1872,7 +1872,7 @@ Node.js 最常见的数据生产方式就是读取磁盘文件或者取网络请
   * Readable 存在两种模式，分别是流动模式和暂停模式，对于使用者来说，两者的区别在于消费数据的时候是否需要主动调用 read 方法来读取数据
 
 ```js
-const { Readable } = require('stream')
+ const { Readable } = require('stream')
 
 // 定义数组存放数据，模拟底层数据
 const source = ['yueluo', 'heora', 'yzq']
@@ -1890,16 +1890,38 @@ class $Readable extends Readable {
 
 const readIns = new $Readable(source)
 
-readIns.on('readable', () => {
-  let data = null
+// readIns.on('readable', () => {
+//   let data = null
 
-  while ((data = readIns.read()) !== null) {
-    console.log('readable', data.toString())
-  }
-})
+//   // 打印值可能存在与预期不符的情况
+//   // 这其实是因为 read 的工作机制问题
+//   // 调用 read 时缓存区已经存在值，所以第一次打印的时候会打印出两个值
+//   // read 方法可以传入指定数据长度，这样打印时会和预期会一致
+//   // 暂停模式，我们需要手动调用 read 读取数据
+//   while ((data = readIns.read()) !== null) {
+//     console.log('readable', data.toString())
+//   }
+// })
 
+// 流动模式，这种读取方式会依次读取数据，更符合预期
 readIns.on('data', data => {
   console.log('data', data.toString())
 })
 ```
 
+<img src="./images/readable.png" style="zoom: 50%" />
+
+#### 消费数据
+
+* readable 事件：当流中存在可读取数据时触发
+* data 事件：当流中数据块传给消费者时触发
+
+#### 总结
+
+* 明确数据生产与消费流程
+* 利用 API 实现自定义的可读流
+* 明确数据消费的事件使用
+
+### 可写流
+
+###  
