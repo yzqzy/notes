@@ -40,3 +40,44 @@ const readIns = new $Readable(source)
 readIns.on('data', data => {
   console.log('data', data.toString())
 })
+
+// ------------------------------------------------
+
+// const fs = require('fs')
+
+// // 1. 创建可读流，生产数据
+// const rs = fs.createReadStream('test.txt')
+
+// // 2. 修改字符编码，便于后续使用
+// rs.setEncoding('utf-8')
+
+// // 3. 创建可写流，消费数据
+// const ws = fs.createWriteStream('test2.txt')
+
+// // 4. 监听事件调用方法完成数据的消费
+// rs.on('data', chunk => {
+//   // 执行数据写入
+//   ws.write(chunk)
+// })
+
+const { Writable } = require('stream')
+
+class $Writeable extends Writable {
+  constructor() {
+    super()
+  }
+
+  _write(chunk, _, done) {
+    process.stdout.write(chunk.toString() + '-')
+    process.nextTick(done)
+  }
+}
+
+// 创建可写流用于消费数据
+const ws = new $Writeable()
+
+ws.write('yzq is a boy', 'utf-8', () => {
+  console.log('write success')
+})
+
+// ------------------------------------------------

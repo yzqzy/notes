@@ -1924,4 +1924,65 @@ readIns.on('data', data => {
 
 ### 可写流
 
-###  
+可读流用来生产数据，可写流用来消费数据。通过可写流可以把数据写入到指定的地方， 常见的操作就是往磁盘文件中写入内容或者对 TCP、HTTP 的网络响应进行操作。
+
+#### 基本使用
+
+```js
+
+const fs = require('fs')
+
+// 1. 创建可读流，生产数据
+const rs = fs.createReadStream('test.txt')
+
+// 2. 修改字符编码，便于后续使用
+rs.setEncoding('utf-8')
+
+// 3. 创建可写流，消费数据
+const ws = fs.createWriteStream('test2.txt')
+
+// 4. 监听事件调用方法完成数据的消费
+rs.on('data', chunk => {
+  // 执行数据写入
+  ws.write(chunk)
+})
+```
+
+#### 自定义可写流
+
+* 继承 stream 模块的 Writeable
+* 重写 `_write` 方法，调用 `write` 执行写入
+
+ ```js
+ const { Writable } = require('stream')
+ 
+ class $Writeable extends Writable {
+   constructor() {
+     super()
+   }
+ 
+   _write(chunk, _, done) {
+     process.stdout.write(chunk.toString() + '-')
+     process.nextTick(done)
+   }
+ }
+ 
+ // 创建可写流用于消费数据
+ const ws = new $Writeable()
+ 
+ ws.write('yzq is a boy', 'utf-8', () => {
+   console.log('write success')
+ })
+ ```
+
+可写流事件
+
+* pipe 事件：可读流调用 pipe() 方法向可写流传输数据时就会触发可写流的 pipe 事件，从而完成最终的数据写入操作
+* unpipe 事件：可读流调用 unpipe() 方法时触发，会在 read 方法返回 false，数据又可以继续写入的时候被触发，不会存在内存溢出等问题
+
+### 双工和转换流
+
+
+
+
+
