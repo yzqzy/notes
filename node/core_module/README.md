@@ -1852,13 +1852,15 @@ rs.pipe(ws)
 
 上述案例就是一个简单的读取写入操作。
 
-### 可读流
+### 四种流类型
+
+#### 可读流
 
 可读流是专门生产供程序消费数据的流。
 
 Node.js 最常见的数据生产方式就是读取磁盘文件或者取网络请求中的内容。
 
-#### 自定义可读流
+##### 自定义可读流
 
 * 继承 stream 里的 Readable 类
 * 重写 `_read` 方法调用 push 产出数据
@@ -1911,22 +1913,22 @@ readIns.on('data', data => {
 
 <img src="./images/readable.png" style="zoom: 50%" />
 
-#### 消费数据
+##### 消费数据
 
 * readable 事件：当流中存在可读取数据时触发
 * data 事件：当流中数据块传给消费者时触发
 
-#### 总结
+##### 总结
 
 * 明确数据生产与消费流程
 * 利用 API 实现自定义的可读流
 * 明确数据消费的事件使用
 
-### 可写流
+#### 可写流
 
 可读流用来生产数据，可写流用来消费数据。通过可写流可以把数据写入到指定的地方， 常见的操作就是往磁盘文件中写入内容或者对 TCP、HTTP 的网络响应进行操作。
 
-#### 基本使用
+##### 基本使用
 
 ```js
 
@@ -1948,7 +1950,7 @@ rs.on('data', chunk => {
 })
 ```
 
-#### 自定义可写流
+##### 自定义可写流
 
 * 继承 stream 模块的 Writeable
 * 重写 `_write` 方法，调用 `write` 执行写入
@@ -1980,7 +1982,7 @@ rs.on('data', chunk => {
 * pipe 事件：可读流调用 pipe() 方法向可写流传输数据时就会触发可写流的 pipe 事件，从而完成最终的数据写入操作
 * unpipe 事件：可读流调用 unpipe() 方法时触发，会在 read 方法返回 false，数据又可以继续写入的时候被触发，不会存在内存溢出等问题
 
-### 双工流和转换流
+#### 双工流和转换流
 
 双工流和转换流（Duplex && Transform）
 
@@ -1988,7 +1990,7 @@ Node.js 中 stream 是流操作的抽象接口集合。可读、可写、双工�
 
 流操作的核心功能就是处理数据，Node.js 诞生的初衷就是解决密集型 IO 事务。Node.js 中处理数据模块继承了流和 EventEmitter 模块。
 
-#### 双工流
+##### 双工流
 
 Duplex 是双工流，既能生产又能消费。
 
@@ -2004,8 +2006,8 @@ Duplex 是双工流，既能生产又能消费。
  const source = ['heora', 'yueluo', 'yzq']
  
  class $Duplex extends Duplex {
-   constructor(options) {
-     super(source, options)
+   constructor(source) {
+     super(source)
      this.source = source
    }
  
@@ -2028,12 +2030,173 @@ Duplex 是双工流，既能生产又能消费。
    console.log(chunk.toString())
  })
  
- duplex.write('test', 'utf-8', () => {
-   console.log('duplex test: readable and writeable')
+ // duplex.write('test', 'utf-8', () => {
+ //   console.log('duplex test: readable and writeable')
+ // })
+ ```
+
+##### 转换流
+
+Transform 也是一个双工流。Duplex 的读和写是相互独立的，它的读操作创建的数据不能被直接当作数据源使用，但是在 Transform 里这种操作是可以的。
+
+自定义实现
+
+* 继承 Transform 类
+* 重写 `_transform` 方法，调用 push 和 callback
+* 重写 `_flush` 方法，处理剩余数据
+
+```js
+const { Transform } = require('stream')
+
+class $Transform extends Transform {
+  constructor() {
+    super()
+  }
+
+  _transform(chunk, _, callback) {
+    this.push(chunk.toString().toUpperCase())
+    callback(null)
+  }
+}
+
+const transform = new $Transform()
+
+transform.write('a')
+transform.write('b')
+transform.end('c')
+
+transform.on('data', chunk => {
+  console.log(chunk.toString())
+})
+
+transform.pipe(process.stdout)
+```
+
+#### 总结
+
+* Readable 可读流
+  * 专门生产数据的流
+  * 常见的操作就是监听 readable 事件和 data 事件，其中 readable 事件需要我们主动调用 read 事件消耗数据，data 是流动模式，会一直读取数据
+*  Writeable 可写流
+  * 专门消费数据的流
+  * 主要的方式就是调用 write 方法，然后再把数据源中的数据写入到指定位置 
+* Duplex 双工流
+  * 既可读又可写
+  * 读写之间相互独立
+* Transform 转换流
+  * 既可读又可写
+  * 读写之间可以相互转换，可以自定义转换操作
+
+### 文件可读流
+
+#### 创建和消费
+
+ ```js
+ // data 事件消费数据
+ 
+ const fs = require('fs')
+ 
+ const rs = fs.createReadStream('test.txt', {
+   flags: 'r',
+   encoding: null,
+   fd: null,
+   mode: 438,
+   autoClose: true,
+   start: 0,
+   // end: 3,
+   highWaterMark: 2
+ })
+ 
+ rs.on('data', chunk => {
+   console.log(chunk.toString())
+ 
+   rs.pause() // 切换暂停模式
+ 
+   setTimeout(() => {
+     rs.resume() // 切换流动模式
+   }, 1000)
  })
  ```
 
-#### 转换流
+```js
+const fs = require('fs')
 
- Transform 也是一个双工流。
+const rs = fs.createReadStream('test.txt', {
+  flags: 'r',
+  encoding: null,
+  fd: null,
+  mode: 438,
+  autoClose: true,
+  start: 0,
+  // end: 3,
+  highWaterMark: 4
+})
+
+rs.on('readable', () => {
+  let data
+
+  // while ((data = rs.read(2)) !== null) {
+  //   console.log(data.toString())
+  // }
+
+  // while ((data = rs.read(4)) !== null) {
+  //   console.log(data.toString())
+  // }
+
+  while ((data = rs.read(1)) !== null) {
+    // _readableState 长度与 highWaterMark 密切相关
+    console.log(data.toString(), rs._readableState.length)
+  }
+})
+```
+
+#### 事件与应用
+
+```js
+const fs = require('fs')
+
+const rs = fs.createReadStream('test.txt', {
+  flags: 'r',
+  encoding: null,
+  fd: null,
+  mode: 438,
+  autoClose: true,
+  start: 0,
+  // end: 3,
+  highWaterMark: 4
+})
+
+rs.on('open', fd => {
+  // open 操作并不是在数据被消费之后才被处理
+  // 当我们调用 createReadStream 时就会触发 open 事件
+  console.log(fd, 'file open')
+})
+
+rs.on('close', () => {
+  // 默认情况下并不会被触发
+  // 默认情况下为暂停模式，close 必须在数据被消费之后才会被触发
+  console.log('file close')
+})
+
+let bufferArr = []
+
+rs.on('data', chunk => {
+  console.log(chunk)
+
+  bufferArr.push(chunk)
+})
+
+rs.on('end', () => {
+  // end 在 close 之间被执行
+  console.log('file clear')
+
+  console.log(Buffer.concat(bufferArr).toString())
+})
+
+rs.on('error', err => {
+  console.log('has error', err)
+})
+```
+
+###  文件可写流
 
