@@ -1980,9 +1980,60 @@ rs.on('data', chunk => {
 * pipe 事件：可读流调用 pipe() 方法向可写流传输数据时就会触发可写流的 pipe 事件，从而完成最终的数据写入操作
 * unpipe 事件：可读流调用 unpipe() 方法时触发，会在 read 方法返回 false，数据又可以继续写入的时候被触发，不会存在内存溢出等问题
 
-### 双工和转换流
+### 双工流和转换流
 
+双工流和转换流（Duplex && Transform）
 
+Node.js 中 stream 是流操作的抽象接口集合。可读、可写、双工、转换是单一抽象具体实现。
 
+流操作的核心功能就是处理数据，Node.js 诞生的初衷就是解决密集型 IO 事务。Node.js 中处理数据模块继承了流和 EventEmitter 模块。
 
+#### 双工流
+
+Duplex 是双工流，既能生产又能消费。
+
+自定义双工流：
+
+* 继承 Duplex 类
+* 重写  `_read` 方法，调用 push 生产数据
+* 重写 `_write` 方法，调用 write 消费数据
+
+ ```js
+ const { Duplex } = require('stream')
+ 
+ const source = ['heora', 'yueluo', 'yzq']
+ 
+ class $Duplex extends Duplex {
+   constructor(options) {
+     super(source, options)
+     this.source = source
+   }
+ 
+   _read() {
+     this.push(this.source.shift() || null)
+   }
+ 
+   _write(chunk, enc, next) {
+     if (Buffer.isBuffer(chunk)) {
+       chunk = chunk.toString()
+     }
+     process.stdout.write(chunk + '--')
+     process.nextTick(next)
+   }
+ }
+ 
+ const duplex = new $Duplex(source)
+ 
+ duplex.on('data', chunk => {
+   console.log(chunk.toString())
+ })
+ 
+ duplex.write('test', 'utf-8', () => {
+   console.log('duplex test: readable and writeable')
+ })
+ ```
+
+#### 转换流
+
+ Transform 也是一个双工流。
 
