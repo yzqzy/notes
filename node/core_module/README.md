@@ -2200,6 +2200,8 @@ rs.on('error', err => {
 
 ###  文件可写流
 
+#### 基础使用
+
 ```js
 const fs = require('fs')
 
@@ -2212,6 +2214,8 @@ const ws = fs.createWriteStream('test3.txt', {
   highWaterMark: 3 // default 16
 })
 
+// 因为我们使用过的是 fs 下的可写流
+// 所以写入的内容通常是 字符串或者 buffer
 ws.write('月落01', () => {
   console.log('write success')
 })
@@ -2219,4 +2223,99 @@ ws.write('月落02', () => {
   console.log('write success')
 })
 ```
+
+#### 事件相关
+
+```js
+const fs = require('fs')
+
+const ws = fs.createWriteStream('test3.txt', {
+  flags: 'w',
+  mode: 438,
+  fd: null,
+  encoding: 'utf8',
+  start: 0,
+  highWaterMark: 3 // default 16
+})
+
+ws.on('open', fd => {
+  console.log('file open', fd)
+})
+
+ws.write('heora')
+
+// 对于文件可写流来说，只有在调用 end 数据写入操作全部完成之后才会执行
+ws.on('close', () => {
+  console.log('file close')
+})
+
+// end 执行意味数据写入操作完成
+// 不能再 end 之后执行写入操作，否则会报错
+ws.end()
+
+ws.on('error', () => {
+  console.log('file error')
+})
+```
+
+### write 执行流程
+
+```js
+const fs = require('fs')
+
+const ws = fs.createWriteStream('test.txt', {
+  highWaterMark: 3
+})
+
+let flag = ws.write('1')
+console.log(flag) // true
+
+flag = ws.write('2')
+console.log(flag) // true
+
+flag = ws.write('3')
+console.log(flag) // false
+
+// 如果 flag 为 false，并不意味当前数据不能被执行写入（flag 值仅代表上游产量问题）
+
+// 1. 第一次调用 write 时，会把数据直接写入到文件中
+// 2. 第二次调用 write，会把数据写入到缓存中
+// 3. 生产速度和消费速度是不同的，一般情况下生产速度要比消费速度快很多
+//    例如 highWaterMark 设置为 3 字节，假设生产者给出 5 个字节执行写入，那么在某个时间点就会超过水位线。
+//    一旦超出水位线，write 结果就会返回 false 告知，仅代表警戒作用，不代表会溢出
+// 4. 当 flag 之后，并不意味着当前次数据不能被写入，但是我们应该告知数据生产者，当前的消费速度已经跟不上生产速度，
+//    所以这个时候，一般我们会将可读流的模式修改为暂停模式
+// 5. 当数据生产者暂停之后，消费者会慢慢消费缓存中数据，直到可以再次执行写入操作
+// 6. 当缓冲区可以继续写入数据时，应该如何告知生产者？ 使用 drain 事件
+
+ws.on('drain', () => {
+  console.log('drain trigger')
+})
+```
+
+可以对上述代码进行调试，阅读其源码实现。
+
+```json
+{
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "启动程序",
+      "skipFiles": [
+        // "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/node/core_module/_stream/write_drain.js"
+    }
+  ]
+}
+```
+
+需要注意的是，我们需要注释掉 skipFiles 中的默认配置，只有这样只能单步调试进入源码中。
+
+### 控制写入速度
 
