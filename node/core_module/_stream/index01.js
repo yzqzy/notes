@@ -79,5 +79,3 @@ const ws = new $Writeable()
 ws.write('yzq is a boy', 'utf-8', () => {
   console.log('write success')
 })
-
-// ------------------------------------------------
