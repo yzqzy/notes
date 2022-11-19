@@ -2319,3 +2319,107 @@ ws.on('drain', () => {
 
 ### 控制写入速度
 
+实际业务开发中 drain 并不常用，通常我们会使用 pipe 方法。
+
+drain 主要的作用是控制写入速度或按需完成限流。具体的手段就是指定 highWaterMark，然后配置 write 函数的返回值进行使用。
+
+```js
+// 假设我们有一组数据，我们需要讲数据写入指定文件
+// 1. 一次性写入，调用 write 方法
+// 2. 分批写入
+
+const fs = require('fs')
+
+// 1. 一次性写入。针对大内存来说，这种操作是不友好的，会存在短时间溢出，瞬间撑满的情况
+// const ws = fs.createWriteStream('test.txt')
+// ws.write('月落森森')
+
+// ------------------------
+
+// 2. 分批执行写入
+// const ws = fs.createWriteStream('test.txt')
+
+// const source = '月落森森'.split('')
+
+// // 其实还是一次性写入
+// const executeWrite = () => {
+//   while (source.length) {
+//     ws.write(source.shift())
+//   }
+// }
+
+// executeWrite()
+
+// ------------------------
+
+// 3. 控制写入速度
+const ws = fs.createWriteStream('test.txt', {
+  highWaterMark: 3
+})
+
+const source = '月落森森'.split('')
+
+let falg
+
+const executeWrite = () => {
+  falg = true
+  while (source.length && falg) {
+    falg = ws.write(source.shift())
+  }
+}
+
+executeWrite()
+
+ws.on('drain', () => {
+  console.log('darin trigger')
+
+  setTimeout(executeWrite, 1 * 1000)
+})
+```
+
+使用 drain 控制写入速度并不是最好的方案，通常我们使用的还是 pipe。
+
+它是一个管道，我们只需要按照相应的类型，把可读流的东西交给可写流、转换流、双工流或自己去进行处理。
+
+### 背压机制
+
+Node.js 的 stream 已经实现了一种可以保证数据平滑流动过的背压机制。
+
+我们需要了解的是 Node.js 数据读写的过程以及背压机制解决了什么问题，还有就是 pipe 方法内部实现原理。
+
+数据读写可能存在的问题：
+
+```js
+const fs = require('fs')
+
+const rs = fs.createReadStream('test1.txt')
+const ws = fs.createWriteStream('test2.txt')
+
+rs.on('data', chunk => {
+  ws.write(chunk)
+})
+```
+
+上述代码的作用就是实现文件拷贝。这样写理论上不存在问题，但是数据读取的速度是远远大于数据写入速度的，消费者的速度往往跟不上生产者的速度。
+
+这样就会出现产能过剩的问题，writeable 内部维护了一个队列，当它不能实时消费上游传递的数据时，它就会尝试把不能被消化掉的数据，先缓存到队列中，但是因为队列大小存在上限。因此读写的过程中，如果不去实现背压机制，那么很有可能就会出现以下问题：
+
+* 内存溢出
+* GC 频繁调用
+* 影响其他进程工作
+
+基于这些问题我们就存在一套可以使数据平滑流动的机制，这其实就是背压机制。
+
+<img src="./images/readable_stream.png" style="zoom: 30%" />
+
+默认 Readable 缓存空间是 16kb，在我们的文件可读流中进行了重新定义，为 64 kb。
+
+从消费者来看，可读流就是一个水池，在它之中装满了想要消费的数据，在池子外部有一个开关，如果我们采用流动模式相当于一直防水，直到流完为止。
+
+如果在这个过程中，用水的人跟不上放水的速度，所以这时用水的人在处理不了的情况下，就会想办法告诉可读流，当前实在处理不了，需要先停一会儿，消化消化。此时，可读流就可以调用 pause 方法将流动模式切换为暂停模式，然后消费者就会慢慢处理缓存的水资源，等水资源消费差不多之后，就会告诉水池可以继续放水。
+
+但是用水的人应该如何通知放水的人？我们先来看一下数据的写操作。
+
+<img src="./images/writeable_stream.png" style="zoom: 30%" />
+
+数据从上游生产者传递过来
