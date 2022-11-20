@@ -2422,4 +2422,66 @@ rs.on('data', chunk => {
 
 <img src="./images/writeable_stream.png" style="zoom: 30%" />
 
-数据从上游生产者传递过来
+数据从上游生产者传递过来，然后可写流调用 write 方法消费数据，在可写流内部同样存在内存空间充当缓存队列，他同样也具有水位线。如果某个时刻上游的数据超过上限，说明无法消费更多的水资源，此时 write 方法调用之后会返回 false 给上游的生产者，让他暂停放水。等到可写流将缓存中的数据消费差不多之后，就会触发 drain 事件告诉上游的生产者可以继续放水。这个时候就可以调用 resume 方法再次打开阀门即可。如此往复，保证数据的平滑流动，既不会出现内存被撑爆的情况，也不会在某个时刻无水可用。这其实也是 pipe 方法内部的实现原理。
+
+代码实现：
+
+```js
+const fs = require('fs')
+
+const rs = fs.createReadStream('test1.txt', {
+  highWaterMark: 4 // 默认为 64 kb，文件可写流默认为 16 kb，两者之间存在 4:1 的关系
+})
+const ws = fs.createWriteStream('test2.txt', {
+  highWaterMark: 1
+})
+
+// 1. 流动模式，一次性写入
+// rs.on('data', chunk => {
+//   ws.write(chunk, () => {
+//     console.log('write done')
+//   })
+// })
+
+// ----------------------
+
+let flag = true
+
+rs.on('data', chunk => {
+  flag = ws.write(chunk, () => {
+    console.log('write done')
+  })
+
+  if (!flag) rs.pause()
+})
+
+ws.on('drain', () => {
+  rs.resume()
+})
+```
+
+上述代码就是 pipe 方法的实现原理，实际开发过程中我们直接这样使用的机会并不多，除非是我们自己想拿到每一个数组，单独对数据进行处理。 最常用的还是使用 pipe 方法。
+
+```js
+const fs = require('fs')
+
+const rs = fs.createReadStream('test1.txt', {
+  highWaterMark: 4 // 默认为 64 kb，文件可写流默认为 16 kb，两者之间存在 4:1 的关系
+})
+const ws = fs.createWriteStream('test2.txt', {
+  highWaterMark: 1
+})
+
+rs.pipe(ws)
+```
+
+### 模拟文件可读流
+
+
+
+
+
+
+
+
+
