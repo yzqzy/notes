@@ -45,10 +45,14 @@ class $FileReadStream extends EventEmitter {
 
     const buf = Buffer.alloc(this.highWaterMark)
 
-    fs.read(this.fd, buf, 0, this.highWaterMark, this.readOffset, (err, readBytes) => {
+    const howMuchToRead = this.end
+      ? Math.min(this.end - this.readOffset + 1, this.highWaterMark)
+      : this.highWaterMark
+
+    fs.read(this.fd, buf, 0, howMuchToRead, this.readOffset, (err, readBytes) => {
       if (readBytes) {
         this.readOffset += readBytes
-        this.emit('data', buf)
+        this.emit('data', buf.slice(0, readBytes))
         this.read()
         return
       }
@@ -67,7 +71,10 @@ class $FileReadStream extends EventEmitter {
 
 // -----------------
 
-const rs = new $FileReadStream('test.txt')
+const rs = new $FileReadStream('test.txt', {
+  end: 7,
+  highWaterMark: 3
+})
 
 // rs.on('open', fd => {
 //   console.log('open', fd)
