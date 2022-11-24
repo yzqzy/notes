@@ -2721,9 +2721,132 @@ rs.on('close', () => {
 })
 ```
 
-### 链表结构
+### 链表
 
+#### 链表结构
 
+文件可写流的 read 方法工作时，有些被写入的内容需要在缓冲区排队等待，遵循先进选出的规则，为了保存这些数据，新版 node 中就采用了链表的结构来存储这些数据。
 
+为什么不采用数组存储数组？
 
+*  数组缺点：
+  * 数组存储数据的长度具有上限
+  * 数组存在塌陷问题，需要频繁移动位置
+
+链表是一系列节点的集合，每个节点都具有指向下一个节点的属性。
+
+链表分类：
+
+* 双向链表
+  * 最常用，查询速度比较快
+* 单向链表
+* 循环链表
+
+#### 单向链表实现
+
+```js
+/**
+ * 1. node + head + null
+ * 2. head -> null
+ * 3. size
+ * 4. next element
+ * 5. add、delete、set、get、clear
+ */
+
+class Node {
+  constructor(element, next) {
+    this.element = element
+    this.next = next
+  }
+}
+
+class LinkedList {
+  constructor(head, size) {
+    this.head = null
+    this.size = 0
+  }
+
+  add(index, element) {
+    if (arguments.length === 1) {
+      element = index
+      index = this.size
+    }
+
+    if (index < 0 || index > this.size) {
+      throw new Error('out of bounds')
+    }
+
+    if (index == 0) {
+      const head = this.head
+      this.head = new Node(element, head)
+    } else {
+      const prevNode = this._getNode(index - 1)
+      prevNode.next = new Node(element, prevNode.next)
+    }
+
+    this.size++
+  }
+
+  remove(index) {
+    if (index === 0) {
+      const head = this.head
+      this.head = head.next
+    } else {
+      const prevNode = this._getNode(index - 1)
+      prevNode.next = prevNode.next.next
+    }
+
+    this.size--
+  }
+
+  set(index, element) {
+    const node = this._getNode(index)
+    node.element = element
+  }
+
+  clear() {
+    this.head = null
+    this.size = 0
+  }
+
+  get(index) {
+    return this._getNode(index)
+  }
+
+  _getNode(index) {
+    if (index < 0 || index >= this.size) {
+      throw new Error('out of bounds')
+    }
+
+    let currentNode = this.head
+
+    for (let i = 0; i < index; i++) {
+      currentNode = currentNode.next
+    }
+
+    return currentNode
+  }
+}
+
+// ------------------------
+
+const l1 = new LinkedList()
+
+l1.add('node01')
+l1.add('node02')
+l1.add(1, 'node3')
+
+// l1.remove(0)
+// l1.remove(1)
+
+l1.set(1, 'node3-3')
+
+console.log(l1.get(0))
+
+l1.clear()
+
+console.log(l1)
+```
+
+#### 链表实现队列
 
