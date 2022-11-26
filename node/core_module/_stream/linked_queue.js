@@ -14,6 +14,10 @@ class Queue {
   }
 }
 
+module.exports = {
+  Queue
+}
+
 const q = new Queue()
 
 console.log(q)
@@ -24,3 +28,5 @@ q.push('node2')
 console.log(q.shift())
 console.log(q.shift())
 console.log(q.shift())
+
+console.log('------------------------------')
