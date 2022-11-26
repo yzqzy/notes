@@ -2475,7 +2475,7 @@ const ws = fs.createWriteStream('test2.txt', {
 rs.pipe(ws)
 ```
 
-### 模拟文件可读流
+### 文件可读流实现
 
 处理错误和文件标志符
 
@@ -2761,7 +2761,7 @@ class Node {
 }
 
 class LinkedList {
-  constructor(head, size) {
+  constructor() {
     this.head = null
     this.size = 0
   }
@@ -2849,4 +2849,67 @@ console.log(l1)
 ```
 
 #### 链表实现队列
+
+```js
+// linked_list.js
+
+class LinkedList {
+  remove(index) {
+    let curNode = null
+
+    if (index === 0) {
+      curNode = this.head
+
+      if (!curNode) return undefined
+
+      this.head = curNode.next
+    } else {
+      const prevNode = this._getNode(index - 1)
+
+      curNode = prevNode.next
+      prevNode.next = curNode.next.next
+    }
+
+    this.size--
+
+    return curNode
+  }
+}
+```
+
+ ```js
+ // linked_queue.js
+ 
+ const { LinkedList } = require('./linked_list')
+ 
+ class Queue {
+   constructor() {
+     this.linkedList = new LinkedList()
+   }
+ 
+   push(element) {
+     this.linkedList.add(element)
+   }
+ 
+   shift() {
+     return this.linkedList.remove(0)
+   }
+ }
+ 
+ const q = new Queue()
+ 
+ console.log(q)
+ 
+ q.push('node1')
+ q.push('node2')
+ 
+ console.log(q.shift())
+ console.log(q.shift())
+ console.log(q.shift())
+ ```
+
+### 文件可写流实现
+
+```js
+```
 

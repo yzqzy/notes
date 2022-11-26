@@ -14,7 +14,7 @@ class Node {
 }
 
 class LinkedList {
-  constructor(head, size) {
+  constructor() {
     this.head = null
     this.size = 0
   }
@@ -41,15 +41,24 @@ class LinkedList {
   }
 
   remove(index) {
+    let curNode = null
+
     if (index === 0) {
-      const head = this.head
-      this.head = head.next
+      curNode = this.head
+
+      if (!curNode) return undefined
+
+      this.head = curNode.next
     } else {
       const prevNode = this._getNode(index - 1)
-      prevNode.next = prevNode.next.next
+
+      curNode = prevNode.next
+      prevNode.next = curNode.next.next
     }
 
     this.size--
+
+    return curNode
   }
 
   set(index, element) {
@@ -81,7 +90,9 @@ class LinkedList {
   }
 }
 
-// ------------------------
+module.exports = {
+  LinkedList
+}
 
 const l1 = new LinkedList()
 
@@ -99,3 +110,5 @@ console.log(l1.get(0))
 l1.clear()
 
 console.log(l1)
+
+console.log('------------------------------')
