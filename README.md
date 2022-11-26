@@ -26,6 +26,7 @@
   - [网络基础](https://github.com/yw0525/notes/tree/master/network/base) 已完成
   - ~~[网络进阶](https://github.com/yw0525/notes/tree/master/network/plus) 已废弃~~ 😅
   - [HTTP 协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
+- [JavaScript 逆向](https://github.com/yw0525/notes/tree/master/crawler) 更新中... 😁
 - 工程化
   - [Yeoman/Grunt/Gulp/FIS](https://github.com/yw0525/notes/tree/master/engineering) 已完成
   - webpack
