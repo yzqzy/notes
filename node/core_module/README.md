@@ -2484,7 +2484,7 @@ const fs = require('fs')
 
 const EventEmitter = require('events')
 
-class $FileReadStream extends EventEmitter {
+class $ReadStream extends EventEmitter {
   constructor(path, options = {}) {
     super()
     this.path = path
@@ -3081,4 +3081,58 @@ ws.on('drain', () => {
 ```
 
 ### pipe 方法实现
+
+文件读写操作的终极语法糖，无论是文件可写流还是可读流，核心目的还是为了完成数据读取和数据写入，本质还是执行文件拷贝行为。
+
+#### 基础使用
+
+```js
+const fs = require('fs')
+
+const rs = fs.createReadStream('./test04.txt', {
+  highWaterMark: 4 // default: 64kb
+})
+const ws = fs.createWriteStream('./test05.txt', {
+  highWaterMark: 1 // default: 16kb
+})
+
+rs.pipe(ws)
+```
+
+#### 自定义实现
+
+```js
+const fs = require('fs')
+const EventEmitter = require('events')
+
+class $ReadStream extends EventEmitter {
+  pipe(ws) {
+    this.on('data', data => {
+      const flag = ws.write(data)
+
+      console.log(data)
+
+      if (!flag) {
+        this.pause()
+      }
+    })
+
+    ws.on('drain', () => {
+      this.resume()
+    })
+  }
+}
+```
+
+```js
+const fs = require('fs')
+const { $ReadStream } = require('./read_stream')
+
+const rs = new $ReadStream('./test04.txt', {
+  highWaterMark: 4 // default: 64kb
+})
+const ws = fs.createWriteStream('./test05.txt')
+
+rs.pipe(ws)
+```
 

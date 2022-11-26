@@ -96,6 +96,10 @@ class $WriteStream extends EventListener {
   }
 }
 
+module.exports = {
+  $WriteStream
+}
+
 const ws = new $WriteStream('./test04.txt', {
   highWaterMark: 2
 })

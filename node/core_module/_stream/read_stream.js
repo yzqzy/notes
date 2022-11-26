@@ -1,8 +1,7 @@
 const fs = require('fs')
-
 const EventEmitter = require('events')
 
-class $FileReadStream extends EventEmitter {
+class $ReadStream extends EventEmitter {
   constructor(path, options = {}) {
     super()
     this.path = path
@@ -67,11 +66,31 @@ class $FileReadStream extends EventEmitter {
       this.emit('close')
     })
   }
+
+  pipe(ws) {
+    this.on('data', data => {
+      const flag = ws.write(data)
+
+      console.log(data)
+
+      if (!flag) {
+        this.pause()
+      }
+    })
+
+    ws.on('drain', () => {
+      this.resume()
+    })
+  }
+}
+
+module.exports = {
+  $ReadStream
 }
 
 // -----------------
 
-const rs = new $FileReadStream('test.txt', {
+const rs = new $ReadStream('test.txt', {
   end: 7,
   highWaterMark: 3
 })
