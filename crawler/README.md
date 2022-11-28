@@ -130,3 +130,71 @@ Chrome 其实也自带 Cookie 管理面板，位于 Application - Storage - Cook
 
 ## Chrome 插件 - Toggle JavaScript
 
+提供开启和关闭 JavaScript 功能的操作，使我们可以查看没有 JavaScript 代码执行时的页面效果。
+
+## Chrome 插件 - Tampermonkey
+
+### 概述
+
+在浏览器自定义执行 JavaScript 脚本，完成如自动抢票、自动刷单等操作。
+
+### 安装
+
+chrome 浏览器直接搜索 tampermonkey 就可以找到该扩展程序。
+
+<img src="./images/tamper_monkey_01.png" />
+
+管理面板
+
+<img src="./images/tamper_monkey_02.png" />
+
+### 自定义脚本
+
+[脚本编写文档](https://www.tampermonkey.net/documentation.php?ext=dhdg#Q102)
+
+新建脚本
+
+<img src="./images/tamper_monkey_03.png" />
+
+ ```js
+ // ==UserScript==
+ // @name         test
+ // @namespace    https://www.baidu.com/
+ // @version      0.1
+ // @description  test
+ // @author       heora
+ // @match        https://www.baidu.com/
+ // @grant        none
+ // ==/UserScript==
+ 
+ (function() {
+     'use strict';
+ 
+     console.log('hello world')
+ })();
+ ```
+
+保存后效果如下：
+
+<img src="./images/tamper_monkey_04.png" />
+
+这样一个最简单的脚本就已经编写完成。打开百度就可以看到我们脚本并且会在控制台执行我们编写的函数被执行。
+
+<img src="./images/tamper_monkey_05.png" />
+
+<img src="./images/tamper_monkey_06.png" />
+
+我们也可以在控制台看到我们编写的脚本源文件。
+
+<img src="./images/tamper_monkey_07.png" />
+
+### JavaScript 逆向应用
+
+Hook 技术。将原本执行的函数替换成我们自定义的函数，自定义函数会保持原有函数的功能，并为其附加新功能。不改变程序执行效果的前提下，实现自定义的效果。
+
+
+
+
+
+
+
