@@ -88,3 +88,45 @@ Proxy - Throttle Settings
 
 ## Chrome 插件 - EditThisCookie
 
+### 概述
+
+Cookie 常见操作
+
+* 查看 Cookies
+* 编辑 Cookies（编辑内容或者有效期）
+* 删除 Cookies，实现页面退出
+* 添加 Cookie，未登录状态下添加某个 Cookie 绕过登录
+* 导出导入 Cookie，持久化存储到电脑上
+
+上述需求都可以使用浏览器插件 EditThisCookie 来完成，实现整个 Cookie 的管理。
+
+ ### 安装
+
+[官网地址](https://www.editthiscookie.com/) 
+
+<img src="./images/edit_cookie_01.png" />
+
+<img src="./images/edit_cookie_02.png" />
+
+### 基本使用
+
+可以使用插件弹窗的形式，也可以在开发者工具面板中找到。
+
+<img src="./images/edit_cookie_03.png" />
+
+<img src="./images/edit_cookie_04.png" />
+
+Chrome 其实也自带 Cookie 管理面板，位于 Application - Storage - Cookies。
+
+<img src="./images/edit_cookie_05.png" />
+
+我们修改 Cookie 的 HttpOnly 属性，这样我们就可以使用 `document.cookie` 获取到所有的 Cookie。
+
+<img src="./images/edit_cookie_06.png" />
+
+控制台的面板相对于插件弹窗功能要少一些，使用弹窗使用同时操作所有 Cookie，例如删除所有，导入导出，新增 Cookie 等。
+
+<img src="./images/edit_cookie_07.png" />
+
+## Chrome 插件 - Toggle JavaScript
+
