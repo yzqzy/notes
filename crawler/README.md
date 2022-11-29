@@ -191,3 +191,37 @@ chrome 浏览器直接搜索 tampermonkey 就可以找到该扩展程序。
 ### JavaScript 逆向应用
 
 Hook 技术。将原本执行的函数替换成我们自定义的函数，自定义函数会保持原有函数的功能，并为其附加新功能。不改变程序执行效果的前提下，实现自定义的效果。
+
+```js
+// ==UserScript==
+// @name         HookBase64
+// @namespace    http://xxx.com
+// @version      0.1
+// @description  Hook Base64 encode function
+// @author       heora
+// @match        http://xxx.com/login
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    function hook(object, attr) {
+      const func = object[attr]
+
+      object[attr] = function() {
+        console.log('hooked', object, attr)
+        const ret = func.apply(object, arguments)
+        debugger
+        return ret
+      }
+    }
+
+    hook(window, 'btoa')
+})();
+```
+
+原理就是代理方法，对方法进行重写，调试。例如上述代理的 btoa 方法，用于 base64 编码。
+
+## 无限 debugger
+
