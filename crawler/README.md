@@ -225,3 +225,91 @@ Hook 技术。将原本执行的函数替换成我们自定义的函数，自定
 
 ## 无限 debugger
 
+### 概述
+
+什么情况下会碰到 debugger
+
+* 分析网络请求、查看元素的事件监听器、跟踪 js 等需求第一步就要打开浏览器的开发者工具，只要打开开发者工具就可能会碰到无限 debugger 死循环，或者在调试过程中也可能会出现无限 debugger 的死循环。
+
+为什么反爬虫会用到无限 debugger
+
+* 分析代码逻辑、调试跟踪代码是 js 破解的必要手段，分析调试主要就是使用开发者工具，使用无限 debugger 属于精准防控手段。
+
+debugger 反爬虫的优势在哪里
+
+* 实现比较简单，不必写复杂的反人类的反爬虫代码，写无限 debugger 应该是基本操作
+*  效果比较明显，如果破解不了，不能进行下一步
+* 一定程序可以提高代码逻辑的安全性，因为它可以阻止我们调试分析代码逻辑
+
+###  作用
+
+反调试：阻止调试和分析目标代码的运行逻辑
+
+### 实现
+
+debugger 关键字的应用
+
+* Function/eval "debugger"
+* function debugger
+
+### 解决方案
+
+测试代码
+
+```js
+const startDebug = () => {
+  debugger
+}
+
+let i = 0
+while (i < 10) {
+  startDebug()
+  console.log(`i ${i++}`)
+}
+```
+
+#### 禁用所有断点
+
+上述代码需要中断 10 次才能正常进行调试。解决方案也很简单，就是禁用所有断点。
+
+<img src="./images/debug_01.png" />
+
+禁用所有断点后，重新刷新页面代码可以正常执行。
+
+#### 禁用某处断点
+
+上述代码的关键就是 debugger，我们可以在行号前设置 Never pause here。
+
+<img src="./images/debug_02.png" />
+
+<img src="./images/debug_03.png" />
+
+ #### 条件断点
+
+我们可以在行号前设置  Add conditional breakpoint。
+
+<img src="./images/debug_04.png" />
+
+<img src="./images/debug_05.png" />
+
+当 i > 5 时，才会执行 debugger，暂停程序执行。
+
+#### 中间人工具替换特征字符串
+
+在我们的案例中，特征字符串就是 debugger 关键字。我们可以利用 fiddler、charles 等工具将 debugger 关键字换成 "debugger" 或者替换为空。
+
+<img src="./images/debug_06.png" />
+
+#### reres 替换本地修改过的文件
+
+reres 是一个浏览器插件，当它监控到目标文件时，就不进行网络请求，直接返回本地修改过的文件进行返回。其实也是篡改响应接口的一种方式。
+
+#### 重写关键函数
+
+这种方式算是比较稳妥，使用比较多的一种方式。需要在函数声明之后打断点，然后再重写目标函数。
+
+对于 function 关键字声明或 var 声明的函数是有效的，不过对于 const 关键字声明的箭头函数是无效的，函数不能被重写。
+
+重写关键函数可以指定方法名，或者使用 `Function.prototype.constructor = function() {}` ，这种方法只有在 `(function(){}).constructor === Function` 时才会生效。
+
+ 
