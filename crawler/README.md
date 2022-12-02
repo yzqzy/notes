@@ -312,4 +312,38 @@ reres 是一个浏览器插件，当它监控到目标文件时，就不进行�
 
 重写关键函数可以指定方法名，或者使用 `Function.prototype.constructor = function() {}` ，这种方法只有在 `(function(){}).constructor === Function` 时才会生效。
 
- 
+```js
+// 重写 eval 案例
+
+ console.log(eval + '')
+// 'function eval() { [native code] }'
+
+// 重写 eval
+window._origin_eval = window.eval
+
+function $eval(src) {
+  console.log(
+    `==== eveal begin: length=${src.length}, caller=~${$eval.caller && $eval.caller.name} ====`
+  )
+  console.log(`injected ${document.location}`)
+  console.log(src)
+  console.log(`==== eval end ====`)
+
+  return window._origin_eval(src)
+}
+
+Object.defineProperty(window, 'eval', { value: $eval })
+
+console.log(eval + '')
+// 'function $eval(src) {\n  console.log(\n    `==== eveal begin: length=${src.length}, caller=~${$eval.caller && $eval.caller.name} ====`\n  )\n  console.log(`injected ${document.location}`)\n  console.log(src)\n  console.log(`==== eval end ====`)\n\n  return window._origin_eval(src)\n}'
+
+$eval.toString = function () {
+  return 'function eval() { [native code] }'
+}
+
+console.log(eval + '')
+// 'function eval() { [native code] }'
+```
+
+## 快速定位关键代码点
+
