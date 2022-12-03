@@ -381,3 +381,57 @@ console.log(eval + '')
 如果全局搜索搜索不到内容，这时我们就需要分析调用栈，分析触发来源。
 
 **网络过滤**
+
+<img src="./images/quick_search_03.png" />
+
+### 快速定位 - 断点
+
+#### xhr
+
+例如下面这个例子，这里的断点就是监听请求链接中是否存在 formSite 字段，如果命中。
+
+<img src="./images/quick_debugger_01.png" />
+
+#### dom
+
+<img src="./images/quick_debugger_02.png" />
+
+Break on 有三个，分别是子树、属性和节点移除，当触发这三个事件时，就会中断程序运行。
+
+<img src="./images/quick_debugger_03.png" />
+
+应用场景，某网站会采集用户鼠标事件、鼠标移动事件、鼠标左键单击事件、鼠标右键单击事件，还有键盘事件等，然后在触发事件时，会有一个隐藏的 input 标签记录操作行为， 当你点击登陆按钮时，会把属性值提交给后端，记录用户这段时间到底做了什么事情。
+
+#### event
+
+event，即事件监听器。
+
+<img src="./images/quick_event_01.png" />
+
+在上图中，我们可以看到，在 Elements 面板的 Event Listeners 中看到所有事件，如果我们有需求就可以对单独事件进行 debugger。
+
+<img src="./images/quick_event_02.png" />
+
+#### 自定义
+
+自定义断点即用户自己打的断点。
+
+### 快速定位 - hook
+
+#### json
+
+```js
+```
+
+
+
+#### cookie
+
+#### window attr
+
+#### eval/Function
+
+#### websocket
+
+#### and so on
+
