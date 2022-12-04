@@ -551,9 +551,19 @@ WebSocket.prototype.send = function (data) {
 
 #### Elements Event Listeners
 
+elements event listeners 之间我们已经说过很多次，这里就不再赘述。
+
 #### Network type initator
 
+当鼠标悬停于 initator 上时，就可以看到其调用栈，我们就可以根据调用栈一层一层的点进去，然后我们就可以对此进行分析。 
+
+<img src="./images/quick_analysis_01.png" />
+
 #### Console Log XMLHttpRequests
+
+这个其实就是查看控制台信息，可以自主去查看开发者工具的其他功能。
+
+## 代码混淆的原理
 
 
 
