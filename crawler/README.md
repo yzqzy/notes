@@ -563,7 +563,7 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 
 这个其实就是查看控制台信息，可以自主去查看开发者工具的其他功能。
 
-## 代码混淆的原理
+## 代码混淆与加密
 
 ### 为什么加密或混淆
 
@@ -586,7 +586,7 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 
 #### <img src="./images/encrypt_01.png" />
 
-这种加密方式并不复杂，将代码在控制台执行运行就可以得到结果。或者将 eval 包裹去掉，我们也可以得到一个函数。
+#### 这种加密方式并不复杂，将代码在控制台执行运行就可以得到结果。或者将 eval 包裹去掉，我们也可以得到一个函数。
 
 #### Emscripten
 
@@ -609,6 +609,8 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 
 ### JavaScript 混淆技术
 
+#### 相关技术
+
 * 变量混淆
   * 源代码变量名基本都具有语义，例如 count 代表计数器等。
   * 变量混淆之后将变量变成一些无意义的、看起来比较乱的一些字符串，例如 16 进制的字符串，降低代码可读性。
@@ -624,17 +626,43 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 * 代码压缩
   * 去除一些空格，回车，调试语句等代码，使文件变得更小，由多行代码变为一行代码，压缩代码体积，使代码更难读。
 * 反调试
-  * 
+  * 基于浏览器的一些特性，对当前环境进行检验，加上 debugger 语句，例如无限 debugger，定时器 debugger，用一些断点进行干扰。
 * 多态变异
+  * JavaScript 代码被调用时，一旦代码被调用，代码就会立刻发生变化，变成和原来完全不同的代码，但是依旧可以保持功能完全，只是代码形式发生变化。 避免代码被动态分析、调试。
 * 锁定域名
+  * 对域名进行检测，JavaScript 代码必须运行在特定的域名下。
 * 反格式化
+  * 将代码格式化后，会有一些机制使得代码在运行的时候无法正常工作。
 * 特殊编码
+  * 将 JavaScript 代码编码成一些特别难读的代码，例如中括号，叹号等等，编译成一些表情，符号等等，不易读。
 
+#### 开源项目
 
+* UglifyJS：[https://github.com/mishoo/UglifyJS2](https://github.com/mishoo/UglifyJS2)
+  * 抽象语法树，然后进行代码压缩或变异
+* terser：[https://github.com/terser/terser](https://github.com/terser/terser)
+  * 和 UglifyJS 功能类似，增加 ES6 支持
+* javascript-obfuscator：[https://github.com/javascript-obfuscator/javascript-obfuscator](https://github.com/javascript-obfuscator/javascript-obfuscator)
+  * 可以用来实现几乎所有的混淆效果，比如变量混淆、字符串混淆、属性加密、平展控制流、僵尸代码注入、反调试、反格式化等等。
+* jsfuck：[https://github.com/aemkei/jsfuck](https://github.com/aemkei/jsfuck)
+  * 将一些变量或者定义统一替换成有中括号等等的一些表示，代码代码体积也会变得很大
+* AAEncode：[https://github.com/bprayudha/jquery.aaencode](https://github.com/bprayudha/jquery.aaencode)
+* JJEncode：[https://github.com/ay86/jEncrypt](https://github.com/ay86/jEncrypt)
 
+#### 在线工具
 
+* [https://obfuscator.io/](https://obfuscator.io/)
+* [http://www.freejsobfuscator.com/](http://www.freejsobfuscator.com/)
+* [https://www.daftlogic.com/projects-online-javascript-obfuscator.htm](https://www.daftlogic.com/projects-online-javascript-obfuscator.htm)
+* [https://beautifytools.com/javascript-obfuscator.php](https://beautifytools.com/javascript-obfuscator.php)
+* [https://www.sojson.com/jscodeconfusion.html](https://www.sojson.com/jscodeconfusion.html)
+* [http://www.jshaman.com/#free](http://www.jshaman.com/#free)
 
+#### 商业服务
 
+* [https://javascriptobfuscator.com/](https://javascriptobfuscator.com/)
+* [https://jscrambler.com/](https://jscrambler.com/)
+* [http://stunnix.com/](http://stunnix.com/)
 
-
+### JavaScript 混淆实现
 
