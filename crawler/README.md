@@ -586,7 +586,7 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 
 #### <img src="./images/encrypt_01.png" />
 
-#### 这种加密方式并不复杂，将代码在控制台执行运行就可以得到结果。或者将 eval 包裹去掉，我们也可以得到一个函数。
+这种加密方式并不复杂，将代码在控制台执行运行就可以得到结果。或者将 eval 包裹去掉，我们也可以得到一个函数。
 
 #### Emscripten
 
@@ -665,4 +665,122 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 * [http://stunnix.com/](http://stunnix.com/)
 
 ### JavaScript 混淆实现
+
+基于 javascript-obfuscator、多种混淆技术、依赖 Node.js。
+
+```js
+pnpm init
+```
+
+```js
+pnpm i javascript-obfuscator --save-dev
+```
+
+#### 基础案例
+
+```js
+// demo01.js
+
+const obfuscator = require('javascript-obfuscator')
+
+const code = `
+  const x  = 'l' + 1
+  console.log('x', x)
+`
+
+const options = {
+  compact: false, // 是否压缩成一行
+  controlFlowFlattening: true // 控制流平坦化
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// const _0x319a8e = _0x17c8;
+// (function (_0x52f8e7, _0x57164d) {
+//     const _0x46023b = _0x17c8, _0x430115 = _0x52f8e7();
+//     while (!![]) {
+//         try {
+//             const _0x139205 = parseInt(_0x46023b(0x1c2)) / 0x1 + -parseInt(_0x46023b(0x1c0)) / 0x2 + -parseInt(_0x46023b(0x1c4)) / 0x3 + parseInt(_0x46023b(0x1be)) / 0x4 * (-parseInt(_0x46023b(0x1bc)) / 0x5) + -parseInt(_0x46023b(0x1ba)) / 0x6 + -parseInt(_0x46023b(0x1bb)) / 0x7 * (-parseInt(_0x46023b(0x1bd)) / 0x8) + -parseInt(_0x46023b(0x1c1)) / 0x9 * (-parseInt(_0x46023b(0x1c3)) / 0xa);
+//             if (_0x139205 === _0x57164d)
+//                 break;
+//             else
+// heora@yueluodeMBP obfuscator % node demo01.js
+// function _0x37c2(_0x15e667, _0x179462) {
+//     const _0x3fc284 = _0x3fc2();
+//     return _0x37c2 = function (_0x37c288, _0x365673) {
+//         _0x37c288 = _0x37c288 - 0x149;
+//         let _0x3bb96b = _0x3fc284[_0x37c288];
+//         return _0x3bb96b;
+//     }, _0x37c2(_0x15e667, _0x179462);
+// }
+// const _0x41fee7 = _0x37c2;
+// function _0x3fc2() {
+//     const _0xff6162 = [
+//         '2180445LYHBNw',
+//         '6PoXlVC',
+//         '1062245HPVdof',
+//         '4962699JsvSZR',
+//         '2037424UwkIQW',
+//         '2wCqcbN',
+//         '22550990HHAjbJ',
+//         'log',
+//         '181064EFBbAW',
+//         '744311jBDKbx',
+//         '153fCiFKW'
+//     ];
+//     _0x3fc2 = function () {
+//         return _0xff6162;
+//     };
+//     return _0x3fc2();
+// }
+// (function (_0x44b360, _0x36241e) {
+//     const _0x352cf1 = _0x37c2, _0x59526 = _0x44b360();
+//     while (!![]) {
+//         try {
+//             const _0x546e33 = -parseInt(_0x352cf1(0x153)) / 0x1 + parseInt(_0x352cf1(0x14f)) / 0x2 * (parseInt(_0x352cf1(0x14a)) / 0x3) + -parseInt(_0x352cf1(0x14e)) / 0x4 + -parseInt(_0x352cf1(0x14c)) / 0x5 * (parseInt(_0x352cf1(0x14b)) / 0x6) + -parseInt(_0x352cf1(0x14d)) / 0x7 + parseInt(_0x352cf1(0x152)) / 0x8 * (-parseInt(_0x352cf1(0x149)) / 0x9) + parseInt(_0x352cf1(0x150)) / 0xa;
+//             if (_0x546e33 === _0x36241e)
+//                 break;
+//             else
+//                 _0x59526['push'](_0x59526['shift']());
+//         } catch (_0x479a3c) {
+//             _0x59526['push'](_0x59526['shift']());
+//         }
+//     }
+// }(_0x3fc2, 0x670c0));
+// const x = 'l' + 0x1;
+// console[_0x41fee7(0x151)]('x', x);
+```
+
+整体来看，混淆之后可读性变得非常差。
+
+#### 代码压缩
+
+启用 compact 配置可以进行代码压缩，将多行代码压缩为一行。
+
+```js
+const obfuscator = require('javascript-obfuscator')
+
+const code = `
+  const x  = 'l' + 1
+  console.log('x', x)
+`
+
+const options = {
+  compact: true, // 是否压缩成一行
+  controlFlowFlattening: true // 控制流平坦化
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// function _0x1ed0(){const _0x11ff60=['1696072pCxUdw','9081JMWsXK','58LluwlY','log','2552oFOSUn','1122qjQuAv','25537SpbjXH','711552eXkfAf','4202505CboVKg','8669610XfCMvT','29701fxdBiQ'];_0x1ed0=function(){return _0x11ff60;};return _0x1ed0();}const _0x34263e=_0x2ad4;(function(_0x51afa7,_0x14bd8d){const _0x11aac9=_0x2ad4,_0x4255eb=_0x51afa7();while(!![]){try{const _0x2f7cdd=parseInt(_0x11aac9(0x1a4))/0x1*(parseInt(_0x11aac9(0x1a0))/0x2)+-parseInt(_0x11aac9(0x19a))/0x3+-parseInt(_0x11aac9(0x19e))/0x4+-parseInt(_0x11aac9(0x19b))/0x5+parseInt(_0x11aac9(0x1a3))/0x6*(parseInt(_0x11aac9(0x19d))/0x7)+parseInt(_0x11aac9(0x1a2))/0x8*(-parseInt(_0x11aac9(0x19f))/0x9)+parseInt(_0x11aac9(0x19c))/0xa;if(_0x2f7cdd===_0x14bd8d)break;else _0x4255eb['push'](_0x4255eb['shift']());}catch(_0x12ce85){_0x4255eb['push'](_0x4255eb['shift']());}}}(_0x1ed0,0x8cf79));const x='l'+0x1;function _0x2ad4(_0x3170d9,_0x25c3ba){const _0x1ed02b=_0x1ed0();return _0x2ad4=function(_0x2ad40e,_0x2457e3){_0x2ad40e=_0x2ad40e-0x19a;let _0xf8cd45=_0x1ed02b[_0x2ad40e];return _0xf8cd45;},_0x2ad4(_0x3170d9,_0x25c3ba);}console[_0x34263e(0x1a1)]('x',x);
+```
+
+#### 变量名混淆
+
+controlFlowFlattening 配置为 true，使用的是 16 进制混淆。我们还可以使用 identifierNameGenerator 属性， 设置其值为 `mangled`，即普通混淆。
+
+```js
+```
 
