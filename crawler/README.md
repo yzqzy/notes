@@ -666,7 +666,7 @@ elements event listeners 之间我们已经说过很多次，这里就不再赘�
 
 ### JavaScript 混淆实现
 
-基于 javascript-obfuscator、多种混淆技术、依赖 Node.js。
+基于 javascript-obfuscator 演示、使用多种混淆技术、依赖 Node.js。
 
 ```js
 pnpm init
@@ -782,5 +782,110 @@ console.log(obfuscate(code, options))
 controlFlowFlattening 配置为 true，使用的是 16 进制混淆。我们还可以使用 identifierNameGenerator 属性， 设置其值为 `mangled`，即普通混淆。
 
 ```js
+const obfuscator = require('javascript-obfuscator')
+
+const code = `
+  const x  = 'l' + 1
+  console.log('x', x)
+`
+
+const options = {
+  compact: true, // 是否压缩成一行
+  // controlFlowFlattening: true // 控制流平坦化
+  identifierNamesGenerator: 'mangled'
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// function a(){const i=['1402511atPvUm','226fjmYht','1084160Vfcblk','6748XotdGE','6ldcOls','374521DOItpE','587862aDEfQq','56gRDPSI','307471KdMVmp','5862OyJEBp','215otlhqL'];a=function(){return i;};return a();}(function(c,d){const h=b,e=c();while(!![]){try{const f=-parseInt(h(0x184))/0x1+parseInt(h(0x188))/0x2*(parseInt(h(0x185))/0x3)+parseInt(h(0x17f))/0x4*(parseInt(h(0x186))/0x5)+-parseInt(h(0x180))/0x6*(-parseInt(h(0x181))/0x7)+parseInt(h(0x183))/0x8*(parseInt(h(0x182))/0x9)+-parseInt(h(0x189))/0xa+-parseInt(h(0x187))/0xb;if(f===d)break;else e['push'](e['shift']());}catch(g){e['push'](e['shift']());}}}(a,0x3fa4c));function b(c,d){const e=a();return b=function(f,g){f=f-0x17f;let h=e[f];return h;},b(c,d);}const x='l'+0x1;console['log']('x',x);
+```
+
+#### 字符串混淆
+
+```js
+const options = {
+  stringArray: true,
+  rotateStringArray: true,
+  stringArrayEncoding: ['base64'], // none, base64, rc4
+  stringArrayThreshold: 1
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// const _0x58c2e4=_0x30f4;(function(_0x3dd5c3,_0x43cf03){const _0x50015b=_0x30f4,_0x175929=_0x3dd5c3();while(!![]){try{const _0x179e3e=parseInt(_0x50015b(0x13b))/0x1+-parseInt(_0x50015b(0x13d))/0x2+parseInt(_0x50015b(0x13e))/0x3+-parseInt(_0x50015b(0x13a))/0x4*(parseInt(_0x50015b(0x13f))/0x5)+-parseInt(_0x50015b(0x143))/0x6+-parseInt(_0x50015b(0x141))/0x7+-parseInt(_0x50015b(0x140))/0x8*(-parseInt(_0x50015b(0x13c))/0x9);if(_0x179e3e===_0x43cf03)break;else _0x175929['push'](_0x175929['shift']());}catch(_0x541ffd){_0x175929['push'](_0x175929['shift']());}}}(_0x1ccc,0xe0350));function _0x30f4(_0x4eb79e,_0x329d01){const _0x1ccc2c=_0x1ccc();return _0x30f4=function(_0x30f48d,_0x5a5d5e){_0x30f48d=_0x30f48d-0x13a;let _0x2d532d=_0x1ccc2c[_0x30f48d];if(_0x30f4['xjhYfs']===undefined){var _0x41f5fe=function(_0x56b76d){const _0x53a9ee='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x1528e0='',_0x57a8e8='';for(let _0x170a79=0x0,_0xdbd185,_0x647290,_0x1847b2=0x0;_0x647290=_0x56b76d['charAt'](_0x1847b2++);~_0x647290&&(_0xdbd185=_0x170a79%0x4?_0xdbd185*0x40+_0x647290:_0x647290,_0x170a79++%0x4)?_0x1528e0+=String['fromCharCode'](0xff&_0xdbd185>>(-0x2*_0x170a79&0x6)):0x0){_0x647290=_0x53a9ee['indexOf'](_0x647290);}for(let _0x7c52f0=0x0,_0x13a433=_0x1528e0['length'];_0x7c52f0<_0x13a433;_0x7c52f0++){_0x57a8e8+='%'+('00'+_0x1528e0['charCodeAt'](_0x7c52f0)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x57a8e8);};_0x30f4['BApANM']=_0x41f5fe,_0x4eb79e=arguments,_0x30f4['xjhYfs']=!![];}const _0x37ec4a=_0x1ccc2c[0x0],_0x52ca06=_0x30f48d+_0x37ec4a,_0x44eed0=_0x4eb79e[_0x52ca06];return!_0x44eed0?(_0x2d532d=_0x30f4['BApANM'](_0x2d532d),_0x4eb79e[_0x52ca06]=_0x2d532d):_0x2d532d=_0x44eed0,_0x2d532d;},_0x30f4(_0x4eb79e,_0x329d01);}function _0x1ccc(){const _0x1e5d0c=['mZzTuuDct0C','mtm4ntG1m1vnshvUAa','mJu4mdq4mdLSuwnuAvq','mJa0mZKWnfbqtgvWBa','ndyXotm2n0jjuNzfCa','nti3ndKWBgX6yxr5','ofHbvfvTua','mteXnJy2mtb6yw9mBhG','Bg9N','nZG0nJK2mLfeu0zSsG'];_0x1ccc=function(){return _0x1e5d0c;};return _0x1ccc();}const x='l'+0x1;console[_0x58c2e4(0x142)]('x',x);
+```
+
+```js
+const options = {
+  compact: false,
+  unicodeEscaoeSequence: true
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// function _0x26ba(_0x36c780, _0x53d9ad) {
+//   const _0x395a7c = _0x395a();
+//   return _0x26ba = function (_0x26ba1b, _0x50e0f8) {
+//       _0x26ba1b = _0x26ba1b - 0xf6;
+//       let _0x673a36 = _0x395a7c[_0x26ba1b];
+//       return _0x673a36;
+//   }, _0x26ba(_0x36c780, _0x53d9ad);
+// }
+// const _0x4a8483 = _0x26ba;
+// (function (_0x4f6148, _0x62c41e) {
+//   const _0x12fd5b = _0x26ba, _0x1cdb96 = _0x4f6148();
+//   while (!![]) {
+//       try {
+//           const _0x425692 = -parseInt(_0x12fd5b(0xff)) / 0x1 * (-parseInt(_0x12fd5b(0xfc)) / 0x2) + -parseInt(_0x12fd5b(0xf7)) / 0x3 + parseInt(_0x12fd5b(0xfb)) / 0x4 * (-parseInt(_0x12fd5b(0xfd)) / 0x5) + -parseInt(_0x12fd5b(0xfe)) / 0x6 * (-parseInt(_0x12fd5b(0xf9)) / 0x7) + -parseInt(_0x12fd5b(0xf6)) / 0x8 + -parseInt(_0x12fd5b(0xfa)) / 0x9 + parseInt(_0x12fd5b(0xf8)) / 0xa;
+//           if (_0x425692 === _0x62c41e)
+//               break;
+//           else
+//               _0x1cdb96['push'](_0x1cdb96['shift']());
+//       } catch (_0x52d520) {
+//           _0x1cdb96['push'](_0x1cdb96['shift']());
+//       }
+//   }
+// }(_0x395a, 0xe5bec));
+// function _0x395a() {
+//   const _0x396de0 = [
+//       '11wNEArv',
+//       'log',
+//       '3704680AnmDYz',
+//       '4713714utvsgx',
+//       '34268930dvIjTj',
+//       '53137GzFDpL',
+//       '8750070qAxqEg',
+//       '260292YHShGR',
+//       '138466fDpVBL',
+//       '85BHgFkg',
+//       '684wMjWNk'
+//   ];
+//   _0x395a = function () {
+//       return _0x396de0;
+//   };
+//   return _0x395a();
+// }
+// const x = 'l' + 0x1;
+// console[_0x4a8483(0x100)]('x', x);
+```
+
+#### 自我保护
+
+代码混淆后，如果格式化运行，会将浏览器直接卡死。
+
+原理：申请一些空间、新建一些对象、
+
+```js
+const options = {
+  selfDefending: true
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// function _0x6a5a(_0x57ebb1,_0x288f15){const _0x57a170=_0x3833();return _0x6a5a=function(_0x2482c9,_0x25f644){_0x2482c9=_0x2482c9-0x1ef;let _0x3833aa=_0x57a170[_0x2482c9];return _0x3833aa;},_0x6a5a(_0x57ebb1,_0x288f15);}const _0x252268=_0x6a5a;(function(_0x385891,_0x470326){const _0x193ce5=_0x6a5a,_0x3015bf=_0x385891();while(!![]){try{const _0x49f914=-parseInt(_0x193ce5(0x1fb))/0x1+-parseInt(_0x193ce5(0x1fc))/0x2*(parseInt(_0x193ce5(0x1ef))/0x3)+parseInt(_0x193ce5(0x1f3))/0x4+parseInt(_0x193ce5(0x1f2))/0x5*(parseInt(_0x193ce5(0x1f4))/0x6)+-parseInt(_0x193ce5(0x1f1))/0x7+parseInt(_0x193ce5(0x1f9))/0x8+-parseInt(_0x193ce5(0x1f0))/0x9*(parseInt(_0x193ce5(0x1f7))/0xa);if(_0x49f914===_0x470326)break;else _0x3015bf['push'](_0x3015bf['shift']());}catch(_0x5897ea){_0x3015bf['push'](_0x3015bf['shift']());}}}(_0x3833,0x86bac));const _0x25f644=(function(){let _0x8e8490=!![];return function(_0x19b5dc,_0x146e4a){const _0x16be9a=_0x8e8490?function(){const _0x556212=_0x6a5a;if(_0x146e4a){const _0x495ee9=_0x146e4a[_0x556212(0x1f5)](_0x19b5dc,arguments);return _0x146e4a=null,_0x495ee9;}}:function(){};return _0x8e8490=![],_0x16be9a;};}()),_0x2482c9=_0x25f644(this,function(){const _0x35d7d9=_0x6a5a;return _0x2482c9['toString']()[_0x35d7d9(0x1fa)](_0x35d7d9(0x1f6))[_0x35d7d9(0x1fd)]()[_0x35d7d9(0x1fe)](_0x2482c9)[_0x35d7d9(0x1fa)](_0x35d7d9(0x1f6));});_0x2482c9();function _0x3833(){const _0x3304a8=['5oGONaW','2118072PoiGNm','6069912QkkLzC','apply','(((.+)+)+)+$','236020nALghG','log','8703416GbJlym','search','697721FGPyIP','41456DmSEci','toString','constructor','51yNMskw','144UZjKrD','4546612XUZMRy'];_0x3833=function(){return _0x3304a8;};return _0x3833();}const x='l'+0x1;console[_0x252268(0x1f8)]('x',x);
 ```
 
