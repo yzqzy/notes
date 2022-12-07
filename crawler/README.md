@@ -876,7 +876,7 @@ console.log(obfuscate(code, options))
 
 代码混淆后，如果格式化运行，会将浏览器直接卡死。
 
-原理：申请一些空间、新建一些对象、
+原理：申请一些空间、新建一些对象、无限的新建一些 DOM 节点，或者有一些其他操作，它会疯狂占用浏览器和本机内存，将浏览器直接卡死，无法运行。
 
 ```js
 const options = {
@@ -888,4 +888,147 @@ console.log(obfuscate(code, options))
 
 // function _0x6a5a(_0x57ebb1,_0x288f15){const _0x57a170=_0x3833();return _0x6a5a=function(_0x2482c9,_0x25f644){_0x2482c9=_0x2482c9-0x1ef;let _0x3833aa=_0x57a170[_0x2482c9];return _0x3833aa;},_0x6a5a(_0x57ebb1,_0x288f15);}const _0x252268=_0x6a5a;(function(_0x385891,_0x470326){const _0x193ce5=_0x6a5a,_0x3015bf=_0x385891();while(!![]){try{const _0x49f914=-parseInt(_0x193ce5(0x1fb))/0x1+-parseInt(_0x193ce5(0x1fc))/0x2*(parseInt(_0x193ce5(0x1ef))/0x3)+parseInt(_0x193ce5(0x1f3))/0x4+parseInt(_0x193ce5(0x1f2))/0x5*(parseInt(_0x193ce5(0x1f4))/0x6)+-parseInt(_0x193ce5(0x1f1))/0x7+parseInt(_0x193ce5(0x1f9))/0x8+-parseInt(_0x193ce5(0x1f0))/0x9*(parseInt(_0x193ce5(0x1f7))/0xa);if(_0x49f914===_0x470326)break;else _0x3015bf['push'](_0x3015bf['shift']());}catch(_0x5897ea){_0x3015bf['push'](_0x3015bf['shift']());}}}(_0x3833,0x86bac));const _0x25f644=(function(){let _0x8e8490=!![];return function(_0x19b5dc,_0x146e4a){const _0x16be9a=_0x8e8490?function(){const _0x556212=_0x6a5a;if(_0x146e4a){const _0x495ee9=_0x146e4a[_0x556212(0x1f5)](_0x19b5dc,arguments);return _0x146e4a=null,_0x495ee9;}}:function(){};return _0x8e8490=![],_0x16be9a;};}()),_0x2482c9=_0x25f644(this,function(){const _0x35d7d9=_0x6a5a;return _0x2482c9['toString']()[_0x35d7d9(0x1fa)](_0x35d7d9(0x1f6))[_0x35d7d9(0x1fd)]()[_0x35d7d9(0x1fe)](_0x2482c9)[_0x35d7d9(0x1fa)](_0x35d7d9(0x1f6));});_0x2482c9();function _0x3833(){const _0x3304a8=['5oGONaW','2118072PoiGNm','6069912QkkLzC','apply','(((.+)+)+)+$','236020nALghG','log','8703416GbJlym','search','697721FGPyIP','41456DmSEci','toString','constructor','51yNMskw','144UZjKrD','4546612XUZMRy'];_0x3833=function(){return _0x3304a8;};return _0x3833();}const x='l'+0x1;console[_0x252268(0x1f8)]('x',x);
 ```
+
+#### 控制流平坦化
+
+逻辑处理块统一加上前驱逻辑块，提高逻辑流程复杂度。
+
+```js
+ const options = {
+  compact: false,
+  controlFLowFlattening: true
+}
+
+const obfuscate = (code, options) => obfuscator.obfuscate(code, options).getObfuscatedCode()
+console.log(obfuscate(code, options))
+
+// const _0x5dc750 = _0x5706;
+// (function (_0x3705ad, _0x1ab8ab) {
+//     const _0x1cd39c = _0x5706, _0x35c863 = _0x3705ad();
+//     while (!![]) {
+//         try {
+//             const _0x1b977e = parseInt(_0x1cd39c(0xb7)) / 0x1 * (-parseInt(_0x1cd39c(0xbc)) / 0x2) + -parseInt(_0x1cd39c(0xbf)) / 0x3 * (-parseInt(_0x1cd39c(0xba)) / 0x4) + -parseInt(_0x1cd39c(0xbe)) / 0x5 * (parseInt(_0x1cd39c(0xb6)) / 0x6) + parseInt(_0x1cd39c(0xc2)) / 0x7 + -parseInt(_0x1cd39c(0xb9)) / 0x8 + parseInt(_0x1cd39c(0xbb)) / 0x9 * (-parseInt(_0x1cd39c(0xc1)) / 0xa) + -parseInt(_0x1cd39c(0xb8)) / 0xb * (-parseInt(_0x1cd39c(0xc0)) / 0xc);
+//             if (_0x1b977e === _0x1ab8ab)
+//                 break;
+//             else
+//                 _0x35c863['push'](_0x35c863['shift']());
+//         } catch (_0x40471c) {
+//             _0x35c863['push'](_0x35c863['shift']());
+//         }
+//     }
+// }(_0x3311, 0x2e4d1));
+// const x = 'l' + 0x1;
+// function _0x5706(_0x5eb3cb, _0x2fe232) {
+// heora@yueluodeMBP obfuscator % node index.js
+// function _0x5e0a(_0x3c930e, _0xf6aecd) {
+//     const _0xb7c1fd = _0xb7c1();
+//     return _0x5e0a = function (_0x5e0a43, _0x2da791) {
+//         _0x5e0a43 = _0x5e0a43 - 0x91;
+//         let _0x5bad25 = _0xb7c1fd[_0x5e0a43];
+//         return _0x5bad25;
+//     }, _0x5e0a(_0x3c930e, _0xf6aecd);
+// }
+// (function (_0x5cc324, _0x3698c3) {
+//     const _0x118339 = _0x5e0a, _0x5a6295 = _0x5cc324();
+//     while (!![]) {
+//         try {
+//             const _0x2d006b = parseInt(_0x118339(0x9a)) / 0x1 * (-parseInt(_0x118339(0x97)) / 0x2) + parseInt(_0x118339(0x94)) / 0x3 + parseInt(_0x118339(0x98)) / 0x4 * (-parseInt(_0x118339(0x95)) / 0x5) + parseInt(_0x118339(0x91)) / 0x6 * (parseInt(_0x118339(0x99)) / 0x7) + parseInt(_0x118339(0x93)) / 0x8 + -parseInt(_0x118339(0x92)) / 0x9 * (parseInt(_0x118339(0x9b)) / 0xa) + parseInt(_0x118339(0x96)) / 0xb;
+//             if (_0x2d006b === _0x3698c3)
+//                 break;
+//             else
+//                 _0x5a6295['push'](_0x5a6295['shift']());
+//         } catch (_0x610e47) {
+//             _0x5a6295['push'](_0x5a6295['shift']());
+//         }
+//     }
+// }(_0xb7c1, 0xe2a91));
+// const x = 'l' + 0x1;
+// console['log']('x', x);
+// function _0xb7c1() {
+//     const _0x1b686a = [
+//         '13309008LblyTk',
+//         '4726668qrEbyA',
+//         '24065OkOLaS',
+//         '849354IMMUmk',
+//         '727178NkDDmz',
+//         '956iVWkFu',
+//         '12497821clefPv',
+//         '5WaaQvM',
+//         '20kFAjWw',
+//         '6FgSNaA',
+//         '5423157YBbrFb'
+//     ];
+//     _0xb7c1 = function () {
+//         return _0x1b686a;
+//     };
+//     return _0xb7c1();
+// }
+```
+
+#### 僵尸代码注入
+
+僵尸代码：不会被执行的代码或对上下文没有任何影响的代码，注入后可以对现有的 JavaScript 代码阅读形成干扰。
+
+#### 对象键名替换
+
+对 Object 对象键名替换
+
+```js
+const options = {
+  compact: true,
+  transformObjectKeys: true
+}
+```
+
+#### 禁用控制台输出
+
+将控制台方法置空
+
+* debug
+* info
+* error
+* exception
+* trace
+
+```js
+const options = {
+  disableConsoleOutput: true
+}
+```
+
+#### 调试保护
+
+无限 debug、定时 debug、debugger 关键字
+
+```js
+const options = {
+  debugProtection: true
+}
+```
+
+#### 域名锁定
+
+只允许在特定域名下运行、降低被模拟风险
+
+```js
+const options = {
+  domainLock: ['yueluo.club']
+}
+```
+
+#### 其他实现
+
+JSFuck
+
+* 将变量进行逻辑替换，例如 false 会直接等于 `![]` ，然后把逻辑进行分析， 对代码进行混淆，可读性会变的非常差，体积也会变得很大。
+
+AAEncode
+
+* 将代码转换成表情符号的形式
+
+JJEncode
+
+* 将代码转换成 `$`、`+`、`:` 的形式
+
+ 上述这几种方式放到浏览器是可以直接运行的，也可以通过一些简单的方式对代码进行还原处理，看起来很复杂，但是非常容易破解。
 
