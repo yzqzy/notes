@@ -1316,11 +1316,13 @@ AES 是一种对称加密算法。
 
 ## AES 加密
 
-### 对称加密算法
+### 加密方式
+
+#### 对称加密算法
 
 一方通过密钥将信息加密，把密文传给另一方，另一方再通过这个相同的密钥将密文解密，转换成可以理解的明文。
 
-### 非对称加密算法
+#### 非对称加密算法
 
 * A 向 B 发送信息，A 和 B 都要产生一对用于加密和加密的公钥和私钥；
 * A 的私钥保密，A 的公钥告诉 B; B 的私钥保密，B 的公钥告诉 A；
@@ -1328,5 +1330,105 @@ AES 是一种对称加密算法。
 * B 收到信息后，使用私钥解密 A 的消息，其他收到这个报文的人都无法解析，因为只有 B 才有私钥；
 * 反之，B 向 A 发送消息也一样。
 
+#### 两者区别
 
+* 对称加密算法加密和解密都使用同样的密钥，速度较快，但是由于需要将密钥在网络传输，所以安全性并不高；
+* 非对称加密使用一对密钥，公钥与私钥，所以安全性高，但加密与解密速度较慢；
+* 解决的办法是将对称加密的密钥使用非对称加密的公钥进行加密，然后发送出去，接收方使用私钥进行解密得到对称加密的密钥，然后双方可以使用对称加密进行通信。
+
+### AES 加密
+
+AES 算法全称是 Advanced Ecryption Standard，是 DES 算法的替代者，也是现代最流行的对称加密算法之一。
+
+要想搞明白 AES 算法，首先要搞清楚三个基本概念，密钥、填充、模式。
+
+#### 密钥
+
+对称加密之所以对称就是因为这类算法对明文的加密和解密使用的是同一个密钥。
+
+AES 支持三种长度的密钥：128 位、192 位、256 位。
+
+从安全性来看，256 安全性最高。从性能来看，128 性能最好。不同长度的密钥，在底层的加密过程中，处理的加密轮数是不同的。
+
+#### 填充
+
+AES 分组加密的特性，AES 加密并不是一次性将明文加密成密文，而是把明文拆分成一个个独立的明文块，且每个明文块 128 bit。
+
+假设有一段明文长度是 196 bit，如果按每 128 bit 一个明文块来拆分，第二个明文块只有 64 bit，不足 128 bit。这是就需要对明文块进行填充（Padding）。
+
+常见填充方式：
+* NoPadding：不做任何填充，但是必须要求明文长度必须是 128 位的整倍数；
+* PKCS7Padding：比较推荐的一种方式，当明文块少于 16 个字节 ，在明文块末尾补足相应数量的字符，并且每一个字节的数都等于缺少的字符数；
+* ZeroPadding：用零进行填充，这种方式并不推荐，当明文块最后一位也是 0 时，解密 经常会出现错误；
+* AnsiX923
+* Iso10126
+* Iso97971
+
+#### 模式
+
+AES 工作模式，体现在将明文块加密成密文块的处理过程中。
+
+AES 加密算法提供了五种不同的工作模式，模式之间的主题思想是近似的，在处理细节上有一些差别。分别是 CBC、ECB、CTR、CFB、OFB。
+
+**ECB 模式**
+
+ECB 模式（Electronic Codebook Book）是最简单的工作模式，在该模式下，每一个明文块的加密都是完全独立，互不干涉的。
+
+好处：简单、有利于并行计算。
+
+缺点：相同明文块经过加密会变成相同的密文块，安全性较差。
+
+**CBC模式**
+
+CBD 模式（Cipher Block Chaining）引入了一个新的概念：初始向量IV（Initialization Vector）。
+
+IV 的作用和 MD5 的 "加盐" 有些类似，目的都是防止同样的明文块始终加密成同样的密文块。
+
+CBC 模式在每一个明文块加密前会让明文块和一个值先做异或操作。IV 作为初始化变量，参与第一个明文块的异或，后续的每一个明文块和它前一个明文块所加密出的密文块相异或。
+
+这样相同的明文块加密出的密文块也是不一样的，安全性更高。坏处也很明显，无法并行计算，性能不如 ECB 好。引入初始化向量，增加复杂度。
+
+ ### 加密流程
+
+* 把明文按照 128 bit 拆分成若干个明文块
+* 按照选择的填充方式来填充最后一个明文块
+* 每一个明文块利用 AES 加密器和密钥，加密成密文块。
+* 拼接所有的密文块，形成最终的密文结果。
+
+### 代码演示
+
+```js
+// CBC
+
+const CryptoJS = require('crypto-js')
+
+const AESTool = (key, iv) => {
+  key = CryptoJS.enc.Utf8.parse(key)
+  iv = CryptoJS.enc.Utf8.parse(iv)
+
+  const options = {
+    iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  }
+
+  return {
+    encrypt: text => CryptoJS.AES.encrypt(text, key, options).toString(),
+    decrypt: text => CryptoJS.AES.decrypt(text, key, options).toString(CryptoJS.enc.Utf8)
+  }
+}
+
+const key = '6fa979f20126cb08aa645a8f495f6d85'
+const iv = 'I8zyA4lVhMCaJ5Kg'
+
+const { encrypt, decrypt } = AESTool(key, iv)
+
+const text = '月落 heora'
+
+const encoded = encrypt(text)
+const decrypted = decrypt(encoded)
+
+console.log('encrypt: ', encoded)
+console.log('decrypt: ', decrypted)
+```
 
