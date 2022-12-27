@@ -26,7 +26,7 @@
   - [网络基础](https://github.com/yw0525/notes/tree/master/network/base) 已完成
   - ~~[网络进阶](https://github.com/yw0525/notes/tree/master/network/plus) 已废弃~~ 😅
   - [HTTP 协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
-- [JavaScript 逆向](https://github.com/yw0525/notes/tree/master/crawler) 更新中... 😁
+- [JavaScript 逆向](https://github.com/yw0525/notes/tree/master/crawler) 已完成
 - 工程化
   - [Yeoman/Grunt/Gulp/FIS](https://github.com/yw0525/notes/tree/master/engineering) 已完成
   - webpack
@@ -117,3 +117,4 @@
   - [深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
   - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
   - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
+  - [Go语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 更新中... 😁
