@@ -117,4 +117,4 @@
   - [深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
   - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
   - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
-  - [Go语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 更新中... 😁
+  - [Tony Bai - Go语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 更新中... 😁
