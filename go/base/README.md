@@ -335,7 +335,7 @@ Mac 上的 Go 安装包默认也会将 Go 安装到 /usr/local/go 路径下面�
 export PATH=$PATH:/usr/local/go/bin
 ```
 
-最后，我们同样可以通过 go version 命令验证这次安装是否成功。
+最后，我们同样可以通过 go version 命令验证这次安装是否成功。除此之外，我们还可以使用 brew 安装 Go。
 
 ### 配置 Go
 
@@ -371,4 +371,103 @@ go env
 确认完 Go 版本后，我们介绍了如果安装 Go。最后，我们讲解了 Go 的一些常用配置项。
 
 有了 Go 开发环境，接下来我们就开始学习如何编写 Go 代码。
+
+## Go 程序结构
+
+正式开始之前，首先说明一下，这节课对于开发 Go 程序所使用的编辑器工具没有任何要求。
+
+如果你喜欢使用某个集成开发环境（Integrated Development Environment，IDE），那么就用你喜欢的 IDE 就好。
+
+在这里只推荐两款好用的 IDE，GoLand 或 Visual Studio Code（简称 VS Code）。GoLand 是知名 IDE 出品公司 JetBrains 准对 Go 语言推出的 IDE 产品，也是目前市面上最好用的 Go IDE；VS Code 则是微软开源的跨语言源码编辑器，通过集成语言插件（Go 开发者可以使用 Go 官网维护的 vscode-go 插件），可以让它变成类 IDE 的工具。
+
+如果你有黑客情怀，喜欢优雅高效地使用命令行，那么像 Vim、Emacs 这样的基于终端的编辑器同样可以用于编写 Go 源码。以 Vim 为例，结合 vim-go、coc.nvim（代码补全）以及 Go 官方维护的 gopls 语言服务器，在编写 Go 代码时也可以体会到 “飞一般” 的感觉。
+
+### “hello world” 示例程序
+
+新建一个 helloworld 文件夹。
+
+```
+mkdir helloworld
+cd helloworld
+```
+
+首先，我们需要创建一个名为 main.go 的源文件。
+
+这里说下 Go 的命名规则。Go 源文件总是以全小写字母形式的短小单词命名，并且以 .go 扩展名结尾。
+
+现在，我们打开刚才创建的 main.go 文件，编写下面这段代码：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello, world")
+}
+```
+
+编写完成后，我们就可以通过以下命令编译和运行这个文件。
+
+```
+go build main.go
+./main
+```
+
+到这里你应该可以看到终端输出 “hello, world” 字符串。
+
+现在，让我们来分析下这段代码。首先值得注意的部分是这个：
+
+```go
+package main
+```
+
+这一行代码定义了 Go 中的一个包 package。包是 Go 语言的基本组成单元，通常使用单个的小写单词命名，一个 Go 程序本质上就是一组包的集合。所有 Go 代码都有自己隶属的包，这里我们的 “hello, world” 示例的所有代码都在一个名为 main 的包中。main 包在 Go 中是一个特殊的包，整个 Go 程序中仅允许存储一个名为 main 的包。
+
+main 包中的主要代码是一个名为 main 的函数：
+
+```go
+func main() {
+	fmt.Println("hello, world")
+}
+```
+
+这里的 main 函数也比较特殊：当你运行一个可执行的 Go 程序的时候，所有的带啊吗都会从这个入口函数开始运行。这段代码的第一行声明了一个名为 main 的、没有任何参数和返回值的函数。如果你想给函数声明参数，必须放到括号中。
+
+另外，花括号 {} 用来标记函数体，Go 要求所有的函数体都要被花括号包裹起来。我们推荐把左花括号与函数声明置于同一行并以空格分割。Go 语言内置了一套 Go 社区约定俗成的代码风格，并随安装包提供了一个名为 Gofmt 的工具，这个工具可以帮助你将代码自动格式化为约定的风格。
+
+Gofmt 是 Go 语言在解决规模化（scale）问题上的一个最佳实践，并成了 Go 语言吸引其他语法开发者的一大卖点。很多其他主流语言也在效仿 Go 语言推出自己的 format 工具，例如：Java formatter、Clang formatter、Dartfmt 等。因此，作为 Go 开发人员，在提交你的代码前要使用 Gpfmt 格式化你的 Go 源码。
+
+我们再来看一看 main 函数体中的代码：
+
+```go
+fmt.Println("hello, world")
+```
+
+这一行代码已经完成整个示例程序的所有工作：将字符串输出到终端的标准输出（stdout）上。这里有几个细节需要注意：
+
+**标准 Go 代码风格使用 Tab 而不是空格使用缩进，代码风格格式化工作也可以交由 gofmt 完成。**
+
+**我们调用一个名为 Println 的函数，这个函数位于 Go 标准库的 fmt 包中。输出 “hello, world” 做了两部操作。**
+
+第一步是在源文件的开始处通过 import 声明导入 fmt 包的包路径。
+
+```go
+import "fmt"
+```
+
+第二步则是在 main 函数体内，通过 fmt 这个操作符（Qualified Identifier）调用 PrintIn 函数。虽然两处都使用了 “fmt” 这个字面值，但在这两处 “fmt” 字面值所代表的含义是一样的。
+
+* import “fmt” 一行中的 “fmt” 代表的是包的导入路径（Import），它代表的是标准库下的 fmt 目录，整个 import 声明语句的含义就是导入标准库 fmt 目录下的包；
+* fmt.PrintIn 函数调用一行中给的 “fmt” 代表的则是包名。
+
+通常导入路径的最后一个分段名与包名是相同的，这也很容易让人误解 import 声明语句中的 “fmt” 指的是包名。
+
+main 函数体中之所以可以调用 fmt 包中的 PrintIn 函数，还有最后一个原因，那就是 PrintIn 函数的首字母是大写的。在 Go 语言中，只有首字母为大写的标识符才是导出的（Exported），才能对包外的代码可见；如果首字母是小写的，那么就说明这个标识符仅限于在声明它的包内可见。
+
+另外，在 Go 语言中，main 包是不可以像标准库 fmt 包那样导入的，如果导入 main 包，在代码编译阶段就会收到 Go 编译器错误：import "xx/main" is a program, not an importable package。
+
+最后，在整个示例程序源码中，我们都没有使用分号来表示语句结束。不过，其实 Go 语言的正式语法规范是使用分号 “;” 来做结尾标识符的。因为大多数分号都是可选的，常常被省略，不过在源码编译时，Go 编译器会自动插入这些被省略的分号。
+
+### 程序如何编译
 
