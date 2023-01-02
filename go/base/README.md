@@ -372,7 +372,7 @@ go env
 
 有了 Go 开发环境，接下来我们就开始学习如何编写 Go 代码。
 
-## Go 程序结构
+## Go 程序的结构
 
 正式开始之前，首先说明一下，这节课对于开发 Go 程序所使用的编辑器工具没有任何要求。
 
@@ -382,7 +382,7 @@ go env
 
 如果你有黑客情怀，喜欢优雅高效地使用命令行，那么像 Vim、Emacs 这样的基于终端的编辑器同样可以用于编写 Go 源码。以 Vim 为例，结合 vim-go、coc.nvim（代码补全）以及 Go 官方维护的 gopls 语言服务器，在编写 Go 代码时也可以体会到 “飞一般” 的感觉。
 
-### “hello world” 示例程序
+### “hello world”
 
 新建一个 helloworld 文件夹。
 
@@ -470,4 +470,399 @@ main 函数体中之所以可以调用 fmt 包中的 PrintIn 函数，还有最�
 最后，在整个示例程序源码中，我们都没有使用分号来表示语句结束。不过，其实 Go 语言的正式语法规范是使用分号 “;” 来做结尾标识符的。因为大多数分号都是可选的，常常被省略，不过在源码编译时，Go 编译器会自动插入这些被省略的分号。
 
 ### 程序如何编译
+
+刚刚我们在运行 “hello world” 程序之前，使用了 go build 命令，还有它附带的源文件名参数来编译它：
+
+```
+go build main.go
+```
+
+假设你有 C/C++ 语言的开发背景，你就会发现这个步骤与 gcc 或 clang 编译十分相似。一旦编译成功，我们就会获得一个二进制的可执行文件。在 Linux 系统、MacOS 系统，以及 Windows 系统的 PowerShell 中，我们可以通过输入下面这个 ls 命令看到刚刚生成的可执行文件。
+
+如果之前你更熟悉类似于 Ruby、Python 或 JavaScript 之类的动态语言，你可能还不太习惯在运行之前需要先进行编译的情况。Go 是一种编译型语言，这意味着只有编译完 Go 程序之后，才可以将生成的可执行文件交付给其他人，并可以运行在没有安装 Go 的环境中。
+
+而如果你交付给其他人的是一份 .rb、.py 或 .js 的动态语言的源文件，那么目标环境中就必须要拥有对应的 Ruby、Python 或 JavaScript 环境才能解释执行这些源文件。
+
+当然，Go 也借鉴了动态语言一些对开发者体验比较好的特性，比如基于源码文件的直接执行，Go 提供了 run 命令可以直接运行 Go 源码文件，比如我们也可以使用下面命令直接基于 main.go 运行。
+
+```
+go run main.go
+```
+
+不过像 go run 这类命令更多应用于开发调试阶段，实际交付成功还是需要使用 go build 命令进行构建。
+
+在我们的生产环境里，Go 程序的编译往往不会像我们前面，基于单个 Go 源文件构建这么简单。越贴近真实环境，也就意味着项目规模越大、协同人员越多，项目的依赖和依赖的版本都会变得复杂。
+
+### 复杂项目编译
+
+现在我们创建一个新项目 “hellomodule”，在新项目中我们使用两个第三方库，zap 和 fasthttp。
+
+```
+mddir hellomodule
+cd hellomodule
+```
+
+接下来编写源码文件：
+
+```go
+package main
+
+import (
+	"github.com/valyala/fasthttp"
+	"go.uber.org/zap"
+)
+
+var logger *zap.Logger
+
+func init() {
+	logger, _ = zap.NewProduction()
+}
+
+func fastHttpHandler(ctx *fasthttp.RequestCtx) {
+	logger.Info("hello, go module", zap.ByteString("uri", ctx.RequestURI()))
+}
+
+func main() {
+	fasthttp.ListenAndServe(":8081", fastHttpHandler)
+}
+```
+
+这个示例用于创建一个在 8081 端口监听的 http 服务，当我们向它发起请求后，这个服务会在终端输出一段访问日志。
+
+不过，当我们尝试编译这个源文件，go 编译器的输出结果是这样的：
+
+```
+main.go:4:2: no required module provides package github.com/valyala/fasthttp: go.mod file not found in current directory or any parent directory; see 'go help modules'
+main.go:5:2: no required module provides package go.uber.org/zap: go.mod file not found in current directory or any parent directory; see 'go help modules'
+```
+
+可以看到，main.go 文件编译失败了。从编译器来看，go build 需要找 go.mod 的文件，来解决程序对第三方包的依赖决策问题。
+
+go.mod 文件是 Go Module 的核心文件，在这个文件中存储了这个 module 对第三方依赖的全部信息。
+
+> Go Module 构建模式是在 Go 1.11 版本正式引入的，目的是彻底解决 Go 项目复杂版本依赖的问题，在 Go 1.16 版本中，Go Module 已经成为 Go 默认的包依赖管理机制和 Go 源码构建机制。
+
+接下来我们通过下面命令为这个示例程序添加 go.mod 文件。
+
+```
+go mod init github.com/bigwhite/hellomodule
+```
+
+```
+go: creating new go.mod: module github.com/bigwhite/hellomodule
+go: to add module requirements and sums:
+	go mod tidy
+```
+
+现在你应该可以看到，go mod init 命令的执行结果是在当前目录下生成一个 go.mod 文件：
+
+```
+cat go.mod
+```
+
+```
+module github.com/bigwhite/hellomodule
+
+go 1.19
+```
+
+其实，一个 module 就是一个包的集合，这些包和 module 一起打版本、发布和分发。go.mod 所在目录即 module 根目录。
+
+现在我们的 go.mod 文件内容还比较简单，第一行内容是用于声明 module 路径（module path）的。而且，module 隐含了一个命名空间的概念，module 下每个包的导入路径都是有 module path 和包所在子目录的名字结合在一起构成。
+
+另外，go.mod 的最后一行是一个 Go 版本指示符，用于表示这个 module 是在某个特定 Go 版本的 module 语义基础上编写的。
+
+要想我们的程序正常运行，还需要在 go.mod 中添加 fasthttp 和 zap 这两个包的版本信息，我们可以手动添加，也可以使用 go mod tidy 命令，让 Go 工具自动添加：
+
+```
+go mod tidy
+```
+
+```
+go: finding module for package go.uber.org/zap
+go: finding module for package github.com/valyala/fasthttp
+go: downloading github.com/valyala/fasthttp v1.43.0
+go: downloading go.uber.org/zap v1.24.0
+go: found github.com/valyala/fasthttp in github.com/valyala/fasthttp v1.43.0
+go: found go.uber.org/zap in go.uber.org/zap v1.24.0
+go: downloading go.uber.org/atomic v1.7.0
+go: downloading go.uber.org/multierr v1.6.0
+go: downloading github.com/pkg/errors v0.8.1
+go: downloading github.com/stretchr/testify v1.8.0
+go: downloading github.com/klauspost/compress v1.15.9
+go: downloading github.com/andybalholm/brotli v1.0.4
+go: downloading github.com/valyala/bytebufferpool v1.0.0
+go: downloading go.uber.org/goleak v1.1.11
+go: downloading gopkg.in/yaml.v3 v3.0.1
+go: downloading github.com/davecgh/go-spew v1.1.1
+go: downloading github.com/pmezard/go-difflib v1.0.0
+go: downloading github.com/benbjohnson/clock v1.1.0
+```
+
+丛输出结果中，可以看到 Go 工具不仅下载并添加了 hellomodule 直接依赖的 zap 和 fasthttp 包信息，还下载了这两个包的依赖包。
+
+go mod tidy 执行完毕后，我们 go.mod 最新内容如下：
+
+```go
+module github.com/bigwhite/hellomodule
+
+go 1.19
+
+require (
+	github.com/valyala/fasthttp v1.43.0
+	go.uber.org/zap v1.24.0
+)
+
+require (
+	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
+)
+```
+
+这个时候，go.mod 已经记录了 hellomodule 直接依赖的包信息。不仅如此，hellomodule 目录下还多了一个名为 go.sum 的文件，这个文件记录了 hellomodule 的直接依赖和间接依赖的相关版本的 hash 值，用来校验本地宝的真实性。在构建的时候，如果本地依赖包的 hash 值与 go.sum 文件中记录的不一致，就会被拒绝构建。
+
+有了 go.mod 以及 hellomodule 依赖的包版本信息后，我们再来执行构建：
+
+```
+go build main.go
+```
+
+这次我们就可以成功构建出可执行文件 main，运行这个文件，新建一个终端端口，在新窗口中使用 curl 命令访问该服务，我们就可以看到服务端输出如下日志。
+
+```
+curl localhost:8081/foo/bar
+```
+
+```
+{"level":"info","ts":1672627109.641545,"caller":"hellomodule/main.go:15","msg":"hello, go module","uri":"/foo/bar"}
+```
+
+现在我们的 “hello module” 程序就已经创建成功。我们也可以看到使用 Go Module 的构建模式，go build 完全可以承担起构建规模较大、依赖复杂的 Go 项目的重任。
+
+### 总结
+
+本篇文章，我们通过 helloworld 示例程序，了解了一个 Go 程序的源码结果与代码风格自动化格式的约定。
+
+* Go 包是 Go 语言的基本组成单元。一个 Go 程序就是一组包的集合，所有 Go 代码都位于包中；
+* Go 源码可以导入其他 Go 包，并使用其中的导出语法元素，包括类型、变量、函数、方法等，而且，main 函数是整个 Go 应用的入口函数；
+* Go 语言需要先编译，然后再分发和运行。如果是单 Go 源文件的情况，我们可以使用 go build 命令和 Go 源文件名的方式进行编译。不过，对于复杂的 Go 项目，我们需要在 Go Module 的帮助下完成项目构建。
+
+最后，我们集合 hellomodule 示例，初步歇息了如何构建更大规模的 Go 程序，并介绍了 Go Module 涉及的相关概念。
+
+### 技术拓展
+
+**go 引入其他包，是将引用包都编译进去，还是会引用动态连接库？**
+
+go 默认是开启 CGO_ENABLED 的，将 CGO_ENABLED=1。但编译出来的二进制程序究竟有无动态连接，取决于你的程序使用了什么包。如果只是一个简单的 hello world，那么编译出来的将是一个纯静态程序。
+
+如果你依赖了网络包或一些系统包，那么编译出来的二进制程序中将会是一个包含动态链接的库。
+
+原因就是在目前的 go 标准库中，某些功能具有两份实现，一份是 c 语言实现的，一份是 go 语言实现的。在 CGO_ENABLE 开启的情况下，go 链接器会链接 c 语言的版本，于是就有了动态连接库的情况。如果将 CGO_ENABLED 置为 0 ，再重新编译链接，那么 go 链接器会使用 go 版本的实现，这样就会得到一个没有动态链接的纯静态二进制程序。
+
+## Go 项目的布局标准
+
+在前面的讲解中，我们编写的 Go 程序都是简单程序，一般由一个或几个 Go 源码文件组成，而且所有源码文件都在同一个目录中。但是生产环境中运行的实用程序并不会这么简单，通常它们都有复杂的项目结构布局。所以，弄清楚一个实用 Go 项目的项目布局标准是 Go 开发者走向编写复杂 Go 程序的第一步，也是必经的一步。
+
+但是，Go 官方到目前为止也没有给出一个关于 Go 项目布局标准的正式定义。在这样的情况下，Go 社区是否有我们可以遵循的参考布局，或者事实标准？
+
+答案是肯定的，在本节课中，我们就来学习一下 Go 社区广泛采用的 Go 项目布局是什么样子的。
+
+要想了解 Go 项目的结构布局以及演化历史，全世界第一个 Go 语言项目是一个最好的切入点。所以，我们就先来看一下 Go 语言 “创世项目” 的结构布局是什么样子。
+
+### “创世项目” 结构
+
+所谓 “Go 语言的创世项目”，其实就是 Go 语言项目自身，它是全世界第一个 Go 语言项目。不过这么说也不够精确，因为 Go 语言项目起初混杂着多种语言，以 C 和 Go 代码为主，Go 语言的早期版本 C 代码的比例还不小。
+
+我们可以使用 [loccount 工具](https://gitlab.com/esr/loccount) 对 Go 语言发布的第一个 [Go 1.0 版本](https://github.com/golang/go/releases/tag/go1) 分析：
+
+```
+locccount .
+```
+
+```
+all          SLOC=460992  (100.00%)  LLOC=193045  in 2746 files
+Go           SLOC=256321  (55.60%)  LLOC=109763  in 1983 files
+C            SLOC=148001  (32.10%)  LLOC=73458   in 368 files
+HTML         SLOC=25080   (5.44%)  LLOC=0       in 57 files
+asm          SLOC=10109   (2.19%)  LLOC=0       in 133 files
+... ...
+```
+
+你会发现，在 1.0 版本中，Go 代码行数占据一半以上比例，但是 C 语言代码行数也占据 32.10% 的份额。并且在后续 Go 版本演进过程中，Go 语言代码行数占比还在逐步提升，直到 Go 1.5 版本实现自举后，Go 语言代码行数占比近 90%，C 语言比例下降为不到 1%，这一比例一直持续至今。
+
+虽然 C 代码比例下降，Go 代码比例上升，但 Go 语言项目的布局结构却整体保留下来，十多年间虽然也有一些小范围变动，但整体没有本质变化。作为 Go 语言的 “创世项目”，它的结构布局对后续 Go 社区的项目具有重要的参考价值，尤其是 Go 项目早期 src 目录下面的结构。
+
+为了方便查看，我们可以下载 Go 语言项目源码：
+
+```
+git clone https://github.com/golang/go.git
+```
+
+以 Go 1.3 版本为例，结果是这样的：
+
+```
+cd go // 进入Go语言项目根目录
+git checkout go1.3 // 切换到go 1.3版本
+
+tree -LF 1 ./src // 查看src目录下的结构布局
+./src
+├── all.bash*
+├── clean.bash*
+├── cmd/
+├── make.bash*
+├── Make.dist
+├── pkg/
+├── race.bash*
+├── run.bash*
+... ...
+└── sudo.bash*
+```
+
+从上面的结果来看，src 目录下结构有三个特点。
+
+首先，你可以看到，以 all.bash 为代表的代码构建的脚本源文件放在 src 下面的顶层目录。
+
+其次，src 下的二级目录 cmd 下面存放 Go 相关可执行文件的相关目录，我们可以继续深入查看 cmd 目录下的结构：
+
+```
+tree -LF 1 ./cmd
+
+./cmd
+... ...
+├── 6a/
+├── 6c/
+├── 6g/
+... ...
+├── cc/
+├── cgo/
+├── dist/
+├── fix/
+├── gc/
+├── go/
+├── gofmt/
+├── ld/
+├── nm/
+├── objdump/
+├── pack/
+└── yacc/
+```
+
+我们可以看到，这里的每个子目录都是一个 Go 工具链命令子命令对应的可执行文件。其中，6a、6c、6g 等是早期 Go 版本针对特定平台的汇编器、编译器等的特殊命名方式。
+
+最后，你会看到 src 下的二级目录 pkg 下面存放着运行时实现、标准库包实现，这些包即可以被上面 cmd 下各程序所导入，也可以被 Go 语言项目之外的 Go 程序依赖并导入。下面是我们通过 tree 命令查看 pkg 下面结构的输出结果：
+
+```
+tree -LF 1 ./pkg
+
+./pkg
+... ...
+├── flag/
+├── fmt/
+├── go/
+├── hash/
+├── html/
+├── image/
+├── index/
+├── io/
+... ...
+├── net/
+├── os/
+├── path/
+├── reflect/
+├── regexp/
+├── runtime/
+├── sort/
+├── strconv/
+├── strings/
+├── sync/
+├── syscall/
+├── testing/
+├── text/
+├── time/
+├── unicode/
+└── unsafe/
+```
+
+虽然 Go 语言的创世项目的 src 目录下的布局结构，距离现在已经比较久远，但是这样的布局特点依然对后续很多 Go 项目的布局产生比较大的影响，尤其是那些 Go 语言早期采纳者建立的 Go 项目。比如，Go 调试器项目 Delve、开启云原生时代的 Go 项目 Docker，以及云原生时代的 “操作系统” 项目 Kubernetes 等，它们的项目布局，至今都还保持与 Go 创世项目早期相同的风格。
+
+当然，这些早期的布局结构一直在不断地演化，简单来说可以归纳为下面三个比较重要的演进。
+
+**演进一：Go 1.4 版本删除 pkg 这一中间层目录并引入 internal 目录**
+
+出于简化源码树层次原因，Go 语言项目的 Go 1.4 版本对它原来的 src 目录下的布局做了两处调整。第一处是删除了 Go 源码中 “src/pkg/xxx” 中 pkg 这一层级目录而直接使用 src/xxx。这样一来，Go 语言项目的源码树深度减少一层，更便于 Go 开发者阅读和探索 Go 项目源码。
+
+另外一处就是 Go 1.4 引入 internal 包机制，增加了internal 目录。这个 internal 机制其实是所有 Go 项目都可以用的，Go 语言项目自身也是自 Go 1.4 版本起，就使用 internal 机制。根据 internal 机制定义，一个 Go 项目里的 internal 目录下的 Go 包，只可以被本项目内部的包导入。项目外部是无法导入这个 internal 目录下面的包的。可以说，internal 目录的引入，让一个 Go 项目中 Go 包的分类与用途变得更加清晰。
+
+**演进二：Go 1.6 版本增加 vendor 目录**
+
+第二次演进，其实是为了解决 Go 包依赖版本管理的问题，Go 核心团队在 Go 1.5 版本中做了第一次改进。增加了 vendor 构建机制，也就是 Go 源码的编译可以不在 GOPATH 环境变量下搜索依赖包的路径，而在 vendor 目录下查找对应的依赖包。
+
+Go 语言项目自身也在 Go 1.6 版本中增加了 vendor 目录以支持 vendor 构建，但 vendor 目录并没有实质性缓存任何第三方包。直到 Go 1.7 版本，Go 才真正在 vendor 下缓存其依赖的外部包。这些依赖包主要是 golang.org/x 下面的包，这些包同样是由 Go 核心团队维护的，并且其更新速度不受 Go 版本发布周期影响。
+
+vendor 机制与目录的引入，让 Go 项目第一次具有可重现构建（Reproducible Build）的能力。
+
+> 可重现构建，就是针对同一份 go module 源码进行构建，不同人，在不同机器（同一架构），相同 os 上，在不同时间点都能得到相同的二进制文件。
+
+**演进三：Go 1.13 版本引入 go.mod 和 go.sum**
+
+第三次演进，还是为了解决 Go 包依赖版本管理的问题。在 Go 1.11 版本中，Go 核心团队做出了第二次改进尝试：引入 Go Module 构建机制，也就是在项目引入 go.mod 以及在 go.mod 中明确项目所依赖的第三方包和版本，项目的构建就将摆脱 GOPATH 的束缚，实现精准的可重现构建。
+
+Go 语言项目自身在 Go 1.13 版本中引入 go.mod 和 go.sum 以支持 Go Module 构建机制，下面是 Go 1.13 版本的 go.mod 文件内容：
+
+```
+module std
+
+go 1.13
+
+require (
+  golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
+  golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
+  golang.org/x/sys v0.0.0-20190529130038-5219a1e1c5f8 // indirect
+  golang.org/x/text v0.3.2 // indirect
+)
+```
+
+可以看到，Go 语言项目自身所依赖的包在 go.mod 中都有对应的信息，而原本这些依赖包是缓存在 vendor 目录下的。
+
+总的来说，这三次演进主要体现在简化结构布局，以及优化包依赖管理方面，起到改善 Go 开发体验的作用。可以说，Go 创世项目的源码布局以及演化对 Go 社区项目的布局具有重要的启发意义，以至于在多年的 Go 社区实践后，Go 社区逐渐形成公认的 Go 项目的典型结构布局。
+
+### 典型结构布局
+
+一个 Go 项目通常分为可执行程序项目和库项目，现在我们就来分析一下这两类 Go 项目的典型结构布局分别是怎样的。
+
+#### Go 可执行程序
+
+首先来看一下 Go 可执行程序项目的典型结构布局。
+
+可执行程序项目是以构建可执行程序为目的项目，Go 社区针对这类 Go 项目所形成的典型结构布局是这样的：
+
+```
+tree -F exe-layout 
+
+exe-layout
+├── cmd/
+│   ├── app1/
+│   │   └── main.go
+│   └── app2/
+│       └── main.go
+├── go.mod
+├── go.sum
+├── internal/
+│   ├── pkga/
+│   │   └── pkg_a.go
+│   └── pkgb/
+│       └── pkg_b.go
+├── pkg1/
+│   └── pkg1.go
+├── pkg2/
+│   └── pkg2.go
+└── vendor/
+```
+
+上面这样的一个 Go 项目典型布局就是 “脱胎” 于 Go 创世项目的最新结构布局。下面我们就来解释一下这里面的几个要点。
+
+
 
