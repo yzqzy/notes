@@ -864,5 +864,74 @@ exe-layout
 
 上面这样的一个 Go 项目典型布局就是 “脱胎” 于 Go 创世项目的最新结构布局。下面我们就来解释一下这里面的几个要点。
 
+我们从上往下按顺序来，首先来看 cmd 目录。cmd 目录存放项目要编译的可执行文件对应的 main 包的源文件。如果你的项目中有多个可执行文件需要构建，每个可执行文件的 main 包需要单独放在一个子目录中。比如图中的 app1、app2，cmd 目录下的各 app 的 main 将整个项目的依赖连接在一起。
 
+通常来说，main 包应该很简洁。我们在 main 包中会做一些命令行参数解析、资源初始化、日志设施初始化、数据库连接初始化等工作，之后就会将程序的执行权限交给更高级的执行控制对象。另外，也有一些 Go 项目会将 cmd 这个名字改为 app 或其他名字，但它的功能并没有变。
+
+接下来看 pkg* 目录，这是一个存放项目自身要使用，同样也是可执行文件对应 main 包所依赖的库文件，同时这些目录下的包还可以被外部项目引用。
+
+然后是 go.mod 和 go.sum ，它们是 Go 语言包依赖管理使用的配置文件。我们之前说过，Go 1.11 版本引入了 Go Module 构建机制，建议新项目都基于 Go Module 进行包依赖管理，这是目前 Go 官方推荐的标准构建模式。
+
+对于还没有使用 Go Module 进行包依赖管理的遗留项目，比如之前采用 dep、glide 等作为包依赖管理功能的，建议尽快迁移到 Go Module 模式。Go 命令支持将 dep 的 Gopkg.toml/Gopkg.lock 或 glide 的 glide.yaml/glide.lock 转换为 go.mod。
+
+最后我们再来看看 vendor 目录。vendor 是 Go 1.5 版本引入的用于在项目本地缓存特定八本依赖包的机制，在 Go Modules 机制引入前，基于 vendor 可以实现可重现构建，保证基于同一源码构建出的可执行程序是等价的。
+
+不过，这里可以将 vendor 目录视为一个可选目录。原因在于，Go Modue 本身就支持可再现构建，而无需使用 vendor。当然 Go Module 机制也保留了 vendor 目录（通过 go mod vendor 可以生成 venfor 下的依赖包，通过 go build -mod=vendor 可以实现基于 vendor 的构建）。一般我们仅包里项目根目录下的 vendor 目录，否则会造成不必要的依赖选择的复杂性。
+
+当然，还有些开发者喜欢借助一些第三方的构建工具辅助构建，比如 make、bazel 等。你可以将这些外部辅助构建工具涉及的诸多脚本文件（比如 Makefile）放置在项目的顶层目录下，就像 Go 创世项目中的 all.bash 那样。
+
+另外，Go 1.11 引入的 module 是一组同属于一个版本管理单元。的包的集合。并且 Go 支持在一个项目/仓库中存在多个 module，但这种管理方式可能要比一定比例的代码重复引入更多的复杂性。因此，如果项目结构中存在版本管理的 “分歧”，比如：app1 和 app2 的发布版本并不总是同步的，建议你讲项目拆分为多个项目（仓库），每个项目单独作为一个 module 进行单独的版本管理和演进。
+
+当然如果你非要在一个代码仓库中存放多个 module，新版 Go 命令也提供了很好的支持。比如下面代码仓库 multi-modules 下面有三个 module：mainmodule、module1、module2 ：
+
+```
+tree multi-modules
+
+multi-modules
+├── go.mod // mainmodule
+├── module1
+│   └── go.mod // module1
+└── module2
+    └── go.mod // module2
+```
+
+我们可以通过 git tag 名字来区分不同 module 版本。其中 vX.Y.Z 形式的 tag 名字用于代码仓库下的 mainmodule；而 module1/vX.Y.Z 形式的 tag 名字用于指示 module1 的版本；同理 module2/vX.Y.Z 形式的 tag 名字用于指示 module2 版本。
+
+如果 Go 可执行程序项目有一个且只有一个可执行程序要构建，我们还可以将上面项目布局进行简化：
+
+```
+tree -F -L 1 single-exe-layout
+
+single-exe-layout
+├── go.mod
+├── internal/
+├── main.go
+├── pkg1/
+├── pkg2/
+└── vendor/
+```
+
+你可以看到，我们可以删除 cmd 目录，将唯一的可执行程序的 main 包放在项目根目录下，其他布局元素的功能不变。
+
+#### Go 库项目
+
+到现在，我们已经了解 Go 可执行程序项目的典型布局，现在我们再来看下 Go 库项目的典型布局是怎样的。
+
+Go 库项目仅对外暴露 Go 包，这类项目的典型布局形式是这样的：
+
+```
+tree -F lib-layout 
+
+lib-layout
+├── go.mod
+├── internal/
+│   ├── pkga/
+│   │   └── pkg_a.go
+│   └── pkgb/
+│       └── pkg_b.go
+├── pkg1/
+│   └── pkg1.go
+└── pkg2/
+    └── pkg2.go
+```
 
