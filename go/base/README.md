@@ -1009,6 +1009,102 @@ early-project-layout
 
 ### Go 构建模式演化过程
 
+Go 程序由 Go 包组合而成，Go 程序的构建过程就是确定包版本、编译包以及编译后得到的目标文件链接在一起的过程。
+
+Go 语言的构建模式历经了三个迭代和演化过程，分别是初期的 GOPATH、1.5 版本的 Vendor 机制，以及现在的 Go Module。
+
+#### GOPATH
+
+Go 语言在首次开源时，就内置了一种名为 GOOPATH 的构建模式。在这种构建模式下，Go 编译器可以在本地 GOPATh 环境变量配置的路径下，搜寻 Go 程序依赖的第三方包。如果存在，就使用这个本地包进行编译；如果不存在，就会报编译错误。
+
+这里给出一段在 GOPATH 构建模式下编写的代码：
+
+```go
+package main
+
+import "github.com/sirupsen/logrus"
+
+func main() {
+  logrus.Println("hello, gopath mode")
+}
+```
+
+你可以看到，这段代码依赖第三方包 logrus（logrus 是 Go 社区使用最为广泛的第三方 log 包）。
+
+接下来，这个构建过程演示 Go 编译器在 GOPATH 环境变量所配置的目录下，无法找到程序依赖的 logrus 包而报错的情况：
+
+```
+go build main.go
+
+main.go:3:8: cannot find package "github.com/sirupsen/logrus" in any of:
+  /Users/heora/.bin/go1.10.8/src/github.com/sirupsen/logrus (from $GOROOT)
+  /Users/heora/Go/src/github.com/sirupsen/logrus (from $GOPATH)
+```
+
+那么 Go 编译器在 GOPATH 构建模式下，是如何搜寻第三方依赖包呢？
+
+我们先假定 Go 程序导入了 github.com/user/repo 这个包，我们也同时假定当前 GIOPATH 环境变量配置的值为：
+
+```
+export GOPATH=/usr/local/goprojects:/home/heora/go
+```
+
+在 GOPATH 构建模式下，Go 编译器在编译 Go 程序时，就会在下面两个路径下搜索第三方依赖包是否存在：
+
+```
+/usr/local/goprojects/src/github.com/user/repo
+/home/heora/go/src/github.com/user/repo
+```
+
+> 如果没有显式设置 GOPATH 环境变量，不同操作系统下默认值的路径不同，在 macOS 或 Linux 上，默认值都是 $HOME/go。
+
+言归正传，当遇到上面例子这样，没有在本地找到程序的第三方包的情况，我们该如何解决这个问题？
+
+这个时候就要用到 go get。
+
+我们可以通过 go get 命令将本地缺失的第三方依赖包下载到本地，比如：
+
+```
+go get github.com/sirupsen/logrus
+```
+
+这里的 go get 命令，不仅能将 logrus 包下载到 GIOPATH 环境变量配置的目录下，它还会检查 logrus 的依赖包在本地是否存在，如果不存在，go get 也会一并将它们下载到本地。
+
+不过，go get 下载的包是在那个时刻的最新主线版本，这样会给后续 Go 程序的构建带来一些问题。例如：
+
+* 依赖包持续演进，可能会导致不同开发者在不同时间获取和编译同一个 Go 包时，得到不同的结果，不能保证可重现构建（Reproduceable Build）。
+* 如果依赖包引入不兼容代码，程序将无法通过编译。
+* 如果依赖包因引入新代码而无法正常通过编译，并且该依赖包作者又没及时修复这个问题，这种错误也会导致程序无法通过编译。
+
+#### vendor 机制
+
+在 GOPATH 构建模式下，Go 编译器实质上并没有关注 Go 项目所依赖的第三方包的版本。但 Go 开发者希望自己的 Go 项目所依赖的第三方包版本可以受自己的控制，而不是随意变化。于是 Go 核心开发团队引入 Vendor 机制试图解决上面的问题。
+
+现在我们就来看看 vendor 机制是如何解决这个问题的。
+
+Go 在 1.5 版本中引入 vendor 机制。vendor 机制本质上就是在 Go 项目的某个特定目录下，将项目的所有依赖包缓存起来，这个特定目录名就是 vendor。
+
+Go 编译器会优先感知和使用 vendor 目录下缓存的第三方包版本，而不是 GOPATH 环境变量所配置的路径下的第三方包版本。这样，无论第三方依赖包自己如何变化，无论 GOPATH 环境变量所配置的路径下的第三方包是否存在、版本是什么，都不会影响 Go 程序的构建。
+
+如果你将 vendor 目录和项目源码一样提交到代码仓库，那么其他开发者下载你的项目后，就可以实现可重现的构建。因此，如果使用 vendor 机制管理第三方依赖包，最佳实践就是将 vendor 一并提交到代码仓库中。
+
+下面这个目录结构就是添加 vendor 目录后的结果：
+
+```
+.
+├── main.go
+└── vendor/
+    ├── github.com/
+    │   └── sirupsen/
+    │       └── logrus/
+    └── golang.org/
+        └── x/
+            └── sys/
+                └── unix/
+```
+
+
+
 
 
 
