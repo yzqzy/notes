@@ -1103,9 +1103,201 @@ Go 编译器会优先感知和使用 vendor 目录下缓存的第三方包版本
                 └── unix/
 ```
 
+添加完 vendor 后，重新编译 main.go，这个时候 Go 编译器就会在 vendor 目录下搜索程序依赖的 logrus 包以及后者依赖的 go.lang/x/sys/unix 包了。
 
+这里还要注意一点，要想开启 vendor 机制，你的 Go 项目必须位于 GOPATH 环境变量配置的某个路径的 src 目录下面。如果不满足这一路径要求，那么 Go 编译器是不会查找 Go 项目目录下的 vendor 目录的。
 
+不过 vendor 机制虽然一定程序解决了 Go 程序可重现构建的问题，但对开发者来说，它的体验却并不友好。一方面，Go 项目必须放在 GOPATH 环境变量配置的路径下，庞大的 vendor 目录需要提交到代码仓库，不仅占用代码仓库空间，减慢仓库下载和更新速度，而且还会干扰代码评审，对实施代码统计等开发者效能工具也有较大影响。
 
+另外，还需要手动管理 vendor 下面的依赖包，包括项目依赖包的分析、版本的记录、依赖包获取和存放等等。
 
+为了解决这个问题，Go 核心团队与社区将 Go 构建的重点转移到如何解决包依赖管理上。Go 社区先后开发了诸如 gb、glide、dep 等工具，来帮助 Go 开发者对 vendor 下的第三方包进行自动依赖分析和管理，但这些工具也都有自身的问题。
 
+#### GoModule
+
+就在 Go 社区为包依赖管理焦虑并抱怨没有官方工具时，Go 核心团队基于社区实践的经验和教训，推出官方解决方案：Go Module。
+
+从 Go 1.11 版本开始，除了 GOPATH 构建模式之外，Go 又增加了一种 Go Module 构建模式。
+
+一个 Go Moudle 是一个 Go 包的集合。module 是有版本的，所以 module 下的包也具有版本属性。这个 module 与这些包会组成一个独立的版本单元，它们可以一起打版本、发布和分发。
+
+在 Go Module 模式下，通常一个代码仓库对应一个 Go Module。一个 Go Module 的顶层目录下会放置一个 go.mod 文件，每个 go.mod 文件会定义唯一一个 module，Go Module 与 go.mod 是一一对应的。
+
+go.mod 文件所在的顶层目录也被称为 module 的根目录，module 根目录以及它子目录下的所有 Go 包均归属于这个 Go Module，这个 module 也被称为 main module。
+
+### 创建 Go  Module
+
+Go Module 的原理和使用方法其实有点复杂，我们先从如何创建一个 Go Module 开始说起。
+
+基于当前项目创建一个 Go Module，通常有以下几个步骤：
+
+* 第一步，通过 go mod init 创建 go.mod 文件，将当前项目变成一个 Go Module；
+* 第二步，通过 go mod tidy 命令自动更新当前 module 的依赖信息；
+* 第三步，执行 go build，执行新 module 构建。
+
+首先我们先建立一个新项目 module-mode 用来演示 Go Module 的创建。
+
+```go
+package main
+
+import "github.com/sirupsen/logrus"
+
+func main() {
+	logrus.Println("hello, go module mode")
+}
+```
+
+这个项目目录下只有 main.go 一个源文件，现在我们就来为这个项目添加 Go Module 支持。
+
+我们可以通过 go mod init 命令为这个项目创建一个 Go Module。
+
+```
+go mod init github.com/bigwhite/module-mode
+
+go: creating new go.mod: module github.com/bigwhite/module-mode
+go: to add module requirements and sums:
+	go mod tidy
+```
+
+go mod init 会在当前项目目录下创建一个 go.mod 文件，这个 go.mod 文件就将当前项目变成一个 Go Module，项目根目录变成 module 根目录。
+
+```
+module github.com/bigwhite/module-mode
+
+go 1.19
+```
+
+这个 go.mod 现在处于初始状态，它的地一行内容用于声明 module 路径（module path），最后一行是一个 Go 版本指示符，用于表示这个 module 特定的 Go 版本。
+
+go mod init 命令还输出两行日志，提示我们可以使用 go mod tidy 命令，添加 module 依赖以及校验和。go mod tidy 命令会扫描 Go 源码，并自动找出项目依赖的外部 Go Module 以及版本，并下载这些依赖更新本地的 go.mod 文件。
+
+```
+go mod tidy
+
+go: finding module for package github.com/sirupsen/logrus
+go: downloading github.com/sirupsen/logrus v1.9.0
+go: found github.com/sirupsen/logrus in github.com/sirupsen/logrus v1.9.0
+go: downloading github.com/stretchr/testify v1.7.0
+go: downloading golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
+go: downloading gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+```
+
+对于一个处于初始状态的 module 而言，go mod tidy 分析了当前 main module 的所有源文件，找出当前 main module 的所有第三方依赖，确定第三方依赖版本，还下载了当前 main module 的直接依赖包（比如 logrus），以及相关间接依赖包（直接依赖包的依赖，比如上面的 golang.org/x/sys 等）。
+
+Go Module 还支持通过 Go Module 代理服务加速第三方依赖的下载。我们之前在讲解 Go 环境安装时，就提到过配置 GOPROXY 环境变量，这个环境变量的默认值是 “https://proxy.glang.org,direct”，我们可以配置适合中国大陆地区的 Go Module 代理服务。
+
+由 go mod tidy 下载的依赖 module 会被放置在本地的 module 缓存路径下，默认值 $GOPATH[0]/pkg/mod，Go 1.15 及以后版本可以通过 GOMODCACHE 环境变量，自定义本地 module 的缓存路径。
+
+执行 go mod tidy 后，go.mod 的内容更新如下：
+
+```
+module github.com/bigwhite/module-mode
+
+go 1.19
+
+require github.com/sirupsen/logrus v1.9.0
+
+require golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+```
+
+可以看到，当前 module 的直接依赖 logrus，还有它的版本信息都会写入到 go.mod 文件的 require 段中。并且，执行完 go mod tidy 后，当前项目除了 go.mod 文件外，还多了一个新文件 go.sum，内容如下：
+
+```
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/sirupsen/logrus v1.9.0 h1:trlNQbNUG3OdDrDil03MCb1H2o9nJ1x4/5LYw7byDE0=
+github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 h1:0A+M6Uqn+Eje4kHMK80dtF3JCXC4ykBgQG4Fe06QRhQ=
+golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+```
+
+这同样是由 go mod 相关命令维护的一个文件，它存放特定版本的 module 内容的哈希值。
+
+这是 Go Module 的一个安全措施。当将来这里的某个 module 的特定版本被再次下载时，go 命令会使用 go.sum 文件中对应的哈希值，和新下载的内容的哈希值进行比对，只有哈希值比对一致才是合法的，这样就可以保证你的项目所依赖的 module 内容，不会被恶意或意外篡改。因此，我们推荐把 go.mod 和 go.sum 两个文件及源码，一并提交到代码版本控制服务器上。
+
+接下来，我们只需在当前 module 的根路径下，执行 go build 就可以完成 module 的构建。
+
+go build 命令会读取 go.mod 中的依赖及版本信息，并在本地 module 缓存路径下找到对应版本的依赖 module，执行编译和链接。如果顺利的话，我们就会在在当前目录下看到一个新生成的可执行文件，执行这个文件我们就可以得到正确结果。
+
+```
+go build
+```
+
+```
+ls
+
+go.mod		go.sum		main.go		module-mode
+```
+
+```
+./module-mode
+
+INFO[0000] hello, go module mode  
+```
+
+到这里，我们已经完成一个具有多个第三方依赖项目的构建。不过，关于 Go Module 的操作远不止这些，随着项目的演进，我们还会在代码中导入新的第三方包，删除一些旧的依赖包，更新一些依赖包版本等。
+
+Go Module 机制会自动分析项目的依赖包，并选出最适合的版本，但是项目所依赖的包有很多版本，Go Module 是如何选出最适合的那个版本的？
+
+### 深入 Go Module 构建模式
+
+Go 语言设计者在设计 Go Module 构建模式时，进行了几项创新，这其中就包括语义导入版本（Semantic Import Versioning），以及和其他主流语言不通给的最小版本选择（Minimal Version Selection）等机制。只有深入了解这些机制，才能真正掌握 Go Module 构建模式。
+
+#### 语义导入机制
+
+首先我们看一下 Go Module 的语义导入版本机制。
+
+在上面的例子中，我们可以看到 go.mod 的 require 段中依赖的版本号，都符合 v X.Y.Z 的格式。在 Go Module 构建模式下，一个符合 Go Module 要求的版本号，由前缀 v 和一个满足 [语义版本](https://semver.org/) 规范的版本号组成。
+
+<img src="./images/semantic.png" style="zoom: 50%" />
+
+在上面这张图中，语义版本号分为 3 部分：主版本号（major）、次版本号（minor）和补丁版本号（patch）。例如上面的 logrus module 的版本号是 v1.8.1，即主版本号为 1，次版本号为 8，补丁版本号为 1。
+
+Go 命令和 go.mod 文件都使用这种符合语义版本规范的版本号，作为描述 Go Module 版本的标准形式。借助语义版本规范，Go 命令可以确定同一 module 的两个版本发布的先后次序，而且可以确定它们是否兼容。
+
+按照语义版本规范，主版本号不同的两个版本是相互不兼容的。不过在主版本号相同的情况下，次版本号大都是向后兼容次版本号小的版本。
+
+Go Module 规定：如果同一个包的新旧版本是兼容的，那么它们的包导入路径应该是相同的。以 logrus 为例，它有很多发布版本，我们从中选出两个版本 v1.7.0 和 v1.8.1。按照上面的语义版本规则，这两个版本的主版本号相同，新版本 v1.8.1 是兼容老版本 v1.7.0 的。那么，我们就可以知道，如果一个项目依赖 logrus，无论它使用的是 v1.7.0 版本还是 v1.8.1 版本，它都可以使用下面的包导入语句导入 logrus 包：
+
+```go
+import "github.com/sirupsen/logrus"
+```
+
+如果在未来的每一天，logrus 的作者发布了 logrus v2.0.0 版本。那么根据语义版本规则，该版本的主版本号为 2，已经与 v1.7.0、v1.8.1 的主版本号不同，那么 v2.0.0 与 v1.7.0、v1.8.1 就是不兼容的包版本。然后我们再按照 Go Module 的规定，如果一个项目依赖 logrus v2.0.0 版本，那么它的包导入路径就不能与上面的导入方式相同了。那我们应该使用什么方式导入 logrus v2.0.0 版本呢？
+
+Go Module 给出一个方法：将包主版本号引入到包导入路径中，我们可以像下面这样导入 logrus v2.0.0 版本依赖包：
+
+> 升级大版本后代码的 import 都要改，其实挺坑！！
+
+```go
+import "github.com/sirupsen/logrus/v2"
+```
+
+这就是 Go 的 “语义导入版本” 机制，也就是说通过在包导入路径中引入主版本号的方式，来区别同一个包的不兼容版本，这样一来我们甚至可以同时依赖一个包的两个不兼容版本。
+
+```go
+import (
+  "github.com/sirupsen/logrus"
+  logv2 "github.com/sirupsen/logrus/v2"
+)
+```
+
+如果我们使用 v0.y.z 版本应该使用哪种导入路径？
+
+按照语义版本规范的说法，v0.y.z 这样的版本号是用于项目开发阶段的版本号。在这个阶段任何事情都有可能发生，其 API 也不应该被认为是稳定的。Go Module 将这样的版本（v0）与主版本号 v1 做同等对待，也就是采用不带主版本号的包导入路径，这样在一定程度降低了 Go 开发人员使用版本号包时的心智负担。
+
+Go 语义导入机制是 Go Module 机制的基础规则，也是 Go Module 其他规则的基础。
+
+#### 最小版本选择机制
+
+接下来，我们再来看一下 Go Module 的最小版本选择原则。
 
