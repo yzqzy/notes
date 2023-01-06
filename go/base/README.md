@@ -1345,3 +1345,87 @@ Go 语言最初发布时内置的构建模式是 GOPATH 构建模式。在这种
 
 ## 七、Go Module 常规操作
 
+我们已经掌握了 Go Module 构建模式的基本概念和工作原理，也学会了如何通过 go mod 命令，将一个 Go 项目转变为一个 Go Module，并通过 Go Module 构建模式进行构建。
+
+当我们有一个 Go Module 项目之后，就需要考虑是如何维护它，即对 Go Module 依赖包的管理。
+
+### 为当前 module 添加依赖
+
+在一个项目的初始阶段，我们会经常为项目引入第三方包，并借助这些包完成特定功能。就算项目进入稳定阶段，随着项目演进，我们偶尔也需要在代码中引入新的第三方包。
+
+那我们应该如何为一个 Go Module 添加一个新的依赖包呢？
+
+我们还是以之前的 module-mode 项目为例，为这个项目添加一个新依赖：github.com/google/uuid。
+
+```go
+package main
+
+import (
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+)
+
+func main() {
+	logrus.Println("hello, go module mode")
+	logrus.Println(uuid.NewString())
+}
+```
+
+新源码中，我们通过 import 语句导入了 github.com/google/uuid，并在 main 函数中调用 uuid 包的函数 NewString。
+
+此时如果我们直接构建这个 module，我们会得到一个错误提示：
+
+```
+go build
+
+main.go:4:2: no required module provides package github.com/google/uuid; to add it:
+	go get github.com/google/uuid
+```
+
+Go 编译器提示我们，go.mod 中的 require 段中，并没有提供 gitHub.com/google/uuid 包，我们可以手动执行 go get 命令。
+
+```
+go get github.com/google/uuid
+
+go: downloading github.com/google/uuid v1.3.0
+go: added github.com/google/uuid v1.3.0
+```
+
+go get 命令可以将我们新增的依赖包下载到本地的 module 缓存里，并在 go.mod 文件的 require 段中新增一行内容。
+
+```
+module github.com/bigwhite/module-mode
+
+go 1.19
+
+require github.com/sirupsen/logrus v1.9.0
+
+require (
+	github.com/google/uuid v1.3.0 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+)
+```
+
+我们也可以使用 go mod tidy 命令，再执行构建前自动分析源码中的依赖变化，识别新增依赖项并下载它们。
+
+```
+go mod tidy
+```
+
+```
+module github.com/bigwhite/module-mode
+
+go 1.19
+
+require (
+	github.com/google/uuid v1.3.0
+	github.com/sirupsen/logrus v1.9.0
+)
+
+require golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+```
+
+对于我们这个例子而言，手动执行 go get 新增依赖项和执行 go mod tidy 自动分析和下载依赖项的最终效果是等价的。对于复杂项目变更而言，逐一手动添加依赖显然很没有效率，go mod tidy 是更佳的选择。
+
+### 升级/降级依赖版本
+
