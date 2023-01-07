@@ -1429,3 +1429,57 @@ require golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 
 ### 升级/降级依赖版本
 
+我们先以对依赖的的版本进行降级为例，进行分析。
+
+在实际开发工作中，如果我们认为 Go 命令自动帮我们确定的某个依赖的版本存在一些问题，比如引入不必要复杂性导致可靠性降低、性能回退等等。我们可以手动将它降级为之前发布的某个兼容版本。
+
+我们还是以上面的 logrus 为例，logrus 存在多个发布版本，我们可以通过下面命令进行查询：
+
+```
+go list -m -versions github.com/sirupsen/logrus
+
+github.com/sirupsen/logrus v0.1.0 v0.1.1 v0.2.0 v0.3.0 v0.4.0 v0.4.1 v0.5.0 v0.5.1 v0.6.0 v0.6.1 v0.6.2 v0.6.3 v0.6.4 v0.6.5 v0.6.6 v0.7.0 v0.7.1 v0.7.2 v0.7.3 v0.8.0 v0.8.1 v0.8.2 v0.8.3 v0.8.4 v0.8.5 v0.8.6 v0.8.7 v0.9.0 v0.10.0 v0.11.0 v0.11.1 v0.11.2 v0.11.3 v0.11.4 v0.11.5 v1.0.0 v1.0.1 v1.0.3 v1.0.4 v1.0.5 v1.0.6 v1.1.0 v1.1.1 v1.2.0 v1.3.0 v1.4.0 v1.4.1 v1.4.2 v1.5.0 v1.6.0 v1.7.0 v1.7.1 v1.8.0 v1.8.1 v1.9.0
+```
+
+在我们的例子中，基于初始状态的 go mod tidy 命令，帮我们选择 logrus 的最新发布版本 v1.9.0。如果你觉得这个版本存在某些问题，想将 logrus 版本降至之前发布的兼容版本，比如 v1.8.0，那么我们可以在项目的 module 根目录下，执行带有版本号的 go get 命令：
+
+```
+go get github.com/sirupsen/logrus@v1.8.0
+
+go: downloading github.com/sirupsen/logrus v1.8.0
+go: downloading github.com/stretchr/testify v1.2.2
+go: downgraded github.com/sirupsen/logrus v1.9.0 => v1.8.0
+```
+
+从输出结果我们可以看到，go get 命令下载了 logrus v1.8.0 版本，并将 go.mod 中对 logrus 的依赖版本从 v1.9.0 降至 v1.8.0。
+
+当然我们也可以使用 go mod tidy 来帮助我们降级，前提是首先要用 go mod edit 命令，明确告知我们要依赖 v1.8.0 版本，而不是 v1.9.0：
+
+```
+go mod edit -require=github.com/sirupsen/logrus@v1.8.0
+go mod tidy
+
+go: downloading github.com/sirupsen/logrus v1.8.0
+```
+
+降级后，我们再假设 logrus v1.8.1 版本是一个安全补丁升级，修复了一个很严重的安全漏洞，并且我们必须要使用这个安全补丁版本，那么我们就需要将 logrus 依赖从 v1.8.0 升级到 v1.8.1。
+
+我们可以使用与降级同样的步骤来完成。
+
+```
+go get github.com/sirupsen/logrus@v1.8.1
+```
+
+到这里你就学会如何对项目依赖包版本进行升级和降级了。
+
+但是你可能会发现一个问题，在前面的例子中，Go Module 的依赖主版本号都是 1。根据我们之前学习的语义导入版本的规范，在 Go Module 构建模式下，当依赖的主版本号为 0 或 1 的时候，我们在 Go 源码中导入依赖包，不需要在包的导入路径上增加版本号，也就是：
+
+```
+import github.com/urer/repo/v0 <=> import github.com/user/repo
+import github.com/urer/repo/v1 <=> import github.com/user/repo
+```
+
+但是，如果我们要依赖的 module 的主版本号大于 1，这又要怎么办呢？
+
+### 主版本号大于 1 的依赖
+
