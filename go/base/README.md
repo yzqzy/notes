@@ -1349,7 +1349,7 @@ Go 语言最初发布时内置的构建模式是 GOPATH 构建模式。在这种
 
 当我们有一个 Go Module 项目之后，就需要考虑是如何维护它，即对 Go Module 依赖包的管理。
 
-### 为当前 module 添加依赖
+### 添加依赖
 
 在一个项目的初始阶段，我们会经常为项目引入第三方包，并借助这些包完成特定功能。就算项目进入稳定阶段，随着项目演进，我们偶尔也需要在代码中引入新的第三方包。
 
@@ -1427,7 +1427,7 @@ require golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 
 对于我们这个例子而言，手动执行 go get 新增依赖项和执行 go mod tidy 自动分析和下载依赖项的最终效果是等价的。对于复杂项目变更而言，逐一手动添加依赖显然很没有效率，go mod tidy 是更佳的选择。
 
-### 升级/降级依赖版本
+### 升级/降级依赖
 
 我们先以对依赖的的版本进行降级为例，进行分析。
 
@@ -1481,5 +1481,68 @@ import github.com/urer/repo/v1 <=> import github.com/user/repo
 
 但是，如果我们要依赖的 module 的主版本号大于 1，这又要怎么办呢？
 
-### 主版本号大于 1 的依赖
+语义导入版本有一个原则：如果新旧版本的包使用相同的导入路径，那么新包与旧包是兼容的。也就是说，如果新旧两个包不兼容，那么我们就应该使用不同的导入路径。
+
+按照语义版本规范，如果我们要为项目引入主版本号为 1 的依赖，比如 v2.0.0，那么由于这个版本与 v1、v0 开头的包版本都不兼容，我们在导入 v2.0.0 包时，不能再直接使用 github.com/user/repo，而要使用像下面代码中这样不同的包导入路径。
+
+```
+import github.com/user/repo/v2/xxx
+```
+
+也就是说，如果我们要为 Go 项目添加主版本号大于 1 的依赖，我们就需要使用 “语义导入版本” 机制，在声明它的导入路径的基础上，加上版本信息。
+
+我们以向 module-mode 项目添加 github.com/go-redis/redis 依赖包的 v7  版本 为例，看下添加步骤。
+
+```
+go get github.com/go-redis/redis/v7
+
+go: downloading github.com/go-redis/redis/v7 v7.4.1
+go: added github.com/go-redis/redis/v7 v7.4.1
+```
+
+我们可以看到，go get 为我们选择了 go-redis v7 版本下的最新版本 v7.4.1。
+
+### 移除依赖
+
+我们还是以 go-redis/redis 示例，如果这时我们不再需要 go-redis/redis，应该怎么做？
+
+首先我们可以通过 go list 命令列出当前 module 的所有依赖。
+
+```
+go list -m all
+
+github.com/bigwhite/module-mode
+github.com/cespare/xxhash/v2 v2.1.2
+github.com/davecgh/go-spew v1.1.1
+github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
+github.com/fsnotify/fsnotify v1.4.9
+github.com/go-redis/redis/v7 v7.4.1
+github.com/go-redis/redis/v8 v8.11.5
+...
+gopkg.in/yaml.v2 v2.4.0
+```
+
+我们可以看到 go-redis/redis/v8 出现在结果中。
+
+要想移除 go.mod 的依赖项，我们需要从源码中删除对依赖项的导入语句，然后使用 go mod tidy 命令，将这个依赖项彻底从 Go Module 构建上下文中清除掉。go mod tidy 会自动分析源码依赖项，而且将不再使用的依赖从 go.mod 和 go.sum 中移除。
+
+```
+go mod tidy
+```
+
+```
+go list -m all
+
+github.com/bigwhite/module-mode
+github.com/davecgh/go-spew v1.1.1
+github.com/google/uuid v1.3.0
+github.com/pmezard/go-difflib v1.0.0
+github.com/sirupsen/logrus v1.8.1
+github.com/stretchr/testify v1.2.2
+golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
+```
+
+执行完 go mod tidy 命令后，再次执行 go list -m all 命令，可以看到依赖列表中已经没有 redis 依赖。
+
+### 特殊情况：使用 vendor
 
