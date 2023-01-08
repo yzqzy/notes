@@ -1546,3 +1546,126 @@ golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
 
 ### 特殊情况：使用 vendor
 
+你可能会感觉到有点奇怪，为什么 Go Module 的维护，还需要使用 vendor。
+
+其实，vendor 机制虽然诞生于 GOPATH 构建模式主导的年代，但在 Go Module 构建模式下，它依旧被保留下来，并且成为 Go Module 构建机制的一个很好的补充。特别是在一些不方便访问外部网络，并且对 Go 应用构建性能敏感的环境，比如在一些内部的持续集成或持续交付环境中， 使用 vendor 机制可以实现与 Go Module 等价的构建。
+
+和 GOPATH 构建模式不同，Go Module 构建模式下，我们无需手动维护 vendor 目录下的依赖包，Go 提供了可以快速建立和更新 vendor 的命令。我们还是以前面的 module-mode 项目为例，通过下面命令为该项目建立 vendor。
+
+```
+go mod vendor
+```
+
+```
+tree -LF 2 vendor
+
+vendor/
+├── github.com/
+│   ├── google/
+│   └── sirupsen/
+├── golang.org/
+│   └── x/
+└── modules.txt
+```
+
+我们可以看到，go mod vendor 命令在 vendor 目录下，创建了当前项目依赖包的副本，并且通过 vendor/modules.txt. 记录了 vendor 下的 module 以及版本。
+
+如果我们要基于 vendor 构建，而不是基于本地缓存的 Go Module 构建，我们需要在 go build 后面加上 -mod=vendor 参数。
+
+在 Go 1.14 及以后版本中，如果 Go 项目的顶层目录下存在 vendor 目录，那么 go build 默认也会优先基于 vendor 构建，除非你给 go build 传递 -mod=mod 参数。
+
+### 总结
+
+在通过 go mod init 为当前 Go 项目创建一个新的 module 后，随着项目的演进，我们在日常开发过程中，会遇到多种常见的维护 Go Module 的场景。
+
+其中最常见的就是为项目添加一个依赖包，我们可以通过 go get 命令手动获取该依赖包的特定版本，更好的方法是通过 go mod tidy 命令让 Go 命令自动取分析新依赖并决定使用新依赖的哪个版本。
+
+* 通过 go get 我们可以升级或降级某依赖的版本，如果升级或降级前后的版本不兼容，需要修改导入路径中的版本号，这是 Go 语义导入版本机制的要求。
+* 通过 go mod tidy，我们可以自动分析 Go 源码的依赖变更，包括依赖的新增、版本变更以及删除，并更新 go.mod 中的依赖信息。
+* 通过 go mod vendor，我们依旧可以使用 vendor 机制，并且对 vendor 目录下缓存的依赖包进行自动管理。
+
+## 八、入口函数与包初始化
+
+刚开始学习 Go 语言的时候，我们可能会经常遇到这样一个问题：一个 Go 项目中有数十个 Go 包，每个包又有若干常量、变量、各种函数和方法，那 Go 代码究竟是从哪里开始执行的？后续执行顺序又是什么？
+
+Go 程序由一系列 Go 包组成，代码的执行也是在各个包之间跳转。首先我们先来看看 Go 应用的入口函数，main 函数。
+
+### main.main 函数
+
+Go 语言中有一个特殊的函数：main 包中的 main 函数，即 main.main，它是所有 Go 可执行程序的用户层执行逻辑的入口函数。Go 程序在用户层面的执行逻辑，会在这个函数内按照它的调用顺序展开。
+
+main 函数的函数原型是这样的：
+
+```go
+package main
+
+func main() {}
+```
+
+main 函数的函数原型非常简单，没有参数也没有返回值。而且，Go 语言要求：可执行程序的 main 包必须定义 main 函数，否则 Go 编译器会报错。在启动多个 Goroutine（Go 语言的轻量级用户线程）的 Go 应用中，main.main 函数将在 Go 应用的主 Coroutine 中执行。
+
+在多 Goroutine 的 Go 应用中，相较于 main.main 作为 Go 应用的入口，main.main 函数返回的意义其实更大，main 函数返回就意味着整个 Go 程序的终结，而且你也不用管这个时候是否还有其他子 Goroutine 正在执行。
+
+另外还需要注意的是，除了 main 包外，其他包也可以拥有自己的名为 main 的函数或方法。但按照 Go 的可见性规则（小写字母开头的标识符为非导出标识符），非 main 包中自定义的 main 函数仅限于包内使用，就像下面代码这样：
+
+```go
+package pk1
+
+import "fmt"
+
+func Main() {
+  main()
+}
+
+func main() {
+  fmt.Println("main func for pk1")
+}
+```
+
+你可以看到，这里的 main 函数主要就是在包 pkg1 内部使用的，不能在包外使用。
+
+对于 main 包的 main 函数来说，虽然他是用户层逻辑的入口函数，但并不意味着它是用户层第一个被执行的函数。
+
+### init 函数
+
+除了上面的 main.main 函数之外，Go 还有一个特殊函数，就是用于进行包初始化的 init 函数。
+
+和 main.main 函数一样，init 函数也是一个无参数无返回值的函数：
+
+```go
+func init() {}
+```
+
+如果 main 依赖的包中定义了 init 函数，或者 main 包自身定义了 init 函数，那么 Go 程序在这个包初始化的时候，就会自动调用它的 init 函数，因此这些 init 函数的执行就都会发生在 main 函数之前。
+
+不过对于 init 函数来说，我们还需要注意一点，就是在 Go 程序中我们不能手工显示地调用 init，否则会收到编译错误。
+
+```go
+package main
+
+import "fmt"
+
+func init() {
+	fmt.Println("init invoked")
+}
+
+func main() {
+	init()
+}
+```
+
+```
+go run main.go
+
+# command-line-arguments
+./main.go:10:2: undefined: init
+```
+
+Go 包可以拥有多个 init 函数，每个组成 Go 包的 Go 源文件中，也可以定义多个 init 函数。
+
+在初始化 Go 包时，Go 会按照一定的次序，逐一、顺序地调用这个包的 init 函数。一般来说，先传递给 Go 编译器的源文件中的 init 函数，会先被执行；同一个源文件中的多个 init 函数，会按声明顺序依次执行。
+
+所以，当我们想要在 main.main 函数执行之前，执行一些函数或语句的时候，只需要将它放入 init 函数就可以了。
+
+### Go 包的初始化顺序
+
