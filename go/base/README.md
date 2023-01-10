@@ -1681,7 +1681,100 @@ Go 在进行包初始化的过程中，会采用 “深度优先” 的原则，
 
 紧接着，在 pkg3 包初始化完毕后，Go 会回到 pkg2 包对 pkg2 包进行初始化，然后再回到 pkg1 包对 pkg1 包进行初始化。在调用完 pkg1 包的 init 函数后，Go 就完成了 main 包的第一个依赖包 pkg1 的初始化。
 
+> 根据 Go 语言规范，一个被多个包依赖的包进会初始化一次。
+
 接下来，Go 会初始化 main 包的第二个依赖包 pkg4，pkg4 包饿初始化过程与 pkg1 类似，也是先初始化依赖包 pkg5，然后再初始化自身。
 
 然后，当 Go 初始化完 pkg4 包后也就完成了对 main 包的所有依赖包的初始化，接下来初始化 main 包自身。
+
+最后，在 main 包中，Go 同样会按照 “常量 -> 变量 -> init 函数” 的顺序进行初始化，执行完这些初始化工作后才正式进入程序的入口 main 函数。
+
+简而言之，Go 包的初始化次序并不难，只需要记住下面这三点就可以：
+
+* 依赖包按照 “深度优先” 的次序进行初始化；
+* 每个包内以 “常量 -> 变量 -> init 函数” 的顺序进行初始化；
+* 包内的多个 init 函数按出现次数进行调用。
+
+### init 函数应用场景
+
+init 的应用场景与 init 函数在 Go 包初始化过程中的次序密不可分。前面我们也讲过，Go 包在初始化时，init 函数的初始化次序在变量之后，这也意味着开发人员在 init 函数中对包级变量进行进一步检查和操作。
+
+#### 重置包级变量
+
+首先我们来看 init 函数的第一个常用用途：重置包级变量值。
+
+init 函数可以对包内部以及暴露到外部的包级数据（主要是包级变量）的初始状态进行检查。在 Go 标准库中，我们可以发现很多 init 函数被用于检查包级变量初始状态的例子，例如标准库 flag 包就是其中的一个。
+
+flag 包定义了一个导出的包级变量 CommandLine，如果用户没有通过 flag.newFlagSet 创建新的代表命令行标志集合的实例，那么 CommandLine 就会作为 flag 导出函数背后的默认值。
+
+在 flag 包初始化的时候，由于 init 函数初始化次序在包级变量之后，因此包级变量 CommandLine 会在 init 函数之前被初始化。
+
+```go
+var CommandLine = NewFlagSet(os.Args[0], ExitOnError)
+
+func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
+    f := &FlagSet{
+        name:          name,
+        errorHandling: errorHandling,
+    }
+    f.Usage = f.defaultUsage
+    return f
+}
+
+func (f *FlagSet) defaultUsage() {
+    if f.name == "" {
+        fmt.Fprintf(f.Output(), "Usage:\n")
+    } else {
+        fmt.Fprintf(f.Output(), "Usage of %s:\n", f.name)
+    }
+    f.PrintDefaults()
+}
+```
+
+我们可以看到，在通过 NewFlagSet 创建 CommandLine 变量绑定的 FlagSet 类型实例时，CommandLine 的 Usage 字段被赋值为 defaultUsage。如果保持现状，那么使用 flag 包默认 CommandLine 的用户就无法自定义 usage 的输出。于是，flag 包在 init 函数中重置了 CommandLine 的 Usage 字段：
+
+```go
+func init() {
+    CommandLine.Usage = commandLineUsage // 重置CommandLine的Usage字段
+}
+
+func commandLineUsage() {
+    Usage()
+}
+
+var Usage = func() {
+    fmt.Fprintf(CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+    PrintDefaults()
+}
+```
+
+通过上面代码我们可以发现，CommandLine 的 Usage 字段，设置了一个 flag 包内的未导出函数 commandLineUsage，后者使用 flag 包的 Usage 变量。这样，就通过 init 函数，将 CommandLine 与包变量 Usage 关联在一起。
+
+然后，当用户将自定义的 usage 赋值给 flag.Usage 后，就相当于改变了默认代表命令行标志集合的 CommandLine 变量的 Usage。这样当 flag 包完成初始化后，CommandLine 变量就处于一个合理可用的状态。
+
+#### 包级变量初始化
+
+有些包级变量需要一个比较复杂的初始化过程，有些时候，使用它的类型零值（每个 Go 类型都具有一个零值定义）或通过简单初始化表达式不能满足业务逻辑要求，这时我们可以通过 init 函数对包级变量进行初始，在 标准库 http 包中就有这样一个示例：
+
+```go
+
+var (
+    http2VerboseLogs    bool // 初始化时默认值为 false
+    http2logFrameWrites bool // 初始化时默认值为 false
+    http2logFrameReads  bool // 初始化时默认值为 false
+    http2inTests        bool // 初始化时默认值为 false
+)
+
+func init() {
+    e := os.Getenv("GODEBUG")
+    if strings.Contains(e, "http2debug=1") {
+        http2VerboseLogs = true // 在 init 中对 http2VerboseLogs 的值进行重置
+    }
+    if strings.Contains(e, "http2debug=2") {
+        http2VerboseLogs = true // 在 init中 对 http2VerboseLogs 的值进行重置
+        http2logFrameWrites = true // 在 init 中对 http2logFrameWrites 的值进行重置
+        http2logFrameReads = true // 在i nit中 对 http2logFrameReads 的值进行重置
+    }
+}
+```
 
