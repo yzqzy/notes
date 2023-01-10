@@ -1778,3 +1778,114 @@ func init() {
 }
 ```
 
+我们可以看到，标准库 http 包定义了一系列布尔类型的特性开关变量，它们默认处于关闭状态（即值为 false），但我们可以通过 GODEBUG 环境变量值，开启相关特性开关。然后在 init 函数中，根据环境变量 GODEBUG 的值，对这些包级开关变量进行初始化。
+
+#### 实现 “注册模式”
+
+为了便于我们更好理解，我们先来看一段使用 lib/pq 包访问 PostgreSQL 数据库的代码示例：
+
+```go
+import (
+    "database/sql"
+    _ "github.com/lib/pq"
+)
+
+func main() {
+    db, err := sql.Open("postgres", "user=pqgotest dbname=pqgotest sslmode=verify-full")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    age := 21
+    rows, err := db.Query("SELECT name FROM users WHERE age = $1", age)
+    ...
+}
+```
+
+示例代码中是以空导入的方式引入 lib/pq 包，main 函数中并没有使用 pq 包的任何变量、函数或方法，这样就实现了对 PostgreSQL 数据库的访问。
+
+```go
+func init() {
+    sql.Register("postgres", &Driver{})
+}
+```
+
+上述效果实现原理其实就是 init 函数，init 函数会在 pq 包初始化的时候得以执行。在 pq 包的 init 函数中，pq 包将自己实现的 sql 驱动注册到 sql 包中。这样主要应用层代码在 Open 数据库的时候，传入驱动的名称（这里是 “postgress”），那么通过 sql.Open 函数，返回的数据库实例句柄对数据库进行的操作，实际上调用的都是 pq 包中相应的驱动实现。
+
+这种通过在 init 函数中注册自己实现的模式，可以有效降低 Go 包对外的直接暴露，尤其是包级变量的暴露，从而避免外部影响内部状态。
+
+另外，从标准库 database/sql 包的角度来看，这种 “注册模式” 实质上是一种工厂设计模式的实现，sql.Open 函数就是这个模式中的工厂方法，它根据外部传入的驱动名称 “生产” 出不同类别的数据库实例句柄。
+
+这种 “注册模式” 在其他标准库中也有广泛应用，例如，使用标准库 image 包获取各种格式图片的宽和高。
+
+```go
+package main
+
+import (
+    "fmt"
+    "image"
+    _ "image/gif" // 以空导入方式注入 gif 图片格式驱动
+    _ "image/jpeg" // 以空导入方式注入 jpeg 图片格式驱动
+    _ "image/png" // 以空导入方式注入 png 图片格式驱动
+    "os"
+)
+
+func main() {
+    // 支持png, jpeg, gif
+    width, height, err := imageSize(os.Args[1]) // 获取传入的图片文件的宽与高
+    if err != nil {
+        fmt.Println("get image size error:", err)
+        return
+    }
+    fmt.Printf("image size: [%d, %d]\n", width, height)
+}
+
+func imageSize(imageFile string) (int, int, error) {
+    f, _ := os.Open(imageFile) // 打开图文文件
+    defer f.Close()
+
+    img, _, err := image.Decode(f) // 对文件进行解码，得到图片实例
+    if err != nil {
+        return 0, 0, err
+    }
+
+    b := img.Bounds() // 返回图片区域
+    return b.Max.X, b.Max.Y, nil
+}
+```
+
+上面这个示例程序支持 png、jpeg、gif 三种格式的图片。实现这一效果的原因是，在 image/png、image/jpeg 和 image/gif 包各自的 init 函数中，都将自己 “注册” 到 image 的支持格式列表中。
+
+```go
+// $GOROOT/src/image/png/reader.go
+func init() {
+    image.RegisterFormat("png", pngHeader, Decode, DecodeConfig)
+}
+
+// $GOROOT/src/image/jpeg/reader.go
+func init() {
+    image.RegisterFormat("jpeg", "\xff\xd8", Decode, DecodeConfig)
+}
+
+// $GOROOT/src/image/gif/reader.go
+func init() {
+    image.RegisterFormat("gif", "GIF8?a", Decode, DecodeConfig)
+}  
+```
+
+### 总结
+
+本篇文章中，我们一起了解了 Go 应用的用户层入口函数 main.main、包初始化函数 init，还有 Go 程序包的初始化次序和包内各种语法元素的初始化次序。
+
+我们需要重点关注 init 函数具备的几种行为特征：
+
+* 执行顺序排序包内其他语法元素后面；
+* 每个 init 函数在整个 Go 程序生命周期内仅会被执行一次；
+* init 函数是顺序执行的，只有当 init 函数执行完毕后，才会去执行下一个 init 函数。
+
+基于上面这些特征，init 函数十分适合做一些包级数据初始化工作以及包级数据初始状态的检查工作。
+
+最后，我们还需要注意一点，大多 Go 程序都是并发程序，程序会启动多个 Goroutine 并发执行程序逻辑，这里你一定要注意主 Goroutine 的执行状态，需要根据实际情况决定，是否需要等待其他子 goroutine 做完清理收尾工作退出后再执行退出。
+
+## 九、构建 Web 服务
+
