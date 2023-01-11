@@ -1889,8 +1889,72 @@ func init() {
 
 ## 九、构建 Web 服务
 
-根据 [Go 官方用户 2021 调查报告](https://go.dev/blog/survey2021-results) ，我们可以得到 Go 应用最广泛的领域调查结果图。
+根据 [Go 官方用户 2021 调查报告](https://go.dev/blog/survey2021-results) ，可以得到 Go 应用最广泛的领域调查结果图。
 
 <img src="./images/go_use.png" />
 
-在 Go 应用的
+我们可以看到，在 Go 应用的前 4 个领域中，有两个都是 Web 服务相关的。一个是排在第一位的 API/RPC 服务，另一个是排在第四位的 Web 服务。
+
+### 简易 Web 服务
+
+Go 具有 “面向工程” 的特性，它提供了完善的工具链和标准库，使得 Go 程序大大减少对第三方包的依赖。我们可以基于 Go 标准库的 net/http 包，轻松构建一个承载 Web 内容传输的 HTTP 服务。
+
+首先我们建立 simple-http-server 目录，并创建 Go Module：
+
+```
+mkdir simple-http-server
+cd simple-http-server
+go mod init simple-http-server
+```
+
+因为这个 HTTP 服务比较简单，我们可以采用最简项目布局，直接在项目根目录下创建 main.go 源文件：
+
+```go
+package main
+
+import "net/http"
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("hello, world"))
+	})
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+以上就是一个最简单的 HTTP 服务实现。在这个实现中，我们只使用 Go 标准库的 http 包。
+
+这段代码有两个重要的函数，一个是 ListenAndServe，另一个是 HandleFunc。
+
+我们通过 http 包提供的 ListenAndServe 函数，建立起 HTTP 服务，这个服务监听本地 8080 端口。客户端可以通过这个端口与服务建立链接，发送 HTTP 请求即可得到相应的响应结果。
+
+在代码中，我们还为 web 服务设置了一个处理函数。这个函数的函数原型如下：
+
+```go
+func(w http.ResponseWriter, r *http.Request)
+```
+
+这个函数里有两个参数，w 和 r。r 代表来自客户端的 HTTP 请求，w 代表返回客户端的应答，基于 http 包实现的 HTTP 服务都应该符合这一原型。
+
+我们可以编译运行这个程序，并用 curl 命令行工具模拟客户端，向上述服务发送 http 请求：
+
+```
+go build
+
+./simple-htt-server
+```
+
+```
+curl localhost:8080/
+
+hello, world
+```
+
+至此，一个简易的 HTTP 服务就构建成功了。
+
+### 图书管理 API 服务
+
+在前面我们建立起一个简易的 HTTP 服务，现在我们再来构建一个实战小项目，一个更接近于真实业务的图书管理 API 服务。
+
+在这个项目中，我们模拟的是一个书店的图书管理后端服务。这个服务为平台前端以及其他客户端，提供针对图书的 CRUD 的基于 HTTP 协议的 API。API 采用 RESTful  风格设计，服务提供的 API 集合如下：
+
