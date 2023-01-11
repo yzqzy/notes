@@ -1889,3 +1889,8 @@ func init() {
 
 ## 九、构建 Web 服务
 
+根据 [Go 官方用户 2021 调查报告](https://go.dev/blog/survey2021-results) ，我们可以得到 Go 应用最广泛的领域调查结果图。
+
+<img src="./images/go_use.png" />
+
+在 Go 应用的
