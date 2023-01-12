@@ -1956,5 +1956,62 @@ hello, world
 
 在前面我们建立起一个简易的 HTTP 服务，现在我们再来构建一个实战小项目，一个更接近于真实业务的图书管理 API 服务。
 
-在这个项目中，我们模拟的是一个书店的图书管理后端服务。这个服务为平台前端以及其他客户端，提供针对图书的 CRUD 的基于 HTTP 协议的 API。API 采用 RESTful  风格设计，服务提供的 API 集合如下：
+在这个项目中，我们模拟的是一个书店的图书管理后端服务。这个服务为平台前端以及其他客户端，提供针对图书的 CRUD 的基于 HTTP 协议的 API。
+
+API 采用 RESTful  风格设计，服务提供的 API 集合如下：
+
+| HTTP 方法 | 请求路径  | API 作用             |
+| --------- | --------- | -------------------- |
+| POST      | /book     | 创建图书条目         |
+| POST      | /book/:id | 更新图书条目         |
+| GET       | /book/:id | 返回图书条目信息     |
+| GET       | /book     | 返回所有图书条目信息 |
+| DELETE    | /book/:id | 删除图书条目         |
+
+#### 布局设计
+
+首先我们需要创建一个名为 bookstore 的 Go 项目并创建对应的 Go Module。
+
+```
+mkdir bookstore
+cd bookstore
+go mod init bookstore
+```
+
+我们可以把这个服务拆分为两部分。
+
+* 一部分是 HTTP 服务器，用来对外提供 API 服务
+* 一部分是图书数据存储模块，存储图书数据。
+
+同时，这是一个构建可执行程序为目的的 Go 项目，我们可以把项目结构布局设计成这样：
+
+```
+├── cmd/
+│   └── bookstore/         // 放置 bookstore main 包源码
+│       └── main.go
+├── go.mod                 // module bookstore 的 go.mod
+├── go.sum
+├── internal/              // 存放项目内部包的目录
+│   └── store/
+│       └── memstore.go     
+├── server/                // HTTP 服务器模块
+│   ├── middleware/
+│   │   └── middleware.go
+│   └── server.go          
+└── store/                 // 图书数据存储模块
+    ├── factory/
+    │   └── factory.go
+    └── store.go
+```
+
+#### 项目 main 包
+
+main 包是主包，下面是 main 包的逻辑实现图。
+
+<img src="./images/store_main.png" />
+
+下面是 main 包的所有代码：
+
+```go
+```
 
