@@ -2064,5 +2064,156 @@ func main() {
 }
 ```
 
-在 Go 中，main 包不仅包含整个程序入口，还承担整个程序中主要模块初始化与组合的功能。
+在 Go 中，main 包不仅包含整个程序入口，还承担程序中主要模块初始化与组合的功能。
+
+在我们这个程序中，主要模块就是第 16 行的创建图书存储模块实例，以及第 21 行创建 HTTP 服务模块实例。在创建 HTTP 服务模块实例时，我们将图书存储实例 s 作为参数，传递给 NewBookStoreServer 函数。
+
+我们重点来看 main 函数的后半部分（30行 ～ 42 行），在这里我们通过监视系统信号实现了 http 服务实例的优雅退出。
+
+所谓优雅退出，指的就是程序有机会等待其他事情处理完再退出。比如尚未完成的事务处理、清理资源（关闭文件描述符、关闭 socket）、保存必要中间状态、内存数据持久化等等。
+
+我们通过 signal 包的 Notify 捕获了 SIGINT、SIGTERM 这两个系统信号。这样，当这两个信号中的任何一个触发时，我们的 http 服务实例都有机会在退出前做一些清理工作。
+
+然后，我们再使用 http 服务实例（srv）自身提供的 Shutdown 方法，来实现 http 服务内部的退出清理工作，包括：立即关闭所有 listener、关闭所有空闲连接、等待处于活动状态的连接处理完毕等等。当 http 服务实例的清理工作完成后，我们整个程序就可以正常退出了。
+
+#### 图书数据存储模块
+
+图书数据存储模块的职责很清晰，就是用来存储整个 bookstore 的图书数据。图书数据存储有多种方式，最简单的方式就是在内存中创建一个 map，以图书 id 作为 key，来保存图书信息。但如果我们在生产环境，数据要进行持久化，那么最实际的方式就是通过 Nosql 数据库甚至是关系型数据库，实现对图书数据的存储与管理。
+
+考虑到对多种存储实现方式支持，我们可以将图书存储的相关操作，定义在一个接口类型 Store 中。
+
+```go
+// store/store.go
+
+type Book struct {
+	Id      string   `json:"id"`      // 图书 ISBN ID
+	Name    string   `json:"name"`    // 图书名称
+	Authors []string `json:"authors"` // 图书作者
+	Press   string   `json:"press"`   // 出版社
+}
+
+type Store interface {
+	Create(*Book) error       // 创建一个新图书条目
+	Update(*Book) error       // 更新某图书条目
+	Get(string) (Book, error) // 获取某图书信息
+	GetAll() ([]Book, error)  // 获取所有图书信息
+	Delete(string) error      // 删除某图书条目
+}
+```
+
+我们建立了一个对应图书条目的抽象数据类型 Book，以及针对 Book 存储的接口类型 Store。这样，对于想要进行图书数据操作的一方来说，只需要得到一个满足 Store 接口的实例，就可以实现对图书数据的存储操作，不再关心图书数据究竟采用何种存储方式。这就实现了图书存储操作与底层图书数据存储方式的解耦。这也是 Go 组合设计哲学中面向接口编程的一个重要体现。
+
+我们可以参考《设计模式》提供的多种创建型模式，选择一种 Go 风格的工厂模式（创建型模式的一种）来实现满足 Store 接口实例的创建。
+
+```go
+// store/factory/factory.go
+
+var (
+	providersMu sync.RWMutex
+	providers   = make(map[string]store.Store)
+)
+
+func Register(name string, p store.Store) {
+	providersMu.Lock()
+	defer providersMu.Unlock()
+	if p == nil {
+		panic("store: Register provider is nil")
+	}
+
+	if _, dup := providers[name]; dup {
+		panic("store: Register called twice for provider " + name)
+	}
+	providers[name] = p
+}
+
+func New(providerName string) (store.Store, error) {
+	providersMu.RLock()
+	p, ok := providers[providerName]
+	providersMu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("store: unknown provider %s", providerName)
+	}
+
+	return p, nil
+}
+```
+
+这段代码模仿 Go 标准库 database/sql 的实现方式。factory 包采用 map 数据类型，满足对 Store 接口的实例类型进行管理。factory 还提供了 Register 函数，让各个实现 Store 接口的类型可以注册到工厂中。
+
+一旦注册成功，factory 就可以生产出满足 Store 接口的类型实例。依赖 Store 接口的使用方，只需要调用 factory 包的 New 函数，再传入期望使用的图书存储实现的名称，就可以得到对应的类型实例。
+
+在项目 interal/store 目录下，我们提供了一个基于内存 map 的 Store 接口的实现。
+
+```go
+// internal/store/memstore.go
+
+package store
+
+import (
+	mystore "bookstore/store"
+	factory "bookstore/store/factory"
+	"sync"
+)
+
+func init() {
+	factory.Register("mem", &MemStore{
+		books: make(map[string]*mystore.Book),
+	})
+}
+
+type MemStore struct {
+	sync.RWMutex
+	books map[string]*mystore.Book
+}
+```
+
+从代码中可以看到，在 init 函数中我们调用 factory 包提供的 Register 函数，将自己的实例以 “mem” 的名称注册到 factory 中。
+
+这样做还有一个好处，依赖 Store 接口进行图书数据管理的一方，只需要导入 intenal/store 这个包，就可以完成自动注册。
+
+#### HTTP 服务模块
+
+HTTP 服务模块的职责就是对外提供 API 服务，处理客户端请求，并通过 Store 接口实例执行对图书数据的相关操作。
+
+首先，我们抽象处理一个 server 包，这个包中定义了一个 BookStoreServer 类型：
+
+```go
+// server/server.go
+
+type BookStoreServer struct {
+	s   store.Store
+	srv *http.Server
+}
+```
+
+这个类型实质上就是一个标准库的 http.Server，并且组合了 store.Store 接口的能力。server 包提供 NewBookStoreServer 函数，用来创建 BookStoreServer 类型实例：
+
+```go
+// server/server.go
+
+// ...
+
+func NewBookStoreServer(addr string, s store.Store) *BookStoreServer {
+	srv := &BookStoreServer{
+		s: s,
+		srv: &http.Server{
+			Addr: addr,
+		},
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/book", srv.createBookHandler).Methods("POST")
+	router.HandleFunc("/book/{id}", srv.updateBookHandler).Methods("POST")
+	router.HandleFunc("/book/{id}", srv.getBookHandler).Methods("GET")
+	router.HandleFunc("/book", srv.getAllBooksHandler).Methods("GET")
+	router.HandleFunc("/book/{id}", srv.delBookHandler).Methods("DELETE")
+
+	srv.srv.Handler = middleware.Logging(middleware.Validating(router))
+	return srv
+}
+```
+
+我们可以看到， 函数 NewBookStoreServer 接受两个参数，一个是 HTTP 服务监听的服务地址，另一个是实现了 store.Store 接口的类型实例。这样函数原型设计是 Go 语言常用的一种设计方法，即接受一个接口类型参数，返回一个具体类型。返回的具体类型组合传入接口类型的能力。
+
+除此之外，我们还需要为 HTTP 服务器设置请求处理函数。
 
