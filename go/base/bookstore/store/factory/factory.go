@@ -1,3 +1,11 @@
+package factory
+
+import (
+	"bookstore/store"
+	"fmt"
+	"sync"
+)
+
 var (
 	providersMu sync.RWMutex
 	providers   = make(map[string]store.Store)

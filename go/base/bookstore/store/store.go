@@ -1,3 +1,12 @@
+package store
+
+import "errors"
+
+var (
+	ErrNotFound = errors.New("not found")
+	ErrExist    = errors.New("exist")
+)
+
 type Book struct {
 	Id      string   `json:"id"`      // 图书 ISBN ID
 	Name    string   `json:"name"`    // 图书名称
