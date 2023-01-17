@@ -15,7 +15,7 @@
   * 相对于 C/C++、Java，Go 在开发体验上有很多提升，包括简单的语法、得心应手的工具链、丰富和健壮的标准库，生产力与性能的完美结合，免除内存管理的心智负担，对并发设计的原生支持等等
   * 可以使用 Go 体现自身价值，有非常广泛的应用场景
 
-## 一、GO 历史与现状
+## 01、GO 历史与现状
 
 ### Go 语言是怎样诞生的
 
@@ -79,7 +79,7 @@ Go 语言项目的开源吸引了全世界开发者的目光，再加上 Go 三�
 
 也正是在这段时间内，Go 语言推出了以 Docker、Kubernetes 为典型代表的 “杀手级应用”，充分展示了实力，在世界范围收获了百万粉丝，迸发出极高的潜力和持续的活力。
 
-## 二、Go 语言的设计哲学
+## 02、Go 语言的设计哲学
 
 很多编程语言的初学者在学习初期，可能都会遇到这样的问题：最初兴致勃勃地开始学习一门编程语言，学着学着就发现很多 “别扭” 的地方，比如想要的语言特性缺失、语法风格偏避与主流语言差异大、语言的不同版本之间无法兼容、语言的语法特性过多导致学习曲线陡峭、语言的工具链支持较差，等等。
 
@@ -291,7 +291,7 @@ https://github.com/golang/proposal/blob/master/design/18130-type-alias.md
 
 它也是 Go 面向工程设计哲学的体现，另外 type alias 对基于现有实现进行扩展并做出新的封装方面也有 “奇效”。
 
-## 三、环境配置
+## 03、环境配置
 
 这一篇文章主要介绍如何安装和配置 Go 语言开发环境。
 
@@ -372,7 +372,7 @@ go env
 
 有了 Go 开发环境，接下来我们就开始学习如何编写 Go 代码。
 
-## 四、Go 程序的结构
+## 04、Go 程序的结构
 
 正式开始之前，首先说明一下，这节课对于开发 Go 程序所使用的编辑器工具没有任何要求。
 
@@ -662,7 +662,7 @@ go 默认是开启 CGO_ENABLED 的，将 CGO_ENABLED=1。但编译出来的二�
 
 原因就是在目前的 go 标准库中，某些功能具有两份实现，一份是 c 语言实现的，一份是 go 语言实现的。在 CGO_ENABLE 开启的情况下，go 链接器会链接 c 语言的版本，于是就有了动态连接库的情况。如果将 CGO_ENABLED 置为 0 ，再重新编译链接，那么 go 链接器会使用 go 版本的实现，这样就会得到一个没有动态链接的纯静态二进制程序。
 
-## 五、Go 项目的布局标准
+## 05、Go 项目的布局标准
 
 在前面的讲解中，我们编写的 Go 程序都是简单程序，一般由一个或几个 Go 源码文件组成，而且所有源码文件都在同一个目录中。但是生产环境中运行的实用程序并不会这么简单，通常它们都有复杂的项目结构布局。所以，弄清楚一个实用 Go 项目的项目布局标准是 Go 开发者走向编写复杂 Go 程序的第一步，也是必经的一步。
 
@@ -999,7 +999,7 @@ early-project-layout
 
 最后，早期接纳 Go 语言的开发者所建立的项目布局深受 Go 创世项目 1.4 版本之前布局的影响，将可导出的公共包放入单独的 pkg 目录下，对于这种情况我们了解即可。对于新建项目，还是建议采用前面介绍的标准布局形式。
 
-## 六、构建模式：包依赖管理问题
+## 06、构建模式：包依赖管理问题
 
 我们已经初步了解 Go 程序的结构，以及 Go 项目的典型布局。接下来，我们来系统学习下 Go 应用的构建。
 
@@ -1343,7 +1343,7 @@ Go 语言最初发布时内置的构建模式是 GOPATH 构建模式。在这种
 
 后续，Go 核心团队已经考虑在后续版本中彻底移除 GOPATH 构建模式，Go Module 构建模式将成为 Go 语言唯一的标准构建模式。
 
-## 七、Go Module 常规操作
+## 07、Go Module 常规操作
 
 我们已经掌握了 Go Module 构建模式的基本概念和工作原理，也学会了如何通过 go mod 命令，将一个 Go 项目转变为一个 Go Module，并通过 Go Module 构建模式进行构建。
 
@@ -1584,7 +1584,7 @@ vendor/
 * 通过 go mod tidy，我们可以自动分析 Go 源码的依赖变更，包括依赖的新增、版本变更以及删除，并更新 go.mod 中的依赖信息。
 * 通过 go mod vendor，我们依旧可以使用 vendor 机制，并且对 vendor 目录下缓存的依赖包进行自动管理。
 
-## 八、入口函数与包初始化
+## 08、入口函数与包初始化
 
 刚开始学习 Go 语言的时候，我们可能会经常遇到这样一个问题：一个 Go 项目中有数十个 Go 包，每个包又有若干常量、变量、各种函数和方法，那 Go 代码究竟是从哪里开始执行的？后续执行顺序又是什么？
 
@@ -1887,7 +1887,7 @@ func init() {
 
 最后，我们还需要注意一点，大多 Go 程序都是并发程序，程序会启动多个 Goroutine 并发执行程序逻辑，这里你一定要注意主 Goroutine 的执行状态，需要根据实际情况决定，是否需要等待其他子 goroutine 做完清理收尾工作退出后再执行退出。
 
-## 九、构建 Web 服务
+## 09、构建 Web 服务
 
 根据 [Go 官方用户 2021 调查报告](https://go.dev/blog/survey2021-results) ，可以得到 Go 应用最广泛的领域调查结果图。
 
@@ -2010,8 +2010,431 @@ main 包是主包，下面是 main 包的逻辑实现图。
 
 <img src="./images/store_main.png" />
 
-下面是 main 包的所有代码：
+下面是 main 包 main.go 的所有代码：
 
 ```go
+package main
+
+import (
+	_ "bookstore/internal/store"
+	"bookstore/server"
+	"bookstore/store/factory"
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+func main() {
+	s, err := factory.New("mem") // 创建图书数据存储模块实例
+	if err != nil {
+		panic(err)
+	}
+
+	srv := server.NewBookStoreServer(":8080", s) // 创建 http 服务实例
+
+	errChan, err := srv.ListenAndServe() // 运行 http 服务
+	if err != nil {
+		log.Println("web server start failed:", err)
+		return
+	}
+	log.Println("web server start ok")
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+
+	select { // 监视来自 errChan 以及 c 的事件
+	case err = <-errChan:
+		log.Println("web server run failed:", err)
+		return
+	case <-c:
+		log.Println("bookstore program is exiting...")
+		ctx, cf := context.WithTimeout(context.Background(), time.Second)
+		defer cf()
+		err = srv.Shutdown(ctx) // 优雅关闭 http 服务实例
+	}
+
+	if err != nil {
+		log.Println("bookstore program exit error:", err)
+		return
+	}
+	log.Println("bookstore program exit ok")
+}
+```
+
+在 Go 中，main 包不仅包含整个程序入口，还承担程序中主要模块初始化与组合的功能。
+
+在我们这个程序中，主要模块就是第 16 行的创建图书存储模块实例，以及第 21 行创建 HTTP 服务模块实例。在创建 HTTP 服务模块实例时，我们将图书存储实例 s 作为参数，传递给 NewBookStoreServer 函数。
+
+我们重点来看 main 函数的后半部分（30行 ～ 42 行），在这里我们通过监视系统信号实现了 http 服务实例的优雅退出。
+
+所谓优雅退出，指的就是程序有机会等待其他事情处理完再退出。比如尚未完成的事务处理、清理资源（关闭文件描述符、关闭 socket）、保存必要中间状态、内存数据持久化等等。
+
+我们通过 signal 包的 Notify 捕获了 SIGINT、SIGTERM 这两个系统信号。这样，当这两个信号中的任何一个触发时，我们的 http 服务实例都有机会在退出前做一些清理工作。
+
+然后，我们再使用 http 服务实例（srv）自身提供的 Shutdown 方法，来实现 http 服务内部的退出清理工作，包括：立即关闭所有 listener、关闭所有空闲连接、等待处于活动状态的连接处理完毕等等。当 http 服务实例的清理工作完成后，我们整个程序就可以正常退出了。
+
+#### 图书数据存储模块
+
+图书数据存储模块的职责很清晰，就是用来存储整个 bookstore 的图书数据。图书数据存储有多种方式，最简单的方式就是在内存中创建一个 map，以图书 id 作为 key，来保存图书信息。但如果我们在生产环境，数据要进行持久化，那么最实际的方式就是通过 Nosql 数据库甚至是关系型数据库，实现对图书数据的存储与管理。
+
+考虑到对多种存储实现方式支持，我们可以将图书存储的相关操作，定义在一个接口类型 Store 中。
+
+```go
+// store/store.go
+
+type Book struct {
+	Id      string   `json:"id"`      // 图书 ISBN ID
+	Name    string   `json:"name"`    // 图书名称
+	Authors []string `json:"authors"` // 图书作者
+	Press   string   `json:"press"`   // 出版社
+}
+
+type Store interface {
+	Create(*Book) error       // 创建一个新图书条目
+	Update(*Book) error       // 更新某图书条目
+	Get(string) (Book, error) // 获取某图书信息
+	GetAll() ([]Book, error)  // 获取所有图书信息
+	Delete(string) error      // 删除某图书条目
+}
+```
+
+我们建立了一个对应图书条目的抽象数据类型 Book，以及针对 Book 存储的接口类型 Store。这样，对于想要进行图书数据操作的一方来说，只需要得到一个满足 Store 接口的实例，就可以实现对图书数据的存储操作，不再关心图书数据究竟采用何种存储方式。这就实现了图书存储操作与底层图书数据存储方式的解耦。这也是 Go 组合设计哲学中面向接口编程的一个重要体现。
+
+我们可以参考《设计模式》提供的多种创建型模式，选择一种 Go 风格的工厂模式（创建型模式的一种）来实现满足 Store 接口实例的创建。
+
+```go
+// store/factory/factory.go
+
+var (
+	providersMu sync.RWMutex
+	providers   = make(map[string]store.Store)
+)
+
+func Register(name string, p store.Store) {
+	providersMu.Lock()
+	defer providersMu.Unlock()
+	if p == nil {
+		panic("store: Register provider is nil")
+	}
+
+	if _, dup := providers[name]; dup {
+		panic("store: Register called twice for provider " + name)
+	}
+	providers[name] = p
+}
+
+func New(providerName string) (store.Store, error) {
+	providersMu.RLock()
+	p, ok := providers[providerName]
+	providersMu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("store: unknown provider %s", providerName)
+	}
+
+	return p, nil
+}
+```
+
+这段代码模仿 Go 标准库 database/sql 的实现方式。factory 包采用 map 数据类型，满足对 Store 接口的实例类型进行管理。factory 还提供了 Register 函数，让各个实现 Store 接口的类型可以注册到工厂中。
+
+一旦注册成功，factory 就可以生产出满足 Store 接口的类型实例。依赖 Store 接口的使用方，只需要调用 factory 包的 New 函数，再传入期望使用的图书存储实现的名称，就可以得到对应的类型实例。
+
+在项目 interal/store 目录下，我们提供了一个基于内存 map 的 Store 接口的实现。
+
+```go
+// internal/store/memstore.go
+
+package store
+
+import (
+	mystore "bookstore/store"
+	factory "bookstore/store/factory"
+	"sync"
+)
+
+func init() {
+	factory.Register("mem", &MemStore{
+		books: make(map[string]*mystore.Book),
+	})
+}
+
+type MemStore struct {
+	sync.RWMutex
+	books map[string]*mystore.Book
+}
+```
+
+从代码中可以看到，在 init 函数中我们调用 factory 包提供的 Register 函数，将自己的实例以 “mem” 的名称注册到 factory 中。
+
+这样做还有一个好处，依赖 Store 接口进行图书数据管理的一方，只需要导入 intenal/store 这个包，就可以完成自动注册。
+
+#### HTTP 服务模块
+
+HTTP 服务模块的职责就是对外提供 API 服务，处理客户端请求，并通过 Store 接口实例执行对图书数据的相关操作。
+
+首先，我们抽象处理一个 server 包，这个包中定义了一个 BookStoreServer 类型：
+
+```go
+// server/server.go
+
+type BookStoreServer struct {
+	s   store.Store
+	srv *http.Server
+}
+```
+
+这个类型实质上就是一个标准库的 http.Server，并且组合了 store.Store 接口的能力。server 包提供 NewBookStoreServer 函数，用来创建 BookStoreServer 类型实例：
+
+```go
+// server/server.go
+
+// ...
+
+func NewBookStoreServer(addr string, s store.Store) *BookStoreServer {
+	srv := &BookStoreServer{
+		s: s,
+		srv: &http.Server{
+			Addr: addr,
+		},
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/book", srv.createBookHandler).Methods("POST")
+	router.HandleFunc("/book/{id}", srv.updateBookHandler).Methods("POST")
+	router.HandleFunc("/book/{id}", srv.getBookHandler).Methods("GET")
+	router.HandleFunc("/book", srv.getAllBooksHandler).Methods("GET")
+	router.HandleFunc("/book/{id}", srv.delBookHandler).Methods("DELETE")
+
+	srv.srv.Handler = middleware.Logging(middleware.Validating(router))
+	return srv
+}
+```
+
+我们可以看到， 函数 NewBookStoreServer 接受两个参数，一个是 HTTP 服务监听的服务地址，另一个是实现了 store.Store 接口的类型实例。这样函数原型设计是 Go 语言常用的一种设计方法，即接受一个接口类型参数，返回一个具体类型。返回的具体类型组合传入接口类型的能力。
+
+除此之外，我们还需要为 HTTP 服务器设置请求处理函数。在这里，我们借助第三方包 github.com/gorilla/mux 来实现我们的需求。
+
+在上面代码的第 11 行到 16 行，我们针对不同 URI 路径模式设置了不同的处理函数。我们以 createBookHandler 和 getBookHandler 为例来看下这些处理函数的实现。
+
+```go
+// server/server.go
+
+func (bs *BookStoreServer) createBookHandler(w http.ResponseWriter, req *http.Request) {
+	dec := json.NewDecoder(req.Body)
+	var book store.Book
+	if err := dec.Decode(&book); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := bs.s.Create(&book); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func (bs *BookStoreServer) getBookHandler(w http.ResponseWriter, req *http.Request) {
+	id, ok := mux.Vars(req)["id"]
+	if !ok {
+		http.Error(w, "no id found in request", http.StatusBadRequest)
+		return
+	}
+
+	book, err := bs.s.Get(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response(w, book)
+}
+
+func response(w http.ResponseWriter, v interface{}) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+}
+```
+
+这些处理函数的实现都大同小异，首先获取 http 请求包体数据，然后通过标准库 json 包将这些数据，解码（decode）为我们需要的 store.Book 结构体实例，再通过 Store 接口对图书数据进行存储操作。如果我们是获取图书数据的请求，那么处理函数可以通过 response 函数，将取出的图书数据编码到 http 响应包中，并返回给客户端。
+
+在 NewBookStoreServer 函数实现的尾部，我门还可以看到这样一段代码：
+
+```go
+srv.srv.Handler = middleware.Logging(middleware.Validating(router))
+```
+
+我们在 router 的外围包裹了 middleware，即中间件函数。下面我们再来看下这两个 middleware，即 Logging 与 Validating。
+
+```go
+// server/middleware/middleware.go
+
+func Logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		log.Printf("recv a %s request from %s", req.Method, req.RemoteAddr)
+		next.ServeHTTP(w, req)
+	})
+}
+
+func Validating(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		contentType := req.Header.Get("Content-Type")
+		mediatype, _, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if mediatype != "application/json" {
+			http.Error(w, "invalid Content-Type", http.StatusUnsupportedMediaType)
+			return
+		}
+		next.ServeHTTP(w, req)
+	})
+}
+```
+
+我们可以看到，Loading 函数主要用来输出每个到达的 HTTP 请求的概要信息，Validating 则会对每个 http 请求头部进行检查，检查 Content-Type 头字段所表示的媒体类型是否为 application/json。
+
+创建完 BookStoreServer 实例后，我们就可以调用其 ListenAndServe 方法运行这个服务了。
+
+```go
+// server/server.go
+
+func (bs *BookStoreServer) ListenAndServe() (<-chan error, error) {
+	var err error
+	errChan := make(chan error)
+	go func() {
+		err = bs.srv.ListenAndServe()
+		errChan <- err
+	}()
+
+	select {
+	case err = <-errChan:
+		return nil, err
+	case <-time.After(time.Second):
+		return errChan, nil
+	}
+}
+```
+
+我们可以看到，这个函数将 BookStore 内部的 http.Serve 放置到一个单独的轻量级线程 Goroutine 中运行。这是因为，httpServer.ListenAndServe 会阻塞代码继续执行，如果不把它放到单独的 Goroutine 中，后面的代码将无法运行。
+
+为了可以检测到 http.Serve.ListenAndServe 的运行状态，我们再通过一个 channel，在新创建的 Goroutine 与主 Goroutine 之间建立起通信渠道。通过这个渠道，我们就可以及时得到 http server 的运行状态。
+
+#### 编译、运行
+
+首先执行下面这个命令，让 Go 命令自动分析依赖项和版本，并更新 go.mod。
+
+```go
+go mod tidy
+
+go: finding module for package github.com/gorilla/mux
+go: downloading github.com/gorilla/mux v1.8.0
+go: found github.com/gorilla/mux in github.com/gorilla/mux v1.8.0
+```
+
+完成后，我们就可以按照下面的步骤构建并执行 bookstore。
+
+```
+go build bookstore/cmd/bookstore
+```
+
+```
+heora@yueluodeMBP bookstore % ./bookstore  
+2023/01/15 20:51:33 web server start ok
+```
+
+如果你也可以看到上面这个输出日志，说明我们的程序已经启动成功。
+
+现在我们就可以使用 curl 命令行工具，模拟客户端向 bookstore 服务发送请求。
+
+创建新书条目
+
+```
+curl -X POST -H "Content-Type:application/json" -d '{"id": "978-7-111-55842-2", "name": "The Go Programming Language", "authors":["Alan A.A.Donovan", "Brian W. Kergnighan"],"press": "Pearson Education"}' localhost:8080/book
+```
+
+此时服务端会输出以下日志，表明我们的 bookstore 服务收到了客户端请求。
+
+```
+2023/01/15 20:53:26 recv a POST request from 127.0.0.1:49367
+```
+
+接下来，我们再来获取一下这本书的信息：
+
+```
+curl -X GET -H "Content-Type:application/json" localhost:8080/book/978-7-111-55842-2
+
+{"id":"978-7-111-55842-2","name":"The Go Programming Language","authors":["Alan A.A.Donovan","Brian W. Kergnighan"],"press":"Pearson Education"}%   
+```
+
+可以看到 curl 得到的响应与我们的预期是一致的。
+
+[源码地址](https://github.com/yzqzy/notes/tree/master/go/base/bookstore)
+
+## 10. 变量声明
+
+在编程语言中，为了方便操作内存特定位置的数据，我们使用一个特定的名称与特定位置的内存块绑定在一起，这个名字被称为变量。但这并不代表我们可以通过变量随意引用或修改内存，变量所绑定的内存区域需要有一个明确的边界。
+
+也就是说，通过这样一个变量，我们究竟可以操作 4 个字节内存还是 8 个字节内存，又或是 256 个字节内存，编程语言的编译器或解释器都需要明确知道。
+
+那么，编程语言的编译器或解释器时如何知道一个变量所能引用的内存区域边界呢？
+
+对于这个问题，动态语言和静态语言有不同的处理方式。动态语言（例如 Python、Ruby 等）的解释器可以在运行时通过对变量赋值的分析，自动确定变量的边界。并且在动态语言中，一个变量可以在运行时被赋予大小不同的边界。
+
+而静态编程语言编译器必须明确知道一个变量的边界才允许使用这个变量，但静态语言编译器自身也没办法提供这个信息，这个边界信息必须由这门语言的使用者提供，于是就又有了 ”变量声明“。通过变量声明，语言使用者可以显式告知编译器一个变量的边界信息。
+
+作为身处静态编程语言阵营的 Go 语言，它沿袭了静态语言的这一要求：使用变量之前需要先进行变量声明。
+
+### 变量声明方法
+
+Go 是静态语言，所有变量在使用前必须先进行声明。声明的意义在于告诉编译器该变量可以操作的内存边界信息，而这种边界通常又是由变量的类型信息提供的。
+
+在 Go 语言中，有一个通用的变量声明方法：
+
+<img src="./images/declare.png" />
+
+这个变量声明分为四个部分：
+
+* var 是修饰变量声明的关键字；
+* a 为变量名；
+* int 为该变量的类型；
+* 10 是变量的初始值。
+
+Go 语言的变量声明形式与其他主流静态语言有一个显著差异，就是它将变量名放在了类型前面。如果你没有显式为变量赋值，Go 编译器就会为变量赋予这个类型的零值。
+
+```go
+var a int // a 的初值为 int 类型的零值：0
+```
+
+Go 语言的每种原生类型都有它的默认值，这个默认值就是这个类型的零值。下面是 Go 规范定义的内置原生类型的默认值。
+
+| 内置原生类型                              | 默认值 |
+| ----------------------------------------- | ------ |
+| 所有整型类型                              | 0      |
+| 浮点类型                                  | 0.0    |
+| 布尔类型                                  | false  |
+| 字符串类型                                | “”     |
+| 指针、接口、切片、channel、map 和函数类型 | nil    |
+
+另外，像数组、结构体这样的复合类型变量的零值就是它们组成元素都为零值时的结果。
+
+除了单独声明每个变量外，Go 语言还提供了变量声明块（block）的语法形式，可以用一个 var 关键字将多个变量声明放在一起：
+
+```go
+var (
+	a int = 128
+  b init8 = 6
+  s string = "hello"
+  c rune = 'A'
+  t bool = true
+)
 ```
 
