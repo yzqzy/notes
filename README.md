@@ -83,6 +83,8 @@
   - [Node 核心模块](https://github.com/yw0525/notes/tree/master/node/core_module) 已完成
   - ~~[Node 进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
   - [koa 架构分析与源码重写](https://github.com/yw0525/notes/tree/master/node/koa) 已完成
+- Go
+  - [Go 基础](https://github.com/yw0525/notes/tree/master/go/base) 更新中... 😁
 - [正则学习](https://github.com/yw0525/notes/tree/master/reg/learn) 已完成
 - 可视化
   - threejs
