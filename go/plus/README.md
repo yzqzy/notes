@@ -1,6 +1,8 @@
 # Go 语言从入门到实战
 
-## 语言简介
+## Go 语言简介
+
+### 概述
 
 Go 语言诞生于 2007 年，主要是为了解决 Google 内部所发现的问题。
 
@@ -29,9 +31,9 @@ Go 语言创始人：
   * 语法简洁
   * 存在编程约束，只支持复合，不支持继承
 
-## 第一个 Go 程序
+### 第一个 Go 程序
 
-### 简单案例
+#### 简单案例
 
 ```go
 // src/ch1/main/hello_world.go
@@ -60,7 +62,7 @@ go build hello_world.go
 
 > Go 在默认情况下都会使用静态链接，编译完的 Go 程序都会指示一个独立的二进制文件，具有良好的便携性，可以拷贝到不到的机器上运行。安装部署时，尤其是通过容器安装部署，便携能力很强。
 
- ### 案例分析
+#### 案例分析
 
 应用程序入口
 
@@ -96,9 +98,120 @@ func main() {
 go run hello_world.go heora
 ```
 
-## 变量、常量
+## 基础程序结构
+
+### 变量、常量
 
 > The master has failed more times than the beginner has tried.
 
+#### 编写测试程序
 
+* 源码文件以 _test 结尾：xxx_test.go
+* 测试方法名以 Test 开头：`func TestXXX(t *testing.T) {...}`
+
+```go
+// src/ch2/test/first_test.go
+
+package try_test
+
+import "testing"
+
+func TestTry(t *testing.T) {
+	t.Log("my first try!")
+}
+```
+
+#### 变量定义
+
+```go
+// src/ch2/fib/fib_test.go
+
+package fib
+
+import (
+	"testing"
+)
+
+func TestFibList(t *testing.T) {
+	// 1. 第一种方式
+	// var a int = 1
+	// var b int = 1
+
+	// 2. 第二种方式
+	// var (
+	// 	a int = 1
+	// 	b     = 1
+	// )
+
+	// 3. 第三种方式
+	a := 1
+	b := 1
+
+	t.Log(a)
+
+	for i := 0; i < 5; i++ {
+		t.Log(" ", b)
+		tmp := a
+		a = b
+		b = tmp + a
+	}
+} 
+```
+
+* 赋值支持自动类型推断
+* 在一个赋值语句中可以对多个变量同时赋值
+
+```go
+func TestExchange(t *testing.T) {
+	// a := 1
+	// b := 2
+	// tmp := a
+	// a = b
+	// b = tmp
+
+	a := 1
+	b := 2
+
+	a, b = b, a
+
+	t.Log(a, b)
+}
+```
+
+#### 常量定义
+
+支持快速设置连续值
+
+```go
+package constant_test
+
+import "testing"
+
+const (
+	Monday = iota + 1
+	Tuesday
+	Wednesday
+	Thursday
+	Friday
+	Saturday
+	Sunday
+)
+
+const (
+	Readable = 1 << iota
+	Writable
+	Executable
+)
+
+func TestConstant(t *testing.T) {
+	t.Log(Monday, Tuesday) // 1 2
+
+	a := 7 // 0111
+
+	t.Log(a&Readable == Readable, a&Writable == Writable, a&Executable == Executable) 
+  // true true true
+}
+```
+
+### 数据类型
 
