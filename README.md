@@ -86,6 +86,8 @@
 - Go
   - [Go 基础](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
   - [Go 进阶](https://github.com/yw0525/notes/tree/master/go/plus) 更新中... 😁
+- MySQL
+  - [MySQL 基础](https://github.com/yw0525/notes/tree/master/mysql/base) 更新中... 😁
 - [正则学习](https://github.com/yw0525/notes/tree/master/reg/learn) 已完成
 - 可视化
   - threejs
@@ -109,7 +111,7 @@
   - [算法训练营](https://github.com/yw0525/notes/tree/master/alg/training) 已完成
   - [JavaScript算法](https://github.com/yw0525/notes/tree/master/alg/javascript) 已完成
   - [LeetCode-75](https://github.com/yw0525/notes/tree/master/alg/leetcode75) 已完成
-  - [LeetCode刷题笔记](https://github.com/yw0525/notes/tree/master/alg/training) 更新中... 😁
+  - [LeetCode刷题笔记](https://github.com/yw0525/notes/tree/master/alg/training) 暂停中 😀
 - 读书笔记
   - [玩转 Git 三剑客](https://github.com/yw0525/notes/tree/master/git) 已完成
   - [玩转 Webpack](https://github.com/yw0525/notes/tree/master/webpack/webpack_tencent) 已完成
@@ -120,5 +122,6 @@
   - [深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
   - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
   - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
-  - [Tony Bai - Go语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
+  - [Go 语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
   - [Go 语言从入门到实战](https://github.com/yw0525/notes/tree/master/go/plus) 更新中... 😁
+  - [MySQL 必知必会](https://github.com/yw0525/notes/tree/master/mysql/base) 更新中... 😁
