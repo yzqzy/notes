@@ -215,3 +215,119 @@ func TestConstant(t *testing.T) {
 
 ### 数据类型
 
+#### 基本数据类型
+
+| 数据类型                                                 |
+| -------------------------------------------------------- |
+| bool                                                     |
+| string                                                   |
+| int init8 int16 int32 int64                              |
+| uint uint8 uint16 uint32 uint64 uintptr                  |
+| byte // alias for uint8                                  |
+| rune // alias for int32, represents a Unicode code point |
+| float32 float64                                          |
+| complex64 complex128                                     |
+
+类型转化
+
+* Go 语言不支持隐式类型转换
+* 别名和原有类型也不能进行隐式类型转换
+
+```go
+package type_test
+
+import "testing"
+
+type MyInt int64
+
+func TestType(t *testing.T) {
+	var a int = 1
+
+	var b int64
+	var c int32
+
+	// b = a // cannot use a (variable of type int) as int64 value in assignmentcompiler
+	// c = a // cannot use a (variable of type int) as int64 value in assignmentcompiler
+
+	b = int64(a)
+	c = int32(a)
+
+	var d MyInt
+	d = MyInt(a)
+
+	t.Log(a, b, c, d)
+}
+```
+
+Go 语言对于类型转换非常严格， 不支持隐式类型转换。
+
+```go
+type MyInt int64    // 类型再定义，支持强制类型转换，不支持判等操作
+type MyInt = int64  // 类型别名，支持直接判等操作
+```
+
+#### 类型的预定义值
+
+* math.MaxInt64
+* math.MaxFloat64
+* math.MaxUnit32
+
+#### 指针类型
+
+Go 支持垃圾回收机制 ，同时作为一种非常高效的语言，也支持使用指针直接访问内存空间。
+
+不过 Go 语言指针使用也有一些限制：
+
+* 不支持指针运算
+* string 是值类型，默认值是空字符串，而不是 nil
+
+ ```go
+ func TestPoint(t *testing.T) {
+ 	a := 1
+ 	aPtr := &a
+ 
+ 	// aPtr = aPtr + 1 // cannot convert 1 (untyped int constant) to *int
+ 
+ 	t.Log(a, aPtr)           // 1 0x140000a41c8
+ 	t.Logf("%T %T", a, aPtr) // int *int
+ }
+ ```
+
+```go
+func TestStrng(t *testing.T) {
+	var s string
+
+	t.Log("*" + s + "*") // **
+	t.Log(len(s))        // 0
+}
+```
+
+### 运算符
+
+#### 算数运算符
+
+A = 10, B = 20
+
+| 运算符 | 描述 | 实例        |
+| ------ | ---- | ----------- |
+| +      | 相加 | A + B = 30  |
+| -      | 相减 | A - B = -10 |
+| *      | 相乘 | A * B = 200 |
+| /      | 相除 | B / A = 2   |
+| %      | 取余 | B % A = 0   |
+| ++     | 自增 | A++ = 11    |
+| --     | 自减 | A--   = 9   |
+
+Go 语言没有前置 ++，前置 -- 。
+
+#### 比较运算符
+
+| 运算符 | 描述 | 实例 |
+| ------ | ---- | ---- |
+|        |      |      |
+|        |      |      |
+|        |      |      |
+|        |      |      |
+|        |      |      |
+|        |      |      |
+
