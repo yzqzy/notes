@@ -40,7 +40,7 @@ const buildModule = (entry: string): MdNode => {
   const removeNodes: MdNode[] = []
 
   const isMarkdown = (path: string) => path.includes('README.md')
-  const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs']
+  const validFiles = ['.git', '.vscode', 'node_modules', 'build', 'docs', 'mysql']
   const isValid = (dir: string) =>
     // valid file and large file or build failed file
     ![...validFiles, 'Vue.js设计与实现'].some(_ => dir.includes(_))
@@ -99,9 +99,7 @@ const buildModule = (entry: string): MdNode => {
   removeNodes.forEach(m => {
     while (m && m.parent) {
       if (!m.mark) {
-        m.parent.children = m.parent.children?.filter(
-          item => item.path != m.path
-        )
+        m.parent.children = m.parent.children?.filter(item => item.path != m.path)
       }
       m = m.parent
     }
@@ -170,9 +168,7 @@ const generateDocs = (module: MdNode) => {
     }
   } else {
     fs.copyFileSync(module.path, normalizeText(currentDir))
-    sidebar.link = normalizeText(
-      module.path.replace(entry, '').replace(/\\/g, '/')
-    )
+    sidebar.link = normalizeText(module.path.replace(entry, '').replace(/\\/g, '/'))
   }
 
   return sidebar
@@ -203,10 +199,7 @@ const genrateSidebarConfig = (sideber: Sidebar) => {
 
   clear(sideber, 0)
 
-  fs.writeFileSync(
-    path.resolve(output, '.vitepress/sidebar.json'),
-    JSON.stringify(config)
-  )
+  fs.writeFileSync(path.resolve(output, '.vitepress/sidebar.json'), JSON.stringify(config))
 }
 
 const buildEntry = (entry: string) => {
