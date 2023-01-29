@@ -163,10 +163,8 @@ insert into 表示向 demo.test 中插入数据，后面是要插入数据的字
 ```mysql
 -- 创建数据库
 CREATE DATABASE demo;
-
 -- 删除数据库
 DROP DATABASE demo;
-
 -- 创建数据表
 CREATE TABLE demo.test
 (
@@ -174,17 +172,13 @@ CREATE TABLE demo.test
   goodsname text,
   price int
 )
-
 -- 查看表结构
 DESCRIBE demo.test;
-
 -- 查看所有表
 SHOW TABLES;
-
 -- 添加主键
 ALTER TABLE demo.test
 ADD COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
-
 -- 向表中添加数据
 INSERT INTO demo.test (barcode,goodsname,price) VALUES ('0001', '本', 3)
 ```
@@ -195,7 +189,7 @@ MySQL 以分号来识别一条 SQL 语句结束，所以，你写的每一条 SQ
 
 所以，建议在写 SQL 语句时遵循统一的样式，以增加可读性，减少错误。可以点击这个[链接](https://www.sqlstyle.guide/zh/)深入学习相关规范。
 
-## 02. 数据类型
+## 02. 字段类型
 
 MySQL 种有很多字段类型，比如整数、文本、浮点数，等等。如果类型定义合理，就能节省存储空间，提升数据查询和处理的速度。相反，如果类型定义不合理，就有可能导致数据超出取值范围，引发系统错误，甚至可能出现计算错误的情况，进而影响整个系统。
 
@@ -419,5 +413,254 @@ SELECT SUM(price) FROM demo.goodsmater;
 
 比如，TEXT 虽然使用方便，但是效率不如 CHAR(M) 和 VARCHAR(M)。如果你有进一步优化需求，可以查看这个[文档](https://dev.mysql.com/doc/refman/8.0/en/data-types.html)。
 
-## 03. 表操作
+## 03. 创建、修改数据表
+
+创建和修改数据表，是数据存储过程中的重要一环。我们不仅需要把表创建出来，还需要正确地限定条件，这样才能确保数据的一致性和完整性。同时，表中的数据会随着业务需求的变化而变化，添加和修改相应的字段也是常见的操作。
+
+假设在我们的超市项目中，客户经常需要进货，这就需要在 MySQL 数据库里创建一个表，用来管理进货相关的数据。
+
+假设这个表叫做进货单头表（importhead），如下图所示：
+
+<img src="./images/table02.png" />
+
+这里的 1、2、3 表示门店的 3 种进货方式，分别是配送中心配送、门店采买和供货直供。其中 1 是标准进货方式。因为超市是连锁经营，为了确保商品质量和品类一致，超过 9 成的门店都是通过配送中心进行配送的。因此，我们希望这个字段的默认值为 1。
+
+现在，客户需要一个类似的表来存储进货数据，进货方式有 3 个可能的取值范围，需要设置默认值。那么，应该如何创建这个表？另外，创建好表之后，应该如何修改？
+
+### 创建数据表
+
+首先，我们需要知道 MySQL 创建表的语法结构：
+
+```mysql
+CREATE TABLE <表名>
+(
+	字段名1 数据类型 [字段级别约束] [默认值],
+  字段名2 数据类型 [字段级别约束] [默认值],
+  ...
+  [表级别约束]
+);
+```
+
+在 MySQL 创建表的语法结构层面，有一个词叫做 “约束”。“约束” 用于限定表中数据应该满足的条件。MySQL 会根据这些限定条件，对表的操作进行监控，阻止破坏约束条件的操作执行，并提示错误，从而保证表中数据的唯一性、合法性和完整性。
+
+下面我们来创建刚刚提到的进货单表。创建代码如下：
+
+```mysql
+CREATE TABLE demo.importhead
+(
+	listnumber INT,
+	supplierid INt,
+	stocknumber INT,
+	-- 设置默认值 1
+	importtype INT DEFAULT 1,
+	quantity DECIMAL(10, 3),
+	importvalue DECIMAL(10, 2),
+	recorder INT,
+	recordingdate DATETIME
+);
+```
+
+运行上述 SQL 语句，表 demo.importhead 就按照我们的要求被创建出来了。
+
+现在我们尝试往刚刚创建的表中插入一条记录，验证字段 “importtype” 定义的默认值约束是否起了作用。
+
+```mysql
+INSERT INTO demo.importhead
+(
+	listnumber,
+	supplierid,
+	stocknumber,
+	-- 我们不需要插入 importtype 的值	
+	quantity,
+	importvalue,
+	recorder,
+	recordingdate
+)
+VALUES
+(
+	3256,
+	1,
+	1,
+	10,
+	100,
+	1,
+	'2023-01-29'	
+);
+```
+
+插入完成后，我们可以运行以下 SQL 查询表内容：
+
+```mysql
+SELECT * FROM demo.importhead;
+```
+
+你会发现，字段 importtype 的值已经是 1 了。到这里，表就被创建出来了。
+
+### 约束分类
+
+刚才给字段设置默认值的做法是默认约束。设置默认约束后，插入数据的时候，如果不明确给字段赋值，那么系统会把设置的默认值自动赋值给字段。
+
+除了**默认约束**，还有**主键约束**、**外键约束**、**非空约束**、**唯一性约束**和**自增约束**。
+
+我们之前学的主键，其实就是主键约束。其中外键约束涉及表与表之间的关联，以及确保表的数据一致性的问题，内容比较多。后面我们再展开说。
+
+下面，我们重点介绍一下非空约束、唯一性约束和自增约束。
+
+#### 非空约束
+
+非空约束表示字符值不能为空，如果创建表时，指明某个字段为空，那么添加数据的时候，这个字段必须有值，否则系统就会提示错误。
+
+#### 唯一性约束
+
+唯一性约束表示这个字段的值不能重复，否则系统会提示错误。跟主键约束相比，唯一性约束要更加弱一些。
+
+在一个表中，我们可以指定多个字段满足唯一性约束，但是主键约束只能有一个，这是 MySQL 系统决定的。另外，满足主键约束的字段，自动满足非空约束，但是满足唯一性约束的字段，可以是空值。
+
+例如，我们有一个商品信息表 goodsmaster。
+
+<img src="./images/table03.png" />
+
+为了防止条码重复，我们可以定义字段 “barcode” 满足唯一性约束。这样一来，条码就不能重复，但是允许为空。
+
+#### 自增约束
+
+自增约束可以让 MySQL 自动给字段赋值，且保证不会重复，非常有用，但是不容易用好。
+
+还是之前的商品信息表，由于 barcode、goodsname 和 price 都不能确保唯一性，因此我们只能自己添加一个字段 itemnumber 作为主键，并且每次添加一条数据的时候，要给值增加 1。这时，我们就可以通过定义自增约束的方式，让系统自动帮我们赋值，从而满足唯一性，这样就可以做主键了。
+
+不过这里有 2 个问题需要注意下：
+
+* 在数据表中，只有整型类型的字段（包括 TINYINT、SMALLINT、MEDIUMINT、INT 和 BIGINT），才可以定义自增约束。自增约束，没增加一条数据，值自动增加 1。
+* 可以给自增约束的字段赋值，这个时候，MySQL 会重置自增约束字段的自增基数，下次添加数据的时候，自动以自增约束字段的最大值加 1 为新的字段值。
+
+> 自增约束其实就是设置 auto_increment。
+
+### 修改数据表
+
+创建完表后，我们经常还需要修改表。
+
+当我们创建新表的时候，会出现这样的情况：例如我们前面创建进货单表，是用来存储进货数据的。
+
+但是，我们还要创建一个进货单历史表（importheadlist），用来存储验收过的进货数据。这个表的结构跟进货单表类似，只是多了两个字段，分别是验收人（confirmer）和验收时间（confirmdate）。针对这种情况，我们很容易就可以想到通过复制表结构，然后在这个基础上通过修改表结构，来创建新表。
+
+首先，我们可以把原来的表结构复制一下：
+
+```mysql
+CREATE TABLE demo.importheadhist LIKE demo.importhead;
+```
+
+运行这个语句之后，一个和 demo.importhead 具有相同表结构的空表 demo.importheadlist 就被创建出来了。
+
+这个新创建的表，还不是我们需要的表，我们需要对这个表进行修改，通过添加字段和修改字段，来得到我们最终需要的表。
+
+#### 添加字段
+
+现在我们给这个新的表增加 2 个字段：confirmer 和 confirmdate。
+
+```mysql
+-- 添加字段 confirmer，类型为 INT
+ALTER TABLE demo.importheadhist ADD confirmer INT;
+-- 添加字段 confirmdate，类型为 DATETIME
+ALTER TABLE demo.importheadhist ADD confirmdate DATETIME;
+```
+
+我们可以查看一下表结构：
+
+```mysql
+DESCRIBE demo.importheadhist;
+```
+
+<div><img src="./images/table04.png" /></div>
+
+#### 修改字段
+
+除了添加字段，我们可能还要修改字段，比如，把字段名称 ”quantity“ 改成 ”importquantity“，并且将字段类型改为 DOUBLE。
+
+```mysql
+ALTER TABLE demo.importheadhist CHANGE quantity importquantity DOUBLE;
+```
+
+运行 SQL 语句后，重新查看表结构，可以得到下面的结果：
+
+<div><img src="./images/table05.png" /></div>
+
+可以看到，字段名称和字段类型全部都改过来了。
+
+如果你不想改变字段名称，只想改变字段类型。例如，将字段 ”importquantity“ 类型改为 DECIMAL(10, 3)，可以这样写：
+
+```mysql
+ALTER TABLE demo.importheadhist MODIFY importquantity DECIMAL(10, 3);
+```
+
+我们还可以通过 SQL 语句向表中添加一个字段，甚至可以指定添加字段在表中的位置。
+
+比如在字段 supplierid 之后，添加一个字段 suppliername，数据类型是 TEXT。
+
+```mysql
+ALTER TABLE demo.importheadhist ADD suppliername TEXT AFTER supplierid;
+```
+
+到这里，我们就完成了修改字段在表中位置的操作。
+
+### 总结
+
+本篇文章，我们学习了创建和修改数据表的具体方法。
+
+创建表时，我们还提到了一个重要概念，就是约束，包括默认约束、非空约束、唯一性约束和自增约束等。
+
+* 默认值约束：给字段设置一个默认值。
+* 非空约束：声明字段不能为空值。
+* 唯一性约束：声明字段不能重复。
+* 自增约束：声明字段值能够自动加 1，且不会重复。
+
+修改表时，我们可以通过已经存在的表创建新表，也可以通过添加字段、修改字段的方式来修改数据表。
+
+最后，汇总一下常用的创建表的 SQL 语句。
+
+```mysql
+-- 创建表
+CREATE TABLE 
+(
+	字段名 字段类型 PRIMARY KEY
+);
+CREATE TABLE 
+(
+	字段名 字段类型 NOT NULL
+);
+CREATE TABLE 
+(
+	字段名 字段类型 UNIQUE
+);
+CREATE TABLE 
+(
+	字段名 字段类型 DEFAULT 值
+);
+-- 自增条件，字段类型必须时是整型
+CREATE TABLE 
+(
+	字段名 字段类型 AUTO_INCREMENT
+);
+-- 已经存在表基础上，创建新表
+CREATE TABLE demo.importheadhist LIKE demo.importhead;
+-- 修改表相关
+ALTER TABLE 表名 CHANGE 旧字段名 新字段名 数据类型;
+ALTER TABLE 表名 ADD COLUMN 字段名 字段类型 FIRST|AFTER 字段名;
+ALTER TABLE 表名 MODIFY 字段名 字段类型 FIRST|AFTER 字段名;
+```
+
+对于初学者来说，掌握今天的内容就已经足够了。不过，MySQL 支持的数据表操作不只这些。
+
+比如，你可以在表级别指定表的存储引擎：
+
+```mysql
+ALTER TABLE 表名 ENGINE=INNDB;
+```
+
+还可以通过指定关键字 AUTO_EXTENDSIZE，指定存储文件自增空间的大小，从而提高存储空间的利用率。
+
+在 MySQL 8.0.12 之后的版本中，甚至还可以通过 INVISIBLE 关键字，使字段不可见，但可以正常使用。
+
+如果想了解更多有关数据表的操作，可以看这两份资料：[MySQL 创建表文档](https://dev.mysql.com/doc/refman/8.0/en/create-table.html) 和 [MySQL 修改表文档](https://dev.mysql.com/doc/refman/8.0/en/alter-table.html)。
+
+## 04. 增删改查
 
