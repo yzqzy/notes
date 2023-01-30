@@ -773,5 +773,16 @@ FROM 流水表
 
 ### 删除数据
 
+数据删除的语法很简单，如下所示：
 
+```mysql
+DELETE FROM 表名
+WHERE 条件
+```
+
+如果我们想删除表全部数据，可以通过下面的 SQL 语句实现：
+
+```mysql
+DELETE FROM demo.goodsmater;
+```
 
