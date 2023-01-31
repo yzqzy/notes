@@ -378,3 +378,99 @@ A = 10, B = 20
 
 ### 条件和循环
 
+ #### 循环
+
+Go 语言仅支持循环关键字 for
+
+```go
+for j := 7; j <= 9; j++
+```
+
+```go
+// while 条件循环
+// while <= 5
+
+func TestWhileLoop(t *testing.T) {
+	n := 0
+
+	for n < 5 {
+		n++
+		t.Log(n)
+	}
+}
+```
+
+```go
+// 无限循环
+// while(true)
+
+n := 0
+for {
+  ...
+}
+```
+
+#### 条件语句 - if 条件
+
+```go
+if condition {
+  // code to be executed if condition is true
+} else {
+	// code to be executed if condition is false  
+}
+```
+
+```go
+if condition-1 {
+  // code to be executed if condition-1 is true
+} else if condition-2 {
+  // code to be executed if condition-2 is true
+} else {
+	// code to be executed if both condition1 and condition2 are false  
+}
+```
+
+* condition 表达式结果必须为布尔值
+* 支持变量赋值
+  * 由于 go 支持多返回值，配合使用比较便捷
+
+```go
+if var decleartion; condition {
+  // code to be exectuted if condition is true
+}
+```
+
+```go
+func TestIfMulitSec(t *testing.T) {
+	if a := 1 == 1; a {
+		t.Log("1 == 1")
+	}
+}
+```
+
+```go
+func TestIfMulitSec(t *testing.T) {
+  if v, err := someFun(); err == nil {
+  } else {
+  }
+}
+```
+
+#### 条件语句 - switch 条件
+
+```go
+switch os := runtime.GOOS; os {
+  case "darwin":
+  	fmt.Println("OS X.")
+  case "linux":
+  	fmt.Println("Linux.")
+	default:
+  fmt.Printf("%s.", os)
+}
+```
+
+* 条件表达式不限制为常量或者整数；
+* 单个 case 中，可以出现多个结果选项，使用逗号分隔；
+* 与 C 语言等规则相反，Go 语言不需要使用 break 来明确退出一个 case；
+* 可以不设定 switch 之后的条件表达式，在此种情况下，整个 switch 结构与多个 if...else... 的逻辑作用等同。
+
