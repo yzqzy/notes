@@ -785,4 +785,215 @@ WHERE 条件
 ```mysql
 DELETE FROM demo.goodsmater;
 ```
+### 修改数据
+
+先来看一下 MySQL 的数据修改语法：
+
+```mysql
+UPDATE 表名
+SET 字段名=值
+WHERE 条件
+```
+
+语法也很简单，需要注意的是，不能修改主键字段的值。因为主键是数据记录的唯一标识，如果修改主键值，就有可能破坏数据的完整性。
+
+如果你必须修改主键的值，那极有可能就是主键设置的不合理。
+
+### 查询数据
+
+先来看下查询语句的语法结构：
+
+```mysql
+SELECT *|字段列表
+FROM 数据源
+WHERE 条件
+GROUP BY 字段
+HAVING 条件
+ORDER BY 字段
+LIMIT 起始点,行数
+```
+
+在这些字段中，SELECT、WHERE、GROUP BY 和 HAVING 比较好理解，我们能只需要知道它们的含义就可以了。
+
+* SELECT：查询关键字，表示我们要做一个查询。
+  * “*” 是一个通配符，表示我们要查询表中所有字段。也可以把要查询的字段罗列出来，这样，查询结果就只会显示想要查询的字段内容。
+* WHERE：表示查询条件。
+  * 可以把要查询的数据所要满足的条件，放在 WHERE 关键字之后。
+* GROUP BY：告诉 MySQL，查询结果要如何分组，通常和 MySQL 聚合函数搭配使用。
+* HAVING：用于筛选查询结果，与 WHERE 类似。
+
+FROM、ORDER BY、LIMIT 相对来说比较复杂，需要注意的地方比较多，我们来具体解释一下。
+
+### 关键字
+
+#### FROM
+
+FROM 关键字表示查询的数据源。目前我们只学习了单个数据表，可以把要查询的数据表名，直接写在 FROM 关键字之后。当我们学习关联表之后，在 FROM 关键字后面，还可以跟着更复杂的数据表链接。
+
+需要注意的是，数据源不一定是表，也可以是一个查询结果。
+
+```mysql
+SELECT a.goodsname, a.price 
+FROM (
+	SELECT *
+  FROM demo.goodsmaster
+) AS a;
+```
+
+框号中的部分叫做派生表（derived table），或者子查询（subquery），意思是我们可以把一个查询结果数据集当做一个虚拟的数据表来看待。
+
+MySQL 规定，必须使用 AS 关键字给这个派生表起一个别名。
+
+#### ORDER BY
+
+ORDER BY 的作用，是告诉 MySQL，查询结果如何排序。ASC 表示升序，DESC 表示降序。
+
+首先我们向 demo.goodsmaster 中插入两条数据。
+
+```mysql
+INSERT INTO demo.goodsmater
+(
+	barcode,
+	goodsname,
+	price
+)
+VALUES
+(
+	'0003',
+	'尺子1',
+	15
+);
+INSERT INTO demo.goodsmater
+(
+	barcode,
+	goodsname,
+	price
+)
+VALUES
+(
+	'0004',
+	'尺子2',
+	20
+);
+```
+
+如果我们不控制查询结果顺序，就会得到这样的结果：
+
+```mysql
+SELECT * FROM demo.goodsmater;
+```
+
+<div><img src="./images/table07.png" /></div>
+
+如果我们使用 ORDER BY 对查询结果进行控制，结果就不同了：
+
+```mysql
+SELECT * FROM demo.goodsmater ORDER BY barcode ASC, price DESC;
+```
+
+<div><img src="./images/table08.png" /></div>
+
+可以看到，查询结果会先按照字段 barcode 的升序排序，相同 barcode，再按照 price 的降序排序。
+
+#### LIMIT
+
+LIMIT 作用是告诉 MySQL 只显示部分查询结果。
+
+比如，在我们的数据表 demo.goodsmaster 中有 4 条数据，我们只想显示第 2、3 条数据，就可以使用 LIMIT 关键字来实现。
+
+```mysql
+SELECT * FROM demo.goodsmater LIMIT 1,2;
+```
+
+<div><img src="./images/table09.png" /></div>
+
+### 总结
+
+本篇文章，我们学习了添加、删除、修改和查询数据的方法，这些都是我们经常遇到的操作。
+
+```mysql
+INSERT INTO 表名 [(字段名 [,字段名] ...)] VALUES (值的列表);
+
+INSERT INTO 表名 (字段名)
+SELECT 字段名或值
+FROM 表名
+WHERE 条件
+
+DELETE FROM 表名
+SET 字段名=值
+WHERE 条件
+
+UPDATE 表名
+SET 字段名=值
+WHERE 条件
+
+SELECT *|字段列表
+FROM 数据源
+WHERE 条件
+GROUP BY 字段
+HAVING 条件
+ORDER BY 字段
+LIMIT 起始点,行数
+```
+
+如果你在工作中遇到更复杂的操作需求，可以查看这 3 份资料，分别是 [MySQL 数据插入](https://dev.mysql.com/doc/refman/8.0/en/insert.html)、[MySQL 数据更新](https://dev.mysql.com/doc/refman/8.0/en/update.html)、[MySQL 数据查询](https://dev.mysql.com/doc/refman/8.0/en/select.html)。
+
+### 技术拓展
+
+如果我们将查询结果插入到表中，导致主键约束或者唯一性约束被破坏，就可以使用 “ON DUPLICATE” 关键字，把两个门店的商品信息数据整合到一起。
+
+假设门店 A 的商品信息表是 "demo.goodsmaster"，代码如下：
+
+```mysql
+mysql> SELECT *
+    -> FROM demo.goodsmaster;
+    
++------------+---------+-----------+---------------+------+------------+
+| itemnumber | barcode | goodsname | specification | unit | salesprice |
++------------+---------+-----------+---------------+------+------------+
+|          1 | 0001    | 书        | 16开          | 本   |      89.00 |
+|          2 | 0002    | 笔        | 10支装        | 包   |       5.00 |
+|          3 | 0003    | 橡皮      | NULL          | 个   |       3.00 |
++------------+---------+-----------+---------------+------+------------+
+3 rows in set (0.00 sec)
+```
+
+门店 B 的商品信息表是 ”demo.goodsmater1“：
+
+```mysql
+mysql> SELECT *
+    -> FROM demo.goodsmaster1;
+    
++------------+---------+-----------+---------------+------+------------+
+| itemnumber | barcode | goodsname | specification | unit | salesprice |
++------------+---------+-----------+---------------+------+------------+
+|          1 | 0001    | 教科书    | NULL          | NULL |      89.00 |
+|          4 | 0004    | 馒头      |               |      |       1.50 |
++------------+---------+-----------+---------------+------+------------+
+2 rows in set (0.00 sec)
+```
+
+假设我们要把门店 B 的商品数据插入到门店 A 的商品表中，如果有重复的商品编号，就用门店 B 的条码，替换门店 A 的条码，用门店 B 的商品名称，替换门店 A 的商品名称；如果没有重复编号，就直接把门店 B 的商品数据插入到门店 A 的商品表中。这个操作，可以用下面的 SQL 语句实现：
+
+```mysql
+INSERT INTO demo.goodsmaster 
+SELECT *
+FROM demo.goodsmaster1 as a
+ON DUPLICATE KEY UPDATE barcode = a.barcode,goodsname=a.goodsname;
+
+-- 运行结果如下
+mysql> SELECT *
+    -> FROM demo.goodsmaster;
++------------+---------+-----------+---------------+------+------------+
+| itemnumber | barcode | goodsname | specification | unit | salesprice |
++------------+---------+-----------+---------------+------+------------+
+|          1 | 0001    | 教科书    | 16开          | 本   |      89.00 |
+|          2 | 0002    | 笔        | 10支装        | 包   |       5.00 |
+|          3 | 0003    | 橡皮      | NULL          | 个   |       3.00 |
+|          4 | 0004    | 馒头      |               |      |       1.50 |
++------------+---------+-----------+---------------+------+------------+
+4 rows in set (0.00 sec)
+```
+
+## 05. 设置主键
 
