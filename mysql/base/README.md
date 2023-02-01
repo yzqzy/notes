@@ -1009,7 +1009,7 @@ mysql> SELECT *
 
 今天我们来学习三种设置主键的思路：业务字段做主键、自增字段做主键、手动赋值字段做主键。
 
-### 业务主键做主键
+### 业务字段做主键
 
 针对这个需求，最容易想到的，就是选择表中已有字段，也就是跟业务相关的字段做主键。
 
@@ -1099,4 +1099,112 @@ SELECT * FROM demo.membermaster;
 但是实际情况并没有这么简单，会员卡号存在重复使用的情况。比如，张三因为工作变动搬离原来的地址，不再到商家的门店消费（退还会员卡），于是张三就不再是这个商店门店的会员了。但是，商家不想让这个会员卡空着，就把卡号是 ”10000001“ 的会员卡发给王五。
 
 从系统设计的角度来看，这个变化只是修改会员信息表中的卡号为 ”10000001“ 的会员信息，但不会影响到数据一致性。也就是说，修改会员卡号是 ”10000001“ 的会员信息，系统的各个模块都会获取到修改后的会员信息。因此，从信息系统层面上看是没有问题的。但是从使用系统的业务层面来看，就有很大的问题了，会对商家造成影响。
+
+下面，我们就来看看这种修改，是如何影响到商家的。
+
+比如，我们有一个销售流水表，记录了所有的销售流水明细。2020 年 12 月 01 日，张三在门店购买一本书，消费 89 元。那么，系统中就有了张三买书的记录，如下所示：
+
+<img src="./images/table13.png" />
+
+我们可以用下面的代码创建销售流水表。因为需要引用会员信息和商品信息，所以表中要包括商品编号字段和会员卡号字段。
+
+```mysql
+CREATE TABLE demo.trans
+(
+	transactionno INT,
+	itemnumber INT, -- 引用商品信息
+	quantity DECIMAL(10, 3),
+	price DECIMAL(10, 2),
+	salesvalue DECIMAL(10, 2),
+	cardno CHAR(8), -- 引用会员信息
+	transdate DATETIME
+);
+```
+
+创建好表之后，我们就来插入一条销售流水：
+
+```mysql
+INSERT INTO demo.trans
+(
+	transactionno,
+	itemnumber,
+	quantity,
+	price,
+	salesvalue,
+	cardno,
+	transdate
+)
+VALUES
+(
+	1,
+	1,
+	1,
+	89,
+	89,
+	'10000001',
+	'2023-02-01'
+);
+```
+
+接着，我们再来查看一下 2023 年 02 月 01 日的会员销售记录。
+
+```mysql
+SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate
+FROM demo.trans AS a
+JOIN demo.membermaster AS b
+JOIN demo.goodsmater AS c
+ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);
+```
+
+<div><img src="./images/table14.png" /></div>
+
+我们用到了 JOIN，也就是表的关联，目的就是为了引用其他表的信息，包括会员信息表（demo.membermaster）和商品信息表（demo.goodsmater）。通过关联查询，我们就可以从会员信息表中获取会员信息，从商品信息表获取商品信息。
+
+下面，我们假设会员卡 ”10000001“ 又发给王五，我们需要更改会员信息表。
+
+```mysql
+UPDATE demo.membermaster
+SET membername = '王五',
+memberphone = '12345678998',
+memberpid = '475145197001012356',
+memberaddress = '天津',
+sex = '女',
+brithday = '1997-01-01'
+WHERE cardno = '10000001';
+```
+
+会员记录修改后之后，我们再次运行之前的会员消费流水查询：
+
+```mysql
+SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate
+FROM demo.trans AS a
+JOIN demo.membermaster AS b
+JOIN demo.goodsmater AS c
+ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);
+```
+
+<div><img src="./images/table15.png" /></div>
+
+这次得到的结果是：王五在 2023 年 02 月 01 日，买了一本书，消费 89 元。
+
+很明显，这个结果把张三的消费行为放到王五身上了，这样是不对的。原因就是，我们将会员卡号对应的会员信息改了，因为会员卡号是主键，会员消费查询通过会员卡号关联到会员信息，最终得到错误的结果。
+
+现在你已经知道，为什么不能把会员卡号当作主键。除此之外，会员电话也不能做主键，在实际操作中，手机号也存在被运营商收回，重新发给别人用的情况。
+
+身份证号也不行。虽然身份证号不会重复，与每个人存在一一对应的关系。但是，身份证号属于个人隐私，顾客不一定会提供。客户电话也有这个问题。
+
+这样看来，任何一个现有字段都不适合做主键。
+
+所以，建议尽量不要使用与业务有关的字段做主键。作为项目设计的技术人员，我们无法预测在项目的整个声明周期中，哪个业务字段会因为项目的业务需求存在重复或者重用的情况出现。
+
+### 自增字段做主键
+
+我们再给会员信息表添加一个字段，比如叫 id，然后我们给这个字段定义自增约束，这样，我们就具备唯一性的，且不为空的字段来做主键了。
+
+接下来，我们来修改会员信息表的结构，添加一个自增字段做主键。
+
+第一步，修改会员信息表，删除表的主键约束。
+
+```mysql
+```
 
