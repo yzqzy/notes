@@ -98,7 +98,7 @@ func main() {
 go run hello_world.go heora
 ```
 
-## 基础程序结构
+## 01. 基础程序结构
 
 ### 变量、常量
 
@@ -469,8 +469,204 @@ switch os := runtime.GOOS; os {
 }
 ```
 
+```go
+switch {
+  case 0 <= Num && Num <= 3
+  	fmt.Printf("0-3")
+ 	case 4 <= Num && Num <= 6
+  	fmt.Printf("4-6")
+  case 7 <= Num && Num <= 9
+  	fmt.Printf("7-9")
+}
+```
+
 * 条件表达式不限制为常量或者整数；
 * 单个 case 中，可以出现多个结果选项，使用逗号分隔；
 * 与 C 语言等规则相反，Go 语言不需要使用 break 来明确退出一个 case；
 * 可以不设定 switch 之后的条件表达式，在此种情况下，整个 switch 结构与多个 if...else... 的逻辑作用等同。
+
+```go
+func TestSWitchMultiCase(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		switch i {
+		case 0, 2:
+			t.Log("even")
+		case 1, 3:
+			t.Log("odd")
+		default:
+			t.Log("it is not 0-3")
+		}
+	}
+}
+```
+
+ ```go
+ func TestSwitchCaseCondition(t *testing.T) {
+ 	for i := 0; i < 5; i++ {
+ 		switch {
+ 		case i%2 == 0:
+ 			t.Log("even")
+ 		case i%2 == 1:
+ 			t.Log("odd")
+ 		default:
+ 			t.Log("it is not 0-3")
+ 		}
+ 	}
+ }
+ ```
+
+## 02. 常用集合
+
+### 数据和切片
+
+#### 数组声明
+
+```go
+func TestArrayInit(t *testing.T) {
+	var arr [3]int
+	arr1 := [4]int{1, 2, 3, 4}
+	arr3 := [...]int{1, 2, 3, 4, 5}
+
+	arr1[1] = 6
+
+	t.Log(arr[1], arr[2]) // 0 0
+	t.Log(arr1)           // [1, 6, 3, 4]
+	t.Log(arr3)           // [1, 2, 3, 4, 5]
+}
+```
+
+#### 数组元素遍历
+
+```go
+func TestArrayTravel(t *testing.T) {
+	arr := [...]int{1, 3, 4, 5}
+
+	// 1. method1
+	for i := 0; i < len(arr); i++ {
+		t.Log((arr[i]))
+	}
+
+	// 2. method2
+	for idx, e := range arr {
+		t.Log(idx, e)
+	}
+
+	// 3. method3
+	for _, e := range arr {
+		t.Log(e)
+	}
+}
+```
+
+#### 数组截取
+
+```
+a[开始索引(包含), 结束索引(不包含)]
+```
+
+```go
+func TestArraySection(t *testing.T) {
+	arr := [...]int{1, 2, 3, 4, 5}
+
+	t.Log(arr[:3]) // [1 2 3]
+	t.Log(arr[3:]) // [4 5]
+	t.Log(arr[:])  // [1 2 3 4 5]
+}
+```
+
+> 数组截取之后，其实就是一个 slice。
+
+#### 切片声明
+
+<img src="./images/slice.png" />
+
+```go
+func TestSliceInit(t *testing.T) {
+	var s0 []int
+	t.Log(len(s0), cap(s0)) // 0 0
+
+	s0 = append(s0, 1)
+	t.Log(len(s0), cap(s0)) // 1 1
+
+	s1 := []int{1, 2, 3, 4}
+	t.Log(len(s1), cap(s1)) // 4 4
+
+	s2 := make([]int, 3, 5)
+	t.Log(len(s2), cap(s2)) // 3 5
+	// cap 容量，len 可访问元素个数
+	// t.Log(s2[0], s2[1], s2[2], s2[3], s2[4]) // index out of range [3] with length 3 [recovered]
+	t.Log(s2[0], s2[1], s2[2]) // 0 0 0
+
+	s2 = append(s2, 5)
+	t.Log(len(s2), cap(s2))           // 4 5
+	t.Log(s2[0], s2[1], s2[2], s2[3]) // 0 0 0 5
+}
+```
+
+#### 切片共享存储结构
+
+ ```go
+ func TestSliceGrowing(t *testing.T) {
+ 	s := []int{}
+ 
+ 	for i := 0; i < 10; i++ {
+ 		s = append(s, i)
+ 		t.Log(len(s), cap(s))
+ 	}
+ 	// 当容量不够时，会乘 2 倍的方式进行扩展
+ 	// 当扩展时，会开启新的存储空间，并将原有空间的元素拷贝到新空间中间
+ 	// 1 1
+ 	// 2 2
+ 	// 3 4
+ 	// 4 4
+ 	// 5 8
+ 	// 6 8
+ 	// 7 8
+ 	// 8 8
+ 	// 9 16
+ 	// 10 16
+ }
+ ```
+
+<img src="./images/slice02.png" />
+
+```go
+func TestSliceShareMemory(t *testing.T) {
+	year := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+
+	Q2 := year[3:6]
+	t.Log(Q2, len(Q2), cap(Q2)) // [Apr May Jun] 3 9
+
+	summer := year[5:8]
+	t.Log(summer, len(summer), cap(summer)) // [Jun Jul Aug] 3 7
+
+	summer[0] = "Unknow"
+	t.Log(Q2)   // [Apr May Unknow]
+	t.Log(year) // [Jan Feb Mar Apr May Unknow Jul Aug Sep Oct Nov Dec]
+}
+```
+
+#### 数组 vs 切片
+
+* 容量是否可伸缩
+  * 数组定长
+  * 切片不定长
+* 是否可以进行比较
+  * 相同维数、相同长度的数组是可以比较的
+  * 切片不能比较
+
+```go
+func TestSliceComparing(t *testing.T) {
+	a := []int{1, 2, 3, 4}
+	b := []int{1, 2, 3, 4}
+
+	if a == b { // cannot compare a == b (slice can only be compared to nil)
+		t.Log("equal")
+	}
+}
+```
+
+### Map 
+
+
 
