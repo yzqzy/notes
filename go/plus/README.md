@@ -668,5 +668,141 @@ func TestSliceComparing(t *testing.T) {
 
 ### Map 
 
+#### Map 声明
 
+```go
+m := map[string]int{"one": 1, "two": 2, "three": 3}
+
+m1 := map[string]int{}
+m1["one"] = 1
+
+m2 := make(map[string]int, 10 /**Initial Capacity*/)
+// 为什么不初始化 len ?
+// 切片中 len 都会赋值为零值，map 没有办法确认零值
+```
+
+```go
+func TestInitMap(t *testing.T) {
+	m1 := map[int]int{1: 1, 2: 4, 3: 9}
+	t.Log(m1[2])                 // 4
+	t.Logf("len m1=%d", len(m1)) // len m1=3
+
+	m2 := map[int]int{}
+	m2[4] = 16
+	t.Logf("len m2=%d", len(m2)) // len m2=1
+
+	m3 := make(map[int]int, 10)
+	t.Logf("len m3=%d", len(m3)) // len m3=0
+}
+```
+
+#### Map 元素访问
+
+在访问的 key 不存在时，会返回零值，不能通过返回 nil 来判断元素是否存在。
+
+```go
+func TestAccessNotExistingKey(t *testing.T) {
+	m1 := map[int]int{}
+	t.Log(m1[1]) // 0
+
+	m1[2] = 0
+	t.Log(m1[1]) // 0
+
+	// 无法区分不存在值或实际值为 0
+	// 需要自主判断
+
+	// m1[3] = 0
+
+	if _, ok := m1[3]; ok {
+		t.Logf("key 3 value is %d", m1[3])
+	} else {
+		t.Log("key 3 is not existing.")
+	}
+}
+```
+
+#### Map 遍历
+
+```go
+m := map[string]int{"one": 1, "two": 2, "three": 3}
+for k, v := range m {
+  t.Log(k, v)
+}
+```
+
+```go
+func TestTravelMap(t *testing.T) {
+	m1 := map[int]int{1: 1, 2: 4, 3: 9}
+
+	for k, v := range m1 {
+		t.Log(k, v)
+		// 1 1
+		// 2 4
+		// 3 9
+	}
+}
+```
+
+> Map 底层使用使用 hash 表机制，所以遍历结果并不总是有序的。
+
+#### Map 与工厂模式
+
+* Map 的 value 可以是一个方法
+  * Go 语言中，函数是一等公民
+* 与 Go 的 Dock type 接口方式一起，可以方便的实现单一方法对象的工厂模式
+
+```go
+package map_test
+
+import "testing"
+
+func TestMapWithFunValue(t *testing.T) {
+	m := map[int]func(op int) int{}
+
+	m[1] = func(op int) int { return op }
+	m[2] = func(op int) int { return op * op }
+	m[3] = func(op int) int { return op * op * op }
+
+	t.Log(m[1](2), m[2](2), m[3](2)) // 2 4 8 
+}
+```
+
+#### 实现 Set
+
+Go 语言没有提供内置的 Set，我们可以使用 Map 实现一个 Set。
+
+* 元素唯一性
+* 基本操作
+  * 添加元素
+  * 判断元素是否存在
+  * 删除元素
+  * 元素个数
+
+```go
+func TestMapForSet(t *testing.T) {
+	set := map[int]bool{}
+
+	set[1] = true
+
+	n := 1
+
+	if set[n] {
+		t.Logf("%d is existing", n)
+	} else {
+		t.Logf("%d is not existing", n)
+	}
+
+	set[2] = true
+	t.Log(len(set)) // 2
+
+	delete(set, 2)
+	t.Log(len(set)) // 1
+}
+```
+
+### 字符串
+
+* string 是数据类型，不是引用或指针类型
+* string 是只读的 byte slice，len 函数可以获取它所包含的 byte 数
+* string 的 byte 数组可以存放任何数据
 
