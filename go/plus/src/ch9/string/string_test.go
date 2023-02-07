@@ -27,3 +27,18 @@ func TestString(t *testing.T) {
 	t.Logf("中 unicode %x", c[0]) // 中 unicode 4e2d
 	t.Logf("中 utf8 %x", s)       // 中 utf8 e4b8ad
 }
+
+func TestStringToRune(t *testing.T) {
+	s := "中华人民共和国"
+
+	for _, c := range s {
+		t.Logf("%[1]c %[1]d", c)
+		// 中 20013
+		// 华 21326
+		// 人 20154
+		// 民 27665
+		// 共 20849
+		// 和 21644
+		// 国 22269
+	}
+}
