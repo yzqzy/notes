@@ -800,9 +800,145 @@ func TestMapForSet(t *testing.T) {
 }
 ```
 
-### 字符串
+## 03. 字符串
+
+### 基本使用
 
 * string 是数据类型，不是引用或指针类型
 * string 是只读的 byte slice，len 函数可以获取它所包含的 byte 数
 * string 的 byte 数组可以存放任何数据
+
+```go
+func TestString(t *testing.T) {
+	var s string
+	t.Log(s) // 初始化为默认零值
+
+	s = "hello"
+	t.Log(len(s)) // 5
+
+	// string 是不可变的 byte 切片
+	// s[1] = '3' // cannot assign to s[1] (value of type byte)
+
+	s = "\xE4\xB8\xA5" // 可以存储二进制数据
+	t.Log(s)           // 严
+
+	s = "中"
+	t.Log(len(s)) // 3 存储的是 byte 数
+
+	c := []rune(s)
+	t.Log(len(c)) // 1
+	// t.Log("run size:", unsafe.Sizeof(c[0])) // run size: 4
+
+	t.Logf("中 unicode %x", c[0]) // 中 unicode 4e2d
+	t.Logf("中 utf8 %x", s)       // 中 utf8 e4b8ad
+}
+```
+
+Unicode UTF8
+
+* Unicode 是一种字符集（code point）
+* UTF8 是 unicode 的存储实现（转换为字节序列的规则）
+
+### 编码与存储
+
+| 字符          | “中”               |
+| ------------- | ------------------ |
+| Unicode       | 0x4E2D             |
+| UTF-8         | 0xE4B8AD           |
+| string/[]byte | [0xE4, 0xB8, 0xAD] |
+
+```go
+func TestStringToRune(t *testing.T) {
+	s := "中华人民共和国"
+
+	for _, c := range s {
+		t.Logf("%[1]c %[1]d", c)
+		// 中 20013
+		// 华 21326
+		// 人 20154
+		// 民 27665
+		// 共 20849
+		// 和 21644
+		// 国 22269
+	}
+}
+```
+
+[阮一峰博客-字符串编码](http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html?from=timeline)
+
+### 常用字符串处理函数
+
+* strings 包 [https://golang.org/pkg/strings](https://golang.org/pkg/strings)
+* strconv 包 [https://golang.org/pkg/strconv](https://golang.org/pkg/strconv)
+
+```go
+func TestStringFn(t *testing.T) {
+	s := "A,B,C"
+
+	parts := strings.Split(s, ",")
+	for _, part := range parts {
+		t.Log(part)
+		// A
+		// B
+		// C
+	}
+
+	t.Log(strings.Join(parts, "-")) // A-B-C
+}
+
+func TestStringConv(t *testing.T) {
+	s := strconv.Itoa(10)
+
+	t.Log("str" + s) // str10
+
+	if i, err := strconv.Atoi("10"); err == nil {
+		t.Log(10 + i) // 20
+	}
+}
+```
+
+## 04. 函数
+
+### Go 语言中的函数
+
+函数是一等公民。
+
+* 可以多有多个返回值；
+* 所有参数都是值传递；
+  * slice、map、channel 也是值传递
+* 函数可以作为变量的值；
+* 函数可以作为参数和返回值。
+
+```go
+
+func returnMultiValues() (int, int) {
+	return rand.Intn(10), rand.Intn(20)
+}
+
+func timeSpent(inner func(op int) int) func(op int) int {
+	return func(n int) int {
+		start := time.Now()
+		ret := inner(n)
+		fmt.Println("time spent:", time.Slice(start).Seconds())
+		return ret
+	}
+}
+
+func slowFn(op int) int {
+	time.Sleep(time.Second * 1)
+	return op
+}
+
+func TestFn(t *testing.T) {
+	a, _ := returnMultiValues()
+	t.Log(a) // 1
+
+	tsSF := timeSpent(slowFn)
+	t.Log(tsSF(10))
+}
+```
+
+> 推荐书籍：《计算器程序的构造和解释》。
+
+### 可变参数和defer
 
