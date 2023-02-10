@@ -942,3 +942,41 @@ func TestFn(t *testing.T) {
 
 ### 可变参数和defer
 
+可变参数
+
+```go
+func Sum(ops ...int) int {
+	ret := 0
+
+	for _, op := range ops {
+		ret += op
+	}
+
+	return ret
+}
+
+func TestVarParam(t *testing.T) {
+	t.Log(Sum(1, 2, 3, 4))    // 10
+	t.Log(Sum(1, 2, 3, 4, 5)) // 15
+}
+```
+
+defer
+
+```go
+func Clear() {
+	fmt.Println("Clear resources.")
+}
+
+func TestDefer(t *testing.T) {
+	defer Clear()
+	fmt.Println("Start")
+	panic("err")
+}
+
+// Star
+// Clear resources
+```
+
+## 05. 面向对象编程
+
