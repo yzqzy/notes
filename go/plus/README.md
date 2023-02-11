@@ -1104,5 +1104,83 @@ func timeSpent(inner IntConv) IntConv {
 面向对象的扩展通常可以通过复合或者继承来实现，Go 不支持继承。
 
 ```go
+type Pet struct {
+}
+
+func (p *Pet) Speak() {
+	fmt.Print(("..."))
+}
+
+func (p *Pet) SpeakTo(host string) {
+	p.Speak()
+	fmt.Println("", host)
+}
+
+type Dog struct {
+	p *Pet
+}
+
+func (d *Dog) Speak() {
+	d.p.Speak()
+}
+
+func (d *Dog) SpeakTo(host string) {
+	d.p.SpeakTo(host)
+}
+
+func TestDod(t *testing.T) {
+	dog := new(Dog)
+	dog.SpeakTo("Wang Wang") // ... Wang Wang
+}
 ```
+
+复合需要重新定义方法，这样看起来也比较自然。其次我们还可以使用匿名嵌套类型简化整个过程。 
+
+```go
+type Pet struct {
+}
+
+func (p *Pet) Speak() {
+	fmt.Print(("..."))
+}
+
+func (p *Pet) SpeakTo(host string) {
+	p.Speak()
+	fmt.Println("", host)
+}
+
+type Dog struct {
+	Pet
+}
+
+func TestDod(t *testing.T) {
+	dog := new(Dog)
+	dog.SpeakTo("Wang Wang") // ... Wang Wang
+}
+```
+
+网上很多文章说 Go 的继承是这样实现的，其实这种说法并不准确。
+
+```go
+// ...
+
+type Dog struct {
+	Pet
+}
+
+func (d *Dog) Speak() {
+	fmt.Print("Wang!")
+}
+
+func TestGog(t *testing.T) {
+	 var dog Pet := new(Dog)
+	dog.SpeakTo("Wang Wang")	 
+}
+```
+
+在 Java 中上述代码是可以正常运行的，在 Go 中这样的写法并不正确，不能实现重载，且无法支持强制类型转换。
+
+### 接口类型与多态
+
+
 
