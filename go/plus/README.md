@@ -980,3 +980,129 @@ func TestDefer(t *testing.T) {
 
 ## 05. 面向对象编程
 
+[https://golang.org/doc/faq](https://golang.org/doc/faq)
+
+<img src="./images/intro.png" />
+
+### 行为定义和实现
+
+结构体定义
+
+```go
+type Employee struct {
+	Id   string
+	Name string
+	Age  int
+}
+```
+
+实例创建及初始化
+
+```go
+func TestCreateEmployeeObj(t *testing.T) {
+	e1 := Employee{"0", "Bob", 20}
+	e2 := Employee{Name: "Mike", Age: 25}
+	e3 := new(Employee) // 返回指针
+
+	e3.Id = "3"
+	e3.Age = 22
+	e3.Name = "Rose"
+
+	t.Log(e1)              // {0 Bob 20}
+	t.Log(e2)              // { Mike 25}
+	t.Log(e2.Id)           //
+	t.Log(e3)              // &{3 Rose 22}
+	t.Logf("e2 is %T", e2) // e2 is encap.Employee
+	t.Logf("e3 is %T", e3) // e3 is *encap.Employee
+}
+```
+
+行为（方法）定义
+
+```go
+// 在实例对应方法被调用时，实例的成员会进行值复制
+func (e Employee) String1() string {
+	return fmt.Sprintf("ID:%s-Name:%s-Age:%d", e.Id, e.Name, e.Age)
+}
+
+// 为了避免内存拷贝，我们可以使用这种定义方式
+func (e *Employee) String2() string {
+	return fmt.Sprintf("ID:%s-Name:%s-Age:%d", e.Id, e.Name, e.Age)
+}
+
+func TestStructOperations(t *testing.T) {
+	e1 := Employee{"0", "Bob", 20}
+	t.Log(e1.String1()) // ID:0-Name:Bob-Age:20
+
+	e2 := &Employee{"0", "Bob", 20}
+	t.Log(e2.String2()) // D:0-Name:Bob-Age:20
+}
+```
+
+> 值接收者和指针接收者
+>
+> 值接收者声明的方法，调用时使用的时这个值的副本；
+>
+> 指针接收者声明的方法，调用时共享这个值。
+
+### 接口定义和实现
+
+**接口与依赖**
+
+```go
+// Duck Type 式接口实现
+type Programmer interface {
+	WriteHelloWorld() string
+}
+
+type GoProgrammer struct {
+}
+
+func (g *GoProgrammer) WriteHelloWorld() string {
+	return "fmt.Println(\"Hello World\")"
+}
+
+func TestClient(t *testing.T) {
+	p := new(GoProgrammer) // interface implement
+
+	t.Log(p.WriteHelloWorld()) // fmt.Println("Hello World")
+}
+```
+
+* 接口为非入侵性，实现不依赖于接口定义
+* 接口定义可以包含在接口使用者包内
+
+**接口变量**
+
+```go
+var prog Coder = &GoProgrammer{}
+
+// prog 类型
+type GoProgrammer struct {}
+
+// prog 数据
+type &GoProgrammer{}
+```
+
+**自定义类型**
+
+```go
+type IntConv func(op int) int
+
+func timeSpent(inner IntConv) IntConv {
+	return func(n int) int {
+		start := time.Now()
+		ret := inner(n)
+		fmt.Println("time spent:", time.Slice(start).Seconds())
+		return ret
+	}
+}
+```
+
+### 扩展与复用
+
+面向对象的扩展通常可以通过复合或者继承来实现，Go 不支持继承。
+
+```go
+```
+
