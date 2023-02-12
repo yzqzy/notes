@@ -52,7 +52,7 @@
   - [vue3 基础](https://github.com/yw0525/notes/tree/master/vue/vue3) 已完成
   - [vue3 diff过程分析](https://github.com/yw0525/notes/tree/master/vue/vue3_diff) 已完成
   - [vue3 自定义渲染器](https://github.com/yw0525/notes/tree/master/vue/vue3_renderer) 已完成
-  - [vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
+  - ~~[vite](https://github.com/yw0525/notes/tree/master/vite) 已废弃~~ 😅
   - [vite 源码实现](https://github.com/yw0525/notes/tree/master/vue/vue_vite) 已完成
   - [vite 源码进阶实现](https://github.com/yw0525/notes/tree/master/vite/vite_source) 已完成
   - [vue 面试相关](https://github.com/yw0525/notes/tree/master/vue/vue_inteview) 已完成
@@ -70,14 +70,14 @@
   - [mobx](https://github.com/yw0525/notes/tree/master/react/mobx) 已完成
   - [VirtualDOM 及 DIFF 算法](https://github.com/yw0525/notes/tree/master/react/virtual_dom) 已完成
   - [Fiber](https://github.com/yw0525/notes/tree/master/react/Fiber) 已完成
-  - [react 源码阅读](https://github.com/yw0525/notes/tree/master/react/react_source) 暂停中 😀
+  - ~~[react 源码阅读](https://github.com/yw0525/notes/tree/master/react/react_source) 已废弃~~ 😅
 - solid
   - [solid 源码解析](https://github.com/yw0525/notes/tree/master/solid/source_analysis) 暂停中 😀
 - TypeScipt
   - [TypeScipt 基础](https://github.com/yw0525/notes/tree/master/typescript/base) 已完成
   - [TypeScipt 案例](https://github.com/yw0525/notes/tree/master/typescript/examples/test/src) 已完成
   - [TypeScipt 进阶](https://github.com/yw0525/notes/tree/master/typescript/plus) 已完成
-  - [TypeScipt 全面进阶](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
+  - ~~[TypeScipt 全面进阶](https://github.com/yw0525/notes/tree/master/typescript/review) 已废弃~~ 😅
 - Node
   - [Node 基础](https://github.com/yw0525/notes/tree/master/node/base) 已完成
   - [Node 核心模块](https://github.com/yw0525/notes/tree/master/node/core_module) 已完成
@@ -85,7 +85,7 @@
   - [koa 架构分析与源码重写](https://github.com/yw0525/notes/tree/master/node/koa) 已完成
 - Go
   - [Go 基础](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
-  - [Go 进阶](https://github.com/yw0525/notes/tree/master/go/plus) 更新中... 😁
+  - [Go 进阶](https://github.com/yw0525/notes/tree/master/go/plus) 暂停中 😀
 - MySQL
   - [MySQL 基础](https://github.com/yw0525/notes/tree/master/mysql/base) 更新中... 😁
 - [正则学习](https://github.com/yw0525/notes/tree/master/reg/learn) 已完成
@@ -119,9 +119,9 @@
   - [透视 HTTP 协议](https://www.yuque.com/yyne87/mw1l9v) 已完成
   - [Vue 源码解析](https://github.com/yw0525/notes/tree/master/vue/vue_source) 已完成
   - [Vue.js 设计与实现](https://github.com/yw0525/notes/tree/master/books/Vue.js设计与实现) 已完成
-  - [深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 暂停中 😀
-  - [TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 暂停中 😀
+  - ~~[深入浅出 Vite](https://github.com/yw0525/notes/tree/master/vite) 已废弃~~ 😅
+  - ~~[TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 已废弃~~ 😅
   - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
   - [Go 语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
-  - [Go 语言从入门到实战](https://github.com/yw0525/notes/tree/master/go/plus) 更新中... 😁
+  - [Go 语言从入门到实战](https://github.com/yw0525/notes/tree/master/go/plus) 暂停中 😀
   - [MySQL 必知必会](https://github.com/yw0525/notes/tree/master/mysql/base) 更新中... 😁
