@@ -85,7 +85,7 @@
   - [koa 架构分析与源码重写](https://github.com/yw0525/notes/tree/master/node/koa) 已完成
 - Go
   - [Go 基础](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
-  - [Go 进阶](https://github.com/yw0525/notes/tree/master/go/plus) 暂停中 😀
+  - [Go 进阶](https://github.com/yw0525/notes/tree/master/go/plus) 更新中... 😁
 - MySQL
   - [MySQL 基础](https://github.com/yw0525/notes/tree/master/mysql/base) 更新中... 😁
 - [正则学习](https://github.com/yw0525/notes/tree/master/reg/learn) 已完成
@@ -123,5 +123,5 @@
   - ~~[TypeScipt 全面进阶指南](https://github.com/yw0525/notes/tree/master/typescript/review) 已废弃~~ 😅
   - [浏览器工作原理与实践](https://github.com/yw0525/notes/tree/master/books/浏览器工作原理与实践) 已完成
   - [Go 语言第一课](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
-  - [Go 语言从入门到实战](https://github.com/yw0525/notes/tree/master/go/plus) 暂停中 😀
+  - [Go 语言从入门到实战](https://github.com/yw0525/notes/tree/master/go/plus) 更新中... 😁
   - [MySQL 必知必会](https://github.com/yw0525/notes/tree/master/mysql/base) 更新中... 😁

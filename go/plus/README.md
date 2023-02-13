@@ -1272,3 +1272,131 @@ func StoreData(reader Reader) error {
 
 ## 06. 错误处理
 
+### Go 的错误机制
+
+* 没有异常机制；
+* error 类型实现 error 接口；
+* 可以通过 errors.New 来快速创建错误实例。
+
+```go
+type error interface {
+  Error() string
+}
+
+errors.New("n must be in the range [0, 10]")
+```
+
+#### 最佳实践 1
+
+```go
+func getFibonacci(n int) ([]int, error) {
+	if n < 2  || n > 100 {
+		return nil, errors.New("n should be in [2, 100]")
+	}
+
+	fibList := []int{1, 1}
+
+	for i := 2; i < n; i++ {
+		fibList = append(fibList, fibList[i-2]+fibList[i-1])
+	}
+
+	return fibList, nil
+}
+
+func TestFibonacci(t *testing.T) {
+	t.Log(getFibonacci(10)) // [1 1 2 3 5 8 13 21 34 55]
+
+	if v, err := getFibonacci(-10); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(v)
+	}
+}
+```
+
+代码优化
+
+```go
+var LessThanTwoError = errors.New("n should be not less than 2")
+var LargetThanHundredError = errors.New("n should be not larger than 100")
+
+func getFibonacci(n int) ([]int, error) {
+	if n < 2 {
+		return nil, LessThanTwoError
+	}
+	if n > 100 {
+		return nil, LargetThanHundredError
+	}
+
+	fibList := []int{1, 1}
+
+	for i := 2; i < n; i++ {
+		fibList = append(fibList, fibList[i-2]+fibList[i-1])
+	}
+
+	return fibList, nil
+}
+
+func TestFibonacci(t *testing.T) {
+	t.Log(getFibonacci(10)) // [1 1 2 3 5 8 13 21 34 55]
+
+	if v, err := getFibonacci(-10); err != nil {
+		if err == LessThanTwoError {
+			fmt.Println("It is less.") // It is less.
+		}
+	} else {
+		t.Log(v)
+	}
+}
+```
+
+#### 最佳实践2
+
+```go
+func getFibonacci2(str string) {
+	var (
+		i    int
+		err  error
+		list []int
+	)
+
+	if i, err = strconv.Atoi(str); err == nil {
+		if list, err = getFibonacci(i); err == nil {
+			fmt.Println(list)
+		} else {
+			fmt.Println("Error", err)
+		}
+	} else {
+		fmt.Println("Error", err)
+	}
+}
+```
+
+代码优化
+
+```go
+func getFibonacci3(str string) {
+	var (
+		i    int
+		err  error
+		list []int
+	)
+	if i, err = strconv.Atoi(str); err != nil {
+		fmt.Println("Error", err)
+		return
+	}
+	if list, err = getFibonacci(i); err == nil {
+		fmt.Println("Error", err)
+		return
+	}
+	fmt.Println(list)
+}
+```
+
+> 错误优先机制，代码更易读。
+
+### panic 和 recover
+
+#### panic
+
+* panic 
