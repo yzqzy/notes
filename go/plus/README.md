@@ -1399,4 +1399,54 @@ func getFibonacci3(str string) {
 
 #### panic
 
-* panic 
+* panic 用于不可恢复的错误；
+* panic 退出前会执行 defer 指定的内容。
+
+panic vs os.Exit
+
+* os.Exit 退出时不会调用 defer 指定的函数；
+* os.Exit 退出时不输出当前调用栈信息。
+
+```go
+func TestPanicVxExit(t *testing.T) {
+	defer func() {
+		fmt.Println("Finally!")
+	}()
+
+	fmt.Println("Start")
+	// os.Exit(-1)
+	panic(errors.New("Something wrong!"))
+}
+```
+
+#### recover
+
+通过 recover 可以接收错误，进行恢复处理。
+
+ ```go
+ func TestPanicVxExit(t *testing.T) {
+ 	defer func() {
+ 		fmt.Println("Finally!")
+ 
+ 		if err := recover(); err != nil {
+ 			fmt.Println("recovered from", err) // recovered from Something wrong!
+ 		}
+ 	}()
+ 
+ 	fmt.Println("Start")
+ 	// os.Exit(-1)
+ 	panic(errors.New("Something wrong!"))
+ }
+ ```
+
+上述这种方式只是将错误接收，并记录，其实这样的修复方式是非常危险的。
+
+* 容易形成僵尸服务进程，导致 health check 失效；
+* “Let it Crash！” 往往是我们恢复不确定错误的最好方法。
+
+## 07. 包和依赖管理
+
+### 构建可复用模块（包）
+
+
+
