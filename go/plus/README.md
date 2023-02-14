@@ -1448,5 +1448,21 @@ func TestPanicVxExit(t *testing.T) {
 
 ### 构建可复用模块（包）
 
+#### package
 
+* 基本复用模块单元
+  * 以首字母大写来表明可被包外代码访问
+* 代码的 package 可以和所在的目录不一致
+* 同一目录里的 Go 代码的 package 要保持一致
 
+#### 如何使用
+
+通过 go get 来获取远程依赖
+
+* go get -u 强制从网络更新远程依赖
+
+注意代码在 GitHub 上的组织形式，以适应 go get
+
+* 直接以代码路径开始，不要有 src
+
+ 
