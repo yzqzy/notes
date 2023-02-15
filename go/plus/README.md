@@ -1465,4 +1465,63 @@ func TestPanicVxExit(t *testing.T) {
 
 * 直接以代码路径开始，不要有 src
 
+```go
+// src/ch15/series/series.g
+
+package series
+
+// 大写的函数名才可以在包外被调用
+func GetFibonacciSeries(n int) []int {
+	ret := []int{1, 1}
+	for i := 2; i < n; i++ {
+		ret = append(ret, ret[i-2]+ret[i-1])
+	}
+	return ret
+}
+```
+
+ ```go
+ // src/ch15/client/client_test.go
  
+ package client_test
+ 
+ import (
+ 	"plus/src/ch15/series"
+ 	"testing"
+ )
+ 
+ func TestPackage(t *testing.T) {
+ 	t.Log(series.GetFibonacciSeries(5)) // [1 1 2 3 5]
+ }
+ ```
+
+#### init 方法
+
+* 在 main 被执行前，所有依赖的 package 的 init 方法都会被执行；
+* 不同包的 init 函数按照包导入的依赖关系决定执行顺序；
+* 每个包可以有多个 init 函数；
+* 包的每个源文件也可以有多个 init 函数。
+
+#### 使用第三方包
+
+```go
+package remote_test
+
+import (
+	"testing"
+
+	cm "github.com/easierway/concurrent_map"
+)
+
+func TestConcurrentMap(t *testing.T) {
+	m := cm.CreateConcurrentMap(99)
+	m.Set(cm.StrKey("key"), 10)
+
+	t.Log(m.Get(cm.StrKey("key")))
+}
+```
+
+可以使用 go mod tidy 命令自动分析依赖并下载。
+
+### 依赖管理
+
