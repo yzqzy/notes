@@ -1601,6 +1601,22 @@ Processor 在不同的系统线程里，但是每个 Processor 都挂载一个�
 
 ### 共享内存并发机制
 
+#### Lock
+
+锁机制，对于 Java 和 C++ 程序员都很常见。
+
+```java
+Lock lock = ...;
+lock.lock()
+try {
+  
+} catch (Exception ex) {
+  
+} finally {
+  lock.unlock()
+}
+```
+
 
 
 
