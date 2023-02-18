@@ -1565,3 +1565,45 @@ dep [https://github.com/golang/dep](https://github.com/golang/dep)
 * Java Thread 时 1:1
 * Groutine 是 M:N
 
+<img src="./images/thread.png" />
+
+ 多对多关系简图，thread 与 kernel entity 一对一关系。
+
+
+
+<img src="./images/groutine.png" />
+
+Processor 在不同的系统线程里，但是每个 Processor 都挂载一个准备运行的协程队列。Processor 会依次运行协程。
+
+如果一个协程运行的时间特别长，那么在队列中的其他协程是不是就会延迟很久？
+
+其实在 Go 启动的时候会有一个守护线程对 Processor 进行计数，记录每个 Processor 完成的数量。当一段时间守护线程发现 Processor 完成的协程数量没有变化，它就会往协程的任务栈中插入一个特殊的标记，当协程运行时遇到非内联函数 ，读到这个标记，就会中断下来，等候到协程队尾切换到别的协程继续运行。
+
+ 当某一个协程被系统中断，例如 IO， 需要等待的时候。为了提高整体的并发，Processor  会把自己移动到另一个可使用的系统线程中继续执行它所挂载的其他协程。 当被中断的协程被唤醒完成之后，它会把自己加入到其中某一个 Processor 的队列中，后者加入到全局等待队列中。
+
+当协程被中断后，它在寄存器中的运行状态也会保存到这个对象里，当协程被唤醒时，这些信息也会重新写入寄存器，继续运行。
+
+#### 代码案例
+
+ ```go
+ func TestGroutine(t *testing.T) {
+ 	for i := 0; i < 10; i++ {
+ 		// 使用 go 关键词启动协程运行程序
+ 		go func(i int) {
+ 			fmt.Println(i)
+ 		}(i)
+ 	}
+ 	time.Sleep(time.Microsecond * 50)
+ }
+ ```
+
+每次运行的结果都是不一致的，因为协程运行并不是按照指定顺序执行的。
+
+### 共享内存并发机制
+
+
+
+
+
+
+
