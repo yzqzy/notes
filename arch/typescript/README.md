@@ -243,3 +243,134 @@ node dist/bundle.index.js
 
 #### react + ts-loader
 
+安装 npm 包
+
+```bash
+pnpm i react react-dom
+```
+
+```bash
+pnpm i @types/react @types/react-dom --save-dev
+```
+
+```bash
+pnpm i awesome-typescript-loader --save-dev
+```
+
+> ts-loader 已经安装过，这里不再安装。
+
+```bash
+pnpm i webpack-dev-server html-webpack-plugin -D
+```
+
+编写 react 文件
+
+```react
+// src/ReactHello.tsx
+
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+const App: () => JSX.Element = () => {
+  return (
+    <div>
+      <h1>Hello React!</h1>
+    </div>
+  )
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))
+```
+
+编写 tsconfig.json 文件
+
+```json
+{
+  "compilerOptions": {
+    "esModuleInterop": true, // 支持多套编码风格
+    "jsx": "react" // react, div => React.createElement
+  }
+}
+```
+
+编写 template 模板文件
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+编写 webpack.react.js 文件
+
+```js
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  entry: {
+    index: './src/ReactHello.tsx'
+  },
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
+  },
+  output: {
+    filename: 'bundle.[name].js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  devServer: {
+    static: path.resolve(__dirname, 'dist')
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'template.html')
+    })
+  ]
+}
+```
+
+编写测试脚本
+
+```bash
+"scripts": {
+  "start:dev": "webpack",
+  "start:react": "webpack --config webpack.react.js"
+}
+```
+
+运行测试脚本
+
+```bash
+yarn start:react
+```
+
+这样运行命令并不会启动开发服务器，我们需要修改 scripts 脚本。
+
+```bash
+"scripts": {
+  "start:dev": "webpack",
+  "start:react": "webpack server --config webpack.react.js"
+}
+```
+
+重新运行脚本，就可以看到开发服务器被启动，可以正常访问。
+
+#### react + babel preset
+
