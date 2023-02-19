@@ -1,3 +1,6 @@
 {
-  "compilerOptions": {}
+  "compilerOptions": {
+    "esModuleInterop": true, // 支持多套编码风格
+    "jsx": "react" // react, div => React.createElement
+  }
 }
