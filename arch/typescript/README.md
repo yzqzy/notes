@@ -374,3 +374,122 @@ yarn start:react
 
 #### react + babel preset
 
+babel-preset 和 ts-loader 的区别是什么？
+
+* babel 作用
+
+  * The Compiler for next generation Javascript
+  * 所有编译 JS 的事情，babel 都干
+  * es6 => es5 => es3 => polyfill
+
+* 缓存 + 优化
+
+* 插件 + 生态
+
+两者本质区别不大，不过从生态和优化上来看，babel 更优。
+
+**babel-loader 背后是 babel，ts-loader 背后是 tsc 编译器。**
+
+```bash
+pnpm i babel-loader @babel/core @babel/preset-env @babel/preset-react @babel/preset-typescript --save-dev
+```
+
+ Babel 有两套机制，一套是 preset，一套是 plugin。我们可以认为 preset 是 plugin 的集合，其实就是预选项的概念。
+
+编写 webpack.react.withbabel.js
+
+```js
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+	// ...
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              '@babel/preset-typescript',
+              '@babel/preset-react', // 不使用 ts-loader 的情况下，需要使用
+              '@babel/preset-env'
+            ]
+          }
+        },
+        exclude: /node_modules/
+      }
+    ]
+  },
+	// ...
+}
+```
+
+编写 scripts 脚本
+
+```json
+{
+   "scripts": {
+    "start:dev": "webpack",
+    "start:react": "webpack server --config webpack.react.js",
+    "start:babel": "webpack server --config webpack.react.withbabel.js"
+  }
+}
+```
+
+#### vue + loader
+
+增加 vue 依赖
+
+```bash
+pnpm i vue@next -D
+pnpm i @vue/compiler-sfc -D
+
+pnpm i vue-loader -D
+```
+
+> sfc：Single File Component，单文件组件
+
+编写 vue sfc 及 bootstraper
+
+```vue
+<template>
+  <h1>Hello Vue!</h1>
+</template>
+
+<script lang="ts">
+export default {
+  setup() {
+    return {}
+  }
+}
+</script>
+```
+
+```typescript
+// src/main.ts
+
+import { createApp } from 'vue'
+import HelloVue from './VueHello.vue'
+
+createApp(HelloVue).mount('#root')
+```
+
+```typescript
+// src/shims-vue.d.ts
+
+/* eslint-disable */
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+```
+
+vue 需要增加 shims-vue.d.ts 文件，否则 main.ts 中引入 .vue 文件会报错。
+
+> shim（垫片），通常为了处理兼容而命名。上面这个 shim 的目标是让 vscode 和 webpack 知道 .vue 的文件可以被当作一个组件定义文件来使用。
+
+编写 webpack.vue.js 文件
+
