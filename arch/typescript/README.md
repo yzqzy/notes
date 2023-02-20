@@ -630,3 +630,14 @@ module.exports = {
 **preset-react 和 preset-vue 的作用是什么？**
 
 @babel/preset-react：集成更多的 plugin，让我们可以使用，其实就是一个 plugin 包。
+
+Preset-typescript-vue3 只增加了 typescript 的转换能力。
+
+**实战建议**
+
+实际开发时，还是推荐使用官方脚手架 react-create- app、vue 或者 vite。
+
+我们学习环境配置只是作为架构师的一项基本技能。当你架构项目时，我们需要的是一个成熟的脚手架，推荐使用第三方的工具。
+
+## 04. 
+
