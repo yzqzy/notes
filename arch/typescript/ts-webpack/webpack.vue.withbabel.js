@@ -11,10 +11,9 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?/,
-        loader: 'ts-loader',
+        loader: 'babel-loader',
         options: {
-          // 无法识别 vue 转换的 ts 文件，需要配置该规则添加后缀
-          appendTsSuffixTo: [/\.vue$/]
+          presets: ['@babel/preset-env', 'babel-preset-typescript-vue3', '@babel/preset-typescript']
         },
         exclude: /node_modules/
       },

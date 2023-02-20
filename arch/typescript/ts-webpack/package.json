@@ -6,8 +6,9 @@
   "scripts": {
     "start:dev": "webpack",
     "start:react": "webpack server --config webpack.react.js",
-    "start:babel": "webpack server --config webpack.react.withbabel.js",
-    "start:vue": "webpack server --config webpack.react.js"
+    "start:react-babel": "webpack server --config webpack.react.withbabel.js",
+    "start:vue": "webpack server --config webpack.vue.js",
+    "start:vue-babel": "webpack server --config webpack.vue.withbabel.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,7 @@
     "@types/react-dom": "^18.0.11",
     "@vue/compiler-sfc": "^3.2.47",
     "babel-loader": "^9.1.2",
+    "babel-preset-typescript-vue3": "^2.0.17",
     "html-webpack-plugin": "^5.5.0",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",

@@ -9,6 +9,7 @@ specifiers:
   '@types/react-dom': ^18.0.11
   '@vue/compiler-sfc': ^3.2.47
   babel-loader: ^9.1.2
+  babel-preset-typescript-vue3: ^2.0.17
   html-webpack-plugin: ^5.5.0
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -33,6 +34,7 @@ devDependencies:
   '@types/react-dom': 18.0.11
   '@vue/compiler-sfc': 3.2.47
   babel-loader: 9.1.2_la66t7xldg4uecmyawueag5wkm
+  babel-preset-typescript-vue3: 2.0.17_@babel+core@7.20.12
   html-webpack-plugin: 5.5.0_webpack@5.75.0
   ts-loader: 9.4.2_hhrrucqyg4eysmfpujvov2ym5u
   typescript: 4.9.5
@@ -1940,6 +1942,21 @@ packages:
     dependencies:
       '@babel/core': 7.20.12
       '@babel/helper-define-polyfill-provider': 0.3.3_@babel+core@7.20.12
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /babel-preset-typescript-vue3/2.0.17_@babel+core@7.20.12:
+    resolution: {integrity: sha512-6AdNf72Jd9OTap9ws12bAehn/GuuBSqUPN+nuOY7XCMckRcvPbO1G+yFvF+ahQsiMCk+gUZwTie1eoQMzeesog==}
+    engines: {node: '>=8.0.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
+      '@babel/core': 7.20.12
+      '@babel/helper-plugin-utils': 7.20.2
+      '@babel/plugin-transform-typescript': 7.20.13_@babel+core@7.20.12
+      '@babel/preset-typescript': 7.18.6_@babel+core@7.20.12
+      '@vue/compiler-sfc': 3.2.47
     transitivePeerDependencies:
       - supports-color
     dev: true

@@ -493,3 +493,140 @@ vue 需要增加 shims-vue.d.ts 文件，否则 main.ts 中引入 .vue 文件会
 
 编写 webpack.vue.js 文件
 
+```js
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { VueLoaderPlugin } = require('vue-loader')
+
+module.exports = {
+  entry: {
+    index: './src/main.ts'
+  },
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        loader: 'ts-loader',
+        options: {
+          // 无法识别 vue 转换的 ts 文件，需要配置该规则添加后缀
+          appendTsSuffixTo: [/\.vue$/]
+        },
+        exclude: /node_modules/
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
+  },
+  output: {
+    filename: 'bundle.[name].js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  devServer: {
+    static: path.resolve(__dirname, 'dist')
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'template.html')
+    }),
+    new VueLoaderPlugin()
+  ]
+}
+```
+
+编写 script 脚本
+
+```json
+{
+  "scripts": {
+    "start:dev": "webpack",
+    "start:react": "webpack server --config webpack.react.js",
+    "start:babel": "webpack server --config webpack.react.withbabel.js",
+    "start:vue": "webpack server --config webpack.vue.js"
+  }
+}
+```
+
+#### vue + babel preset
+
+安装依赖
+
+```bash
+pnpm i babel-preset-typescript-vue3 -D
+```
+
+编写 webpack.vue.withbabel.js 文件
+
+```js
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { VueLoaderPlugin } = require('vue-loader')
+
+module.exports = {
+  entry: {
+    index: './src/main.ts'
+  },
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env', 'babel-preset-typescript-vue3', '@babel/preset-typescript']
+        },
+        exclude: /node_modules/
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
+  },
+  output: {
+    filename: 'bundle.[name].js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  devServer: {
+    static: path.resolve(__dirname, 'dist')
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, 'template.html')
+    }),
+    new VueLoaderPlugin()
+  ]
+}
+```
+
+编写 script 脚本文件
+
+```json
+{
+  "scripts": {
+    "start:dev": "webpack",
+    "start:react": "webpack server --config webpack.react.js",
+    "start:react-babel": "webpack server --config webpack.react.withbabel.js",
+    "start:vue": "webpack server --config webpack.vue.js",
+    "start:vue-babel": "webpack server --config webpack.vue.withbabel.js"
+  }
+}
+```
+
+### 技术拓展
+
+**Babel preset 执行顺序有关系吗？**
+
+存在顺序关系，真正执行时可能存在多种执行顺序。
+
+**preset-react 和 preset-vue 的作用是什么？**
+
+@babel/preset-react：集成更多的 plugin，让我们可以使用，其实就是一个 plugin 包。
