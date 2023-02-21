@@ -696,5 +696,60 @@ function foo(x: number) {
 起初 ts 中没有 unknown 类型，是后来新加的类型。
 
 ```typescript
+let x: unknown = 1
+
+x = true
+
+let y: string = x // 不能将类型“unknown”分配给类型“string”。
+```
+
+通常情况下，我们需要使用 any 的地方，使用 unknown 就足够了。
+
+**为什么要提供 unknown 类型？**
+
+unknown 其实是 any 的替代品，它是一个类型安全的 any 的替代品。unknown 的值可以随便设置，但是将 unknown 赋值给别的值就会报错。  把一个 unknown 赋值给其他值本身也是一个比较危险的事情。
+
+### 类型标注
+
+使用 `:` 用于类型标注。
+
+```typescript
+let myName01: string = 'Alice'
+let myName02 = 'Alice' // 类型推断是 string
+```
+
+### 函数
+
+```typescript
+function greet(name: string): number {
+  console.log(`Hello, ${name.toUpperCase()} !!`)
+}
+greet(42) // Error
+
+let x: string = greet('omg') // Error
+```
+
+```typescript
+const names = ['Alice', 'Bob', 'Eve']
+names.forEach(s => {
+  console.log(s.toUpperCase())
+  // typescript 会根据上下文类型推测类型
+})
+```
+
+```typescript
+function print(arg1: string, arg2?: string) {
+  console.log(arg1, arg2)
+}
+
+print('hello', 'world')
+print('hello')
+```
+
+### 对象类型
+
+对象如果描述类型也需要严格执行。
+
+```typescript
 ```
 
