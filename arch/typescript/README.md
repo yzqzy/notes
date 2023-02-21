@@ -639,5 +639,62 @@ Preset-typescript-vue3 只增加了 typescript 的转换能力。
 
 我们学习环境配置只是作为架构师的一项基本技能。当你架构项目时，我们需要的是一个成熟的脚手架，推荐使用第三方的工具。
 
-## 04. 
+## 04. 日常类型
+
+### 基础类型
+
+string, number, boolean, null, undefined
+
+### 数组类型
+
+`Array<T>` ，T 代表数组中的元素类型。
+
+**为什么要求数组中元素类型统一？优势是什么？**
+
+这个优势其实在于我们百分之99的需求，我们使用数组的时候，通常也是一个类型。
+
+```typescript
+function useState(x) {
+  return [x, setState]
+}
+```
+
+这种情况我们才会有数组中不同类型的需求，但是这样本身也不是当作数组来用。在编程领域这样叫做记录，是当作值类型在用。
+
+### any/unknown/noImplictAny
+
+```typescript
+let obj: any = { x: 0 }
+// any 屏蔽了所有类型检查，相当于你对程序的理解是高于 TS，不需要检查
+
+obj.foo()
+obj()
+obj.bar = 100
+obj = 'hello'
+const n: number = obj
+```
+
+> Implict：隐式、explict：显式
+
+配置项：noImplictAny，建议开启。
+
+* 当不给变量声明类型时，如果  noImplictAny = false，那么他就是 any；
+* 如果 noImplictAnt = true，就会报错。
+
+```typescript
+function foo(x) {
+	console.log(x)
+}
+
+// =>
+
+function foo(x: number) {
+  console.log(x)
+}
+```
+
+起初 ts 中没有 unknown 类型，是后来新加的类型。
+
+```typescript
+```
 
