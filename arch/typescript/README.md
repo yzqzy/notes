@@ -751,5 +751,89 @@ print('hello')
 对象如果描述类型也需要严格执行。
 
 ```typescript
+const pt: {
+  x: number
+  y: number
+} = { x: 100, y: 100 }
+
+pt.z = 1998 // Error
+```
+
+可选项：
+
+```typescript
+function printName(obj: { first: string; last?: string }) {}
+
+printName({ first: 'Bob' })
+printName({ first: 'Alice', last: 'Alisson' })
+```
+
+`?` 表达式：`?` 代表可能是 undefined，但是安全很多。
+
+```typescript
+const o: {
+  a: string
+  b?: {
+    c: string
+  }
+} = { a: '1' }
+
+// console.log(o.b.c) // Cannot read properties of undefined (reading 'c')
+console.log(o.b?.c) // undefined
+
+o.b.c = 'Hello' // Error
+```
+
+### 联合类型
+
+所谓联合类型，就是多个类型组合成一个新的类型。
+
+`|` 取自于 IFSTMT，即 if {} | if {} else {}，其实是或的关系。
+
+```typescript
+function printId(id: number | string) {
+  console.log("your id is：" + id)
+}
+
+printId(101)
+printId("202")
+printId({ id: 303 }) // Error
+```
+
+联合类型只能使用两个类型的公共操作。
+
+```typescript
+function printId(id: number | string) {
+  console.log(id.toUpperCase())
+  // 类型“string | number”上不存在属性“toUpperCase”。类型“number”上不存在属性“toUpperCase”。
+}
+```
+
+ts 会针对联合类型做排除法，其实这是类型守卫的一种实现，用于窄化类型。
+
+```typescript
+function printId(id: number | string) {
+  if (typeof id === 'number') {
+    console.log(id)
+    return
+  }
+  console.log(id.toUpperCase())
+}
+```
+
+### 类型别名
+
+```typescript
+type Point = {
+  x: number
+  y: number
+}
+
+function printCoord(pt: Point) {
+  console.log("The coordinate's x value is " + pt.x)
+  console.log("The coordinate's y value is " + pt.y)
+}
+
+printCoord({ x: 100, y: 100 })
 ```
 
