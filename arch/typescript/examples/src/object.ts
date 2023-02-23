@@ -45,14 +45,26 @@
 
 // -------------------------------
 
-type Point = {
-  x: number
-  y: number
-}
+// type Point = {
+//   x: number
+//   y: number
+// }
 
-function printCoord(pt: Point) {
-  console.log("The coordinate's x value is " + pt.x)
-  console.log("The coordinate's y value is " + pt.y)
-}
+// function printCoord(pt: Point) {
+//   console.log("The coordinate's x value is " + pt.x)
+//   console.log("The coordinate's y value is " + pt.y)
+// }
 
-printCoord({ x: 100, y: 100 })
+// printCoord({ x: 100, y: 100 })
+
+// -------------------------------
+
+// type ID = number | string
+
+// let x: ID = 100
+// typeof x // number
+
+// let id: ID = 'abc'
+// id = 456
+
+// -------------------------------

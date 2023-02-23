@@ -823,6 +823,8 @@ function printId(id: number | string) {
 
 ### 类型别名
 
+别名可以理解成字符串的查找和替换。
+
 ```typescript
 type Point = {
   x: number
@@ -836,4 +838,76 @@ function printCoord(pt: Point) {
 
 printCoord({ x: 100, y: 100 })
 ```
+
+类型别名也可以使用联合：
+
+```typescript
+type ID = number | string
+```
+
+别名只是 “别名”，不是一种类型：
+
+```typescript
+let x: ID = 100
+typeof x // number
+```
+
+别名也可以和它代表的类型一起工作（别名并不是创建新的类型）
+
+```typescript
+let id: ID = 'abc'
+id = 456 // ok
+```
+
+### 接口
+
+```typescript
+interface Point {
+  x: number
+  y: number
+}
+
+function printCoord(pt: Point) {
+  console.log("The coordinate's x value is " + pt.x)
+  console.log("The coordinate's y value is " + pt.y)
+}
+
+printCoord({ x: 100, y: 100 })
+```
+
+interface 与 type 有很多相似之处，但是它作为一个接口，也承担着一些特殊的含义在里面。
+
+```typescript
+interface Animal {
+  name: string
+}
+
+interface Bear extends Animal {
+  honey: boolean
+}
+
+const bear = getBear()
+
+bear.name
+bear.honey
+
+// ----------
+
+type Animal = {
+  name: string
+}
+
+type Bear = Animal & {
+  honey: boolean
+}
+
+const bear = getBear()
+
+bear.name
+bear.honey
+```
+
+两者看起来实现效果基本一样，但是在语义上是不同的，interface 是继承，type 是类型组合。
+
+**接口的声明合并（Declaration Merging）**
 
