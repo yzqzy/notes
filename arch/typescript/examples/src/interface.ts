@@ -25,15 +25,31 @@
 // bear.name
 // bear.honey
 
-type Animal = {
-  name: string
+// -------------------------------
+
+// type Animal = {
+//   name: string
+// }
+
+// type Bear = Animal & {
+//   honey: boolean
+// }
+
+// const bear = getBear()
+
+// bear.name
+// bear.honey
+
+// -------------------------------
+
+interface Box {
+  width: number
+  height: number
+}
+interface Box {
+  scale: number
 }
 
-type Bear = Animal & {
-  honey: boolean
-}
+const box: Box = { width: 5, height: 10, scale: 3 }
 
-const bear = getBear()
-
-bear.name
-bear.honey
+// const x = 'hello' as number

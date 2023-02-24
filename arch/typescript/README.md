@@ -911,3 +911,132 @@ bear.honey
 
 **接口的声明合并（Declaration Merging）**
 
+```typescript
+interface Box {
+  width: number
+  height: number
+}
+interface Box {
+  scale: number
+}
+
+const box: Box = { width: 5, height: 10, scale: 3 }
+```
+
+如果接口被定义两次并不是覆盖，而是合并的关系。
+
+### 类型断言（assertion）
+
+```tsx
+const canvas = document.getElementById("main_canvas") as HTMLCanvasElement
+```
+
+通常 ts 会接收 “说的通” 的类型断言，但是有的类型断言 ts 会拒绝。
+
+```typescript
+const x = "hello" as number
+// 类型 "string" 到类型 "number" 的转换可能是错误的，因为两种类型不能充分重叠。
+// 如果这是有意的，请先将表达式转换为 "unknown"。
+```
+
+你可以使用 any as T 来 “欺骗” TS：
+
+```typescript
+const a = (expr as unknown) as T
+```
+
+> as 并不是类型的转化，其本质还是类型断言。
+
+### 字面类型
+
+对于常量，在 TS 中实际上是 Literal Type。
+
+```typescript
+const someStr = "abc"
+// someStr 的类型是 “abc”，它的值只能是 abc
+
+const foo = 1
+// foo 的类型是 1（不代表是整数）
+
+// 对于 ts 理解是这样，如果我们使用 typeof 操作符也可以得到正确的结果
+// typeof someStr // 'string'
+// typeof foo // 1
+
+// 对于 let
+let foo = 1 // foo: number
+```
+
+> const 和 let 对于 ts 来说，其实是区分对待的，const 定义的数据对于 ts 来说其实就是一种类型，所以不能修改。
+
+我们可以用字面类型来约束一些特殊的函数，比如：
+
+```typescript
+function compare(a: string, b: string): -1 | 0 | 1 {
+  return a === b ? 0 : a > b ? 1 : -1
+}
+```
+
+下面是一个更贴近真实场景的案例：
+
+```typescript
+interface Options {
+  width: number
+}
+
+function configure(x: Options | 'auto') {
+  // ...
+}
+
+configure({ width: 100 })
+configure('auto')
+configure('automatic') // 类型“"automatic"”的参数不能赋给类型“Options | "auto"”的参数。
+```
+
+字面类型可以起到纠正参数的作用。
+
+**字面类型的坑：**
+
+```typescript
+function handleRequest(url: string, method: 'GET' | 'POST') {
+  // do ...
+}
+
+const req = { url: 'https://example.com', method: 'GET' }
+handleRequest(req.url, req.method)
+// 类型“string”的参数不能赋给类型“"GET" | "POST"”的参数。
+// 这里提示是正确的，method 是字面量类型，但是我们定义的 req 中的 method 是字符串类型，而且还有可能被修改成别的值
+```
+
+我们可以这样解决：
+
+```typescript
+const req = { url: 'https://example.com', method: 'GET' as 'GET' }
+handleRequest(req.url, req.method)
+```
+
+or
+
+```typescript
+const req = { url: 'https://example.com', method: 'GET' }
+handleRequest(req.url, req.method as 'GET')
+```
+
+or
+
+```typescript
+const req = { url: 'https://example.com', method: 'GET' } as const
+handleRequest(req.url, req.method)
+```
+
+### null/undefined
+
+null 和 undefined 是 JavaScript 的两种基础类型（Primtive type），它们描述的是不同的行为：
+
+* undefined 是一个没有被分配值的变量
+* null 是一个被人为分配的空值
+
+TypeScript 有一个配置项，叫做 strictNullChecks，这个配置项设置为 `on` 的时候，在使用有可能是 null 值时，需要显式检查。
+
+```typescript
+```
+
