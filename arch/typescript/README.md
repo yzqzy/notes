@@ -1038,5 +1038,220 @@ null 和 undefined 是 JavaScript 的两种基础类型（Primtive type），它
 TypeScript 有一个配置项，叫做 strictNullChecks，这个配置项设置为 `on` 的时候，在使用有可能是 null 值时，需要显式检查。
 
 ```typescript
+function doSomething(x: string | null) {
+  if (x === null) {
+    // do nothing
+  } else {
+    console.log('Hello, ' + x.toUpperCase())
+  }
+}
+```
+
+另外，我们可以用 `! `操作符，来断言某个值不是空值：
+
+> ! 代表非空断言。
+
+```typescript
+function doSomething(x: string | null) {
+  console.log("Hello, " + x!.toUpperCase())
+}
+```
+
+### 枚举类型
+
+```typescript
+enum Direction {
+  Up = 1,
+  Down,
+  Left,
+  Right
+}
+```
+
+枚举类型最后会被翻译成整数，因此枚举的很多性质和整数相似。
+
+比如 Down.toString() 会返回 2，而不是 Down。正因为如此，枚举类型的效率很高。
+
+```typescript
+enum Direction {
+  Up = 1,
+  Down,
+  Left,
+  Right
+}
+
+console.log(Direction.Up) // 1
+```
+
+如果你想 ts 返回字符串，还可以像这样做。这样叫做反向映射。
+
+```typescript
+console.log(Direction[Direction.Up]) // Up
+```
+
+当然如果你想用字符串类的枚举，就需要显示的为每一项赋值，不过这样意义并不大，因为 enum 已经提供了反向操作的方式。
+
+```typescript
+enum Direction {
+  Up = 'UP',
+  Down = "Down",
+  Left = 'LEFT',
+  Right = 'RIGHT'
+}
+```
+
+我们还可以混合使用，不过这样不仅没有意义，而且还会减少代码可读性。
+
+```typescript
+enum BooleanLikeHeterogeneousEnum {
+  No = 0,
+  Yes = 'YES'
+}
+```
+
+在运行时，Enum 会被解释成对象，Enum 的每项都会被解释成常数。例如下面这个例子：
+
+```typescript
+enum E {
+  X,
+  Y,
+  Z
+}
+
+function f(obj: { X: number }) {
+  return obj.X
+}
+
+console.log(f(E)) // 0
+```
+
+可以用下面这个语法提取 Enum 中的字符串，这个也叫 Reverse Mapping。刚才我们也提到过。
+
+```typescript
+console.log(E[E.X]) // X
+```
+
+## 05. 泛型
+
+### 泛型概念
+
+泛型，可以说是提取了一类事物的共性特征的一种抽象。比如说，松树、柳树都是树，在程序里有 3 种表达：
+
+* 接口（Interface）
+* 继承（Ineritance）
+* 泛型（Generics）
+
+**继承是一种强表达。**
+
+松树继承于树，松树同时也是木材。这样关系的表达，可以让松树多重继承（树、木材），要么松树 < 树 < 木材。
+
+无论哪种，增加程序设计复杂度，也加强了继承关系的维护成本（或者说耦合）。这样看，关系太强，其实并不好。
+
+**接口是一种方面（Aspect）描述**。比如松树可以生长，那么松树是：Growable；动植物都可以进化，那么它们是 Evolvable。
+
+一个类型可以拥有多个方面的特性：
+
+**泛型（Generics）**是对共性的提取（不仅仅是描述）。
+
+```typescript
+class BedMaker<t> {
+  make() {}
+}
+
+const A = new BedMaker<红木>()
+const B = new BedMaker<桃木>()
+```
+
+* 木头可以制造床，但不是所有的木头都可以制造床；
+* 制造床这个方法，放进木头类中就会很奇怪，因为木头不仅仅可以制造床；
+* 同理，让木头继承于 “可以制造床” 这个接口也很奇怪。
+
+```typescript
+// 奇怪的代码展示
+
+class 红木 implements IMakedBed {
+  makeBed() { ... }
+}
+```
+
+设计 `IMakedBed` 的目标是为了拆分描述事物不同的方面（Aspect），还有一个更专业的词汇 - 关注点（Interest Point）。拆分关注点的技巧，叫做关注点分离。如果仅仅用接口，不用泛型，那么关注点就没有做到完全解耦。
+
+**泛型是一种抽象共性（本质）的编程手段，它允许将类型作为其他类型的参数（表现形式），从而分离不同关注点的实现（作用）**。
+
+* `Array<T>` 分离的是数据可以被线性访问、存储的共性。
+
+* `Stream<T>` 分离的是数据可以随着时间产生的共性。
+* `Promsie<T>` 分离的是数据可以被异步计算的特性。
+
+### Hello 泛型
+
+```typescript
+// 一个 identity 函数是自己返回自己的函数
+// 可以声明它是：number - number
+function identity(arg: number): number {
+  return arg
+}
+
+// 为了可以让 identity 支持更多类型，可以声明它是 any
+function identity(arg: any): any {
+  return arg
+}
+
+// any 会丢失后续所有的检查，这时我们可以考虑使用泛型
+function identity<Type>(arg: Type): Type {
+  return arg
+}
+
+let output = identity<string>("MyString")
+// 不同显示的指定 <> 中的类型
+// let output = identity("MyString")
+
+output = 100 // Error
+```
+
+`<>` 叫做钻石操作符，代表传入的类型参数
+
+### 泛型类
+
+```typescript
+class GenericNumber<NumType> {
+  zeroValue: NumType
+  add: (x: NumType, y: NumType) => NumType
+}
+
+let myGenericNumber = new GenericNumber<number>()
+myGenericNumber.zeroValue = 0
+myGenericNumber.add = function (x, y) {
+  return x + y
+}
+
+let stringNumeric = new GenericNumber<string>()
+stringNumeric.zeroValue = ''
+stringNumeric.add = function (x, y) {
+  return x + y
+}
+```
+
+推荐将声明（Declaration）和定义（Definition）写到一起：
+
+```typescript
+class GenericNumber<T> {
+  private zeroValue: T
+
+  constructor(v: T) {
+    this.zeroValue = v
+  }
+
+  public add(x: T, y: T) {
+    return x + y
+  }
+}
+```
+
+### 泛型约束（Generic Constraints）
+
+下面的程序会报错：
+
+```typescript
 ```
 
