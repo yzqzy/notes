@@ -1253,5 +1253,101 @@ class GenericNumber<T> {
 下面的程序会报错：
 
 ```typescript
+function loggingIdentity<Type>(arg: Type): Type {
+  console.log(arg.length)
+  // 类型“Type”上不存在属性“length”。
+  return arg
+}
 ```
+
+我们可以考虑为 arg 增加约束：
+
+```typescript
+interface Lengthwise {
+  length: number
+}
+
+function loggingIdentity<Type extends Lengthwise>(arg: Type): Type {
+  console.log(arg.length)
+  return arg
+}
+```
+
+我们还可以用 keyof 关键字作为泛型约束：
+
+```typescript
+type Point = { x: number; y: number }
+type P = keyof Point // “x” | “y”
+```
+
+```typescript
+function getProperty<Type, Key extends keyof Type>(obj: Type, key: Key) {
+  return obj[key]
+}
+
+const x = { a: 1, b: 2, c: 3, d: 4 }
+
+getProperty(x, 'a')
+getProperty(x, 'm') // 类型“"m"”的参数不能赋给类型“"a" | "b" | "c" | "d"”的参数
+```
+
+不过 ts 为什么可以这么做？因为对 TS 而言所有对象的 key 都是静态的。
+
+```typescript
+const a = { x: 1, y: 2 }
+a.z = 3 // Error
+```
+
+因为是静态的，所以可以用 keyof 操作符求所有的 key。如果一个对象的类型是 any，那么 keyof 也就没有意义了。
+
+### 实例化泛型类型（将类作为参数）
+
+```typescript
+function create<Type>(c: { new (): Type }): Type {
+  return new c()
+}
+
+create(Foo) // Foo 的实例
+```
+
+不错的例子：
+
+```typescript
+class BeeKeeper {
+  hasMask: boolean = true
+}
+
+class ZooKeeper {
+  nametag: string = 'Mike'
+}
+
+class Animal {
+  numLegs: number = 4
+}
+
+class Bee extends Animal {
+  keeper: BeeKeeper = new BeeKeeper()
+}
+
+class Lion extends Animal {
+  keeper: ZooKeeper = new ZooKeeper()
+}
+
+function createInstance<A extends Animal>(c: new () => A): A {
+  return new c()
+}
+
+createInstance(Lion).keeper.nametag
+createInstance(Bee).keeper.hasMask
+```
+
+### 总结
+
+**什么时候用接口？什么时候用泛型？**
+
+接口是用来约束一个类型的行为；泛型实在提取某些共性，做成类似模板一样的语法，将共性抽象成泛型。
+
+**将类型作为参数传递，并实例化有哪些应用场景？**
+
+例如 React.createClass("")，其实应用场景也有很多。
 
