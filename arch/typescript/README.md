@@ -1351,3 +1351,46 @@ createInstance(Bee).keeper.hasMask
 
 例如 React.createClass("")，其实应用场景也有很多。
 
+## 06. 类型窄化
+
+TS中的类型是可以组合使用的。
+
+### 联合和窄化
+
+```typescript
+type Padding = number | string
+
+function padLeft(padding: Padding, input: string): string {
+  // ...
+}
+```
+
+当我们编写上述代码会遇到一个问题，我们需要用 typeof 判断 padding 的类型。
+
+当然作为一个 number | string 的联合类型可以赋值成 number 或者 string。
+
+```typescript
+let x: number | string = 1
+x = 'Hello'
+```
+
+如果不判断：
+
+```typescript
+function padLeft(padding: number | string, input: string) {
+  return new Array(padding + 1).join(' ') + input
+  // 运算符“+”不能应用于类型“string | number”和“number”。
+}
+```
+
+于是我们可以增加 typeof 的判断：
+
+```typescript
+function padLeft(padding: number | string, input: string) {
+  if (typeof padding === 'number') {
+    return new Array(padding + 1).join(' ') + input
+  }
+  return padding + input
+}
+```
+
