@@ -1394,3 +1394,216 @@ function padLeft(padding: number | string, input: string) {
 }
 ```
 
+当进行 `if + typeof` 操作后，ts 可以识别变窄后的类型，称为窄化（Narrowing）。上面 Narrowing 的能力，可以让 TS 清楚的知道 padding 是数字还是字符串。
+
+在实现层面，TS 会认为 `typeof padding = "number"` 。这样的表达式是一种类型守卫（type guard）表达式。 当然这是纯粹实现层面的概念，准确来说是 `if + type guard` 实现了 Narrowing。
+
+**类型窄化（Type Narrowing）根据类型守卫（Type Guard）在子语句块重新定义更具体的类型。**
+
+### typeof 守卫
+
+```typescript
+// 返回值
+"string"
+"number"
+"bigint"
+"boolean"
+"symbol"
+"undefined"
+"object"
+"function"
+```
+
+注意，因为 `typeof null === 'object'`。因此：
+
+```typescript
+function printAll(strs: string | string[] | null) {
+  if (typeof strs === 'object') {
+    for (const s of strs) {
+      // Object is possibly 'null'
+      console.log(s)
+    }
+  } else if (typeof strs === 'string') {
+    console.log(strs)
+  } else {
+    // do nothing
+  }
+}
+```
+
+### 真值窄化
+
+真值窄化（Truthiness narrowing）。
+
+Javascript 有一张复杂的真值表，总结下来这些值都会拥有 false 的行为：
+
+```typescript
+0
+NaN
+"" （the empty string）
+0n  (the bigint version of zero)
+null
+undefined
+```
+
+我们也可以通过真值实现窄化。例如我们可以避免：TypeError：null is not iterable 错误。
+
+```typescript
+function printAll(strs: string | string[] | null) {
+  if (strs && typeof strs === 'object') {
+    for (const s of strs) {
+      // Object is possibly 'null'
+      console.log(s)
+    }
+  } else if (typeof strs === 'string') {
+    console.log(strs)
+  } else {
+    // do nothing
+  }
+}
+```
+
+再举个例子：
+
+```typescript
+function multiplyAll(values: number[] | undefined, factor: number) {
+  if (!values) {
+    return values
+  }
+  return values.map(x => x * factor)
+}
+```
+
+**真值（Truthiness narrowing）窄化可以帮助我们更好的应对 null/undefined/0 等值**。
+
+### 相等性窄化
+
+在窄化中有一类隐式的窄化方法，就是想等性窄化。`===`，`!==`，`==` 和 `!=` 都可以用来窄化类型。例如：
+
+```typescript
+function example(x: string | number, y: string | boolean) {
+  if (x === y) {
+    // s is string
+  } else {
+    // x is string | number
+    // y is string | boolean
+  }
+}
+```
+
+再看一个例子：
+
+```typescript
+function printAll(strs: string | string[] | null) {
+  if (strs !== null) {
+    if (typeof strs === 'object') {
+      for (const s of strs) {
+      }
+    } else if (typeof strs === 'string') {
+    }
+  }
+}
+```
+
+```typescript
+interface Container {
+  value: number | null | undefined
+}
+
+function multiplyValue(container: Container, factor: number) {
+  if (container.value != null) {
+    container.value *= factor
+  }
+}
+```
+
+### in 操作符窄化
+
+in 操作符的作用是检验对象中是否有属性。
+
+```typescript
+type Fish = { swim: () => void }
+type Bird = { fly: () => void }
+
+function move(animal: Fish | Bird) {
+  if ('swim' in animal) {
+    return animal.swim()
+  }
+  return animal.fly()
+}
+```
+
+不过我们为什么不用 `instaceof Fish` ？因为 type 没有运行时，代码转化后就不存在了。
+
+### instanceof 窄化
+
+`instanceof` 也可以做窄化，不过类型不能是 type，而是真实存在的 Function 类型。
+
+```typescript
+function logValue(x: Date | string) {
+  if (x instanceof Date) {
+    // s is Date
+  } else {
+    // x is string
+  }
+}
+```
+
+## 组合类型推导
+
+有时候 TypeScript 会推导出组合类型。
+
+```typescript
+let x = Math.random() < 0.5 ? 10 : 'hello world!'
+```
+
+这个时候 x 是 `number | string`。当然，这里有个问题是 `number | string`  的类型可以赋值成 `number`  或者 `string`。
+
+### 控制流分析
+
+TypeScript 是如何做到类型窄化的？
+
+首先在语法分析阶段，Typescrpt 的编译器会识别出类型卫兵表达式。包括一些隐性的类型卫兵，比如真值表达式、instaceof 等等。然后在语法分析的时候，Typescript 遇到控制流关键字 `if/while` 等，就会看看这里有没有需要分析的窄化操作。例如：
+
+```typescript
+function padLeft(padding: number | string, input: string) {
+  if (typeof padding === 'number') {
+    return new Array(padding + 1).join(' ') + input
+  }
+  return padding + input
+}
+```
+
+* 首先 ts 会看到一个卫兵表达式：`typeof padding === 'number'`；
+* 然后 ts 会对返回值 `return padding + input` 以及 `return new` 分别做窄化；
+* 窄化的本质是重新定义类型。
+
+很多语句都会触发窄化：
+
+```typescript
+function example() {
+  let x: string | number | boolean
+
+  x = Math.random() < 0.5
+  // x = boolean
+
+  if (Math.random() < 0.5) {
+    x = 'Hello'
+    // x:string
+  } else {
+    x = 100
+    // x: number
+  }
+
+  return x
+  // x: string | number
+}
+```
+
+## 类型断言
+
+类型断言（Type Assertions/Predicate）。
+
+Assertion 和 predicate 翻译过来都是断言。在计算机中，Assertion 通常是断言某个表达式的值是不是 true/false。Assertion 在很多的测试库中被使用，比如 `asset.equals(a, 1)` 。从语义上，这里在断言 a 的值是 1 （a === 1 是 true）。
+
+**Assertion 在说某个东西是什么。**
