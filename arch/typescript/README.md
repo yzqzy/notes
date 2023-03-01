@@ -1739,3 +1739,139 @@ function getArea(shape: Shape) {
 
 类型窄化解决了联合类型校验的问题。TS 是 JS 的超集，TS 会尽量避免新增特性。
 
+## 07. React Latest
+
+React 从 16 开始，不断给我们眼前一亮的新特性，例如：
+
+* Fiber
+* React Hooks
+* Suspense
+* React 17 对渲染的启发性优化
+* ...
+
+React 是一个渲染引擎，所有更新的特性都是为了更好的渲染页面。所有 React 的努力，其实就是两方面的事情：
+
+* 改进体验
+* 提升开发效率
+
+Fiber 是 React 16 之后对体验改进的核心；React Hooks 是 16 之后对工程效率提升的核心。
+
+### React Hooks 介绍
+
+React Hooks 可以从两个方面理解：
+
+* 作用：
+  * 让 React 更好的拥抱函数式
+  * 更好的解决组合问题（关注点分离）
+* 工作原理：
+  * 从原理上看它们是钩子（hook），当 React 生命周期发生变化的时候，会触发它们。
+
+#### 作用角度
+
+首先是 Hooks 出现之前 Class 风格的 React 组件：
+
+```jsx
+class Foo extends Component {
+  constructor() {
+    this.sttate = {}
+  }
+
+  componentDidMount() {}
+  shouldComponentUpdate() {}
+
+  render() {
+    return <div></div>
+  }
+}
+```
+
+Hooks 出现后，我们可以将 React 组件看作是一个函数：
+
+```jsx
+function Foo() {
+  return <div></div>
+}
+```
+
+没有生命周期函数，使用 Hooks 去替代。例如下面的累加器案例：
+
+```tsx
+function Foo() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    timer(0, 1000)
+      .subscribe(i => setCount(i))
+  }, [])
+
+  return <div>{count}</div>
+}
+```
+
+上面这段程序中没有 class，只有函数。这是一种编程风格的变化：
+
+* 组件是一个用来渲染的纯函数（重新定义）：不再关注生命周期，不需要理解生命周期，更接近于 React `compoent = f(data)` 的定义；
+* 细化解决用户痛点：针对状态、作用、上下文、缓存等方面，为用户量身定做 hook 函数；而不是像之前都需要用户自己在类中实现程序；
+* 让用户以最小的代价实现关注点分离。
+
+关注点分离的例子：
+
+```tsx
+function HomePage() {
+  const [productList, load] = useService('product').get()
+  const [ads, loadAds] = useService('ads').get()
+  const [suppestions, loadSuggs] = useService('suggestion').get()
+
+  return <>
+    <TitleBar />
+    <ProductList list={productList} loadFN={load} />
+    <Ads ads={ads} />
+    <Suggestions list={suppestions} />
+    <FootBar />
+  </>
+
+```
+
+上面程序在一个页面中对应 3 个关注点进行分析，非常干净。
+
+* 产品列表
+* 广告
+* 推荐列表
+
+`useService` 是一个自定义的 hook，可以由用户自己来实现。
+
+**Hooks 更好地拥抱了函数式，彻底改变了 React 的编程风格，简化了用户的理解，并且可以很好的帮助用户实现关注点分分离。**
+
+#### 原理角度
+
+钩子（Hooks）是什么？
+
+* Git 的 Web hooks 是什么？
+* 杀毒软件监控操作系统的 Hooks 是什么？
+* React 的 Hooks 是什么？
+
+Hooks 本质是一种消息机制。
+
+Hooks 的作用是从系统外部监听某个系统内部的变化，并和某种特定事件挂钩。比如 Git 的 Web Hooks 看到 Git 有提交，就会触发一个 HTTP 请求。操作系统给的进程 Hook，看到新进程就发送一条消息，然后杀毒软件就可以获取这条消息。
+
+Hook 的实现是两个方面：
+
+* 被监听的实体在特定情况下发送消息给 Hook（比如打开文件、Git 提交、新建进程 ...）
+* Hook 对象收到这种消息完成某个具体的工作（比如发送 Http 请求、开始杀毒、Hot Reload）
+
+ React Hook 一方面在 React 在某种特定状态发生变化的时候会通知 Hook，然后 Hook 再完成某个特定行为。
+
+例如 `useEffect`，当 React 渲染的时候会触发这个 Hook，如果这个 Hook 的依赖发生变化，就会执行这个 Hook 上关联的函数。`useState` 是一个反向的 Hook，当用户设置状态变更的时候，会反向触发 React 的更新。
+
+**Hooks 是一种通知机制**。
+
+#### 总结
+
+**关于 React Hooks 的理解？**
+
+钩子是一种消息通知机制。列举 Git Hook、Web Hook、Webpack Hook 机制等概念。
+
+函数式编程的拥抱，拥抱的特性，更好支持关注点分离等。
+
+### React 基础
+
