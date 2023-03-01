@@ -1549,7 +1549,7 @@ function logValue(x: Date | string) {
 }
 ```
 
-## 组合类型推导
+### 组合类型推导
 
 有时候 TypeScript 会推导出组合类型。
 
@@ -1559,7 +1559,7 @@ let x = Math.random() < 0.5 ? 10 : 'hello world!'
 
 这个时候 x 是 `number | string`。当然，这里有个问题是 `number | string`  的类型可以赋值成 `number`  或者 `string`。
 
-### 控制流分析
+**控制流分析**
 
 TypeScript 是如何做到类型窄化的？
 
@@ -1600,10 +1600,104 @@ function example() {
 }
 ```
 
-## 类型断言
+### 类型断言
 
 类型断言（Type Assertions/Predicate）。
 
 Assertion 和 predicate 翻译过来都是断言。在计算机中，Assertion 通常是断言某个表达式的值是不是 true/false。Assertion 在很多的测试库中被使用，比如 `asset.equals(a, 1)` 。从语义上，这里在断言 a 的值是 1 （a === 1 是 true）。
 
 **Assertion 在说某个东西是什么。**
+
+Predicate 通常是一个函数，返回值是 true/false，比如说 list.filter(x => x.score > 500)，`x => s.score > 500` 这个函数是一个 predicate 函数。
+
+**Prediate 是一个返回 true/false 的函数。**
+
+TS 中有两个断言操作符，`Assertion` 操作符 `as` 和 `predicate` 操作符 `is`。
+
+as 操作符提示 TypeScript 某种类型是什么（当用户比 TypeScript 更了解类型的时候使用）。is 操作符是用户自定义的类型守卫，用于帮助 TypeScript Narrowing。
+
+案例：
+
+```typescript
+function isFish(pet: Fish | Bird): pet is Fish {
+  return (pet as Fish).swim !== undefined
+}
+
+let pet = {
+  fly: () => {}
+}
+
+if (isFish(pet)) {
+  // isFish 成为了 Type Guard
+  pet.swim()
+} else {
+  pet.fly()
+}
+```
+
+`pet is Fish` 让 `isFish` 具有的窄化功能，如果不定义，会直接报错。
+
+那么 as/is 符不符合计算机标准语言中 Assertion/Predicate 的含义？
+
+* as 是比较符合 assertion 的含义的
+* is 如果是一个 predicate，是应该返回一个值的。不过 pet is Fish 在这只是起到类型卫兵的作用，含义略微有些差别。
+
+### 判别的联合
+
+判别的联合（Discriminated unions）。
+
+```typescript
+interface Shape {
+  kind: 'circle' | 'square'
+  radius?: number
+  sideLength: number
+}
+
+function getArea(shape: Shape) {
+  return Math.PI * shape.radius ** 2
+}
+```
+
+这样判断有什么问题吗？如果是下面这样呢？
+
+```typescript
+function getArea(shape: Shape) {
+  if (shape.kind === 'circle') {
+    return Math.PI * shape.radius ** 2
+  }
+}
+```
+
+上面这两种写法都存在问题，因为 radius 可能不存在。我们可以使用非 Null 断言操作符强制判断 radius 不能为空。
+
+```typescript
+function getArea(shape: Shape) {
+  if (shape.kind === 'circle') {
+    return Math.PI * shape.radius! ** 2
+  }
+}
+```
+
+针对上面的代码其实还有优化空间。`circle` 应该是一种单独的类型，Shape 可能还有 rect 等。
+
+```typescript
+interface Circle {
+  kind: 'circle'
+  radius: number
+}
+
+interface Square {
+  kind: 'quare'
+  sideLength: number
+}
+
+type Shape = Circle | Square
+
+function getArea(shape: Shape) {
+  if (shape.kind === 'circle') {
+    // Narrowing
+    return Math.PI * shape.radius ** 2
+  }
+}
+```
+
