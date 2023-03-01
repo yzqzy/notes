@@ -1678,7 +1678,7 @@ function getArea(shape: Shape) {
 }
 ```
 
-针对上面的代码其实还有优化空间。`circle` 应该是一种单独的类型，Shape 可能还有 rect 等。
+针对上面的代码其实还有优化空间。`Circle` 应该是一种单独的类型，Shape 可能还有 rect 等。
 
 ```typescript
 interface Circle {
@@ -1687,7 +1687,7 @@ interface Circle {
 }
 
 interface Square {
-  kind: 'quare'
+  kind: 'square'
   sideLength: number
 }
 
@@ -1700,4 +1700,42 @@ function getArea(shape: Shape) {
   }
 }
 ```
+
+再整理下：
+
+```typescript
+function getArea(shape: Shape) {
+  switch (shape.kind) {
+    case 'circle':
+      return Math.PI * shape.radius ** 2
+    case 'square':
+      return shape.sideLength ** 2
+  }
+}
+```
+
+### never 类型
+
+Never，即不应该出现的意思。Never 类型代表一个不应该出现的类型。因此对 Never 的赋值，都会报错。
+
+比如下面处理 default 的逻辑：
+
+```typescript
+function getArea(shape: Shape) {
+  switch (shape.kind) {
+    case 'circle':
+      return Math.PI * shape.radius ** 2
+    case 'square':
+      return shape.sideLength ** 2
+    default:
+      const _exhaustiveCheck: never = shape
+      // Type ... is not assignable to type never
+      return _exhaustiveCheck
+  }
+}
+```
+
+### 总结
+
+类型窄化解决了联合类型校验的问题。TS 是 JS 的超集，TS 会尽量避免新增特性。
 
