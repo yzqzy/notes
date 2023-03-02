@@ -1963,4 +1963,53 @@ export default function App() {
 }
 ```
 
-`key` 是 React 渲染机制的一环，不需要在属性中声明（不可以自定义名叫 key 的属性）。当 React 渲染的时候，就会调用组件函数。只要组件的 `key` 属性发生变化，React 就会重绘组件。
+`key` 是 React 渲染机制的一环，不需要在属性中声明（不可以自定义名叫 key 的属性）。当 React 渲染的时候，就会调用组件函数。只要组件的 `key` 属性发生变化，React 就会重绘组件。如果 key 不变，且其他属性也不变，那么就不会发生重绘。
+
+* `['a', 'b', 'c']` => `['a', 'b', 'c', 'd']` （只有一个 li 新增，但是没有 li 重绘）
+* `['a', 'b', 'c']` => `['c', 'a']` （a,c 不重绘，删除 b）
+
+属性或 key 发生变化才会导致组件重绘，父组件（List）重绘，子组件（li）不一定需要重绘。
+
+#### 容器组件
+
+有的组件是一个容器，比如说一个支持 flexbox 的盒子：
+
+```tsx
+type Children = JSX.Element | JSX.Element[] | null
+const Box = ({ children }: { children: Children }) => {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {children}
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Box>
+      <h2>Hello!</h2>
+      <h2>Hello!</h2>
+    </Box>
+  )
+}
+```
+
+Event
+
+```tsx
+function App() {
+  return <div onClick={() => alert(1)}>
+  	点我
+  </div>
+}
+```
+
+#### ReactDOM
+
+React 在 DOM（浏览器文本对象模型）下的渲染需要引入 `react-dom`。
+
+```typescript
+import ReactDOM from 'react-dom'
+ReactDOM.render(<App />, document.getElementById('#root'))
+```
+

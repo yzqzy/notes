@@ -31,16 +31,36 @@
 
 // ------------------------
 
-function List({ data }: { data: Array<string> }) {
+// function List({ data }: { data: Array<string> }) {
+//   return (
+//     <ul>
+//       {data.map(word => (
+//         <li key={word}>{word}</li>
+//       ))}
+//     </ul>
+//   )
+// }
+
+// export default function App() {
+//   return <List data={['a', 'b', 'c']} />
+// }
+
+// ------------------------
+
+type Children = JSX.Element | JSX.Element[] | null
+const Box = ({ children }: { children: Children }) => {
   return (
-    <ul>
-      {data.map(word => (
-        <li key={word}>{word}</li>
-      ))}
-    </ul>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {children}
+    </div>
   )
 }
 
 export default function App() {
-  return <List data={['a', 'b', 'c']} />
+  return (
+    <Box>
+      <h2>Hello!</h2>
+      <h2>Hello!</h2>
+    </Box>
+  )
 }
