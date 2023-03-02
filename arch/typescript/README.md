@@ -1875,3 +1875,92 @@ Hook 的实现是两个方面：
 
 ### React 基础
 
+#### 创建项目
+
+推荐使用 create-reacta-app 直接创建。
+
+```shell
+npm i create-react-app -g
+create-react-app hooks-example --template typescript
+```
+
+#### 函数组件
+
+函数组件的输入是 props 对象，输出是一个 JSX 对象。
+
+一个函数组件可以这样写：
+
+```tsx
+function App () {
+  return <h2>Hello world !!!</h2>
+}
+```
+
+你可以看到 `h2` 是一个 JSX 类型，`<h2/>` 是一个 JSX Element，因此，APP 的返回值类型也是一个 JSX Element，准确来说是 `React.JSX`。
+
+`h2` 也是一个组件，是一个 React 内置的组件，准确来说这个组件是 `React.IntrinsicElements.h2`。例如 Java 的 synchronized 关键字也被称为 Intrinsic Lock。
+
+> Intrinsic 内部的、External 外部的。
+
+**函数即组件。**
+
+在 React 中，可以向组件传递属性：
+
+```tsx
+export default function App() {
+  return <Grettings message="Hello React！！！" />
+}
+
+function Grettings({ message }: { message: string }) {
+  return <h2>{message}</h2>
+}
+```
+
+**属性就是函数的参数，JSX=f(props)**
+
+输入决定输出叫做：纯（Pure），没有副作用（Side Effect）。
+
+#### 组件和列表关系
+
+组合关系：多个组件组成一个。
+
+```typescript
+function ComposedComponent() {
+  return (
+    <>
+      <A></A>
+      <B></B>
+    </>
+  )
+}
+
+function A() {
+  return <h2>A</h2>
+}
+
+const B = () => {
+  return <h2>B</h2>
+}
+```
+
+**React 用 JSX 实现组合关系，比较直观。**
+
+#### 数据映射成列表
+
+```tsx
+function List({ data }: { data: Array<string> }) {
+  return (
+    <ul>
+      {data.map(word => (
+        <li key={word}>{word}</li>
+      ))}
+    </ul>
+  )
+}
+
+export default function App() {
+  return <List data={['a', 'b', 'c']} />
+}
+```
+
+`key` 是 React 渲染机制的一环，不需要在属性中声明（不可以自定义名叫 key 的属性）。当 React 渲染的时候，就会调用组件函数。只要组件的 `key` 属性发生变化，React 就会重绘组件。
