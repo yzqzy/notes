@@ -2009,7 +2009,57 @@ function App() {
 React 在 DOM（浏览器文本对象模型）下的渲染需要引入 `react-dom`。
 
 ```typescript
-import ReactDOM from 'react-dom'
-ReactDOM.render(<App />, document.getElementById('#root'))
+import ReactDOM from 'react-dom/client'
+import App from './App'
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />)
+```
+
+之所以要在这样设计，是因为 JSX 的结构是一个`Virtual DOM`，可以渲染在各个端：
+
+* React Native
+* Canavas
+* Web
+* ......
+
+#### 总结
+
+React 的核心设计原则是什么？
+
+* Learn once Write Anywhere；
+* 专注做好渲染工作；
+* Uniform：最简化、标准化的表达。
+
+### React Hooks API
+
+#### useState
+
+管理状态，当状态发生变化的时候反向通知 React 重绘。
+
+通知方向：state hook => React Component => render
+
+```tsx
+import { useState } from 'react'
+
+export default function Aop() {
+  // const [count, setCount] = useState(0)
+  // const [count, setCount] = useState<number>(0)
+  const [count, setCount] = useState(() => 0)
+
+  return (
+    <div>
+      {count}
+      {/* Race Condition */}
+      <button onClick={() => setCount(x => x + 1)}>+</button>
+    </div>
+  )
+}
+```
+
+#### useEffect
+
+当 React 渲染时，hook 中的函数根据依赖变化发生调用。
+
+```tsx
 ```
 

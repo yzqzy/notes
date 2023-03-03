@@ -47,20 +47,38 @@
 
 // ------------------------
 
-type Children = JSX.Element | JSX.Element[] | null
-const Box = ({ children }: { children: Children }) => {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {children}
-    </div>
-  )
-}
+// type Children = JSX.Element | JSX.Element[] | null
+// const Box = ({ children }: { children: Children }) => {
+//   return (
+//     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+//       {children}
+//     </div>
+//   )
+// }
 
-export default function App() {
+// export default function App() {
+//   return (
+//     <Box>
+//       <h2>Hello!</h2>
+//       <h2>Hello!</h2>
+//     </Box>
+//   )
+// }
+
+// ------------------------
+
+import { useState } from 'react'
+
+export default function Aop() {
+  // const [count, setCount] = useState(0)
+  // const [count, setCount] = useState<number>(0)
+  const [count, setCount] = useState(() => 0)
+
   return (
-    <Box>
-      <h2>Hello!</h2>
-      <h2>Hello!</h2>
-    </Box>
+    <div>
+      {count}
+      {/* Race Condition */}
+      <button onClick={() => setCount(x => x + 1)}>+</button>
+    </div>
   )
 }
