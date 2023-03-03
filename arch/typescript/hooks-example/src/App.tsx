@@ -67,17 +67,44 @@
 
 // ------------------------
 
-import { useState } from 'react'
+// import { useState } from 'react'
 
-export default function Aop() {
-  // const [count, setCount] = useState(0)
-  // const [count, setCount] = useState<number>(0)
-  const [count, setCount] = useState(() => 0)
+// export default function Aop() {
+//   // const [count, setCount] = useState(0)
+//   // const [count, setCount] = useState<number>(0)
+//   const [count, setCount] = useState(() => 0)
+
+//   return (
+//     <div>
+//       {count}
+//       {/* Race Condition */}
+//       <button onClick={() => setCount(x => x + 1)}>+</button>
+//     </div>
+//   )
+// }
+
+// ------------------------
+
+import { useEffect, useState } from 'react'
+import { timer } from 'rxjs'
+
+export default function App() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const subscription = timer(0, 1000).subscribe(() => setCount(x => x + 1))
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log('count changed to', count)
+  }, [count])
 
   return (
     <div>
       {count}
-      {/* Race Condition */}
       <button onClick={() => setCount(x => x + 1)}>+</button>
     </div>
   )

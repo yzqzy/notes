@@ -2061,5 +2061,57 @@ export default function Aop() {
 当 React 渲染时，hook 中的函数根据依赖变化发生调用。
 
 ```tsx
+import { useEffect, useState } from 'react'
+import { timer } from 'rxjs'
+
+export default function App() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const subscription = timer(0, 1000).subscribe(() => setCount(x => x + 1))
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log('count changed to', count)
+  }, [count])
+
+  return (
+    <div>
+      {count}
+      <button onClick={() => setCount(x => x + 1)}>+</button>
+    </div>
+  )
+}
 ```
+
+每当渲染的时候 `useEffect` 都会调用，React 通过判断依赖（deps）有无变化决定是否调用 `useEffect` 中的函数。这样就将函数调用和声明式的编程同意。
+
+**那么 react 可不可以这样写？**
+
+```tsx
+if (a === 1) {
+  useEffect(() => {
+    // ...
+  }, [deps])
+}
+```
+
+不能。
+
+**思考：能不能在 React 函数之外的地方使用 hooks？**
+
+不能。
+
+**思考：为什么叫做 effect？**
+
+去掉  `useEffect`，函数组件看起来很纯，像是靠 props 和 state 渲染，加上 effect 函数就不纯了，因为做了渲染之外的事情，比如设置定时器、打印日志、网络请求 ......
+
+至于为什么叫做 Effect？我们通常将计算函数返回值之外的事情都称作 Effect。当这种 Effect 会产生负面效果，就称作 Side Effect。
+
+`useEffect` 将渲染之外的事情收敛，集中管理。
+
+ #### useRef
 
