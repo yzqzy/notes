@@ -85,7 +85,7 @@
 
 // ------------------------
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { timer } from 'rxjs'
 
 export default function App() {
@@ -109,3 +109,52 @@ export default function App() {
     </div>
   )
 }
+
+// function LogBottonClicks() {
+//   const countRef = useRef(0)
+
+//   const handle = () => {
+//     countRef.current++
+//     console.log(`Clicked ${countRef.current} times`)
+//   }
+
+//   console.log('rendered')
+
+//   return <button onClick={handle}>Click me</button>
+// }
+
+// function TextInputWithFocusButton() {
+//   const inputEl = useRef(null)
+
+//   const onButtonClick = () => {
+//     // `current` points to the mounted text input element
+//     inputEl.current.focus()
+//   }
+
+//   return (
+//     <>
+//       <input ref={inputEl} type="text" />
+//       <button onClick={onButtonClick}>Focus the input</button>
+//     </>
+//   )
+// }
+
+function LogButtonClicks() {
+  const countRef = useRef(0)
+  const [_, setVer] = useState(0)
+
+  const handle = () => {
+    countRef.current++
+    console.log(`Clicked ${countRef.current} times`)
+    setVer(ver => ver + 1)
+  }
+
+  return <button onClick={handle}>Click me</button>
+}
+
+// let ref = null
+// if (a > 0) {
+//   ref = useRef(true)
+// } else {
+//   ref = useRef((false))
+// }

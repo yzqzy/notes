@@ -2115,3 +2115,85 @@ if (a === 1) {
 
  #### useRef
 
+这个 Hook 让函数组件可以在多次渲染间同步引用值。不过它为什么是钩子？谁触发它？其实就是每次渲染的时候触发这个 hook，然后它负责再保存一个引用。
+
+```tsx
+function LogBottonClicks() {
+  const countRef = useRef(0)
+
+  const handle = () => {
+    countRef.current++
+    console.log(`Clicked ${countRef.current} times`)
+  }
+
+  console.log('rendered')
+
+  return <button onClick={handle}>Click me</button>
+}
+```
+
+利用这种机制，子组件可以向父组件同步数据：
+
+```tsx
+function TextInputWithFocusButton() {
+  const inputEl = useRef(null)
+
+  const onButtonClick = () => {
+    // `current` points to the mounted text input element
+    inputEl.current.focus()
+  }
+
+  return(
+    <>
+      <input ref={inputEl} type="text" />
+      <button onClick={onButtonClick}>Focus the input</button>
+    </>
+  )
+}
+```
+
+思考：`useRef` 每次渲染的时候都调用，是如何做到只初始化一次的？
+
+例如下面这个程序：
+
+```tsx
+
+function LogButtonClicks() {
+  const countRef = useRef(0)
+  const [_, setVer] = useState(0)
+
+  const handle = () => {
+    countRef.current++
+    console.log(`Clicked ${countRef.current} times`)
+    setVer(ver => ver + 1)
+  }
+
+  return <button onClick={handle}>Click me</button>
+}
+```
+
+React 通过记录 useRef 的序号同步引用。比如 countRef 是函数组件的第 0 个 Ref，存放在位置 0。第一次渲染的时候，React 查看位置 0 中是否有值，如果没有初始化，就调用初始化函数/使用初始值。如果有，就不再初始化。
+
+那么，我们这样使用可以的？答案是不可以。
+
+```tsx
+let ref = null
+if (a > 0) {
+  ref = useRef(true)
+} else {
+  ref = useRef((false))
+}
+```
+
+**hooks 本质也是一种对行为的描述，不可以在任何流程控制语句中使用。**
+
+#### 总结
+
+**请求数据逻辑放哪里？**
+
+useEffect 中。
+
+**React 父组件传递值给子组件如何做？子组件传递值给父组件如何做？**
+
+父传子：props。子传父：ref 或传递回调函数。
+
