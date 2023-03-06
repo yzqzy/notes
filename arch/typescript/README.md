@@ -2199,3 +2199,61 @@ useEffect 中。
 
 ### 08. 类型计算
 
+TypeScript 提供了强大的类型计算能力。
+
+```typescript
+type A1 = string | number // union
+type B1 = string & number // never
+
+type Point = { x: number; y: number }
+type StateDesc = { state: string }
+
+type X1 = Point | StateDesc
+const ins01: X1 = { x: 1, y: 2 }
+const ins02: X1 = { state: 'hello', y: 2 }
+
+type X2 = Point & StateDesc
+const ins03: X2 = { x: 1, y: 2, state: 'hello' }
+// const ins04: X2 = { state: 'hello', y: 2 }
+// 不能将类型“{ state: string; y: number; }”分配给类型“X2”。
+// 类型 "{ state: string; y: number; }" 中缺少属性 "x"，但类型 "Point" 中需要该属性。
+
+interface A2 {
+  foo(): void
+}
+interface A2 {
+  bar(): void
+}
+```
+
+**使用复杂的 infer。**
+
+我们应该如何解决这个问题的描述？
+
+```typescript
+function flattern(arr) {}
+```
+
+首先我们可以这样描述：
+
+```typescript
+function flattern(arr: Array<any>): Array<any> {}
+```
+
+但是这并不完整，还存在很多 any。那么这样呢？
+
+```typescript
+type Flattened<T> = T extends V[] ? V : T
+// 找不到名称“V”。
+```
+
+这句已经非常接近我们的语义。ts 提供了一个关键字 infer，供我们推导类型。
+
+```typescript
+type Flattened<T> = T extends Array<infer V> ? V : T
+
+type D = Flattened<Array<number>>
+```
+
+
+
