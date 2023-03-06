@@ -30,6 +30,33 @@ interface A2 {
 // type Flattened<T> = T extends V[] ? V : T
 // // 找不到名称“V”。
 
-type Flattened<T> = T extends Array<infer V> ? V : T
+// type Flattened<T> = T extends Array<infer V> ? V : T
+// type D = Flattened<Array<number>>
 
-type D = Flattened<Array<number>>
+type Flattened<T> = T extends Array<infer V> ? Flattened<V> : T
+type D = Flattened<Array<Array<number>>> // number
+
+// function flattern<T extends Array<any>>(arr: T): Array<Flattened<T>> {
+//   return new Array<Flattened<T>>().concat(...arr.map(x => (Array.isArray(x) ? flattern(x) : x)))
+// }
+
+type Atom = string | boolean | number | bigint
+
+// type Nested<T> = (T | (T | T[])[])[]
+// function flattern<T extends Atom>(arr: Nested<Atom>): Atom[] {
+//   return new Array<Atom>().concat(...arr.map(x => (Array.isArray(x) ? flattern(x) : x)))
+// }
+type Nested = Array<Atom | Nested>
+const target: Nested = [1, 2, 3, [3, 4, [5]]]
+
+// -------------------
+
+// type Unwrapped<T> = T extends (infer U)[] ? U : T
+// type T0 = Unwrapped<Array<string>> // string
+
+// type Unwrapped<T> = T extends Promise<infer U> ? U : T
+// type T0 = Unwrapped<Promise<string>> // string
+
+type Unwrapped<T> = T extends Array<infer U> ? (U extends Promise<infer R> ? R[] : U) : T
+// type Unwrapped<T> = T extends Array<Promise<infer U>> ? U : T
+type T0 = Unwrapped<Promise<string>[]> // string

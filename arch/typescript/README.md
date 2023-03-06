@@ -2251,9 +2251,62 @@ type Flattened<T> = T extends V[] ? V : T
 
 ```typescript
 type Flattened<T> = T extends Array<infer V> ? V : T
-
-type D = Flattened<Array<number>>
+type D = Flattened<Array<number>> // number
 ```
 
+我们还可以递归推导：
 
+```typescript
+type Flattened<T> = T extends Array<infer V> ? Flattened<V> : T
+type D = Flattened<Array<Array<number>>> // number
+```
 
+flattern 函数实现：
+
+```typescript
+function flattern<T extends Array<any>>(arr: T): Array<Flattened<T>> {
+  return new Array<Flattened<T>>().concat(...arr.map(x => (Array.isArray(x) ? flattern(x) : x)))
+}
+
+flattern([1, 2, 3, [3, 4, [5]]])
+```
+
+优化
+
+```typescript
+type Atom = string | boolean | number | bigint
+type Nested<T> = (T | (T | T[])[])[]
+
+function flattern<T extends Atom>(arr: Nested<Atom>): Atom[] {
+  return new Array<Atom>().concat(...arr.map(x => (Array.isArray(x) ? flattern(x) : x)))
+}
+```
+
+或者这样实现也可以：
+
+```typescript
+type Nested = Array<Atom | Nested>
+const target: Nested = [1, 2, 3, [3, 4, [5]]]
+```
+
+这其实就是一个递归的思考方式。
+
+其他有意思的用法：
+
+```typescript
+type Unwrapped<T> = T extends (infer U)[] ? U : T
+type T0 = Unwrapped<Array<string>> // string
+```
+
+```typescript
+type Unwrapped<T> = T extends Promise<infer U> ? U : T
+type T0 = Unwrapped<Promise<string>> // string
+```
+
+如果我们有一个 promise 数组，我们想把它拆成 string 的数组，应该如何做？
+
+```typescript
+type Unwrapped<T> = T extends Array<infer U> ? (U extends Promise<infer R> ? R[] : U) : T
+```
+
+上面这种实现方式是可以的，不过这种写法整个类型体系不够模块化，那么我们应该如何去写？
