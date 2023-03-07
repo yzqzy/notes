@@ -2197,7 +2197,7 @@ useEffect 中。
 
 父传子：props。子传父：ref 或传递回调函数。
 
-### 08. 类型计算
+## 08. 类型计算
 
 TypeScript 提供了强大的类型计算能力。
 
@@ -2310,3 +2310,171 @@ type Unwrapped<T> = T extends Array<infer U> ? (U extends Promise<infer R> ? R[]
 ```
 
 上面这种实现方式是可以的，不过这种写法整个类型体系不够模块化，那么我们应该如何去写？
+
+```typescript
+type Unwrap<T> = T extends Promise<infer U>
+  ? Unwrap<U>
+  : T extends Array<infer V>
+  ? UnwrapArray<T>
+  : T
+type UnwrapArray<T> = T extends Array<infer U> ? { [P in keyof T]: Unwrap<T[P]> } : T
+
+type T0 = Unwrap<Promise<string>[]> // string[]
+type T1 = Unwrap<Promise<Promise<number>>[]> // number[]
+```
+
+## 09. Vue Latest
+
+### 基本介绍
+
+Vue 是一个让然充满惊喜的框架，也是目前国内使用人数最多的前端框架。
+
+* 更快（[https://github.com/vuejs/rfcs/issues/89](https://github.com/vuejs/rfcs/issues/89)）；
+* 更小（Treeshakable）；
+* 更好用、易维护（Composition API + reactive + JSX + typescript）。
+
+在 vue 3 之后，写出的程序，很多时候已经和 react 看不出明显的区别。
+
+例如下面这段程序：
+
+```tsx
+type HelloWorldProps = {
+	msg: string
+}
+export default ({ msg }: HelloWorldProps) => {
+	return <h1>{ msg }</h1>
+}
+
+// babel/ts 支持 JSX
+// JSX 并不意味着 react，JSX 是 HTTP 0.9 就设计出来的 HTML
+// 程序语言本身扩展性是最好的
+```
+
+react 和 vue 并不决定你的前端架构，它只是作为一个工具去支持你的渲染。MVVM 和 函数式都是前端框架中重要的组成部分。
+
+### 特性解读
+
+vue 3，即 vue-next。
+
+vue 3 可以说是对 vue 的程序应该如何写，重新下了定义：
+
+* JSX
+* Typescript
+* Composition API
+* reactivity
+
+上面这几个更新并不全是 vue3 带来的，但是我们可以放到一起分析，算是对 vue-next 程序的定义。
+
+**why not sfc**
+
+可能有人会问？SFC 不香嘛？
+
+首先我们来看一下，在 TS 环境下，SFC 需要一个 `shim` 文件：
+
+```tsx
+declare module "*.vue" {
+  import { DefineComponent } from 'vue'
+  const Component: DefineComponent
+  export default Component
+}
+```
+
+declare 的作用：告诉 TypeScript 编译器 declare 的部分在源代码之外提供，不需要编译器处理。当遇到 `*.vue` 文件的时候，TS 编译时会将他们当作一个会 `export default Component` 的类型。
+
+如果用 tsx 写，就不需要这个 shim。不过多一个 shim 少一个 shim 重要吗？
+
+从架构角度来说很重要。通常你的项目概念越多，意味着设计越差。
+
+在 SFC 中编写 template 和 script 标签，这个方式有两个缺点：
+
+* 不够灵活
+  * 需要 v-show/v-if/v-for 等；
+  * 关注点被分离（模板也好、script 也好，都是解决某个关注点的一部分，在 SFC 中被强行分离）；
+* ts 类型检查
+  * 函数组件可以在最大程度作用 TS 的类型检查（比如属性检查）
+
+我们来看一个 vue 的计时器程序：
+
+```tsx
+function useCounter(): [Ref<number>, () => void] {
+  const counter = ref(0)
+  
+  function increment() {
+  	counter.value++
+  }
+  
+  return [counter, increment]
+}
+
+export default {
+  setup() {
+    const [counter, increment] = useCounter()
+    return () => <div>
+    	count is: {counter.value}
+      <button onClick={increment}add></button>
+    </div>
+  }
+}
+```
+
+在这个程序中，我们可以看到：
+
+* counter 逻辑的集中管理；
+* 强大的封装能力；
+* 少量的记忆要求。
+
+### compostion api
+
+composition api 是一系列函数式 API 的合集。
+
+有用来初始化的、定义组件的：
+
+* setup
+* defineComponent
+
+有支持响应式数据的：
+
+* ref
+* reactive
+* toRefs
+* computed
+* watch
+* watchEffect
+
+有支持生命周期管理的：
+
+* onMounted
+* onUnmounted
+
+总结来说，Composition API：
+
+* 提升组合能力（自定义的 Composition API）
+* 提供 Reactive Programming
+* 提供函数式（简化 API 设计）
+
+### vue 3.0 性能
+
+Vue3 并没有很很明显的提升性能，这个和 vue3 的渲染机制有关（没有时间切片）。
+
+在一些大型前端系统，没有时间切片会导致页面打开执行周期过久。
+
+### Reactivity
+
+R eactivity 是 Vue3 提供的核心能力，配合函数式的 Composition API 使用非常方便。
+
+#### 响应式编程是什么
+
+Reactive Programming - 让类型自发的响应环境的变化。
+
+**Reactive：**一个值是 Reactive，那么这个值可以被监听；一个对象是 Reactive，那么这个对象可以被监听。一个函数是 Reactive，那么这个函数在提供 Reactive 的能力，比如创造一个 Reactive 的值或者对象。
+
+**Be Reactive !!**
+
+让程序变的 Reactive 是很好的一个思路。程序如果不是 Reactive，那么往往是 Passive（被动的）。响应的的反义词为什么是被动？因为 Reactive 代表一部分程序（类型）主动的去通知周边自己做了什么，另一部分类型主动监听变化，主动做出判断并完成操作。
+
+程序变的 Reactive 之后，每个模块好像就活了一样，不需要程序主动下命令，而是程序主动完成工作。从这个角度来看 Reactive 的反义词就是 Passive。
+
+#### 声明式（Declarative）
+
+Reactive 的程序往往就是声明式的。所谓声明式，就是程序员的声明要做什么？不重要做什么？而不是写一大堆计算逻辑。
+

@@ -57,6 +57,18 @@ const target: Nested = [1, 2, 3, [3, 4, [5]]]
 // type Unwrapped<T> = T extends Promise<infer U> ? U : T
 // type T0 = Unwrapped<Promise<string>> // string
 
-type Unwrapped<T> = T extends Array<infer U> ? (U extends Promise<infer R> ? R[] : U) : T
-// type Unwrapped<T> = T extends Array<Promise<infer U>> ? U : T
-type T0 = Unwrapped<Promise<string>[]> // string
+// type Unwrapped<T> = T extends Array<infer U> ? (U extends Promise<infer R> ? R[] : U) : T
+// // type Unwrapped<T> = T extends Array<Promise<infer U>> ? U : T
+// type T0 = Unwrapped<Promise<string>[]> // string[]
+
+// -------------------
+
+type Unwrap<T> = T extends Promise<infer U>
+  ? Unwrap<U>
+  : T extends Array<infer V>
+  ? UnwrapArray<T>
+  : T
+type UnwrapArray<T> = T extends Array<infer U> ? { [P in keyof T]: Unwrap<T[P]> } : T
+
+type T0 = Unwrap<Promise<string>[]> // string[]
+type T1 = Unwrap<Promise<Promise<number>>[]> // number[]
