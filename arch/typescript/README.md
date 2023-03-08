@@ -2576,9 +2576,115 @@ const LoginStatus = ({ loggedIn }) => {if
 
 从哲学角度去看，Reactivity 就是让程序知道如何自主做事，应该怎样去做。
 
- Mkkjmj I don't 
+个人认为 React 在设计之初就是期望程序可以 Reactivity，所以可以认为是一个词义。
 
 **组合能力是什么？Compostion API 提供更好的组合能力，这样说对吗？**
 
-### reactivity 
+组合能力其实就是最大能力的复用，即 “搭积木” 能力。这样肯定是对的。
+
+### Ref 和 Reactive
+
+一个值如果是 Reactive，那么这个值应该：
+
+* 可以通知（trigger）
+  * vue 更新
+  * vue 做其他标准行为
+  * 完成自定义行为
+* 可以监听（track）
+  * vue 发生的变化（依赖）
+
+#### ref（referece）
+
+ref 是一个工厂方法，本质是创造一个 Ref 对象。ref 的目标是管理值。
+
+首先，ref 可以像一个正常值一样被使用：
+
+```tsx
+import { ref } from 'vue'
+
+export default {
+  setup() {
+    const msg = ref('hello')
+    return () => {
+      return <div>{msg.value}</div>
+    }
+  }
+}
+```
+
+在上面的程序中：
+
+* setup 是一个 vue3 新特性（初始化组件）；
+* setup 可以返回一个 render 函数，render 函数返回的 VNode。
+
+jsx 的语法 div 会被 babel 翻译成 createVNode。
+
+##### ref 是值的代理
+
+ref 是一个 setter 和 getter，例如下面这段代码就可以很好诠释 ref 的内部实现：
+
+```tsx
+function createRef<T>(val: T) {
+  let _val: T = val
+  	
+  const refObj = {
+    set value(v: T) {
+      console.log('setter called')
+      _val = v
+    },
+    get value() {
+      console.log('getter called')
+      return _val
+    }
+  }
+  return refObj
+}
+
+const a = createRef(0)
+a.value = 10
+a.value++ // 非原子操作，一次读写操作
+console.log(a.value)
+```
+
+不过仅有 setter 和 getter 是不够的，还需要一些 reactive 的机制：
+
+```tsx
+function trigger() {}
+function track() {}
+
+// ...
+
+const refObj = {
+  set value(v: T) {
+    console.log('setter called')
+    _val = v
+    trigger()
+  },
+  get value() {
+    console.log('getter called')
+    track()
+    return _val
+  }
+}
+```
+
+当 set 的时候 trigger，get 的时候 track。
+
+* trigger：驱动 vue 更新
+* track：跟踪 vue 更新
+  * 一个 ref 可以给多个 vue 组件使用，因此依赖是不确定的；
+  * 依赖（Deps）
+    * vue 组件依赖 ref，因此是 ref 的依赖；
+    * ref 的依赖应该是一个数组。
+  * 为什么不能在 ref 的构造函数中确定依赖？
+    * 构造函数和实际使用可能并不是一个位置，或同一个组件。
+  * 为什么不自己操作依赖而是封装一个 track 方法？
+    * 只有 get 的时候才需要操作依赖，实际时机很重要。
+  * 为什么不是 vue 检查依赖，而是 ref track 更新依赖？
+    * 发现能力更出色，更 Reactive。
+
+##### ref 驱动更新示例
+
+```tsx
+```
 
