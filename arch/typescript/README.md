@@ -265,7 +265,7 @@ pnpm i webpack-dev-server html-webpack-plugin -D
 
 编写 react 文件
 
-```react
+```tsx
 // src/ReactHello.tsx
 
 import React from 'react'
@@ -2563,17 +2563,22 @@ export default  {
   }
 }
 
-const LoginStatus = ({ loggedIn }) => {
-  if (loggedIn) {
-    return <div>您好，欢迎光临</div>
-  } else {
-    return <div>请登录...</div>
-  }
-}
+const LoginStatus = ({ loggedIn }) => {if 
 ```
 
 还有一个最大的好处就是声明式可以帮助我们更好的阅读代码。
 
 最后也是最重要的、上升到哲学高度的思考：Reactive 让程序模块自己懂得如何做事。
 
+#### 总结
+
+**从前端看：如何理解 Reactivity？和 React 是一个词义吗？**
+
+从哲学角度去看，Reactivity 就是让程序知道如何自主做事，应该怎样去做。
+
+ Mkkjmj I don't 
+
+**组合能力是什么？Compostion API 提供更好的组合能力，这样说对吗？**
+
 ### reactivity 
+
