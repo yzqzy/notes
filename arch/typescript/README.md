@@ -2462,7 +2462,7 @@ Vue3 并没有很很明显的提升性能，这个和 vue3 的渲染机制有关
 
 R eactivity 是 Vue3 提供的核心能力，配合函数式的 Composition API 使用非常方便。
 
-#### 响应式编程是什么
+#### 响应式编程
 
 Reactive Programming - 让类型自发的响应环境的变化。
 
@@ -2472,9 +2472,108 @@ Reactive Programming - 让类型自发的响应环境的变化。
 
 让程序变的 Reactive 是很好的一个思路。程序如果不是 Reactive，那么往往是 Passive（被动的）。响应的的反义词为什么是被动？因为 Reactive 代表一部分程序（类型）主动的去通知周边自己做了什么，另一部分类型主动监听变化，主动做出判断并完成操作。
 
-程序变的 Reactive 之后，每个模块好像就活了一样，不需要程序主动下命令，而是程序主动完成工作。从这个角度来看 Reactive 的反义词就是 Passive。
+程序变的 Reactive 之后，每个模块**好像就活了一样**，不需要程序主动下命令，而是程序主动完成工作。从这个角度来看 Reactive 的反义词就是 Passive。
 
 #### 声明式（Declarative）
 
 Reactive 的程序往往就是声明式的。所谓声明式，就是程序员的声明要做什么？不重要做什么？而不是写一大堆计算逻辑。
 
+**声明式需要更好的封装：**
+
+```typescript
+const arr = []
+for (let i = 0; i < 1000; i++) {
+	arr[i] = i  
+}
+
+// 声明式
+const arr = range(0, 1000)
+```
+
+**声明式会创造语言：**
+
+```typescript
+const div = document.createElement('div')
+div.style.width = 100
+
+// 声明式
+const div = <div style={{ width: 100 }} />
+```
+
+> 创造这个词并不够贴切。
+
+**声明式往往是 Reactive：**
+
+```tsx
+export default {
+  setup() {
+    const logined = ref(userStore.logined())
+    
+    useStore.on(e) {
+      switch (e.type) {
+        case 'logined':
+          logined.value = true
+          break
+        case 'logout':
+          logined.value = false
+          break
+      }
+    }
+    
+    return () => {
+      if (logined.value) {
+        return <div>您好，欢迎光临</div>
+      } else {
+        return <div>请登录...</div>
+      }
+    }
+  }
+}
+```
+
+在上面的程序中组件在响应全局用户状态的变化，这样就将组件和全局状态解耦：
+
+* 组件迭代不用关心 useStore 迭代；
+* useStore 迭代，组件不需要调整。
+
+其实上面代码还可以做优化，可以实现业务逻辑和组件的强分离：
+
+```tsx
+function useLoginStatus() {
+ 	const logined = ref(userStore.logined())
+    
+  useStore.on(e) {
+    switch (e.type) {
+      case 'logined':
+        logined.value = true
+        break
+      case 'logout':
+        logined.value = false
+        break
+    }
+  }
+  
+  return login.value
+}
+
+export default  {
+  setup() {
+    const loggedIn = useLoginStatus()
+    return () => <LoginStatus loggedIn={loggedIn} />
+  }
+}
+
+const LoginStatus = ({ loggedIn }) => {
+  if (loggedIn) {
+    return <div>您好，欢迎光临</div>
+  } else {
+    return <div>请登录...</div>
+  }
+}
+```
+
+还有一个最大的好处就是声明式可以帮助我们更好的阅读代码。
+
+最后也是最重要的、上升到哲学高度的思考：Reactive 让程序模块自己懂得如何做事。
+
+### reactivity 
