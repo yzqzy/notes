@@ -2686,5 +2686,57 @@ const refObj = {
 ##### ref 驱动更新示例
 
 ```tsx
+import { ref } from 'vue'
+
+export default {
+  setup() {
+    const counter = ref(0)
+    return () => (
+    	<div>
+      	{counter.value}
+        <button onClick={() => counter.value++}>add</button>
+      </div>
+    )
+  }
+}
+```
+
+#### Reactive
+
+Reactive 和 Ref 类似，都是代理模式的 Reactive 值。
+
+代理一个值用 getter 和 setter 很方便，代理一个对象，js 提供了 Proxy 类。
+
+##### 代理一个对象
+
+```tsx
+function createReactive(obj: any) {
+  return new Proxy(obj, {
+    get: (target, name, receiver) => {
+      if (name ==== 'c') {
+        return 'this is a proxy value'
+      }
+      return Reflect.get(target, name, receiver)
+    },
+    set: (target, name, value, receiver): boolean => {
+      if (!(name in target)) return false
+      Reflect.set(target, name, receiver)
+      return true
+    }
+  })
+}
+
+const o = createReactive({
+  a: 1,
+  b: 2,
+  foo: function() {
+    console.log('a is', this.a)
+  }
+})
+
+o.a = 100
+console.log(o.c)
+
+o.foo()
 ```
 
