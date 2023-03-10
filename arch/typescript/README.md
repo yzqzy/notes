@@ -2707,7 +2707,7 @@ Reactive 和 Ref 类似，都是代理模式的 Reactive 值。
 
 代理一个值用 getter 和 setter 很方便，代理一个对象，js 提供了 Proxy 类。
 
-##### 代理一个对象
+##### 如何代理一个对象
 
 ```tsx
 function createReactive(obj: any) {
@@ -2738,5 +2738,145 @@ o.a = 100
 console.log(o.c)
 
 o.foo()
+```
+
+为什么用 Reflect.set、Reflect.get 而不用 target[name] 这种形式？
+
+* 可以在 getter 和 setter 间同步 receiver（this 指针）
+
+比较坑的地方：
+
+```tsx
+const p = new Proxy({
+  a: 1
+}, {
+  get(target, property, receiver) {
+    console.log('get trap', ...arguments)
+    return Reflect.get(receiver, property, receiver)
+  }
+})
+```
+
+上面这段程序会造成栈溢出，因为 receiver 其实就是 proxy 代理对象，会造成循环读取。
+
+##### Reactive 是一个代理对象
+
+```tsx
+const state = reactive({
+  counter: 0
+})
+
+state.counter++
+```
+
+上面的程序首先会触发代理对象的 getter，然后再触发 setter，因为 ++ 不是 atomic 原子操作。
+
+具体实现和 ref 一致，Reactive 也会在 getter 中 track，在 setter 中 trigger。
+
+##### Reactive 实现 Counter
+
+```tsx
+import { reactive } from 'vue'
+
+export default {
+  setup() {
+    const state = reactive({
+      counter: 0
+    })
+    
+    return () => {
+      <div>
+      	{state.counter}
+        <button
+          onClick={() => {
+            state.counter++
+          }}
+        >
+          add
+        </button>
+      </div>
+    }
+  }
+}
+```
+
+#### Reactive vs Ref
+
+它们都是 vue 提供的 reactive 值，Ref 维护一个值/对象，Reactive 维护一个对象的所有成员。
+
+```tsx
+const obj = ref({
+  a: 1,
+  b: 2
+})
+
+obj.value.a++ // 不会触发重绘
+obj.value = { ...obj.value, a: 1 } // 触发重绘
+
+const obj1 = reactive({
+  a: 1,
+  b: 2
+})
+obj1.a++ // 触发重绘
+```
+
+有一个函数叫做 toRef，还有一个函数叫做 toRefs，这两个函数可以将值转换为 ref。
+
+```tsx
+import { defineComponent, reactive, toRef, toRefs } from 'vue'
+
+export default defineComponent({
+  setup() {
+    const state = reactive({
+      a: 1,
+      b: '-'
+    })
+    
+    const aRef = toRef(state, 'a')
+    const bRef = toRef(state, 'b')
+    // =>
+    // const refs = toRefs(state)
+    // const aRef === refs.a
+    // cosnt bRef === refs.b
+    
+    return () => {
+      return <>
+      	<h1>aRef: { aRef.value }</h1>
+        <h1>aRef: { aRef }</h1>
+        <h1>bRef: { bRef.value }</h1>
+        <h1>bRef: { bRef }</h1>
+      	<button onClick={() => state.a++}>state.a++</button>
+      	<button onClick={() => aRef.value++}>aRef.a++</button>
+      </>
+    }
+  }
+})
+```
+
+#### Reactive 和 Ref 的类型
+
+在 Reactive 和 Ref 中，通过 UnwrapRef 的定义配合 infer 关键字，可以做到两种类型合一。因此从类型的角度来看 ref 和 reactive 是同一类东西。
+
+```tsx
+export declare function ref<T>(value: T): Ref<UnwrapRef<T>>
+export declare function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
+ 
+export declare type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRef<T>
+  
+export declare type UnwrapRef<T> = T extends Ref<infer V> ? UnwrapRefsSimple<V> : UnwrapRefSimple<T>
+  
+declare type UnwrapRefSimple<T> = 
+	T extends
+		Function |
+		CollectionTypes |
+		BaseTypes |
+		Ref |
+		RefUnwrapBailTypes[keyof RefUnwrapbBailTypes] ? 
+			T :
+			T extends Array<any> ?
+				{
+          [K in keyof T]: UnwraoRefSimple<T[K]>
+        } : 
+				T extends object ? UnwrappedObject<T>: T
 ```
 
