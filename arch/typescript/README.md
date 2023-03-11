@@ -2855,14 +2855,17 @@ export default defineComponent({
 
 #### Reactive 和 Ref 的类型
 
-在 Reactive 和 Ref 中，通过 UnwrapRef 的定义配合 infer 关键字，可以做到两种类型合一。因此从类型的角度来看 ref 和 reactive 是同一类东西。
+在 Reactive 和 Ref 中，通过 UnwrapRef 的定义配合 infer 关键字，可以做到两种类型合一。
+
+因此从类型的角度来看 ref 和 reactive 是同一类东西。
 
 ```tsx
 export declare function ref<T>(value: T): Ref<UnwrapRef<T>>
 export declare function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
  
 export declare type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRef<T>
-  
+ 
+// 拆包
 export declare type UnwrapRef<T> = T extends Ref<infer V> ? UnwrapRefsSimple<V> : UnwrapRefSimple<T>
   
 declare type UnwrapRefSimple<T> = 
@@ -2879,4 +2882,31 @@ declare type UnwrapRefSimple<T> =
         } : 
 				T extends object ? UnwrappedObject<T>: T
 ```
+
+#### 总结
+
+vue 3 提供的 Reactive 这种编程模式和之前 vue.observable 有什么区别？
+
+> 其实是整体编程风格的转变。
+
+```tsx
+const state = Vue.observable({ count: 0 })
+
+const Demo = {
+  render(h) {
+    return h('button', {
+      on: {
+        click: () => { state.count++ }
+      },
+      `count is: ${ state.count }`
+    })
+  }
+}
+```
+
+什么是 observable？reactive is observable？
+
+* 可以被观察到的（observable）；
+  * rxjs 中一个 observable 同时依然是 observer。
+* 可以观察别人（observer）。
 
