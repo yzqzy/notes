@@ -169,8 +169,57 @@ $ docker run -t -p 3000:3000 --name docker-hello -d docker/hello
 
 下载：[https://github.com/docker/compose/releases](https://github.com/docker/compose/releases)
 
+> Docker for Mac 自带 docker-compose
+
 创建 Docker Compose 文件，`docker-compose.yml`。
 
 ```yaml
+version: '2.13'
+
+services:
+  mysql:
+    restart: always
+    image: mariadb:10.3
+    container_name: mariadb
+    ports:
+      - '3306:3006'
+    volumes:
+      - ./store/:/var/lib/mysql
+    men_limit: 512m
+    networks:
+      - mysqlnetwork
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=local
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - PMA_ARBIYTRARY=1
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+
+  redis-server:
+    restart: always
+    image: redis:4.0
+    container_name: redis-server
+    command: /bin/bash -c 'redis-server --appendonly yes'
+    sysctls:
+      - net.core.somaxconn=65535
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./redis:/data
+    men_limit: 96m
+    networks:
+      - mysqlnetwork
+
+# ....
+```
+
+ 启动项目：
+
+```bash
+$ docker-compose up
 ```
 
