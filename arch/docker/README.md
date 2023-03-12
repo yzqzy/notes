@@ -118,3 +118,59 @@ Namespace 技术是多种技术的合集，如果感兴趣可以搜索这些关�
 * 研发效率：有自己的一套完整体系，方便使用；
 * 执行高效：容器本身作为一个进程执行，不采用虚拟化技术，没有性能损耗。
 
+## Docker 镜像部署
+
+新建 vue 项目
+
+```bash
+$ npm create vite
+```
+
+根据目录下创建 Docker 配置文件（Dockerfile）
+
+```dockerfile
+FROM node:16
+
+WORKDIR /usr/app
+
+COPY . .
+
+RUN npm install cnpm -g --registry=https://registry.npmmirror.com
+RUN cnpm install
+RUN npm run build
+RUN cnpm install serve -g
+
+EXPOSE 3000
+
+CMD ["serve", "dist"]
+```
+
+创建忽略文件（.dockerignore）
+
+```
+node_moduels
+```
+
+运行构建脚本
+
+```bash
+$ docker build -t docker/hello . 
+```
+
+启动项目
+
+```bash
+$ docker run -t -p 3000:3000 --name docker-hello -d docker/hello
+```
+
+现在我们就可以正常访问项目了。
+
+## Docker Compose 工具
+
+下载：[https://github.com/docker/compose/releases](https://github.com/docker/compose/releases)
+
+创建 Docker Compose 文件，`docker-compose.yml`。
+
+```yaml
+```
+
