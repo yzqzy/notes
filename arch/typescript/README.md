@@ -2910,3 +2910,82 @@ const Demo = {
   * rxjs 中一个 observable 同时依然是 observer。
 * 可以观察别人（observer）。
 
+## 10. 函数补充部分
+
+### 构造函数表达
+
+```typescript
+type SomeConstructor = {
+  new (s: string): String
+}
+
+function fn(ctor: SomeConstructor) {
+  return new ctor('hello')
+}
+
+const str = fn(String)
+console.log(str) // hello
+```
+
+```typescript
+type SomeConstructor<T> = {
+  new (s: number): T
+}
+
+function fn<T>(ctor: SomeConstructor<T>, n: number) {
+  return new ctor(n)
+}
+
+fn<Array<string>>(Array, 100)
+```
+
+### 泛型函数
+
+```typescript
+function firstElement<Type>(arr: Type[]): Type {
+  return arr[0]
+}
+```
+
+### 关于推导
+
+```typescript
+// map: a => b
+function map<Input, Output>(arr: Input[], func: (arg: Input) => Output): Output[] {
+  return arr.map(func)
+}
+
+const parsed = map(['1', '2', '3'], n => parseInt(n))
+// [1, 2, 3]
+```
+
+### 泛型约束
+
+巨坑：
+
+```typescript
+function minimunLength<Type extends { length: number }>(obj: Type, minimum: number): Type {
+  if (obj.length >= minimum) return obj
+  return { length: minimum }
+  // 不能将类型“{ length: number; }”分配给类型“Type”。
+  // "{ length: number; }" 可赋给 "Type" 类型的约束，但可以使用约束 "{ length: number; }" 的其他子类型实例化 "Type"。ts(2322)
+}
+```
+
+原因：
+
+* 泛型约束约束的是 Type 必须具有 length 属性；
+* 有 length 属性，不代表一定是目标 Type。
+
+```typescript
+function minimunLength<Type extends { length: number }>(obj: Type, minimum: number): Type {
+  if (obj.length >= minimum) return obj
+  return obj.constructor(minimum)
+}
+```
+
+我们可以使用 constructor 解决上述问题。
+
+```typescript
+```
+
