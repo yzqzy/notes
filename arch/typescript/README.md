@@ -2987,5 +2987,203 @@ function minimunLength<Type extends { length: number }>(obj: Type, minimum: numb
 我们可以使用 constructor 解决上述问题。
 
 ```typescript
+function minimunLength<Type extends { length: number; constructor: Function }>(
+  obj: Type,
+  minimum: number
+): Type {
+  if (obj.length >= minimum) return obj
+  return obj.constructor(minimum)
+}
 ```
+
+### 手动指定类型
+
+```typescript
+function combine<Type>(arr1: Type[], arr2: Type[]): Type[] {
+  return arr1.concat(arr2)
+}
+
+const arr = combine([1, 2, 3], ['hello'])
+// 不能将类型“string”分配给类型“number”。
+```
+
+这种时候可以手动指定类型：
+
+```typescript
+const arr = combine<string | number>([1, 2, 3], ['hello'])
+```
+
+### 使用泛型的一些规范
+
+对比下面这一组，哪种比较好？
+
+```typescript
+function firstElement1<Type>(arr: Type[]) {
+  return arr[0]
+}
+function firstElement2<Type extends any[]>(arr: Type) {
+  return arr[0]
+}
+```
+
+**利用好推导（infer）能力，避免使用 any。**
+
+
+
+对比下面这一组，哪种比较好？
+
+```typescript
+function filter1<Type>(arr: Type[], func: (args: Type) => boolean): Type[] {
+  return arr.filter(func)
+}
+function filter2<Type, Func extends (args: Type) => boolean>(arr: Type[], func: Func): Type[] {
+  return arr.filter(func)
+}
+```
+
+**减少泛型参数的使用，除非有必要。**
+
+
+
+下面这个程序好嘛？
+
+```typescript
+function greet<Str extends string>(s: Str) {
+  console.log('Hello, ' + s)
+}
+```
+
+不好，s 本来就是 string 类型。
+
+### 可选参数
+
+用 `?` 描述函数的可选参数。
+
+```typescript
+function myForEach(arr: any[], callback: (args: any, index?: number) => void) {
+  for (let i = 0; i < arr.length; i++) {
+    callback(arr[i], i)
+  }
+}
+```
+
+### 函数重载
+
+```typescript
+function add<T>(a: T, b: T) {
+  return a + b
+  // 运算符“+”不能应用于类型“T”和“T”。
+}
+```
+
+修改办法：
+
+```typescript
+function isSet<T>(x: any): x is Set<T> {
+  return x instanceof Set
+}
+
+function add(a: number, b: number): number
+function add(a: string, b: string): string
+function add<T>(a: Set<T>, b: Set<T>): Set<T>
+function add<T>(a: T, b: T): T {
+  if (isSet<T>(a) && isSet<T>(b)) {
+    return new Set([...a, ...b]) as any
+  }
+  return (a as any) + (b as any)
+}
+
+const a = new Set<string>(['apple', 'redhat'])
+const b = new Set<string>(['google', 'ms'])
+
+console.log(add(a, b))
+console.log(add(1, 2))
+console.log(add('a', 'k'))
+```
+
+**利用重载约束跨类型方法的使用。**
+
+### 操作符重载
+
+[参考资料：babel-plugin-overload-operator](https://npmjs.com/package/babel-plugin-overload-operator)
+
+Typescript 并不支持操作符重载，我们可以借助 babel 插件来实现。
+
+### THIS
+
+```typescript
+interface DB {
+  exec(sql: string): any
+}
+function runSql(this: DB, sql: string) {
+  this.exec(sql)
+}
+
+runSql('select * from user')
+```
+
+> this 和 new 都是 typescript 提供的关键字。
+
+### void vs unknown
+
+函数不返回参数用 void，返回的值类型不确定用 unkown。
+
+下面的定义会报错吗？
+
+```typescript
+type voidFunc = () => void
+
+const f1: voidFunc = () => {
+  return true
+}
+const f2: voidFunc = () => true
+const f3: voidFunc = function () {
+  return true
+}
+```
+
+上面这三条都不会报错。但是类型推导的返回值并不能使用。
+
+
+
+unknown 可以让代码更安全。
+
+```typescript
+function f1(a: any) {
+  a.b() // pass
+}
+function f2(a: unknown) {
+  a.b()
+  // 类型“unknown”上不存在属性“b”。
+}
+```
+
+
+
+为什么会写下面这样的程序：
+
+```typescript
+function safeParse(s: string): unknown {
+  return JSON.parse(s)
+}
+function fail(msg: string) {
+  throw new Error(msg)
+}
+```
+
+### rest params
+
+```typescript
+function multiply(n: number, ...m: number[]) {
+  return m.map(x => n * x)
+}
+
+const a = multiply(10, 1, 2, 3, 4)
+```
+
+### 总结
+
+泛型帮助我们让类型检查更加严格，更加智能。
+
+泛型不是让写程序更舒服的一种方式，而是让你的程序更加可预测。
 
