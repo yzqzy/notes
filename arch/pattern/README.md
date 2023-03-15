@@ -245,5 +245,115 @@ function createReactiveObject(
 
 例如 `vite dev`、`vite build` 。
 
-内部功能实现很复杂，我们可以将内部功能按照用户的需要分类，做成门店，让用户使用，不需要关心内部实现逻辑。
+内部功能实现很复杂，我们可以将内部功能按照用户的需要分类，做成门面，让用户使用，不需要关心内部实现逻辑。
+
+例如 react 的 `useState`、`useEffect`、`useRef`、`useContext`  也算是外观模式的实现，开箱即用。
+
+外观模式优点：
+
+* 整合资源；
+* 降低使用复杂度（开箱即用）。
+
+## 状态机（StateMachine）
+
+将行为绑定在对象内部状态变化之上。
+
+例如 redux。
+
+场景：
+
+* 组件/管理交互设计；
+* 在 DOM 之上抽象用户交互。
+
+## 装饰器（Decorator）
+
+在不改变对象、函数结构的情况下为它添加功能或说明。
+
+例如 `@deprecated`：
+
+```typescript
+interface UIInfo {
+  /** @deprecated use box instead */
+  width: number
+  /** @deprecated use box instead */
+  height: number
+
+  box: BoxDescriptor
+}
+```
+
+例如之前的 React 代码：
+
+```typescript
+@fetchProductList()
+class List extends ReactComponent {
+  render() {
+    const productList = this.props.productList
+    return <...></,,,>
+  }
+}
+
+function fetchProductList(Target) {
+  return () => {
+    class ProxyClass extends React.Component {
+      fetch() {
+        ...fetch logic
+      }
+      render () {
+        const list = this.state.list
+        return <Target productList={list} />
+      }
+    }
+    return ProxyClass
+  }
+}
+```
+
+目前写法：
+
+```typescript
+const List = () => {
+  const productList = useFetchProductList()
+  return <...></...>
+}
+```
+
+**前端还需要使用装饰器嘛？**
+
+作为高阶组件的装饰器暂时不使用了，但是它只有其他用途，例如 typescript 官网的一个例子。
+
+```typescript
+ class Point {
+  private _x: number
+  private _y: number
+
+  constructor(x: number, y: number) {
+    this._x = x
+    this._y = y
+  }
+
+  @configurable(false)
+  get x() {
+    return this._x
+  }
+
+  @configurable(false)
+  get y() {
+    return this._y
+  }
+}
+
+function configurable(value: boolean) {
+  return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    descriptor.configurable = value
+  }
+}
+```
+
+> 装饰器不是切面（aop），但是切面是装饰器。
+
+主要作用：
+
+* 替换原有实现；
+* 修改元数据。
 
