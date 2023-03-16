@@ -1,4 +1,4 @@
-# design pattern
+# 设计模式
 
 ## 设计模式
 
@@ -356,4 +356,74 @@ function configurable(value: boolean) {
 
 * 替换原有实现；
 * 修改元数据。
+
+## 迭代器（Iterator）
+
+用 Iterator 来遍历容器内的元素（隐藏容器内部数据结构）。
+
+例如 JavaScript 的 `Set`、`Array`、`HashMap` 等。
+
+例如使用 Generator，用来简化 Iterator 的构造。
+
+# 前端常见设计模式
+
+## 组件化
+
+用组件来搭建界面，组件是最小的界面元素。
+
+按照最新的前端对组件理解，在组件化当中，一个组件包括：
+
+* 视图（View）
+* 数据（Data）：props、state 等
+* 视图到数据的映射（view = f(data)）
+* 组件的作用（effect）：根据数据渲染视图（view = f(data)）之外的程序
+  * 这里的作用可以理解为副作用
+
+### 组件特性
+
+**组件可以被：**
+
+* 映射、变换
+  * view = f(data)
+  * view = f.g(data)
+  * view = data => data.map(...).map(...).filter(...)...
+* 组合（Composition）
+* 记忆（Memorization）
+  * 记忆是一种作用
+  * 参考 useMemo
+* 列表（List）
+
+**组件具有这些性质：**
+
+* 密闭性（sealed）
+  * 组件专注、完整
+* 可预测性
+  * view = f(data) width effects(...)
+* 连续性（continuations）
+  * 参考 a + b + c + d = a + (b + c + d)。
+    * 如果组件的渲染先后顺序不影响组件渲染的结果
+    * -- 组件和并发渲染
+    * -- 组件可以和控制流（if/while/for等）无缝结合
+  * 每个组件是一个函数调用，是一个任务，它们没有**特殊性**。参考 Rect Fiber。
+  * 每个组件的渲染是一次函数的执行，可以和 if/else/while/for 等无缝结合。
+
+> react: cuncurent Render - VritualDOM（最优化策略）- renderDOM
+
+### 组件的粒度
+
+组件应该具有最小粒度。
+
+按照最新的组件化理解我们可以将组件分成：
+
+* 基础组件（用于实现交互）
+  * Draggable
+  * Selectable
+  * Button
+  * ......
+* 组合组件（基础组件上组合实现更复杂的交互）
+* 业务组件 = （基础组件｜组合组件）+ useXXX
+
+例如 Swiper = SlidePanel + useSlide(...) 。
+
+### 组件间通信模型
 
