@@ -427,3 +427,48 @@ function configurable(value: boolean) {
 
 ### 组件间通信模型
 
+#### EventBus 模型
+
+<img src="./images/event_bus.png" style="zoom: 30%" />
+
+组件可以：
+
+* 单播
+* 广播
+
+常见案例：
+
+* Iframe 中多个 APP 间通信；
+* Iframe 中多个 APP 和 Frame 通信；
+* Native 和 HybridApp 间 postMessage 通信。
+
+#### 单项数据流 + 状态机模型
+
+<img src="./images/state_machine.png" style="zoom: 30%" />
+
+场景举例：
+
+* UI 交互制作；
+* 全部事件通知（例如加购物车、用户消息等）。
+
+#### 领域模型 + Emiter
+
+<img src="./images/emiter.png" style="zoom: 30%" />
+
+组件仅仅负责渲染等简单工作，背后的业务逻辑由复杂的领域模型完成。
+
+## Restful
+
+Restful 是一套前端 + 后端协作标准。
+
+* 前端无状态，前端有（Representation）
+* 服务端有状态
+* 用户通过 transfer 改变服务端状态
+* 用名词性 + HTTP Method 描述 transfer
+
+<img src="./images/restful.png" />
+
+ ## 单项数据流
+
+
+
