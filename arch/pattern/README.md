@@ -466,9 +466,13 @@ Restful 是一套前端 + 后端协作标准。
 * 用户通过 transfer 改变服务端状态
 * 用名词性 + HTTP Method 描述 transfer
 
-<img src="./images/restful.png" />
+<img src="./images/restful.png" />架构师三要素：
 
- ## 单项数据流
+* Coding 能力
+* 架构原理性知识
+* 项目重构，大量练习
+
+# 函数式和架构演变趋势
 
 
 
