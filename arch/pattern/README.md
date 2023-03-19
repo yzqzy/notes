@@ -472,7 +472,141 @@ Restful 是一套前端 + 后端协作标准。
 * 架构原理性知识
 * 项目重构，大量练习
 
+## 单项数据流
+
+传递数据的通道总是单向的，为每个方向的数据传递建立一个单向的通道。例如父组件到子组件的传参（props）。
+
+我们不能将父组件的 state 给子组件用，会存在耦合，子组件会依赖父组件，不能单独使用。可能会存在循环依赖问题。
+
+**双向依赖：双向依赖的组件或者节点没办法给多方使用，没办法提纯。**
+
+```typescript
+// 无限循环的场景
+
+class A {
+  b: B,
+  this.b.on("X", () => {
+    this.emit("Y")
+  }
+}
+            
+class B {
+	a: A
+  this.a.on("Y", () => {
+    this.emit("X")
+  })
+}
+```
+
+**单向数据流的场景：受控组件和非受控组件**
+
+> 所有的 hooks 都是一个模型，即 per instance + per location。
+> 每一个 hook 都有背后关联的 dom 节点，每一个 hook 都有自己的位置，不会混淆。
+>
+> 受控组件即所有数据都是外部传入，组件本身没有状态。非受控组件内部存在自己的状态。
+
+```tsx
+// 典型 受控组件
+function Foo(props) {
+  // virtualDOM instance
+  return <Input onChange={props.onChange} value={props.value} />
+}
+
+// 典型 非受控组件
+function Foo(props) {
+  const [val, setVal] = useState(props.initialValue)
+  
+  useEffect(() => {
+    (debounce(() => {
+      if (val !== props.initialValue) 
+        props.onChange(val)
+    }))()
+  }, [val])
+  
+  return <Input onChange={setVal} value={val} />
+}
+// or
+{
+  props: {
+  	initialState: ...
+  },
+  setup(props) {
+    const val = ref(props.initialState)
+    
+    watchEffects(() => {
+      if (val.value === props.initialState) {
+        props.onChange(val)
+      }
+    })
+    
+    return () => {
+      return <Input onChange={e => val.value = e.target.value} value={val.value}  />
+    }
+  }
+}
+```
+
+**表单解耦：**
+
+```tsx
+<Form>
+	<Subform1>
+  	<SubForm3></SubForm3>
+  </Subform1>
+  <Subform2></Subform2>
+</Form>
+```
+
+深度嵌套表单使用属性传参，很容易传错。我们可以使用 “领域模型 + Emiter” 去实现会比较合理。
+
+ 每个表单项决定自己的数据去哪更新，而不是将数据传递过来。
+
+```tsx
+class FormItem = ({ store, onChange, path }) => {
+  // const value = store.getByPath(['person', 'address'])
+  const value = store.getByPath(path)
+ 		
+  // 更新的时候也不是通过 Form 驱动所有表单更新，而是通过监听更新
+  // store.subscribe(['person', 'address'])
+  store.subscribe(path)
+  
+  // onChange(['person', 'address'], newValue)
+  onChange(path, newValue)
+  
+  return <Input onChange={() => onChange(path, e.target.value)} />
+}
+```
+
+单项数据流的核心是 “依赖项” 要减少，依赖减少并不是说依赖到单项数据流为止，依赖可以一直减少，系统做的越好，系统模块之间依赖就会越少。或者只存在一份公共依赖。
+
+## Immutable
+
+
+
 # 函数式和架构演变趋势
 
+React 为例：
 
+```tsx
+import { useState, useEffect } from 'react'
 
+export default () => {
+  // 正常情况下这两个 hook 是完全够用的
+
+  const [tabList, setTabList] = useState<Array<TabData>([])
+
+  useEffect(() => {
+    setTabList()
+  })
+
+  return <>
+    { tabList.map(x => <p>{x.title}</p>) }
+  </>
+}
+```
+
+useState、useEffect，在 vue 中可以使用 ref、reactive、watch 代替。
+
+state 状态、ref 引用、memo 记忆。
+
+记得要做减法，写程序并不是将所有特征都用上才是最好的，避免无意义的优化。
