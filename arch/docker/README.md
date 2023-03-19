@@ -128,7 +128,7 @@ $ npm create vite
 
 根据目录下创建 Docker 配置文件（Dockerfile）
 
-```dockerfile
+```
 FROM node:16
 
 WORKDIR /usr/app
