@@ -581,6 +581,49 @@ class FormItem = ({ store, onChange, path }) => {
 
 ## Immutable
 
+不可变数据集合：数据不可以被改变，若改变就创建新的集合。
+
+```tsx
+const { Map, List } = require('immutable')
+
+const x = Map({ a: 1 })
+
+x.set('a', 2) // 返回新 map
+```
+
+ 思考这样一个例子（非受控组件）：
+
+```tsx
+function SomeForm(props) {
+  const formData = reactive(props.initialFormData)
+  
+  watchEffect(() => {
+    store.update(formData)
+    // store 无法判断 formData 是否完成更新，因为 formData 作为一个对象并没有发生变化
+  })
+}
+```
+
+这是我们可以使用 immutable 来解决这个问题，或者使用浅拷贝的方式去处理。
+
+**Immutable 的优势：**
+
+* 可以帮助保留变更历史（且体积小）；
+* 速度快（性能好）；
+* 没有副作用。
+
+## 插件模式
+
+将扩展能力抽象为可以无序执行、各自处理不同问题的一个个插件。
+
+**开闭原则：对修改关闭，对扩展开放。**
+
+例如 babel 插件，rollup 插件，webpack loader。
+
+Babel 插件提供了一套遍历抽象语法树的方法，需要自己定义遍历哪些抽象语法树。
+
+## 领域专有语言：DSL
+
 
 
 # 函数式和架构演变趋势
