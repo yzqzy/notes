@@ -661,3 +661,73 @@ const TabPanel = Tab.Panel
 
 ### 单项依赖原则
 
+组件不要发生双向依赖，如果发生双向依赖可以这样解耦：
+
+* 消息（EventBus、Redux ...）
+* 重新设计（重构）
+
+### SSOT 原则
+
+Single Source of Truth
+
+数据的来源只有一个，真理只有一个。
+
+关联的原则：最小知识原则。
+
+例如：Restful。
+
+例如：减少组件间参数传递。
+
+```tsx
+// 反模式：违反 SSOT 原则
+// 如果参数传递过程中存在数据缓存行为，就违反了 SSOT 原则。
+
+const ProductList = (props) => {
+  const [passProps, setProps] = useState(props)
+  return <X { ...passProps }></X>
+}
+```
+
+反模式：商品表单 => 品牌子表单 => 品牌列表
+
+反思：组件从数据层面应该是封闭的（sealed）。例如一个订单列表组件应该自己可以完成所有数据的获取，即便为了提升性能数据作为一个整体被服务端返回。
+
+假设商品表单自身并不需要品牌列表数据，但是由于商品表单中存在品牌列表组件，然后从表单页面请求并透传品牌列表数据。这时其实就违反了最小知识原则。
+
+```tsx
+// redux 架构
+
+import { formJS, Map as ImmutableMap } from 'immutable'
+
+class Form {
+  data: ImmutableMap<string, any>
+  
+  constructor(initialValues: any) {
+    this.data = formJS(initialValues) as ImmutableMap<string, any>
+  }
+  
+  set(path: string[]) {
+    this.data = this.data.setIn(path, value)
+  }
+  
+  getData() {
+    return this.data.toJS()
+  }
+}
+
+function reducer(state = new Form({ a: 1 }), action: Action & {
+  path: string[],
+  value: any
+}) {
+  switch (action.type) {
+    case 'set':
+      const { path, value } = action
+      state.set(path, value)
+      break
+  }
+  return state
+}
+```
+
+
+
