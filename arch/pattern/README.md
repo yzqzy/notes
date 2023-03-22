@@ -729,5 +729,38 @@ function reducer(state = new Form({ a: 1 }), action: Action & {
 }
 ```
 
+```tsx
+const formMeta = {
+  name: "form1",
+  children: [{
+    name: "personName",
+    type: "input",
+    path: "person.name"
+  }, {
+   name: "group",
+   type: "group",
+   children: [{
+      name: "memo",
+      type: "textarea",
+      path: "persion[%i].memo"
+    }]
+  }]
+}
+```
 
+### 最小交互原则
+
+减少类型间的交互，减少类型之间的耦合。
+
+减少继承、多用组合：
+
+* 工厂模式、Facade 模式、Builder 模式
+
+减少类型的成员：
+
+* 发消息通知
+* 管道（组合）
+* continuations
+
+### 开闭原则
 
