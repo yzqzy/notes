@@ -365,7 +365,7 @@ function configurable(value: boolean) {
 
 例如使用 Generator，用来简化 Iterator 的构造。
 
-# 前端常见设计模式
+# 设计思想
 
 ## 组件化
 
@@ -763,4 +763,28 @@ const formMeta = {
 * continuations
 
 ### 开闭原则
+
+提升程序的扩展性（比如插件、元数据、DSL 等），减少对程序的修改。
+
+### 领域设计原则
+
+* 创建属于自己的领域方言，让每个对象拥有贴近场景的具体含义，做到专对象专用。例如：HTML、JSX 等。
+
+* 用 DSL 描述你的系统。DSL（json、yml、builder） => ActivityPage。
+
+* 为不同的目标设计 Context。
+* 让元数据可以被扩展能力（插件、组件等）使用。
+
+```tsx
+const RenderForm = (config, path = []) => {
+  switch(config.type) {
+    case 'input':
+      return <Input path={path} />
+    case 'form':
+      return config.children.map(child => {
+        return RenderForm(child, path.concat(child.name))
+      })
+  }
+}
+```
 
