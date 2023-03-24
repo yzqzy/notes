@@ -1,4 +1,4 @@
-# 设计模式
+# 一、设计模式
 
 ## 设计模式
 
@@ -365,7 +365,7 @@ function configurable(value: boolean) {
 
 例如使用 Generator，用来简化 Iterator 的构造。
 
-# 设计思想
+# 二、设计思想
 
 ## 组件化
 
@@ -786,5 +786,32 @@ const RenderForm = (config, path = []) => {
       })
   }
 }
+```
+
+## 三、基本工具链和功能
+
+### 实现 call 和 aplly
+
+```typescript
+function add(x: number, y: number) {
+  return this.z + x + y
+}
+
+add._call({ z: 100 }, 1, 2) // 103
+add._apply({ z: 100 }, [1, 2]) // 103
+```
+
+```tsx
+function foo() {
+  console.log('foo')
+}
+
+Function.prototype._call = function (thisArgs: any, args: Array<any>) {
+  const symbol = Symbol('xxx')
+  thisArgs[symbol] = foo
+  thisArgs[symbol](...args)
+}
+
+foo._call({ x: 1 })
 ```
 
