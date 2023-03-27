@@ -40,3 +40,27 @@ DSL（领域专有语言）。DSL 的表单设计，就是用专门设计表单�
 ### 表单的通用设计
 
 作为标准的表单设计，可以考虑下面的模型。
+
+<img src="./images/design.png" style="zoom: 70%" />
+
+* DSL（Domain Specific Language），领域专有语言负责
+  * 描述表单
+  * 初始化表单数据的存储
+* Render 负责根据 DSL 渲染表单
+* Store 负责存储表单数据
+* 用户在表单视图发生输入时触发 reducer，触发表单数据的变化
+
+单向更新，不需要 store 再更新视图，由用户控制表单项数据，只是做存储功能。
+
+简单案例如下：
+
+```tsx
+// meta.config.ts DSL
+
+export default {
+  form: {
+    items: [{ type: 'input', path: ['user', 'name'] }]
+  }
+}
+```
+

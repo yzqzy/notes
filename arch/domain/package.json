@@ -1,0 +1,15 @@
+{
+  "name": "domain",
+  "version": "1.0.0",
+  "description": "## 实现 call 和 aplly",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "immutable": "^4.3.0"
+  }
+}
