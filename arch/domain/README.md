@@ -64,6 +64,51 @@ export default {
 }
 ```
 
+```tsx
+// FormDSL.ts
+
+import { Map as ImmutableMap } from 'immutable'
+import { Store, Meta } from './dsl.types'
+
+class FormDSL {
+  private store: Store = ImmutableMap()
+  private meta: Meta
+
+  constructor(meta: Meta) {
+    this.meta = meta
+  }
+
+  initStore() {}
+}
+```
+
+```tsx
+// Render.tsx
+
+import { Meta } from './dsl.types'
+
+export default (meta: Meta) => {}
+```
+
+```typescript
+// dsl.types.d.ts
+
+import { Map as ImmutableMap } from 'immutable'
+
+export type Store = ImmutableMap<string, Store>
+
+export type FormItem = {
+  type: string
+  path: Array<string | number>
+}
+
+export type Meta = {
+  form: {
+    items: Array<FormItem>
+  }
+}
+```
+
 ## 表单组件
 
 ### 表单组件的分类设计
@@ -118,4 +163,11 @@ export default {
 设计具体表单组件的时候，需要考虑组件中数据是否受控。
 
 设计思想如下：
+
+尽量优先考虑非受控组件
+
+* 最小知识原则（组件状态 !== 表单数据）
+* 最小交互原则（减少数据流）
+* 单一职责原则（让组件自己承担自己应该承担的部分）
+* 性能考虑
 

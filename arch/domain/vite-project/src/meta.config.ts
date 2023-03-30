@@ -1,5 +1,6 @@
 export default {
   form: {
-    items: [{ type: 'input', path: ['user', 'name'] }]
+    type: 'form',
+    items: [{ type: 'input', path: ['user', 'name'], default: 'hello' }]
   }
 }
