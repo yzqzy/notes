@@ -1,17 +1,22 @@
 import { useMemo, useRef, useEffect } from 'react'
 import { FormItemProps, Meta } from './dsl.types'
-import { Form, FormItem } from './Form'
+import { FormItem, FormComponent } from './Form'
 
-function useDSL(meta: Meta) {
-  const formDSL = useMemo(() => new Form(meta), [])
-  return formDSL
+function useForm(meta: Meta) {
+  const form = useMemo(() => new FormComponent(meta), [])
+  return form
 }
 
-export default (meta: Meta) => {
-  const formDSL = useDSL(meta)
+export default ({ meta }: { meta: Meta }) => {
+  const form = useForm(meta)
+  return <Form key={'root'} item={form.getRoot()} />
 }
 
-const Form = (props: FormItemProps) => {}
+const Form = (props: FormItemProps) => {
+  const item = props.item
+  return <div>{item.getChildren().map(child => render(child))}</div>
+}
+
 const Input = (props: FormItemProps) => {
   const ref = useRef<HTMLInputElement>(null)
 
@@ -19,7 +24,14 @@ const Input = (props: FormItemProps) => {
     ref.current!.value = props.defaultValue
   }, [])
 
-  return <input ref={ref} onChange={e => props.onChange(e.target.value)} />
+  return (
+    <input
+      ref={ref}
+      onChange={e => {
+        props.onChange && props.onChange(e.target.value)
+      }}
+    />
+  )
 }
 
 function render(formItem: FormItem) {

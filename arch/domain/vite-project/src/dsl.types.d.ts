@@ -5,8 +5,8 @@ export type Store = ImmutableMap<string, Store>
 
 export type FormItemMeta = {
   type: string
-  path: Array<string | number>
-  default: any
+  path?: Array<string | number>
+  default?: any
   items?: Array<FormItemMeta>
 }
 
@@ -15,7 +15,7 @@ export type Meta = {
 }
 
 export type FormItemProps = {
-  onChange: (value: any) => any
+  onChange?: (value: any) => any
   item: FormItem
-  defaultValue: any
+  defaultValue?: any
 }

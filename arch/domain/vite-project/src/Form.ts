@@ -3,10 +3,10 @@ import { Store, Meta, FormItemMeta } from './dsl.types'
 
 export class FormItem {
   private meta: FormItemMeta
-  private form: Form
+  private form: FormComponent
   private children: Array<FormItem>
 
-  constructor(meta: FormItemMeta, form: Form) {
+  constructor(meta: FormItemMeta, form: FormComponent) {
     this.meta = meta
     this.form = form
     this.children = []
@@ -17,7 +17,7 @@ export class FormItem {
   }
 
   public getValue() {
-    const val = this.form.getValue(this.meta.path)
+    const val = this.form.getValue(this.meta.path!)
 
     if (typeof val === 'undefined') {
       return this.meta.default
@@ -27,21 +27,23 @@ export class FormItem {
   }
 
   public setValue(value: any) {
-    this.form.setValue(this.meta.path, value)
+    this.form.setValue(this.meta.path!, value)
   }
 
   public getType() {
     return this.meta.type
   }
+
+  public getChildren() {
+    return this.children
+  }
 }
 
-export class Form {
+export class FormComponent {
   private store: Store = ImmutableMap()
-  private meta: Meta
   private form: FormItem
 
   constructor(meta: Meta) {
-    this.meta = meta
     this.form = new FormItem(meta.form, this)
   }
 
@@ -51,6 +53,10 @@ export class Form {
 
   public setValue(path: Array<string | number>, value: any) {
     this.store = this.store.setIn(path, value)
+  }
+
+  public getRoot() {
+    return this.form
   }
 
   initStore() {}
