@@ -9,7 +9,7 @@ function useForm(meta: Meta) {
 
 export default ({ meta }: { meta: Meta }) => {
   const form = useForm(meta)
-  return <Form key={'root'} item={form.getRoot()} />
+  return <Form item={form.getRoot()} />
 }
 
 const Form = (props: FormItemProps) => {
@@ -17,8 +17,17 @@ const Form = (props: FormItemProps) => {
   return <div>{item.getChildren().map(child => render(child))}</div>
 }
 
+function useListenUpdata(item: FormItem) {
+  useEffect(() => {
+    // custom update
+    // item.on('update', () => {})
+  })
+}
+
 const Input = (props: FormItemProps) => {
   const ref = useRef<HTMLInputElement>(null)
+
+  useListenUpdata(props.item)
 
   useEffect(() => {
     ref.current!.value = props.defaultValue

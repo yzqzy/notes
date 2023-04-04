@@ -37,14 +37,28 @@ export class FormItem {
   public getChildren() {
     return this.children
   }
+
+  public updateStoreByDefault() {
+    if (typeof this.meta.default !== 'undefined') {
+      this.setValue(this.meta.default)
+    }
+
+    for (let child of this.getChildren()) {
+      child.updateStoreByDefault()
+    }
+  }
 }
 
 export class FormComponent {
-  private store: Store = ImmutableMap()
+  private meta: Meta
   private form: FormItem
+  private store: Store
 
   constructor(meta: Meta) {
+    this.meta = meta
     this.form = new FormItem(meta.form, this)
+    this.store = this.initStore()
+    this.updateDefaultValues()
   }
 
   public getValue(path: Array<string | number>) {
@@ -59,5 +73,20 @@ export class FormComponent {
     return this.form
   }
 
-  initStore() {}
+  public getData() {
+    return this.store.toJS()
+  }
+
+  public setData(data: any) {
+    // this.store = fromJS(data) as
+  }
+
+  private initStore() {
+    const store = ImmutableMap<string, Store>()
+    return store
+  }
+
+  private updateDefaultValues() {
+    this.form.updateStoreByDefault()
+  }
 }
