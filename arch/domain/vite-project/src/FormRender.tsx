@@ -24,6 +24,12 @@ function useListenUpdata(item: FormItem) {
   })
 }
 
+const Condition = (props: FormItemProps) => {
+  const cond = props.item.getCond()
+  const condIndex = cond()
+  return render(props.item.getChildren()[condIndex])
+}
+
 const Input = (props: FormItemProps) => {
   const ref = useRef<HTMLInputElement>(null)
 
@@ -57,6 +63,8 @@ function render(formItem: FormItem) {
       return <Form {...passProps} />
     case 'input':
       return <Input {...passProps} />
+    case 'condition':
+      return <Condition {...passProps} />
     default:
       throw new Error(`component ${formItem.getType()} not Found`)
   }

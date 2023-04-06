@@ -172,5 +172,235 @@ export type Meta = {
 * 性能考虑
 
 ```tsx
+// dsl.type.ts
+
+import { Map as ImmutableMap } from 'immutable'
+import { FormItem } from './Form'
+
+export type Store = ImmutableMap<string, Store>
+
+export type FormItemMeta = {
+  type: string
+  path?: Array<string | number>
+  cond?: (ctx: any) => any
+  default?: any
+  items?: Array<FormItemMeta>
+}
+
+export type Meta = {
+  form: FormItemMeta
+}
+
+export type FormItemProps = {
+  onChange?: (value: any) => any
+  item: FormItem
+  defaultValue?: any
+}
+```
+
+```tsx
+// Form.ts
+
+import { useMemo, useRef, useEffect } from 'react'
+import { FormItemProps, Meta } from './dsl.types'
+import { FormItem, FormComponent } from './Form'
+
+function useForm(meta: Meta) {
+  const form = useMemo(() => new FormComponent(meta), [])
+  return form
+}
+
+export default ({ meta }: { meta: Meta }) => {
+  const form = useForm(meta)
+  return <Form item={form.getRoot()} />
+}
+
+const Form = (props: FormItemProps) => {
+  const item = props.item
+  return <div>{item.getChildren().map(child => render(child))}</div>
+}
+
+function useListenUpdata(item: FormItem) {
+  useEffect(() => {
+    // custom update
+    // item.on('update', () => {})
+  })
+}
+
+const Condition = (props: FormItemProps) => {
+  const cond = props.item.getCond()
+  const condIndex = cond()
+  return render(props.item.getChildren()[condIndex])
+}
+
+const Input = (props: FormItemProps) => {
+  const ref = useRef<HTMLInputElement>(null)
+
+  useListenUpdata(props.item)
+
+  useEffect(() => {
+    ref.current!.value = props.defaultValue
+  }, [])
+
+  return (
+    <input
+      ref={ref}
+      onChange={e => {
+        props.onChange && props.onChange(e.target.value)
+      }}
+    />
+  )
+}
+
+function render(formItem: FormItem) {
+  const passProps = {
+    onChange: (value: any) => {
+      formItem.setValue(value)
+    },
+    defaultValue: formItem.getValue(),
+    item: formItem
+  }
+
+  switch (formItem.getType()) {
+    case 'form':
+      return <Form {...passProps} />
+    case 'input':
+      return <Input {...passProps} />
+    case 'condition':
+      return <Condition {...passProps} />
+    default:
+      throw new Error(`component ${formItem.getType()} not Found`)
+  }
+}
+```
+
+```tsx
+// FormRender.tsx
+
+import { useMemo, useRef, useEffect } from 'react'
+import { FormItemProps, Meta } from './dsl.types'
+import { FormItem, FormComponent } from './Form'
+
+function useForm(meta: Meta) {
+  const form = useMemo(() => new FormComponent(meta), [])
+  return form
+}
+
+export default ({ meta }: { meta: Meta }) => {
+  const form = useForm(meta)
+  return <Form item={form.getRoot()} />
+}
+
+const Form = (props: FormItemProps) => {
+  const item = props.item
+  return <div>{item.getChildren().map(child => render(child))}</div>
+}
+
+function useListenUpdata(item: FormItem) {
+  useEffect(() => {
+    // custom update
+    // item.on('update', () => {})
+  })
+}
+
+const Condition = (props: FormItemProps) => {
+  const cond = props.item.getCond()
+  const condIndex = cond()
+  return render(props.item.getChildren()[condIndex])
+}
+
+const Input = (props: FormItemProps) => {
+  const ref = useRef<HTMLInputElement>(null)
+
+  useListenUpdata(props.item)
+
+  useEffect(() => {
+    ref.current!.value = props.defaultValue
+  }, [])
+
+  return (
+    <input
+      ref={ref}
+      onChange={e => {
+        props.onChange && props.onChange(e.target.value)
+      }}
+    />
+  )
+}
+
+function render(formItem: FormItem) {
+  const passProps = {
+    onChange: (value: any) => {
+      formItem.setValue(value)
+    },
+    defaultValue: formItem.getValue(),
+    item: formItem
+  }
+
+  switch (formItem.getType()) {
+    case 'form':
+      return <Form {...passProps} />
+    case 'input':
+      return <Input {...passProps} />
+    case 'condition':
+      return <Condition {...passProps} />
+    default:
+      throw new Error(`component ${formItem.getType()} not Found`)
+  }
+}
+```
+
+```tsx
+// meta.config.ts
+
+type FormContext = {
+  user: {
+    state: string
+  }
+}
+
+export default {
+  form: {
+    type: 'form',
+    items: [
+      { type: 'input', path: ['user', 'name'], default: 'hello' }
+      // {
+      //   type: 'condition',
+      //   cond: (ctx: FormContext) => {
+      //     return ctx.user.state === 'loggedIn' ? 0 : 1
+      //   },
+      //   items: [
+      //     {
+      //       type: 'input',
+      //       path: ['lang', 'ts']
+      //     },
+      //     {
+      //       type: 'input',
+      //       path: ['land', 'node']
+      //     }
+      //   ]
+      // }
+    ]
+  }
+}
+```
+
+```tsx
+// App.tsx
+
+import FormRender from './FormRender'
+import metaConfig from './meta.config'
+
+import './App.css'
+
+function App() {
+  return (
+    <div className="App">
+      <FormRender meta={metaConfig} />
+    </div>
+  )
+}
+
+export default App
 ```
 

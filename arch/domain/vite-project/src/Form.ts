@@ -34,6 +34,12 @@ export class FormItem {
     return this.meta.type
   }
 
+  public getCond() {
+    return () => {
+      return this.meta.cond!(this.form.getContext())
+    }
+  }
+
   public getChildren() {
     return this.children
   }
@@ -53,11 +59,13 @@ export class FormComponent {
   private meta: Meta
   private form: FormItem
   private store: Store
+  private context?: any
 
-  constructor(meta: Meta) {
+  constructor(meta: Meta, context?: any) {
     this.meta = meta
     this.form = new FormItem(meta.form, this)
     this.store = this.initStore()
+    this.context = context
     this.updateDefaultValues()
   }
 
@@ -71,6 +79,10 @@ export class FormComponent {
 
   public getRoot() {
     return this.form
+  }
+
+  public getContext() {
+    return this.context
   }
 
   public getData() {

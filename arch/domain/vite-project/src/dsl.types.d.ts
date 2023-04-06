@@ -6,6 +6,7 @@ export type Store = ImmutableMap<string, Store>
 export type FormItemMeta = {
   type: string
   path?: Array<string | number>
+  cond?: (ctx: any) => any
   default?: any
   items?: Array<FormItemMeta>
 }
