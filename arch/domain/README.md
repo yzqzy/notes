@@ -199,7 +199,7 @@ export type FormItemProps = {
 ```
 
 ```tsx
-// Form.ts
+// Form.ts 领域层
 
 import { useMemo, useRef, useEffect } from 'react'
 import { FormItemProps, Meta } from './dsl.types'
