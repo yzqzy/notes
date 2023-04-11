@@ -3187,3 +3187,62 @@ const a = multiply(10, 1, 2, 3, 4)
 
 泛型不是让写程序更舒服的一种方式，而是让你的程序更加可预测。
 
+## 11. 类型计算
+
+### Keyof 操作符
+
+```typescript
+type Point = { x: number; y: number }
+type P = keyof Point // "x" | "y"
+
+type Arrayish = { [n: number]: unknown }
+type A = keyof Arrayish // number
+
+type Mapish = { [k: string]: boolean }
+type M = keyof Mapish // string | number
+```
+
+`M`  类型是 `string | number` ，因为对于对象来说，虽然规定 k 是 string，但是也可以使用数字作为键。
+
+### typeof
+
+```typescript
+console.log(typeof 'xxx') // string
+
+let s = 'hello'
+let n: typeof s // string
+```
+
+`typeof` 在 javascript 是计算操作符，不过在 ts 中，属于类型操作符（不是运行时执行，coding 时也会检查）。
+
+### Partial Type
+
+部分类型。
+
+```typescript
+interface Todo {
+  title: string
+  description: string
+}
+
+function updateTodo(todo: Todo, fieldsToUpdate: Partial<Todo>) {
+  return {
+    ...todo,
+    ...fieldsToUpdate
+  }
+}
+
+const todo1 = {
+  title: 'organize desk',
+  description: 'clear clutter'
+}
+const todo2 = updateTodo(todo1, {
+  description: 'throw out trash'
+})
+```
+
+如何实现？
+
+```typescript
+```
+
