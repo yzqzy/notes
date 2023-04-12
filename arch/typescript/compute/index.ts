@@ -68,7 +68,7 @@
     title: 'Delete inactive users'
   }
 
-  todo.title = 'Hello'
+  // todo.title = 'Hello'
   // 无法为“title”赋值，因为它是只读属性。
 
   type Readonly<T> = {
@@ -93,4 +93,31 @@
   type Record<K extends keyof any, T> = {
     [P in K]: T
   }
+}
+
+{
+  interface Todo {
+    title: string
+    description: string
+    completed: boolean
+  }
+
+  type TodoPreview = Pick<Todo, 'title' | 'completed'>
+
+  const todo: TodoPreview = {
+    title: 'Clean room',
+    completed: false
+  }
+
+  type Pick<T, K extends keyof T> = {
+    [P in K]: T[P]
+  }
+}
+
+{
+  type T0 = Exclude<'a' | 'b' | 'c', 'a'> // 'b' | 'c'
+  type T1 = Exclude<'a' | 'b' | 'c', 'a' | 'b'> // 'c'
+  type T2 = Exclude<string | number | (() => void), Function> // string | number
+
+  type Exclude<T, U> = T extends U ? never : T
 }

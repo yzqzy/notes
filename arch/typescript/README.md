@@ -3328,3 +3328,42 @@ const obj = Record<string, object>
 
 ### Pick
 
+```typescript
+interface Todo {
+  title: string
+  description: string
+  completed: boolean
+}
+
+type TodoPreview = Pick<Todo, 'title' | 'completed'>
+
+const todo: TodoPreview = {
+  title: 'Clean room',
+  completed: false
+}
+```
+
+如何实现？
+
+```typescript
+type Pick<T, K extends keyof T> = {
+  [P in K]: T[P]
+}
+```
+
+### Exclude
+
+```typescript
+type T0 = Exclude<'a' | 'b' | 'c', 'a'> // 'b' | 'c'
+type T1 = Exclude<'a' | 'b' | 'c', 'a' | 'b'> // 'c'
+type T2 = Exclude<string | number | (() => void), Function> // string | number
+```
+
+如何实现？
+
+```typescript
+type Exclude<T, U> = T extends U ? never : T
+```
+
+### Omit
+
