@@ -3217,7 +3217,7 @@ let n: typeof s // string
 
 ### Partial Type
 
-部分类型。
+部分类型，ts 的延伸能力。
 
 ```typescript
 interface Todo {
@@ -3244,5 +3244,87 @@ const todo2 = updateTodo(todo1, {
 如何实现？
 
 ```typescript
+type Partial<T> = {
+  [P in keyof T]?: T[P]
+}
 ```
+
+### Required
+
+```typescript
+interface Props {
+  a?: number
+  b?: number
+}
+
+const obj: Props = { a: 5 }
+const obj2: Required<Props> = { a: 5 }
+// 类型 "{ a: number; }" 中缺少属性 "b"，但类型 "Required<Props>" 中需要该属性。
+```
+
+如何实现？
+
+```typescript
+type Required<T> = {
+  [P in keyof T]-?: T[P]
+}
+```
+
+### Readonly
+
+```typescript
+interface Todo {
+  title: string
+}
+
+const todo: Readonly<Todo> = {
+  title: 'Delete inactive users'
+}
+
+todo.title = 'Hello'
+// 无法为“title”赋值，因为它是只读属性。
+```
+
+如何实现？
+
+```typescript
+type Readonly<T> = {
+  readonly [P in keyof T]: T[P]
+}
+```
+
+### Record
+
+记录。描述 key value 值的类型。
+
+```typescript
+interface CatInfo {
+  age: number
+  breed: string
+}
+
+type CateName = 'miffy' | 'boris' | 'mordred'
+
+const cats: Record<CateName, CatInfo> = {
+  miffy: { age: 10, breed: 'persian' },
+  boris: { age: 5, breed: 'Maine Coon' },
+  mordred: { age: 10, breed: 'Britsh Shorthair' }
+}
+```
+
+如何实现？
+
+```typescript
+type Record<K extends keyof any, T> = {
+  [P in K]: T
+}
+```
+
+日常使用：
+
+```typescript
+const obj = Record<string, object>
+```
+
+### Pick
 
