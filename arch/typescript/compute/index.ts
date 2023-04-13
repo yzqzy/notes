@@ -121,3 +121,34 @@
 
   type Exclude<T, U> = T extends U ? never : T
 }
+
+{
+  interface Todo {
+    title: string
+    description: string
+    completed: boolean
+    createdAt: number
+  }
+
+  type TodoPreview = Omit<Todo, 'description'>
+  const todo: TodoPreview = {
+    title: 'Clean room',
+    completed: false,
+    createdAt: 1681344482208
+  }
+
+  type TodoInfo = Omit<Todo, 'completed' | 'createdAt'>
+  const todoInfo: TodoInfo = {
+    title: 'Pick up kids',
+    description: 'Kindergarten closes at 5pm'
+  }
+
+  type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+}
+
+{
+  type T0 = Extract<'a' | 'b' | 'c', 'a' | 'f'> // 'a'
+  type T1 = Extract<string | number | (() => void), Function> // () => void
+
+  type Extract<T, U> = T extends U ? T : never
+}

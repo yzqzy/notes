@@ -3367,3 +3367,50 @@ type Exclude<T, U> = T extends U ? never : T
 
 ### Omit
 
+省略。与 Pick 是相反的操作。
+
+Exclude 操作的是联合类型，Omit 操作的是接口。
+
+```typescript
+interface Todo {
+  title: string
+  description: string
+  completed: boolean
+  createdAt: number
+}
+
+type TodoPreview = Omit<Todo, 'description'>
+const todo: TodoPreview = {
+  title: 'Clean room',
+  completed: false,
+  createdAt: 1681344482208
+}
+
+type TodoInfo = Omit<Todo, 'completed' | 'createdAt'>
+const todoInfo: TodoInfo = {
+  title: 'Pick up kids',
+  description: 'Kindergarten closes at 5pm'
+}
+```
+
+如何实现：
+
+```typescript
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+```
+
+### Extract
+
+```typescript
+type T0 = Extract<'a' | 'b' | 'c', 'a' | 'f'> // 'a'
+type T1 = Extract<string | number | (() => void), Function> // () => void
+```
+
+如何实现？
+
+```typescript
+type Extract<T, U> = T extends U ? T : never
+```
+
+可以看到，Extract 和 Exclude 是一对组合；Pick 和 Omit 是一对组合。
+
