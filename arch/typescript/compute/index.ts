@@ -182,3 +182,46 @@
   type ConstructorParameters<T extends abstract new (...args: any) => any> =
     T extends abstract new (...args: infer P) => any ? P : never
 }
+
+{
+  // declare function f1(): { a: number; b: string }
+  // type T0 = ReturnType<() => string> // string
+  // type T1 = ReturnType<(s: string) => void> // void
+  // type T2 = ReturnType<<T>() => T> // unkown
+  // type T3 = ReturnType<<T extends U, U extends number[]>() => T> // number[]
+  // type T4 = ReturnType<typeof f1> // { a: number; b: string }
+  // type T5 = ReturnType<any> // any
+  // type T6 = ReturnType<never> // never
+  // type T7 = ReturnType<string> // 类型“string”不满足约束“(...args: any) => any”。
+  // type T8 = ReturnType<Function> // 类型“Function”不满足约束“(...args: any) => any”。
+  // type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any
+}
+
+{
+  // class C {
+  //   x = 0
+  //   y = 0
+  // }
+  // type T0 = InstanceType<typeof C> // C
+  // type T1 = InstanceType<any> // any
+  // type T2 = InstanceType<never> // never
+  // type T3 = InstanceType<string> // 类型“string”不满足约束“abstract new (...args: any) => any”。
+  // type T4 = InstanceType<Function> // 类型“Function”不满足约束“abstract new (...args: any) => any”。
+  // type InstanceType<T extends abstract new (...args: any) => any> = T extends abstract new (
+  //   ...args: any
+  // ) => infer R
+  //   ? R
+  //   : any
+}
+
+{
+  function toHex(this: Number) {
+    return this.toString(16)
+  }
+
+  function numberToString(n: ThisParameterType<typeof toHex>) {
+    return toHex.apply(n)
+  }
+
+  type ThisParameterType<T> = T extends (this: infer U, ...args: any[]) => any ? U : unknown
+}
