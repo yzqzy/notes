@@ -3416,3 +3416,52 @@ type Extract<T, U> = T extends U ? T : never
 
 ### NonNullable
 
+```typescript
+type T0 = NonNullable<string | number | undefined> // string | number
+type T1 = NonNullable<string[] | null | undefined> // string[]
+```
+
+如何实现:
+
+```typescript
+ type NonNullable<T> = T extends null | undefined ? never : T
+```
+
+### Parmameters
+
+```typescript
+declare function f1(args: { a: number; b: string }) : void
+
+type T0 = Parameters<() => string> // []
+type T1 = Parameters<(s: string) => void> // [s: string]
+type T2 = Parameters<<T>(args: T) => T> // [args: unknown]
+type T3 = Parameters<typeof f1> // [args: { a:number; b: string }]
+```
+
+如何实现：
+
+```typescript
+type Parameters<T extends (...args: any) => any> = 
+	T extends (...args: infer P) => any ? P : never 
+```
+
+### ConstructorParameters
+
+```typescript
+type T0 = ConstructorParameters<ErrorConstructor> // [message?: string | undefiend]
+type T1 = ConstructorParameters<FunctionConstructor> // string[]
+type T2 = ConstructorParameters<RegExpConstructor> // [pattern: string | RegExp, flags?: string | undefined]
+type T3 = ConstructorParameters<any> // unkown[]
+
+type T4 = ConstructorParameters<Function>
+// 类型“Function”不满足约束“abstract new (...args: any) => any”。
+// 类型“Function”提供的内容与签名“new (...args: any): any”不匹配。
+```
+
+如何实现：
+
+```typescript
+type ConstructorParameters<T extends abstract new (...args: any) => any> =
+  T extends abstract new (...args: infer P) => any ? P : never
+```
+
