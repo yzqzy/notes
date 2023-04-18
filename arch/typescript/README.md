@@ -3554,9 +3554,9 @@ type OmitThisParameter<T> = unknown extends ThisParameterType<T>
 
 ### ThisType
 
-```typescript
-interface ThisType<T> {}
+提供 this 提示。
 
+```typescript
 type ObjectDescriptor<D, M> = {
   data?: D
   methods: M & ThisType<D & M>
@@ -3585,4 +3585,58 @@ obj.x = 10
 obj.y = 20
 obj.moveBy(5, 5)
 ```
+
+```json
+// tsconfig.json
+
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["es6"],
+    "esModuleInterop": true,
+    "noImplicitThis": true, // 需要打开这个配置
+    "downlevelIteration": true,
+    "module": "CommonJS"
+  }
+}
+```
+
+如何实现？
+
+```typescript
+interface ThisType<T> {}
+```
+
+### Uppercase/LowerCase
+
+```typescript
+type Greeting = 'Hello, world'
+type ShoutGreeting = Uppercase<Greeting> // HELLO, WORLD
+
+type ASCIICacheKey<Str extends string> = `ID-${Uppercase<Str>}`
+type MainID = ASCIICacheKey<'my_app'> // ID-MY_APP
+
+type QuietGreeting = Lowercase<ShoutGreeting> // hello, world
+```
+
+如何实现？
+
+```typescript
+type Uppercase<S extends string> = intrinsic
+type Lowercase<S extends string> = intrinsic
+type Capitalize<S extends string> = intrinsic
+type Uncapitalize<S extends string> = intrinsic
+```
+
+intrinsic 代表这个实现是内部实现，不是 ts 直接可以使用。
+
+### 总结
+
+类型是可以计算的吗？答案当然是肯定的。
+
+* &
+* -
+* ?
+* infer
+* ......
 

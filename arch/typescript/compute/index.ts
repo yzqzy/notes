@@ -240,8 +240,6 @@
 }
 
 {
-  interface ThisType<T> {}
-
   type ObjectDescriptor<D, M> = {
     data?: D
     methods: M & ThisType<D & M>
@@ -269,4 +267,19 @@
   obj.x = 10
   obj.y = 20
   obj.moveBy(5, 5)
+}
+
+{
+  type Greeting = 'Hello, world'
+  type ShoutGreeting = Uppercase<Greeting> // HELLO, WORLD
+
+  type ASCIICacheKey<Str extends string> = `ID-${Uppercase<Str>}`
+  type MainID = ASCIICacheKey<'my_app'> // ID-MY_APP
+
+  type QuietGreeting = Lowercase<ShoutGreeting> // hello, world
+
+  type Uppercase<S extends string> = intrinsic
+  type Lowercase<S extends string> = intrinsic
+  type Capitalize<S extends string> = intrinsic
+  type Uncapitalize<S extends string> = intrinsic
 }
