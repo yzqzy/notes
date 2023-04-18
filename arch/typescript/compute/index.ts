@@ -215,13 +215,58 @@
 }
 
 {
+  // function toHex(this: Number) {
+  //   return this.toString(16)
+  // }
+  // function numberToString(n: ThisParameterType<typeof toHex>) {
+  //   return toHex.apply(n)
+  // }
+  // type ThisParameterType<T> = T extends (this: infer U, ...args: any[]) => any ? U : unknown
+}
+
+{
   function toHex(this: Number) {
     return this.toString(16)
   }
 
-  function numberToString(n: ThisParameterType<typeof toHex>) {
-    return toHex.apply(n)
+  const fiveToHex: OmitThisParameter<typeof toHex> = toHex.bind(5)
+  console.log(fiveToHex())
+
+  type OmitThisParameter<T> = unknown extends ThisParameterType<T>
+    ? T
+    : T extends (...args: infer A) => infer R
+    ? (...args: A) => R
+    : T
+}
+
+{
+  interface ThisType<T> {}
+
+  type ObjectDescriptor<D, M> = {
+    data?: D
+    methods: M & ThisType<D & M>
   }
 
-  type ThisParameterType<T> = T extends (this: infer U, ...args: any[]) => any ? U : unknown
+  function makeObject<D, M>(desc: ObjectDescriptor<D, M>): D & M {
+    let data: object = desc.data || {}
+    let methods: object = desc.methods || {}
+    return {
+      ...data,
+      ...methods
+    } as D & M
+  }
+
+  let obj = makeObject({
+    data: { x: 0, y: 0 },
+    methods: {
+      moveBy(dx: number, dy: number) {
+        this.x += dx
+        this.y += dy
+      }
+    }
+  })
+
+  obj.x = 10
+  obj.y = 20
+  obj.moveBy(5, 5)
 }
