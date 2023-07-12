@@ -16,3 +16,5 @@ langchain-supabase-website-chatbot
 
 ## agent
 
+非纯文字处理，例如数据计算，图片处理，谷歌搜索等，与外部应用沟通。
+
