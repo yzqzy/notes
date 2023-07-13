@@ -17,3 +17,22 @@ langchain-supabase-website-chatbot
 ## agent
 
 非纯文字处理，例如数据计算，图片处理，谷歌搜索等，与外部应用沟通。
+
+## 搞钱工具
+
+### Google Trends + ChatGpt 写稿
+
+文章改写，增加噱头，剪映配合剪视频
+
+### 客制化宠物领巾
+
+宠物市场，照片生成各种样式的图片
+
+AI 工具 Mid journey
+
+客制化宠物图打印
+
+### AI 操作经验
+
+## 课程操作模式
+
