@@ -48,13 +48,94 @@ langchain-supabase-website-chatbot
 
 * AI 操作经验
 
+# ChatGPT 4
+
+GPT4 是微软最好的模型。
+
+## 训练过程
+
+可以准确预测模型训练的结果
+
+* Language Modeling Loss，使用公开数据训练
+
+* Base Model -> Aligin -> RLHF（对模型做控制）
+
+* 模型能力靠数据、算法
+
+可以预测的扩展性
+
+* 构建深度学习 infra
+* 大数据模型，不可能实现大规模调参
+* 利用自身代码库，准确预测 Loss
+  * 小一万倍的资源尝试更多方法
+
+competition
+
+* 随着模型越来越来，效果越差的案例
+* hindsight neglect 过去做一件事，理性决断，结果不好。给你机会回去做选择，理论上应该做出理性判断，但是随着模型越来越大，会受到最终结果的影响。
+
+![image-20230716073552742](/Users/heora/workspace/notes/langchain/images/image-20230716073552742.png)
+
+## 能力 Capabilities
+
+* 日常能力对话，3.5 和 4 差别不大，随着认为难度增加，GPT4 更加可靠，有创造力，可以处理更加细微能力的知识；
+* 考试测试，结果相对比较好
+  * 测试分两个版本，一个是存在预处理训练集，另一个是不存在训练集，给出的结果相对客观；
+  * 编程题目不是太好，可以转义为编程语言去执行代码；
+
+![image-20230716105321832](/Users/heora/workspace/notes/langchain/images/image-20230716105321832.png)
+
+## 视觉输入
+
+多模态模型。允许用户输入图片、文本，最后生成文本进行返回。
+
+图片文章总结，做题等。对于多模态测试表现也比较好。
+
+Prompt 工程师，哈哈哈。
+
+## 操纵性 Steerability
+
+可以定义语言模型的行为。”system message"，例如家庭辅导老师、程序员。
+
+DAN（do anthing now） 2.0，安全机制处理。
+
+Chat GPT 配合 Chat GPT Plugins 可以获取最新时间，获取最新网络上的新闻等。
+
+## 局限、危险性 limitations
+
+对于高风险领域（法律，金融等），也不是说绝对可靠。
+
+GPT-4 非常自信，即使错了之后，也会比较自信，哈哈。
+
+![image-20230716114801550](/Users/heora/workspace/notes/langchain/images/image-20230716114801550.png)
+
+## 危险 Risks & mitigations
+
+去年就训练完成，然后各种方面去做安全处理。利用自己提升 safe，rlhf，safe-related。
+
+越狱还是可以做到的，寻找漏洞。如果再次发布模型，有能力影响整个社会。
+
+GPT-4 支持更高的 tokens 和 context。
+
+## 总结
+
+视觉图像生成，生成代码，然后可以生成画，还可以对代码进行不断的优化。
+
+根据用户指示，进行不同的进化。生成音乐，使用工具。
+
+GPT 系列模型，可以有 80% 的人的 10% 的任务可以受到影响，10% 的人的 50% 的工作可以收到影响。
+
+写代码、写文章相关的工作，可以受到很大影响，可以作为一个很好的助手。
+
+例如翻译、作家、数学家等岗位，可以给到一些启发，帮助研发问题。
+
+目前仅是语言上的 AI，并不能做到全工种替代，并不是算是智能。
+
 # 语义优势
 
 https://davidsj.substack.com/p/semantic-superiority-part-1
 
 https://davidsj.substack.com/p/semantic-superiority-part-2
-
-
 
 ## 什么是语义层
 
