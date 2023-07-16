@@ -48,6 +48,10 @@ langchain-supabase-website-chatbot
 
 * AI 操作经验
 
+
+
+ChatGPT、Notion AI、Midjourney、Tome、Palette.fm、Remove.bg、Fliki、Auto Draw。
+
 # ChatGPT 4
 
 GPT4 是微软最好的模型。
