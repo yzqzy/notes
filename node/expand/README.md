@@ -169,4 +169,9 @@ void uv__run_timers(uv_loop_t* loop) {
 }
 ```
 
-* 遍历并执行 I/O 已结束（完成、失败）并丢进 `pending` 队列
+* 遍历并执行 I/O 已结束（完成、失败）并丢进 `pending` 队列等待后续处理的事件对应的回调；
+* 遍历并执行空转（Idle）事件；
+* 遍历并执行准备（Prepare）事件；
+* 获取没有触发距离现在最近的定时器的时间间隔（uv_backend_timeout），即事件循环到洗一次循环的最长时间；
+* 根据 epoll、kqueue 等 I/O 多路复用机制，去监听等待 I/O 事件触发，并以上一步获取的时间间隔最为最大监听时间，若超时还未有事件触发，则直接取消此次等待（如果时间到了还没有事件触发，但是定时器触发时间到了，libuv 就要停下来处理下一轮定时器）；
+* 执行一遍 `uv__metrics_update_idle_time()`，更新 `loop` 中 metrics 里的 `idle_time`，
