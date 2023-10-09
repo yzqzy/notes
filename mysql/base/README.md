@@ -223,7 +223,7 @@ insert into 表示向 demo.test 中插入数据，后面是要插入数据的字
 * 插入数据的字段名可以不写，建议每次都写。这样做的好处是可读性好，不易出错且容易修改。
 * 由于字段 itemnumber 定义了 auto_increment，所以我们插入一条记录的时候，不给它赋值，系统也会自动赋值，每次赋值自增 1。也可以在插入数据的时候给 itemnumber 赋值，但是必须保证与已有记录的 itemnumber 值不同，否则就会提示错误。
 
-### 总结
+### 5. 总结
 
 我们在进行具体操作时，会用到 8 种 SQL 语句：
 
@@ -233,21 +233,24 @@ CREATE DATABASE demo;
 -- 删除数据库
 DROP DATABASE demo;
 -- 创建数据表
-CREATE TABLE demo.test
-(
-	barcode text,
-  goodsname text,
-  price int
-)
+CREATE TABLE
+    demo.test (
+        barcode text,
+        goodsname text,
+        price int
+    );
 -- 查看表结构
 DESCRIBE demo.test;
 -- 查看所有表
 SHOW TABLES;
 -- 添加主键
 ALTER TABLE demo.test
-ADD COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
+ADD
+    COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
 -- 向表中添加数据
-INSERT INTO demo.test (barcode,goodsname,price) VALUES ('0001', '本', 3)
+INSERT INTO
+    demo.test (barcode, goodsname, price)
+VALUES ('001', '本', 3);
 ```
 
 最后，我们再来了解一下 MySQL 种 SQL 语句的书写规范。
@@ -260,7 +263,7 @@ MySQL 以分号来识别一条 SQL 语句结束，所以，你写的每一条 SQ
 
 MySQL 种有很多字段类型，比如整数、文本、浮点数，等等。如果类型定义合理，就能节省存储空间，提升数据查询和处理的速度。相反，如果类型定义不合理，就有可能导致数据超出取值范围，引发系统错误，甚至可能出现计算错误的情况，进而影响整个系统。
 
-### 整数类型
+### 1. 整数类型
 
 整数类型一共有 5 种，包括 TINYINT、SMALLINT、MEDIUMINT、INT（INTEGER）和 BIGINT，它们的区别如下：
 
@@ -277,7 +280,7 @@ MySQL 种有很多字段类型，比如整数、文本、浮点数，等等。�
 
 在实际工作中，系统故障产生的成本远远超过增加几个字段存储空间所产生的成本。因此，建议首先确保数据不会超出取值范围，在这个前提下，再去考虑如何节省存储空间。
 
-### 浮点数类型和定点数类型
+### 2. 浮点数类型和定点数类型
 
 浮点数和定点数类型的特点是可以处理小数，浮点数和定点数的使用场景，比整数大很多。
 
@@ -302,74 +305,65 @@ MySQL 按照 ”符号（S）、尾数（M）、阶码（E）“ 的格式存储
 我们可以借助一个实际的例子演示下。我们先创建一个表，如下所示：
 
 ```mysql
-CREATE TABLE demo.goodsmater
-(
-	barcode TEXT,
-	goodsname TEXT,
-	price DOUBLE,
-	itemnumber INT PRIMARY KEY AUTO_INCREMENT
-);
+CREATE TABLE
+    demo.goodsmaster (
+        barcode text,
+        goodsname text,
+        price double,
+        itemnumber int PRIMARY KEY AUTO_INCREMENT
+    );
 ```
 
 可以看到我们创建的表字段 ”price“ 是浮点数类型。然后我们再用下面的 SQL 语句给这个表插入几条数据：
 
 ```mysql
--- 第一条数据
-INSERT INTO demo.goodsmater
-(
-	barcode,
-	goodsname,
-	price
-)
-VALUES
-(
-	'0001',
-	'书',
-	0.47
-);
--- 第二条数据
-INSERT INTO demo.goodsmater
-(
-	barcode,
-	goodsname,
-	price
-)
-VALUES
-(
-	'0002',
-	'笔',
-	0.44
-);
--- 第三条数据
-INSERT INTO demo.goodsmater
-(
-	barcode,
-	goodsname,
-	price
-)
-VALUES
-(
-	'0002',
-	'胶水',
-	0.19
-)
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0001', '书', 0.47);
+
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0002', '笔', 0.44);
+
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0002', '胶水', 0.19);
 ```
 
 接着，运行查询语句查看表中的情况：
 
 ```mysql
-SELECT * FROM demo.goodsmater;
+SELECT * FROM demo.goodsmaster;
 ```
 
-<div><img src="./images/result01.png" /></div>
+```
+mysql> SELECT *
+    -> FROM demo.goodsmaster;
++---------+-----------+-------+------------+
+| barcode | goodsname | price | itemnumber |
++---------+-----------+-------+------------+
+| 0001    | 书        |  0.47 |          1 |
+| 0002    | 笔        |  0.44 |          2 |
+| 0002    | 胶水      |  0.19 |          3 |
++---------+-----------+-------+------------+
+3 rows in set (0.00 sec)
+```
 
 然后我们使用下面的 SQL 语句，将这三个价格加在一起：
 
 ```mysql
-SELECT SUM(price) from demo.goodsmater;
+SELECT SUM(price) FROM demo.goodsmaster;
 ```
 
-<div><img src="./images/result02.png" /></div>
+```
+mysql> SELECT SUM(price)
+    -> FROM demo.goodsmaster;
++--------------------+
+| SUM(price)         |
++--------------------+
+| 1.0999999999999999 |
++--------------------+
+```
 
 查询结果是 1.0999999999999999。虽然误差很小，但确实有误差。
 如果你把数据类型改成 FLOAT 再进行求和运算，你会发现误差更大，结果是 1.0999999940395355。
@@ -379,6 +373,8 @@ SELECT SUM(price) from demo.goodsmater;
 那么为什么会存在这样的误差？问题还是出在 MySQL 对浮点类型数据的存储方式上。
 
 MySQL 使用 4 个字节存储 FLOAT 类型数据，用 8 个字节存储 DOUBLE 类型数据。无论哪种，都是采用二进制的方式来进行存储。比如 9.625，用二进制表示就是 1001.101，或者 1.001101 * 2^3。如果尾数不是 0 或 5，我们就无法使用一个二进制来精确表达，所以相加时只能再取值允许的范围内进行近似（四舍五入）。
+
+现在你应该也可以明白，为什么数据类型是 DOUBLE 的时候，我们得到的结果误差更小一些，当数据类型是 FLOAT 的时候，误差会更大一些。原因就是，DOUBLE 有 8 位字节，精度更高。
 
 那么，MySQL 有没有准确的数据类型呢？当然有，那就是定点数类型：DECIMAL。DECIMAL 的存储方式决定它一定是准确的。
 
@@ -391,7 +387,7 @@ MySQL 用 DECIMAL（M,D）的方式表示高精度小数。其中，M 表示整�
 首先我们运行下面的语句，将字段 “price” 的数据类型修改为 DECIMAL(5, 2)。
 
 ```mysql
-ALTER TABLE demo.goodsmater MODIFY COLUMN price DECIMAL(5,2);
+ALTER TABLE demo.goodsmaster MODIFY COLUMN price DECIMAL(5,2);
 ```
 
 然后，我们再一次运行求和语句：
@@ -411,9 +407,9 @@ SELECT SUM(price) from demo.goodsmater;
 * 浮点类型取值范围大，但是不精确，适用于需要取值范围大，又可以容忍微小误差的科学计算场景（比如计算化学、分子建模、流体动力学等）；
 * 定点数类型取值范围相对小，但是精确，没有误差，适用于对精度要求极高的场景（比如涉及金额计算的场景）。
 
-### 文本类型
+### 3. 文本类型
 
-在实际的项目中，我们还经常会遇到字符串数据。比如，刚才我们创建的表 demo.goodsmaster 中，有两个字段 “barcode”、“goodsname" 。这两个字段的数据类型，我们都选择了 TEXT 类型。
+在实际的项目中，我们还经常会遇到一种数据，那就是字符串数据。比如，表 demo.goodsmaster 中，有两个字段 “barcode”、“goodsname" 。这两个字段的数据类型，我们都选择了 TEXT 类型。
 
 TEXT 类型是 MySQL 支持的文本类型的一种。此外，MySQL 还支持 CHAR、VARCHAR、ENUM 和 SET 等文本类型。
 
@@ -427,9 +423,7 @@ TEXT 类型是 MySQL 支持的文本类型的一种。此外，MySQL 还支持 C
 
 因为不需要预先知道字符串长度，系统会按照实际数据长度进行存储，所以 TEXT 类型最为灵活方便，下面我们重点学习一下它。
 
-TEXT 类型也有  4 种，它们的区别就是最大长度不同：
-
-> 假设字符是 ASCII 码，一个字符占用一个字节。
+TEXT 类型也有  4 种，它们的区别就是最大长度不同（假设字符是 ASCII 码，一个字符占用一个字节）。
 
 * TINYTEXT：255 字符；
 * TEXT: 65535 字符；
@@ -440,7 +434,7 @@ TEXT 类型也有  4 种，它们的区别就是最大长度不同：
 
 所以，建议在你的项目中，只要不是主键字段，就可以按照数据可能的最大长度，选择这几种 TEXT 类型中的一种，作为存储字符串的数据类型。
 
-### 日期与时间类型
+### 4. 日期与时间类型
 
 日期与时间是重要的信息，在我们的系统中，几乎所有的数据表都用得到。原因是客户需要知道数据的时间标签，从而进行数据查询、统计和处理。
 
@@ -456,7 +450,7 @@ TEXT 类型也有  4 种，它们的区别就是最大长度不同：
 
 另外，你可以会有疑问，为什么时间类型的取值范围不是 -23.59.59~23.59.59？原因是 MySQL 设计的 TIME 类型，不仅可以表示一天之内的时间，而且还可以表示一个时间间隔，这个时间间隔可以超过 24 小时。
 
-### 总结
+### 5. 总结
 
 今天我们学习了几种常用的字段数据类型，包括整数类型、浮点数类型、定点数类型、文本类型以及日期时间类型。
 
@@ -464,9 +458,9 @@ TEXT 类型也有  4 种，它们的区别就是最大长度不同：
 
 ```mysql
 -- 修改字段类型语句
-ALTER TABLE demo.goodsmater MODIFY COLUMN price DOUBLE;
+ALTER TABLE demo.goodsmaster MODIFY COLUMN price DECIMAL(5,2);
 -- 计算字段合计语句
-SELECT SUM(price) FROM demo.goodsmater;
+SELECT SUM(price) FROM demo.goodsmaster;
 ```
 
 最后，再分享一个小技巧。在定义数据类型时：

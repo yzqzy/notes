@@ -29,7 +29,7 @@ USE demo;
 
 SHOW TABLES;
 
--- 设置主键，修改表结构
+-- 添加主键，修改表结构
 
 ALTER TABLE demo.test
 ADD
@@ -42,3 +42,39 @@ INSERT INTO
 VALUES ('001', '本', 3);
 
 ## 2. 字段类型
+
+-- 创建数据表
+
+CREATE TABLE
+    demo.goodsmaster (
+        barcode text,
+        goodsname text,
+        price double,
+        itemnumber int PRIMARY KEY AUTO_INCREMENT
+    );
+
+-- 插入数据
+
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0001', '书', 0.47);
+
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0002', '笔', 0.44);
+
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0002', '胶水', 0.19);
+
+-- 查询数据
+
+SELECT * FROM demo.goodsmaster;
+
+SELECT SUM(price) FROM demo.goodsmaster;
+
+-- 修改表字段类型
+
+ALTER TABLE demo.goodsmaster MODIFY COLUMN price DECIMAL(5,2);
+
+## 3. 创建、修改数据表
