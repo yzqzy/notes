@@ -16,6 +16,18 @@ docker run -d -p 3306:3306 \d
 docker run -d -p 3306:3306 --net=host -e MYSQL_ROOT_PASSWORD=9sfx92Yp374YA7wv01ed -v /data/main-mysql:/var/lib/mysql -v /etc/localtime:/etc/localtime --name=main-mysql mysql:8.0
 ```
 
+连接数据库
+
+```
+mysql –u用户名 [–h主机名或者IP地址,-P端口号] –p密码
+```
+
+```bash
+docker exec -it main-mysql /bin/bash
+
+mysql -uroot -p9sfx92Yp374YA7wv01ed
+```
+
 ## 01. 数据存储过程
 
 MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。
@@ -24,7 +36,9 @@ MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确�
 
 数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。
 
-### 创建数据库
+### 1. 创建数据库
+
+数据存储的第一步，就是创建数据库。
 
 #### 创建数据库
 
@@ -35,10 +49,6 @@ CREATE DATABASE demo;
 创建数据库无权限处理方法如下：
 
 ```bash
-docker exec -it main-mysql /bin/bash
-
-mysql -uroot -p123456
- 
 show grants;
 
 grant all privileges on *.* to 'root'@'%' identified by 'your passsword' with grant option;
@@ -62,27 +72,31 @@ SHOW DATABASES;
 
 如果你是 DBA 或者 MySQL 数据库程序员，想深入了解 MySQL 数据库，可以查看[官方文档](https://dev.mysql.com/doc/refman/8.0/en/system-schema.html)。
 
-### 确认字段
+### 2. 确认字段
 
-MySQL 数据表由行与列组成，一行就是一条数据记录，每一条数据记录都被分成许多列，一列就是一个字段。
+数据存储流程的第二步是确认表的字段。
 
-每个字段都需要定义数据类型，这个数据类型就做字段类型。
+MySQL 数据表由行与列组成，一行就是一条数据记录，每一条数据记录都被分成许多列，一列就叫一个字段。
 
-### 创建数据表
+每个字段都需要定义数据类型，这个数据类型叫做字段类型。
+
+### 3. 创建数据表
+
+数据存储流程的第三步，是创建数据表。
 
 #### 创建数据表
 
 ```mysql
-CREATE TABLE demo.test
-(
-	barcode text,
-	goodsname text,
-	price int
-)
+CREATE TABLE
+    demo.test (
+        barcode text,
+        goodsname text,
+        price int
+    );
 ```
 
 * 创建数据表，最好指明数据库。
-* 不要在最后一个字段后面加逗号 ”,“
+* 最后一个字段后面不需要加逗号 ”,“
 
 #### 查看表结构
 
@@ -90,7 +104,17 @@ CREATE TABLE demo.test
 DESCRIBE demo.test;
 ```
 
-<div><img src="./images/table.png" /></div>
+```
+mysql> DESCRIBE demo.test;
++-----------+------+------+-----+---------+-------+
+| Field     | Type | Null | Key | Default | Extra |
++-----------+------+------+-----+---------+-------+
+| barcode   | text | YES  |     | NULL    |       |
+| goodsname | text | YES  |     | NULL    |       |
+| price     | int  | YES  |     | NULL    |       |
++-----------+------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+```
 
 * Field：表示字段名称
 * Type：表示字段类型
@@ -107,6 +131,16 @@ DESCRIBE demo.test;
 ```mysql
 USE demo;
 SHOW TABLES;
+```
+
+```
+mysql> show tables;
++----------------+
+| Tables_in_demo |
++----------------+
+| test           |
++----------------+
+1 row in set (0.00 sec)
 ```
 
 #### 设置主键
@@ -135,7 +169,16 @@ MySQL 中的主键，是表中的一个字段或者几个字段的组合。它�
 
 ```mysql
 ALTER TABLE demo.test
-ADD COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
+ADD
+    COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
+```
+
+```
+mysql> ALTER TABLE demo.test
+    -> ADD
+    ->     COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
+Query OK, 0 rows affected (0.11 sec)
+Records: 0  Duplicates: 0  Warnings: 0
 ```
 
 * alter table：表示修改表；
@@ -143,10 +186,34 @@ ADD COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
 * primary key：表示这一列是主键；
 * auto_increment：表示增加一条记录，这个值会自动增加。
 
-### 插入数据
+```
+mysql> DESCRIBE demo.test;
++------------+------+------+-----+---------+----------------+
+| Field      | Type | Null | Key | Default | Extra          |
++------------+------+------+-----+---------+----------------+
+| barcode    | text | YES  |     | NULL    |                |
+| goodsname  | text | YES  |     | NULL    |                |
+| price      | int  | YES  |     | NULL    |                |
+| itemnumber | int  | NO   | PRI | NULL    | auto_increment |
++------------+------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+```
+
+### 4. 插入数据
+
+数据存储流程的第四步，也是最后一步，是把数据插入到表当中去。
 
 ```mysql
-INSERT INTO demo.test (barcode,goodsname,price) VALUES ('001', '本', 3);
+INSERT INTO
+    demo.test (barcode, goodsname, price)
+VALUES ('001', '本', 3);
+```
+
+```
+mysql> INSERT INTO
+    ->     demo.test (barcode, goodsname, price)
+    -> VALUES ('001', '', 3);
+Query OK, 1 row affected (0.01 sec)
 ```
 
 insert into 表示向 demo.test 中插入数据，后面是要插入数据的字段名，values 表示对应的值。

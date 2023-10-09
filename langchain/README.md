@@ -78,7 +78,7 @@ competition
 * 随着模型越来越来，效果越差的案例
 * hindsight neglect 过去做一件事，理性决断，结果不好。给你机会回去做选择，理论上应该做出理性判断，但是随着模型越来越大，会受到最终结果的影响。
 
-![image-20230716073552742](/Users/heora/workspace/notes/langchain/images/image-20230716073552742.png)
+<!-- ![image-20230716073552742](/Users/heora/workspace/notes/langchain/images/image-20230716073552742.png) -->
 
 ## 能力 Capabilities
 
@@ -87,7 +87,7 @@ competition
   * 测试分两个版本，一个是存在预处理训练集，另一个是不存在训练集，给出的结果相对客观；
   * 编程题目不是太好，可以转义为编程语言去执行代码；
 
-![image-20230716105321832](/Users/heora/workspace/notes/langchain/images/image-20230716105321832.png)
+<!-- ![image-20230716105321832](/Users/heora/workspace/notes/langchain/images/image-20230716105321832.png) -->
 
 ## 视觉输入
 
@@ -111,7 +111,7 @@ Chat GPT 配合 Chat GPT Plugins 可以获取最新时间，获取最新网络�
 
 GPT-4 非常自信，即使错了之后，也会比较自信，哈哈。
 
-![image-20230716114801550](/Users/heora/workspace/notes/langchain/images/image-20230716114801550.png)
+<!-- ![image-20230716114801550](/Users/heora/workspace/notes/langchain/images/image-20230716114801550.png) -->
 
 ## 危险 Risks & mitigations
 
