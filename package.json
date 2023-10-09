@@ -30,7 +30,7 @@
   "devDependencies": {
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.3.0",
-    "vitepress": "^1.0.0-alpha.15"
+    "vitepress": "^1.0.0-rc.20"
   },
   "config": {
     "commitizen": {
