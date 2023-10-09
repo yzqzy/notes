@@ -5,7 +5,7 @@
 ```bash
 docker run -d -p 3306:3306 \d
     --net=host \
-    -e MYSQL_ROOT_PASSWORD=123456 \
+    -e MYSQL_ROOT_PASSWORD=9sfx92Yp374YA7wv01ed \
     -v /data/main-mysql:/var/lib/mysql \
     -v /etc/localtime:/etc/localtime \
     --name=main-mysql \
@@ -13,14 +13,14 @@ docker run -d -p 3306:3306 \d
 ```
 
 ```bash
-docker run -d -p 3306:3306 --net=host -e MYSQL_ROOT_PASSWORD=123456 -v /data/main-mysql:/var/lib/mysql -v /etc/localtime:/etc/localtime --name=main-mysql mysql:8.0
+docker run -d -p 3306:3306 --net=host -e MYSQL_ROOT_PASSWORD=9sfx92Yp374YA7wv01ed -v /data/main-mysql:/var/lib/mysql -v /etc/localtime:/etc/localtime --name=main-mysql mysql:8.0
 ```
 
 ## 01. 数据存储过程
 
-完整数据存储过程四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。
+MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。
 
-从架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。
+从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。
 
 数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。
 

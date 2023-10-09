@@ -14,7 +14,7 @@ Node.js 的单线程是对你而言。对底层则不是，其他线程并不对
 
 nodejs v18.12.1 版本事件循环代码：
 
-```c++
+```c
 do {
   if (env->is_stopping()) break;
   uv_run(env->event_loop(), UV_RUN_DEFAULT);
