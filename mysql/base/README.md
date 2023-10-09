@@ -1,4 +1,4 @@
-# MySQL 必知必会
+MySQL 必知必会
 
 安装数据库
 
@@ -488,7 +488,7 @@ SELECT SUM(price) FROM demo.goodsmaster;
 
 现在，客户需要一个类似的表来存储进货数据，进货方式有 3 个可能的取值范围，需要设置默认值。那么，应该如何创建这个表？另外，创建好表之后，应该如何修改？
 
-### 创建数据表
+### 1. 创建数据表
 
 首先，我们需要知道 MySQL 创建表的语法结构：
 
@@ -507,18 +507,19 @@ CREATE TABLE <表名>
 下面我们来创建刚刚提到的进货单表。创建代码如下：
 
 ```mysql
-CREATE TABLE demo.importhead
-(
-	listnumber INT,
-	supplierid INt,
-	stocknumber INT,
-	-- 设置默认值 1
-	importtype INT DEFAULT 1,
-	quantity DECIMAL(10, 3),
-	importvalue DECIMAL(10, 2),
-	recorder INT,
-	recordingdate DATETIME
-);
+CREATE TABLE
+    demo.importhead (
+        listnumber INT,
+        supplierid INT,
+        stocknumber INT,
+        -- 设置默认值 1
+        importtype INT DEFAULT 1,
+        quantity DECIMAL(10, 3),
+        importvalue DECIMAL(10, 2),
+        recorder INT,
+        recordingdate DATETIME
+    );
+
 ```
 
 运行上述 SQL 语句，表 demo.importhead 就按照我们的要求被创建出来了。
@@ -526,44 +527,51 @@ CREATE TABLE demo.importhead
 现在我们尝试往刚刚创建的表中插入一条记录，验证字段 “importtype” 定义的默认值约束是否起了作用。
 
 ```mysql
-INSERT INTO demo.importhead
-(
-	listnumber,
-	supplierid,
-	stocknumber,
-	-- 我们不需要插入 importtype 的值	
-	quantity,
-	importvalue,
-	recorder,
-	recordingdate
-)
-VALUES
-(
-	3256,
-	1,
-	1,
-	10,
-	100,
-	1,
-	'2023-01-29'	
-);
+INSERT INTO
+    demo.importhead (
+        listnumber,
+        supplierid,
+        stocknumber,
+        -- 没有插入字段 importtype
+        quantity,
+        importvalue,
+        recorder,
+        recordingdate
+    )
+VALUES (
+        1234,
+        1,
+        1,
+        10,
+3-10-09'
+    );
 ```
 
 插入完成后，我们可以运行以下 SQL 查询表内容：
 
 ```mysql
-SELECT * FROM demo.importhead;
+SELECT * from demo.importhead;
 ```
 
-你会发现，字段 importtype 的值已经是 1 了。到这里，表就被创建出来了。
+```
+mysql> select * from demo.importhead;
++------------+------------+-------------+------------+----------+-------------+----------+---------------------+
+| listnumber | supplierid | stocknumber | importtype | quantity | importvalue | recorder | recordingdate       |
++------------+------------+-------------+------------+----------+-------------+----------+---------------------+
+|       1234 |          1 |           1 |          1 |   10.000 |     100.00 |        1 | 2023-10-09 00:00:00 |
++------------+------------+-------------+------------+----------+-------------+----------+---------------------+
+3 rows in set (0.00 sec)
+```
 
-### 约束分类
+你会发现，字段 importtype 的值已经是 1 了。
 
-刚才给字段设置默认值的做法是默认约束。设置默认约束后，插入数据的时候，如果不明确给字段赋值，那么系统会把设置的默认值自动赋值给字段。
+### 2. 约束分类
+
+刚才我们给字段设置默认值的做法是默认约束。设置默认约束后，插入数据的时候，如果不明确给字段赋值，那么系统会把设置的默认值自动赋值给字段。
 
 除了**默认约束**，还有**主键约束**、**外键约束**、**非空约束**、**唯一性约束**和**自增约束**。
 
-我们之前学的主键，其实就是主键约束。其中外键约束涉及表与表之间的关联，以及确保表的数据一致性的问题，内容比较多。后面我们再展开说。
+我们之前使用的主键，其实就是主键约束。其中外键约束涉及表与表之间的关联，以及确保表的数据一致性的问题，内容比较多，后面再具体解释。
 
 下面，我们重点介绍一下非空约束、唯一性约束和自增约束。
 

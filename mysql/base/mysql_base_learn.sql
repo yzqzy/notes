@@ -78,3 +78,45 @@ SELECT SUM(price) FROM demo.goodsmaster;
 ALTER TABLE demo.goodsmaster MODIFY COLUMN price DECIMAL(5,2);
 
 ## 3. 创建、修改数据表
+
+-- 创建表 importhead
+
+CREATE TABLE
+    demo.importhead (
+        listnumber INT,
+        supplierid INT,
+        stocknumber INT,
+        -- 设置默认值 1
+        importtype INT DEFAULT 1,
+        quantity DECIMAL(10, 3),
+        importvalue DECIMAL(10, 2),
+        recorder INT,
+        recordingdate DATETIME
+    );
+
+-- 插入数据
+
+INSERT INTO
+    demo.importhead (
+        listnumber,
+        supplierid,
+        stocknumber,
+        -- 没有插入字段 importtype
+        quantity,
+        importvalue,
+        recorder,
+        recordingdate
+    )
+VALUES (
+        1234,
+        1,
+        1,
+        10,
+        100,
+        1,
+        '2023-10-09'
+    );
+
+-- 查询数据
+
+SELECT * from demo.importhead;
