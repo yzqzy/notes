@@ -1,0 +1,1 @@
+import{_ as e,o as a,c as r,Q as t}from"./chunks/framework.9bc09dc8.js";const _=JSON.parse('{"title":"amo.js","description":"","frontmatter":{},"headers":[],"relativePath":"amo/index.md","filePath":"amo/index.md"}'),l={name:"amo/index.md"},o=t("",18),i=[o];function n(h,s,c,d,p,u){return a(),r("div",null,i)}const f=e(l,[["render",n]]);export{_ as __pageData,f as default};
