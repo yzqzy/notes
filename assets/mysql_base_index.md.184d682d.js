@@ -1,4 +1,4 @@
-import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table11.2daba66a.png",y="/assets/table12.83448c9a.png",d="/assets/table13.90726171.png",m="/assets/table14.cacb5cb4.png",E="/assets/table15.95e3ec35.png",k=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),h={name:"mysql/base/index.md"},g=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
+import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",N=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),y={name:"mysql/base/index.md"},d=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
 <span class="line"><span style="color:#E1E4E8;">    --net</span><span style="color:#F97583;">=</span><span style="color:#9ECBFF;">host</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#B392F0;">-e</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">MYSQL_ROOT_PASSWORD=password</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#79B8FF;">-v</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">/data/main-mysql:/var/lib/mysql</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
@@ -918,188 +918,272 @@ import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">|          3 | 0003    | 橡皮    | NULL         | 个  |       3.00 |</span></span>
 <span class="line"><span style="color:#24292e;">|          4 | 0004    | 馒头    |              |      |       1.50 |</span></span>
 <span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
-<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><h2 id="五-设置主键" tabindex="-1">五. 设置主键 <a class="header-anchor" href="#五-设置主键" aria-label="Permalink to &quot;五. 设置主键&quot;">​</a></h2><p>主键可以唯一标识表中的某一条记录，对数据表来说非常重要。</p><p>当我们需要查询和引用表中的一条记录时，最好的办法就是通过主键。只有合理地设置主键，才能确保我们准确、快速地找到所需要的数据记录。</p><p>假设在我们的项目中，客户要进行会员营销，相应的，我们就需要处理会员信息。会员信息表（demo.membermaster）表结构如下：</p><img src="`+i+`"><p>为了能够唯一标识会员信息，我们需要为会员信息表设置一个主键。那么，应该如何设置主键，才可以达到我们理想的目标呢？</p><p>今天我们来学习三种设置主键的思路：业务字段做主键、自增字段做主键、手动赋值字段做主键。</p><h3 id="业务字段做主键" tabindex="-1">业务字段做主键 <a class="header-anchor" href="#业务字段做主键" aria-label="Permalink to &quot;业务字段做主键&quot;">​</a></h3><p>针对这个需求，最容易想到的，就是选择表中已有字段，也就是跟业务相关的字段做主键。</p><p>在这个表中，会员卡号（cardno）看起来比较合适，因为会员卡号不能为空且具有唯一性，可以用来标识一条会员记录。</p><p>我们可以用下面的代码，在创建表的时候，设置字段 cardno 作为主键：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE TABLE demo.membermaster</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	cardno CHAR(8) PRIMARY KEY, </span></span>
-<span class="line"><span style="color:#e1e4e8;">	membername TEXT,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberphone TEXT,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberpid TEXT,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberaddress TEXT,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	sex TEXT,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	brithday DATETIME</span></span>
-<span class="line"><span style="color:#e1e4e8;">);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE TABLE demo.membermaster</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	cardno CHAR(8) PRIMARY KEY, </span></span>
-<span class="line"><span style="color:#24292e;">	membername TEXT,</span></span>
-<span class="line"><span style="color:#24292e;">	memberphone TEXT,</span></span>
-<span class="line"><span style="color:#24292e;">	memberpid TEXT,</span></span>
-<span class="line"><span style="color:#24292e;">	memberaddress TEXT,</span></span>
-<span class="line"><span style="color:#24292e;">	sex TEXT,</span></span>
-<span class="line"><span style="color:#24292e;">	brithday DATETIME</span></span>
-<span class="line"><span style="color:#24292e;">);</span></span></code></pre></div><p>然后我们来查询一下表结构，确认下主键是否创建成功了：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">DESCRIBE demo.membermaster;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">DESCRIBE demo.membermaster;</span></span></code></pre></div><div><img src="`+r+`"></div><p>可以看到，字段 cardno 在表示键值的 Key 这一系列的值是 ”PRI“，意思是 PRIMARY KEY，这就表示它已经被设置成主键了。</p><p>会员卡号做主键有什么问题嘛？我们插入 2 条数据来验证下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">INSERT INTO demo.membermaster</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	cardno,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	membername,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberphone,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberpid,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberaddress,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	sex,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	brithday</span></span>
-<span class="line"><span style="color:#e1e4e8;">)</span></span>
-<span class="line"><span style="color:#e1e4e8;">VALUES</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;10000001&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;张三&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;13812345678&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;110123200001017890&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;北京&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;男&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;2000-01-01&#39;</span></span>
-<span class="line"><span style="color:#e1e4e8;">);</span></span>
-<span class="line"><span style="color:#e1e4e8;"></span></span>
-<span class="line"><span style="color:#e1e4e8;">INSERT INTO demo.membermaster</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	cardno,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	membername,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberphone,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberpid,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	memberaddress,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	sex,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	brithday</span></span>
-<span class="line"><span style="color:#e1e4e8;">)</span></span>
-<span class="line"><span style="color:#e1e4e8;">VALUES</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;10000002&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;李四&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;13512345678&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;123123200001017890&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;上海&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;女&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;1990-01-01&#39;</span></span>
-<span class="line"><span style="color:#e1e4e8;">);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">INSERT INTO demo.membermaster</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	cardno,</span></span>
-<span class="line"><span style="color:#24292e;">	membername,</span></span>
-<span class="line"><span style="color:#24292e;">	memberphone,</span></span>
-<span class="line"><span style="color:#24292e;">	memberpid,</span></span>
-<span class="line"><span style="color:#24292e;">	memberaddress,</span></span>
-<span class="line"><span style="color:#24292e;">	sex,</span></span>
-<span class="line"><span style="color:#24292e;">	brithday</span></span>
-<span class="line"><span style="color:#24292e;">)</span></span>
-<span class="line"><span style="color:#24292e;">VALUES</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;10000001&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;张三&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;13812345678&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;110123200001017890&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;北京&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;男&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;2000-01-01&#39;</span></span>
-<span class="line"><span style="color:#24292e;">);</span></span>
-<span class="line"><span style="color:#24292e;"></span></span>
-<span class="line"><span style="color:#24292e;">INSERT INTO demo.membermaster</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	cardno,</span></span>
-<span class="line"><span style="color:#24292e;">	membername,</span></span>
-<span class="line"><span style="color:#24292e;">	memberphone,</span></span>
-<span class="line"><span style="color:#24292e;">	memberpid,</span></span>
-<span class="line"><span style="color:#24292e;">	memberaddress,</span></span>
-<span class="line"><span style="color:#24292e;">	sex,</span></span>
-<span class="line"><span style="color:#24292e;">	brithday</span></span>
-<span class="line"><span style="color:#24292e;">)</span></span>
-<span class="line"><span style="color:#24292e;">VALUES</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;10000002&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;李四&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;13512345678&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;123123200001017890&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;上海&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;女&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;1990-01-01&#39;</span></span>
-<span class="line"><span style="color:#24292e;">);</span></span></code></pre></div><p>插入成功后，我们再来看下表的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT * FROM demo.membermaster;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">SELECT * FROM demo.membermaster;</span></span></code></pre></div><div><img src="`+y+'"></div><p>我们可以发现，不同的会员卡号对应不同的会员，字段 ”cardno“ 唯一地标识某一个会员。如果都是这样，会员卡号与会员一一对应，系统是可以正常运行的。</p><p>但是实际情况并没有这么简单，会员卡号存在重复使用的情况。比如，张三因为工作变动搬离原来的地址，不再到商家的门店消费（退还会员卡），于是张三就不再是这个商店门店的会员了。但是，商家不想让这个会员卡空着，就把卡号是 ”10000001“ 的会员卡发给王五。</p><p>从系统设计的角度来看，这个变化只是修改会员信息表中的卡号为 ”10000001“ 的会员信息，但不会影响到数据一致性。也就是说，修改会员卡号是 ”10000001“ 的会员信息，系统的各个模块都会获取到修改后的会员信息。因此，从信息系统层面上看是没有问题的。但是从使用系统的业务层面来看，就有很大的问题了，会对商家造成影响。</p><p>下面，我们就来看看这种修改，是如何影响到商家的。</p><p>比如，我们有一个销售流水表，记录了所有的销售流水明细。2020 年 12 月 01 日，张三在门店购买一本书，消费 89 元。那么，系统中就有了张三买书的记录，如下所示：</p><img src="'+d+`"><p>我们可以用下面的代码创建销售流水表。因为需要引用会员信息和商品信息，所以表中要包括商品编号字段和会员卡号字段。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE TABLE demo.trans</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	transactionno INT,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	itemnumber INT, -- 引用商品信息</span></span>
-<span class="line"><span style="color:#e1e4e8;">	quantity DECIMAL(10, 3),</span></span>
-<span class="line"><span style="color:#e1e4e8;">	price DECIMAL(10, 2),</span></span>
-<span class="line"><span style="color:#e1e4e8;">	salesvalue DECIMAL(10, 2),</span></span>
-<span class="line"><span style="color:#e1e4e8;">	cardno CHAR(8), -- 引用会员信息</span></span>
-<span class="line"><span style="color:#e1e4e8;">	transdate DATETIME</span></span>
-<span class="line"><span style="color:#e1e4e8;">);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE TABLE demo.trans</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	transactionno INT,</span></span>
-<span class="line"><span style="color:#24292e;">	itemnumber INT, -- 引用商品信息</span></span>
-<span class="line"><span style="color:#24292e;">	quantity DECIMAL(10, 3),</span></span>
-<span class="line"><span style="color:#24292e;">	price DECIMAL(10, 2),</span></span>
-<span class="line"><span style="color:#24292e;">	salesvalue DECIMAL(10, 2),</span></span>
-<span class="line"><span style="color:#24292e;">	cardno CHAR(8), -- 引用会员信息</span></span>
-<span class="line"><span style="color:#24292e;">	transdate DATETIME</span></span>
-<span class="line"><span style="color:#24292e;">);</span></span></code></pre></div><p>创建好表之后，我们就来插入一条销售流水：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">INSERT INTO demo.trans</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	transactionno,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	itemnumber,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	quantity,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	price,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	salesvalue,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	cardno,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	transdate</span></span>
-<span class="line"><span style="color:#e1e4e8;">)</span></span>
-<span class="line"><span style="color:#e1e4e8;">VALUES</span></span>
-<span class="line"><span style="color:#e1e4e8;">(</span></span>
-<span class="line"><span style="color:#e1e4e8;">	1,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	1,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	1,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	89,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	89,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;10000001&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">	&#39;2023-02-01&#39;</span></span>
-<span class="line"><span style="color:#e1e4e8;">);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">INSERT INTO demo.trans</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	transactionno,</span></span>
-<span class="line"><span style="color:#24292e;">	itemnumber,</span></span>
-<span class="line"><span style="color:#24292e;">	quantity,</span></span>
-<span class="line"><span style="color:#24292e;">	price,</span></span>
-<span class="line"><span style="color:#24292e;">	salesvalue,</span></span>
-<span class="line"><span style="color:#24292e;">	cardno,</span></span>
-<span class="line"><span style="color:#24292e;">	transdate</span></span>
-<span class="line"><span style="color:#24292e;">)</span></span>
-<span class="line"><span style="color:#24292e;">VALUES</span></span>
-<span class="line"><span style="color:#24292e;">(</span></span>
-<span class="line"><span style="color:#24292e;">	1,</span></span>
-<span class="line"><span style="color:#24292e;">	1,</span></span>
-<span class="line"><span style="color:#24292e;">	1,</span></span>
-<span class="line"><span style="color:#24292e;">	89,</span></span>
-<span class="line"><span style="color:#24292e;">	89,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;10000001&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">	&#39;2023-02-01&#39;</span></span>
-<span class="line"><span style="color:#24292e;">);</span></span></code></pre></div><p>接着，我们再来查看一下 2023 年 02 月 01 日的会员销售记录。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><h2 id="五-设置主键" tabindex="-1">五. 设置主键 <a class="header-anchor" href="#五-设置主键" aria-label="Permalink to &quot;五. 设置主键&quot;">​</a></h2><p>主键可以唯一标识表中的某一条记录，对数据表来说非常重要。</p><p>当我们需要查询和引用表中的一条记录时，最好的办法就是通过主键。只有合理地设置主键，才能确保我们准确、快速地找到所需要的数据记录。</p><p>在我们的项目中，客户要进行会员营销，相应的，我们就需要处理会员信息。会员信息表（demo.membermaster）表结构如下：</p><img src="`+i+`"><p>为了能够唯一标识会员信息，我们需要为会员信息表设置一个主键。那么，应该如何设置主键，才可以达到我们理想的目标呢？</p><p>今天我们来学习三种设置主键的思路：业务字段做主键、自增字段做主键、手动赋值字段做主键。</p><h3 id="业务字段做主键" tabindex="-1">业务字段做主键 <a class="header-anchor" href="#业务字段做主键" aria-label="Permalink to &quot;业务字段做主键&quot;">​</a></h3><p>针对这个需求，最容易想到的，就是选择表中已有字段，也就是跟业务相关的字段做主键。</p><p>在这个表中，会员卡号（cardno）看起来比较合适，因为会员卡号不能为空且具有唯一性，可以用来标识一条会员记录。</p><p>我们可以用下面的代码，在创建表的时候，设置字段 cardno 作为主键：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE TABLE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    demo.membermaster (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        -- 会员卡号为主键</span></span>
+<span class="line"><span style="color:#e1e4e8;">        cardno CHAR(8) PRIMARY KEY,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        membername TEXT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        memberphone TEXT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        memberpid TEXT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        memberaddress TEXT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        sex TEXT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        birthday DATETIME</span></span>
+<span class="line"><span style="color:#e1e4e8;">    );</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE TABLE</span></span>
+<span class="line"><span style="color:#24292e;">    demo.membermaster (</span></span>
+<span class="line"><span style="color:#24292e;">        -- 会员卡号为主键</span></span>
+<span class="line"><span style="color:#24292e;">        cardno CHAR(8) PRIMARY KEY,</span></span>
+<span class="line"><span style="color:#24292e;">        membername TEXT,</span></span>
+<span class="line"><span style="color:#24292e;">        memberphone TEXT,</span></span>
+<span class="line"><span style="color:#24292e;">        memberpid TEXT,</span></span>
+<span class="line"><span style="color:#24292e;">        memberaddress TEXT,</span></span>
+<span class="line"><span style="color:#24292e;">        sex TEXT,</span></span>
+<span class="line"><span style="color:#24292e;">        birthday DATETIME</span></span>
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>然后我们来查询一下表结构，确认下主键是否创建成功了：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DESCRIBE demo.membermaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| Field         | Type     | Null | Key | Default | Extra |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| cardno        | char(8)  | NO   | PRI | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| membername    | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| memberphone   | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| memberpid     | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| memberaddress | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| sex           | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| birthday      | datetime | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">7 rows in set (0.01 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; DESCRIBE demo.membermaster;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#24292e;">| Field         | Type     | Null | Key | Default | Extra |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#24292e;">| cardno        | char(8)  | NO   | PRI | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| membername    | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| memberphone   | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| memberpid     | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| memberaddress | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| sex           | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| birthday      | datetime | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#24292e;">7 rows in set (0.01 sec)</span></span></code></pre></div><p>可以看到，字段 cardno 在表示键值的 Key 这一系列的值是 ”PRI“，意思是 PRIMARY KEY，这就表示它已经被设置成主键了。</p><p>会员卡号做主键会有什么问题嘛？我们插入 2 条数据来验证下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">INSERT INTO</span></span>
+<span class="line"><span style="color:#e1e4e8;">    demo.membermaster (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        cardno,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        membername,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        memberphone,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        memberpid,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        memberaddress,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        sex,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        birthday</span></span>
+<span class="line"><span style="color:#e1e4e8;">    )</span></span>
+<span class="line"><span style="color:#e1e4e8;">VALUES (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;10000001&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;张三&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;15928792771&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;110123200001017890&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;济南&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;男&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;2000-01-01&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    ), (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;10000002&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;李四&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;13578271231&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;123123199001012356&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;北京&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;女&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;1990-01-01&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    );</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">INSERT INTO</span></span>
+<span class="line"><span style="color:#24292e;">    demo.membermaster (</span></span>
+<span class="line"><span style="color:#24292e;">        cardno,</span></span>
+<span class="line"><span style="color:#24292e;">        membername,</span></span>
+<span class="line"><span style="color:#24292e;">        memberphone,</span></span>
+<span class="line"><span style="color:#24292e;">        memberpid,</span></span>
+<span class="line"><span style="color:#24292e;">        memberaddress,</span></span>
+<span class="line"><span style="color:#24292e;">        sex,</span></span>
+<span class="line"><span style="color:#24292e;">        birthday</span></span>
+<span class="line"><span style="color:#24292e;">    )</span></span>
+<span class="line"><span style="color:#24292e;">VALUES (</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;10000001&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;张三&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;15928792771&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;110123200001017890&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;济南&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;男&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;2000-01-01&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    ), (</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;10000002&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;李四&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;13578271231&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;123123199001012356&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;北京&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;女&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;1990-01-01&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>插入成功后，我们再来看下表的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT * FROM demo.membermaster;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">SELECT * FROM demo.membermaster;</span></span></code></pre></div><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.membermaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+------------+-------------+--------------------+---------------+------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| cardno   | membername | memberphone | memberpid          | memberaddress | sex  | birthday            |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+------------+-------------+--------------------+---------------+------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 10000001 | 张三     | 15928792771 | 110123200001017890 | 济南        | 男  | 2000-01-01 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 10000002 | 李四     | 13578271231 | 123123199001012356 | 北京        | 女  | 1990-01-01 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+------------+-------------+--------------------+---------------+------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.membermaster;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+------------+-------------+--------------------+---------------+------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| cardno   | membername | memberphone | memberpid          | memberaddress | sex  | birthday            |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+------------+-------------+--------------------+---------------+------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 10000001 | 张三     | 15928792771 | 110123200001017890 | 济南        | 男  | 2000-01-01 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 10000002 | 李四     | 13578271231 | 123123199001012356 | 北京        | 女  | 1990-01-01 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+------------+-------------+--------------------+---------------+------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div><p>可以发现，不同的会员卡号对应不同的会员，字段 ”cardno“ 唯一地标识某一个会员。如果都是这样，会员卡号与会员一一对应，系统是可以正常运行的。</p><p>但是实际情况并没有这么简单，会员卡号存在重复使用的情况。比如，张三因为工作变动搬离原来的地址，不再到商家的门店消费（退还会员卡），于是张三就不再是这个商店门店的会员了。但是，商家不想让这个会员卡空着，就把卡号是 ”10000001“ 的会员卡发给王五。</p><p>从系统设计的角度来看，这个变化只是修改会员信息表中的卡号为 ”10000001“ 的会员信息，但不会影响到数据一致性。也就是说，修改会员卡号是 ”10000001“ 的会员信息，系统的各个模块都会获取到修改后的会员信息。因此，从信息系统层面上看是没有问题的。但是从使用系统的业务层面来看，就有很大的问题了，会对商家造成影响。</p><p>下面，我们就来看看这种修改，是如何影响到商家的。</p><p>比如，我们有一个销售流水表，记录了所有的销售流水明细。2020 年 12 月 01 日，张三在门店购买一本书，消费 89 元。那么，系统中就有了张三买书的记录，如下所示：</p><img src="`+r+`"><p>我们可以用下面的代码创建销售流水表。因为需要引用会员信息和商品信息，所以表中要包括商品编号字段和会员卡号字段。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE TABLE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    demo.trans (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        transactionno INT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        -- 引用商品信息</span></span>
+<span class="line"><span style="color:#e1e4e8;">        itemnumber INT,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        quantity DECIMAL(10, 3),</span></span>
+<span class="line"><span style="color:#e1e4e8;">        price DECIMAL(10, 2),</span></span>
+<span class="line"><span style="color:#e1e4e8;">        salesvalue DECIMAL(10, 2),</span></span>
+<span class="line"><span style="color:#e1e4e8;">        -- 引用会员信息</span></span>
+<span class="line"><span style="color:#e1e4e8;">        cardno CHAR(8),</span></span>
+<span class="line"><span style="color:#e1e4e8;">        transdate DATETIME</span></span>
+<span class="line"><span style="color:#e1e4e8;">    );</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE TABLE</span></span>
+<span class="line"><span style="color:#24292e;">    demo.trans (</span></span>
+<span class="line"><span style="color:#24292e;">        transactionno INT,</span></span>
+<span class="line"><span style="color:#24292e;">        -- 引用商品信息</span></span>
+<span class="line"><span style="color:#24292e;">        itemnumber INT,</span></span>
+<span class="line"><span style="color:#24292e;">        quantity DECIMAL(10, 3),</span></span>
+<span class="line"><span style="color:#24292e;">        price DECIMAL(10, 2),</span></span>
+<span class="line"><span style="color:#24292e;">        salesvalue DECIMAL(10, 2),</span></span>
+<span class="line"><span style="color:#24292e;">        -- 引用会员信息</span></span>
+<span class="line"><span style="color:#24292e;">        cardno CHAR(8),</span></span>
+<span class="line"><span style="color:#24292e;">        transdate DATETIME</span></span>
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>创建好表之后，我们就来插入一条销售流水：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">INSERT INTO</span></span>
+<span class="line"><span style="color:#e1e4e8;">    demo.trans (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        transactionno,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        salesvalue,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        cardno,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    )</span></span>
+<span class="line"><span style="color:#e1e4e8;">VALUES (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        1,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        1,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        1,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        89,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        89,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;10000001&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        &#39;2023-10-10&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    );</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">INSERT INTO</span></span>
+<span class="line"><span style="color:#24292e;">    demo.trans (</span></span>
+<span class="line"><span style="color:#24292e;">        transactionno,</span></span>
+<span class="line"><span style="color:#24292e;">        itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">        quantity,</span></span>
+<span class="line"><span style="color:#24292e;">        price,</span></span>
+<span class="line"><span style="color:#24292e;">        salesvalue,</span></span>
+<span class="line"><span style="color:#24292e;">        cardno,</span></span>
+<span class="line"><span style="color:#24292e;">        transdate</span></span>
+<span class="line"><span style="color:#24292e;">    )</span></span>
+<span class="line"><span style="color:#24292e;">VALUES (</span></span>
+<span class="line"><span style="color:#24292e;">        1,</span></span>
+<span class="line"><span style="color:#24292e;">        1,</span></span>
+<span class="line"><span style="color:#24292e;">        1,</span></span>
+<span class="line"><span style="color:#24292e;">        89,</span></span>
+<span class="line"><span style="color:#24292e;">        89,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;10000001&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">        &#39;2023-10-10&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>接着，我们再来查看一下 2023 年 10 月 10 日的会员销售记录。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    b.membername,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    c.goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    a.quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    a.salesvalue,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    a.transdate</span></span>
 <span class="line"><span style="color:#e1e4e8;">FROM demo.trans AS a</span></span>
-<span class="line"><span style="color:#e1e4e8;">JOIN demo.membermaster AS b</span></span>
-<span class="line"><span style="color:#e1e4e8;">JOIN demo.goodsmater AS c</span></span>
-<span class="line"><span style="color:#e1e4e8;">ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    JOIN demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">    JOIN demo.goodsmaster as c ON (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        a.cardno = b.cardno AND a.itemnumber = c.itemnumber</span></span>
+<span class="line"><span style="color:#e1e4e8;">    );</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    b.membername,</span></span>
+<span class="line"><span style="color:#24292e;">    c.goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">    a.quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    a.salesvalue,</span></span>
+<span class="line"><span style="color:#24292e;">    a.transdate</span></span>
 <span class="line"><span style="color:#24292e;">FROM demo.trans AS a</span></span>
-<span class="line"><span style="color:#24292e;">JOIN demo.membermaster AS b</span></span>
-<span class="line"><span style="color:#24292e;">JOIN demo.goodsmater AS c</span></span>
-<span class="line"><span style="color:#24292e;">ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);</span></span></code></pre></div><div><img src="`+m+`"></div><p>我们用到了 JOIN，也就是表的关联，目的就是为了引用其他表的信息，包括会员信息表（demo.membermaster）和商品信息表（demo.goodsmater）。通过关联查询，我们就可以从会员信息表中获取会员信息，从商品信息表获取商品信息。</p><p>下面，我们假设会员卡 ”10000001“ 又发给王五，我们需要更改会员信息表。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">UPDATE demo.membermaster</span></span>
-<span class="line"><span style="color:#e1e4e8;">SET membername = &#39;王五&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">memberphone = &#39;12345678998&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">memberpid = &#39;475145197001012356&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">memberaddress = &#39;天津&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">sex = &#39;女&#39;,</span></span>
-<span class="line"><span style="color:#e1e4e8;">brithday = &#39;1997-01-01&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    JOIN demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#24292e;">    JOIN demo.goodsmaster as c ON (</span></span>
+<span class="line"><span style="color:#24292e;">        a.cardno = b.cardno AND a.itemnumber = c.itemnumber</span></span>
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     b.membername,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.salesvalue,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster as c ON (</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;         a.cardno = b.cardno AND a.itemnumber = c.itemnumber</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     );</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| membername | goodsname | quantity | salesvalue | transdate           |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 张三     | 教科书 |    1.000 |      89.00 | 2023-10-10 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     b.membername,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.salesvalue,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster as c ON (</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;         a.cardno = b.cardno AND a.itemnumber = c.itemnumber</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     );</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| membername | goodsname | quantity | salesvalue | transdate           |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 张三     | 教科书 |    1.000 |      89.00 | 2023-10-10 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>我们可以得到查询结果：张三，在 2023 年 10 月 10 日买了一本书，花了 89 元。</p><p>这里我们用到了 JOIN，也就是表的关联，目的就是为了引用其他表的信息，包括会员信息表（<code>demo.membermaster</code>）和商品信息表（<code>demo.goodsmater</code>）。通过关联查询，我们就可以从会员信息表中获取会员信息，从商品信息表获取商品信息。</p><p>下面，我们假设会员卡 ”10000001“ 又发给王五，我们需要更改会员信息表。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">UPDATE demo.membermaster</span></span>
+<span class="line"><span style="color:#e1e4e8;">SET</span></span>
+<span class="line"><span style="color:#e1e4e8;">    membername = &#39;王五&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    memberphone = &#39;13798293042&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    memberpid = &#39;475145197001012356&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    memberaddress = &#39;天津&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    sex = &#39;女&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    birthday = &#39;1970-01-01&#39;</span></span>
 <span class="line"><span style="color:#e1e4e8;">WHERE cardno = &#39;10000001&#39;;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">UPDATE demo.membermaster</span></span>
-<span class="line"><span style="color:#24292e;">SET membername = &#39;王五&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">memberphone = &#39;12345678998&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">memberpid = &#39;475145197001012356&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">memberaddress = &#39;天津&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">sex = &#39;女&#39;,</span></span>
-<span class="line"><span style="color:#24292e;">brithday = &#39;1997-01-01&#39;</span></span>
-<span class="line"><span style="color:#24292e;">WHERE cardno = &#39;10000001&#39;;</span></span></code></pre></div><p>会员记录修改后之后，我们再次运行之前的会员消费流水查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate</span></span>
-<span class="line"><span style="color:#e1e4e8;">FROM demo.trans AS a</span></span>
-<span class="line"><span style="color:#e1e4e8;">JOIN demo.membermaster AS b</span></span>
-<span class="line"><span style="color:#e1e4e8;">JOIN demo.goodsmater AS c</span></span>
-<span class="line"><span style="color:#e1e4e8;">ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate</span></span>
-<span class="line"><span style="color:#24292e;">FROM demo.trans AS a</span></span>
-<span class="line"><span style="color:#24292e;">JOIN demo.membermaster AS b</span></span>
-<span class="line"><span style="color:#24292e;">JOIN demo.goodsmater AS c</span></span>
-<span class="line"><span style="color:#24292e;">ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);</span></span></code></pre></div><div><img src="`+E+'"></div><p>这次得到的结果是：王五在 2023 年 02 月 01 日，买了一本书，消费 89 元。</p><p>很明显，这个结果把张三的消费行为放到王五身上了，这样是不对的。原因就是，我们将会员卡号对应的会员信息改了，因为会员卡号是主键，会员消费查询通过会员卡号关联到会员信息，最终得到错误的结果。</p><p>现在你已经知道，为什么不能把会员卡号当作主键。除此之外，会员电话也不能做主键，在实际操作中，手机号也存在被运营商收回，重新发给别人用的情况。</p><p>身份证号也不行。虽然身份证号不会重复，与每个人存在一一对应的关系。但是，身份证号属于个人隐私，顾客不一定会提供。客户电话也有这个问题。</p><p>这样看来，任何一个现有字段都不适合做主键。</p><p>所以，建议尽量不要使用与业务有关的字段做主键。作为项目设计的技术人员，我们无法预测在项目的整个声明周期中，哪个业务字段会因为项目的业务需求存在重复或者重用的情况出现。</p><h3 id="自增字段做主键" tabindex="-1">自增字段做主键 <a class="header-anchor" href="#自增字段做主键" aria-label="Permalink to &quot;自增字段做主键&quot;">​</a></h3><p>我们再给会员信息表添加一个字段，比如叫 id，然后我们给这个字段定义自增约束，这样，我们就具备唯一性的，且不为空的字段来做主键了。</p><p>接下来，我们来修改会员信息表的结构，添加一个自增字段做主键。</p><p>第一步，修改会员信息表，删除表的主键约束。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div>',366),u=[g];function L(b,T,v,C,N,S){return a(),n("div",null,u)}const R=s(h,[["render",L]]);export{k as __pageData,R as default};
+<span class="line"><span style="color:#24292e;">SET</span></span>
+<span class="line"><span style="color:#24292e;">    membername = &#39;王五&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    memberphone = &#39;13798293042&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    memberpid = &#39;475145197001012356&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    memberaddress = &#39;天津&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    sex = &#39;女&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    birthday = &#39;1970-01-01&#39;</span></span>
+<span class="line"><span style="color:#24292e;">WHERE cardno = &#39;10000001&#39;;</span></span></code></pre></div><p>会员记录修改后之后，我们再次运行之前的会员消费流水查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     b.membername,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.salesvalue,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster as c ON (</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;         a.cardno = b.cardno AND a.itemnumber = c.itemnumber</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     );</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| membername | goodsname | quantity | salesvalue | transdate           |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 王五     | 教科书 |    1.000 |      89.00 | 2023-10-10 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     b.membername,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.salesvalue,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster as c ON (</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;         a.cardno = b.cardno AND a.itemnumber = c.itemnumber</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     );</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| membername | goodsname | quantity | salesvalue | transdate           |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 王五     | 教科书 |    1.000 |      89.00 | 2023-10-10 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+----------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>这次得到的结果是：王五在 2023 年 10 月 10 日买了一本书，消费 89 元。</p><p>很明显，这个结果把张三的消费行为放到王五身上了，肯定是不对的。原因就是，我们将会员卡号是 “10000001” 对应的会员信息改了，而会员卡号是主键，会员消费查询通过会员卡号关联到会员信息，最终得到错误的结果。</p><p>现在你已经知道，为什么不能把会员卡号当作主键。另外，会员电话也不能做主键，在实际操作中，手机号也存在被运营商收回，重新发给别人用的情况。</p><p>同理身份证号也不行。虽然身份证号不会重复，与每个人存在一一对应的关系。但是，身份证号属于个人隐私，顾客不一定会提供。对门店来说，顾客就是上帝，要是强制会员必须登记身份证号，会流失很多客户。另外，客户电话也有同样的问题。</p><p>这样看来，任何一个现有字段都不适合做主键。所以，建议你尽量不要使用与业务有关的字段做主键。作为项目设计的技术人员，我们无法预测在项目的整个生命周期中，哪个业务字段会因为项目的业务需求存在重复或者重用之类的情况出现。</p><p>既然业务字段不可以，那我们再来试试自增字段。</p><h3 id="自增字段做主键" tabindex="-1">自增字段做主键 <a class="header-anchor" href="#自增字段做主键" aria-label="Permalink to &quot;自增字段做主键&quot;">​</a></h3><p>我们再给会员信息表添加一个字段，比如叫 id，然后我们给这个字段定义自增约束，这样，我们就具备唯一性的，且不为空的字段来做主键了。</p><p>接下来，我们来修改会员信息表的结构，添加一个自增字段做主键。</p><p>第一步，修改会员信息表，删除表的主键约束。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div>`,365),m=[d];function E(g,h,u,L,b,T){return a(),n("div",null,m)}const C=s(y,[["render",E]]);export{N as __pageData,C as default};
