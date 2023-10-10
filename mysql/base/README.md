@@ -5,7 +5,7 @@ MySQL 必知必会
 ```bash
 docker run -d -p 3306:3306 \d
     --net=host \
-    -e MYSQL_ROOT_PASSWORD=9sfx92Yp374YA7wv01ed \
+    -e MYSQL_ROOT_PASSWORD=password \
     -v /data/main-mysql:/var/lib/mysql \
     -v /etc/localtime:/etc/localtime \
     --name=main-mysql \
@@ -13,7 +13,7 @@ docker run -d -p 3306:3306 \d
 ```
 
 ```bash
-docker run -d -p 3306:3306 --net=host -e MYSQL_ROOT_PASSWORD=9sfx92Yp374YA7wv01ed -v /data/main-mysql:/var/lib/mysql -v /etc/localtime:/etc/localtime --name=main-mysql mysql:8.0
+docker run -d -p 3306:3306 --net=host -e MYSQL_ROOT_PASSWORD=password -v /data/main-mysql:/var/lib/mysql -v /etc/localtime:/etc/localtime --name=main-mysql mysql:8.0
 ```
 
 连接数据库
@@ -25,7 +25,7 @@ mysql –u用户名 [–h主机名或者IP地址,-P端口号] –p密码
 ```bash
 docker exec -it main-mysql /bin/bash
 
-mysql -uroot -p9sfx92Yp374YA7wv01ed
+mysql -uroot -ppassword
 ```
 
 ## 一. 数据存储过程
