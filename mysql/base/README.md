@@ -620,7 +620,7 @@ mysql> select * from demo.importhead;
 CREATE TABLE demo.importheadhist LIKE demo.importhead;
 ```
 
-运行这个语句之后，一个和 demo.importhead 具有相同表结构的空表 demo.importheadlist 就被创建出来了。
+运行这个语句之后，就创建出一个和 demo.importhead 具有相同表结构的空表。
 
 这个新创建的表，还不是我们需要的表，我们需要对这个表进行修改，通过添加字段和修改字段，来得到我们最终需要的表。
 
@@ -641,26 +641,63 @@ ALTER TABLE demo.importheadhist ADD confirmdate DATETIME;
 DESCRIBE demo.importheadhist;
 ```
 
-<div><img src="./images/table04.png" /></div>
+```
+mysql> DESCRIBE demo.importheadhist;
++----------------+---------------+------+-----+---------+-------+
+| Field          | Type          | Null | Key | Default | Extra |
++----------------+---------------+------+-----+---------+-------+
+| listnumber     | int           | NO   |     | NULL    |       |
+| supplierid     | int           | NO   |     | NULL    |       |
+| stocknumber    | int           | NO   |     | NULL    |       |
+| importtype     | int           | YES  |     | 1       |       |
+| quantity       | decimal(10,3) | YES  |     | NULL    |       |
+| importvalue    | decimal(10,2) | YES  |     | NULL    |       |
+| recorder       | int           | YES  |     | NULL    |       |
+| recordingdate  | datetime      | YES  |     | NULL    |       |
+| confirmer      | int           | YES  |     | NULL    |       |
+| confirmdate    | datetime      | YES  |     | NULL    |       |
++----------------+---------------+------+-----+---------+-------+
+10 rows in set (0.02 sec)
+```
+
+通过增加 2 个字段，我们就得到了进货单历史表。
 
 #### 修改字段
 
 除了添加字段，我们可能还要修改字段，比如，把字段名称 ”quantity“ 改成 ”importquantity“，并且将字段类型改为 DOUBLE。
 
 ```mysql
-ALTER TABLE demo.importheadhist CHANGE quantity importquantity DOUBLE;
+ALTER TABLE
+    demo.importheadhist CHANGE quantity importquantity DOUBLE;
 ```
 
 运行 SQL 语句后，重新查看表结构，可以得到下面的结果：
 
-<div><img src="./images/table05.png" /></div>
+```
+mysql> DESCRIBE demo.importheadhist;
++----------------+---------------+------+-----+---------+-------+
+| Field          | Type          | Null | Key | Default | Extra |
++----------------+---------------+------+-----+---------+-------+
+| listnumber     | int           | NO   |     | NULL    |       |
+| supplierid     | int           | NO   |     | NULL    |       |
+| stocknumber    | int           | NO   |     | NULL    |       |
+| importtype     | int           | YES  |     | 1       |       |
+| importquantity | double        | YES  |     | NULL    |       |
+| importvalue    | decimal(10,2) | YES  |     | NULL    |       |
+| recorder       | int           | YES  |     | NULL    |       |
+| recordingdate  | datetime      | YES  |     | NULL    |       |
+| confirmer      | int           | YES  |     | NULL    |       |
+| confirmdate    | datetime      | YES  |     | NULL    |       |
++----------------+---------------+------+-----+---------+-------+
+10 rows in set (0.02 sec)
+```
 
 可以看到，字段名称和字段类型全部都改过来了。
 
 如果你不想改变字段名称，只想改变字段类型。例如，将字段 ”importquantity“ 类型改为 DECIMAL(10, 3)，可以这样写：
 
 ```mysql
-ALTER TABLE demo.importheadhist MODIFY importquantity DECIMAL(10, 3);
+ALTER TABLE demo.importheadhist MODIFY importquantity DECIMAL(10,3);
 ```
 
 我们还可以通过 SQL 语句向表中添加一个字段，甚至可以指定添加字段在表中的位置。
@@ -668,12 +705,35 @@ ALTER TABLE demo.importheadhist MODIFY importquantity DECIMAL(10, 3);
 比如在字段 supplierid 之后，添加一个字段 suppliername，数据类型是 TEXT。
 
 ```mysql
-ALTER TABLE demo.importheadhist ADD suppliername TEXT AFTER supplierid;
+ALTER TABLE
+    demo.importheadhist
+ADD
+    suppliername TEXT AFTER supplierid;
+```
+
+```
+mysql> DESCRIBE demo.importheadhist;
++----------------+---------------+------+-----+---------+-------+
+| Field          | Type          | Null | Key | Default | Extra |
++----------------+---------------+------+-----+---------+-------+
+| listnumber     | int           | NO   |     | NULL    |       |
+| supplierid     | int           | NO   |     | NULL    |       |
+| suppliername   | text          | YES  |     | NULL    |       |
+| stocknumber    | int           | NO   |     | NULL    |       |
+| importtype     | int           | YES  |     | 1       |       |
+| importquantity | decimal(10,3) | YES  |     | NULL    |       |
+| importvalue    | decimal(10,2) | YES  |     | NULL    |       |
+| recorder       | int           | YES  |     | NULL    |       |
+| recordingdate  | datetime      | YES  |     | NULL    |       |
+| confirmer      | int           | YES  |     | NULL    |       |
+| confirmdate    | datetime      | YES  |     | NULL    |       |
++----------------+---------------+------+-----+---------+-------+
+11 rows in set (0.02 sec)
 ```
 
 到这里，我们就完成了修改字段在表中位置的操作。
 
-### 总结
+### 4. 总结
 
 本篇文章，我们学习了创建和修改数据表的具体方法。
 
@@ -711,7 +771,7 @@ CREATE TABLE
 (
 	字段名 字段类型 AUTO_INCREMENT
 );
--- 已经存在表基础上，创建新表
+-- 已经存在表基础上，创建新表，复制表结构
 CREATE TABLE demo.importheadhist LIKE demo.importhead;
 -- 修改表相关
 ALTER TABLE 表名 CHANGE 旧字段名 新字段名 数据类型;

@@ -120,3 +120,33 @@ VALUES (
 -- 查询数据
 
 SELECT * from demo.importhead;
+
+-- 创建表，复制表结构
+
+CREATE TABLE demo.importheadhist LIKE demo.importhead;
+
+-- 添加表字段
+
+ALTER TABLE demo.importheadhist ADD confirmer INT;
+
+ALTER TABLE demo.importheadhist ADD confirmdate DATETIME;
+
+DESCRIBE demo.importheadhist;
+
+-- 修改表字段，修改名称及类型
+
+ALTER TABLE
+    demo.importheadhist CHANGE quantity importquantity DOUBLE;
+
+-- 修改表字段，修改类型
+
+ALTER TABLE demo.importheadhist MODIFY importquantity DECIMAL(10,3);
+
+-- 添加表字段，指定字段位置
+
+ALTER TABLE
+    demo.importheadhist
+ADD
+    suppliername TEXT AFTER supplierid;
+
+## 4. 增删改查
