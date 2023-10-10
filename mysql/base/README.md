@@ -1542,11 +1542,29 @@ mysql> SELECT
 
 ### 自增字段做主键
 
-我们再给会员信息表添加一个字段，比如叫 id，然后我们给这个字段定义自增约束，这样，我们就具备唯一性的，且不为空的字段来做主键了。
+我们再给会员信息表添加一个字段，比如叫 id，然后我们给这个字段定义自增约束，这样，我们就具备唯一性的，而且不为空的字段来做主键了。
 
 接下来，我们来修改会员信息表的结构，添加一个自增字段做主键。
 
-第一步，修改会员信息表，删除表的主键约束。
+第一步，修改会员信息表，删除表的主键约束（删除主键约束，并不会删除字段）。
+
+```mysql
+ALTER TABLE demo.membermaster DROP PRIMARY KEY;
+```
+
+第二步，修改会员信息表，添加字段 “id” 为主键，并且给它定义自增约束：
+
+```mysql
+ALTER TABLE demo.membermaster ADD id INT PRIMARY KEY AUTO_INCREMENT;
+```
+
+第三步，修改销售流水表，添加新的字段 memberid，对应会员信息表中的主键：
+
+```mysql
+ALTER TABLE demo.trans ADD memberid INT;
+```
+
+第四步，更新一下销售流水表，给新添加的字段 "memberid" 赋值，让它指向对应的会员信息：
 
 ```mysql
 ```

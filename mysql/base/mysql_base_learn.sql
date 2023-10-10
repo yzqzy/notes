@@ -382,6 +382,8 @@ SELECT * FROM demo.goodsmaster;
 
 SELECT * FROM demo.membermaster;
 
+DESCRIBE demo.membermaster;
+
 -- 查询（关联查询）
 
 SELECT
@@ -407,3 +409,17 @@ SET
     sex = '女',
     birthday = '1970-01-01'
 WHERE cardno = '10000001';
+
+-- 修改会员信息表（删除表的主键约束）
+
+ALTER TABLE demo.membermaster DROP PRIMARY KEY;
+
+DESCRIBE demo.membermaster;
+
+-- 修改会员信息表（添加字段 “id” 为主键，添加自增约束）
+
+ALTER TABLE demo.membermaster ADD id INT PRIMARY KEY AUTO_INCREMENT;
+
+-- 修改销售流水表（添加字段 memberid）
+
+ALTER TABLE demo.trans ADD memberid INT;
