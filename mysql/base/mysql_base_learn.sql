@@ -290,3 +290,120 @@ UPDATE
     goodsname = a.goodsname;
 
 ## 五. 设置主键
+
+-- 创建会员信息表（指定主键）
+
+CREATE TABLE
+    demo.membermaster (
+        -- 会员卡号为主键
+        cardno CHAR(8) PRIMARY KEY,
+        membername TEXT,
+        memberphone TEXT,
+        memberpid TEXT,
+        memberaddress TEXT,
+        sex TEXT,
+        birthday DATETIME
+    );
+
+-- 查看表结构
+
+DESCRIBE demo.membermaster;
+
+-- 插入数据
+
+INSERT INTO
+    demo.membermaster (
+        cardno,
+        membername,
+        memberphone,
+        memberpid,
+        memberaddress,
+        sex,
+        birthday
+    )
+VALUES (
+        '10000001',
+        '张三',
+        '15928792771',
+        '110123200001017890',
+        '济南',
+        '男',
+        '2000-01-01'
+    ), (
+        '10000002',
+        '李四',
+        '13578271231',
+        '123123199001012356',
+        '北京',
+        '女',
+        '1990-01-01'
+    );
+
+-- 查看表内容
+
+SELECT * FROM demo.membermaster;
+
+-- 创建销售流水表
+
+CREATE TABLE
+    demo.trans (
+        transactionno INT,
+        -- 引用商品信息
+        itemnumber INT,
+        quantity DECIMAL(10, 3),
+        price DECIMAL(10, 2),
+        salesvalue DECIMAL(10, 2),
+        -- 引用会员信息
+        cardno CHAR(8),
+        transdate DATETIME
+    );
+
+INSERT INTO
+    demo.trans (
+        transactionno,
+        itemnumber,
+        quantity,
+        price,
+        salesvalue,
+        cardno,
+        transdate
+    )
+VALUES (
+        1,
+        1,
+        1,
+        89,
+        89,
+        '10000001',
+        '2023-10-10'
+    );
+
+SELECT * FROM demo.goodsmaster;
+
+SELECT * FROM demo.membermaster;
+
+-- 查询（关联查询）
+
+SELECT
+    b.membername,
+    c.goodsname,
+    a.quantity,
+    a.salesvalue,
+    a.transdate
+FROM demo.trans AS a
+    JOIN demo.membermaster AS b
+    JOIN demo.goodsmaster as c ON (
+        a.cardno = b.cardno AND a.itemnumber = c.itemnumber
+    );
+
+-- 更新会员表信息
+
+UPDATE demo.membermaster
+SET
+    membername = '王五',
+    memberphone = '13798293042',
+    memberpid = '475145197001012356',
+    memberaddress = '天津',
+    sex = '女',
+    birthday = '1970-01-01'
+WHERE cardno = '10000001';

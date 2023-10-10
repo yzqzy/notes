@@ -1300,7 +1300,7 @@ mysql> SELECT * FROM demo.goodsmaster;
 
 当我们需要查询和引用表中的一条记录时，最好的办法就是通过主键。只有合理地设置主键，才能确保我们准确、快速地找到所需要的数据记录。
 
-假设在我们的项目中，客户要进行会员营销，相应的，我们就需要处理会员信息。会员信息表（demo.membermaster）表结构如下：
+在我们的项目中，客户要进行会员营销，相应的，我们就需要处理会员信息。会员信息表（demo.membermaster）表结构如下：
 
 <img src="./images/table10.png" />
 
@@ -1317,72 +1317,69 @@ mysql> SELECT * FROM demo.goodsmaster;
 我们可以用下面的代码，在创建表的时候，设置字段 cardno 作为主键：
 
 ```mysql
-CREATE TABLE demo.membermaster
-(
-	cardno CHAR(8) PRIMARY KEY, 
-	membername TEXT,
-	memberphone TEXT,
-	memberpid TEXT,
-	memberaddress TEXT,
-	sex TEXT,
-	brithday DATETIME
-);
+CREATE TABLE
+    demo.membermaster (
+        -- 会员卡号为主键
+        cardno CHAR(8) PRIMARY KEY,
+        membername TEXT,
+        memberphone TEXT,
+        memberpid TEXT,
+        memberaddress TEXT,
+        sex TEXT,
+        birthday DATETIME
+    );
 ```
 
 然后我们来查询一下表结构，确认下主键是否创建成功了：
 
 ```mysql
-DESCRIBE demo.membermaster;
+mysql> DESCRIBE demo.membermaster;
++---------------+----------+------+-----+---------+-------+
+| Field         | Type     | Null | Key | Default | Extra |
++---------------+----------+------+-----+---------+-------+
+| cardno        | char(8)  | NO   | PRI | NULL    |       |
+| membername    | text     | YES  |     | NULL    |       |
+| memberphone   | text     | YES  |     | NULL    |       |
+| memberpid     | text     | YES  |     | NULL    |       |
+| memberaddress | text     | YES  |     | NULL    |       |
+| sex           | text     | YES  |     | NULL    |       |
+| birthday      | datetime | YES  |     | NULL    |       |
++---------------+----------+------+-----+---------+-------+
+7 rows in set (0.01 sec)
 ```
-
-<div><img src="./images/table11.png" /></div>
 
 可以看到，字段 cardno 在表示键值的 Key 这一系列的值是 ”PRI“，意思是 PRIMARY KEY，这就表示它已经被设置成主键了。
 
-会员卡号做主键有什么问题嘛？我们插入 2 条数据来验证下：
+会员卡号做主键会有什么问题嘛？我们插入 2 条数据来验证下：
 
 ```mysql
-INSERT INTO demo.membermaster
-(
-	cardno,
-	membername,
-	memberphone,
-	memberpid,
-	memberaddress,
-	sex,
-	brithday
-)
-VALUES
-(
-	'10000001',
-	'张三',
-	'13812345678',
-	'110123200001017890',
-	'北京',
-	'男',
-	'2000-01-01'
-);
-
-INSERT INTO demo.membermaster
-(
-	cardno,
-	membername,
-	memberphone,
-	memberpid,
-	memberaddress,
-	sex,
-	brithday
-)
-VALUES
-(
-	'10000002',
-	'李四',
-	'13512345678',
-	'123123200001017890',
-	'上海',
-	'女',
-	'1990-01-01'
-);
+INSERT INTO
+    demo.membermaster (
+        cardno,
+        membername,
+        memberphone,
+        memberpid,
+        memberaddress,
+        sex,
+        birthday
+    )
+VALUES (
+        '10000001',
+        '张三',
+        '15928792771',
+        '110123200001017890',
+        '济南',
+        '男',
+        '2000-01-01'
+    ), (
+        '10000002',
+        '李四',
+        '13578271231',
+        '123123199001012356',
+        '北京',
+        '女',
+        '1990-01-01'
+    );
 ```
 
 插入成功后，我们再来看下表的内容：
@@ -1391,9 +1388,18 @@ VALUES
 SELECT * FROM demo.membermaster;
 ```
 
-<div><img src="./images/table12.png" /></div>
+```
+mysql> SELECT * FROM demo.membermaster;
++----------+------------+-------------+--------------------+---------------+------+---------------------+
+| cardno   | membername | memberphone | memberpid          | memberaddress | sex  | birthday            |
++----------+------------+-------------+--------------------+---------------+------+---------------------+
+| 10000001 | 张三     | 15928792771 | 110123200001017890 | 济南        | 男  | 2000-01-01 00:00:00 |
+| 10000002 | 李四     | 13578271231 | 123123199001012356 | 北京        | 女  | 1990-01-01 00:00:00 |
++----------+------------+-------------+--------------------+---------------+------+---------------------+
+2 rows in set (0.00 sec)
+```
 
-我们可以发现，不同的会员卡号对应不同的会员，字段 ”cardno“ 唯一地标识某一个会员。如果都是这样，会员卡号与会员一一对应，系统是可以正常运行的。
+可以发现，不同的会员卡号对应不同的会员，字段 ”cardno“ 唯一地标识某一个会员。如果都是这样，会员卡号与会员一一对应，系统是可以正常运行的。
 
 但是实际情况并没有这么简单，会员卡号存在重复使用的情况。比如，张三因为工作变动搬离原来的地址，不再到商家的门店消费（退还会员卡），于是张三就不再是这个商店门店的会员了。但是，商家不想让这个会员卡空着，就把卡号是 ”10000001“ 的会员卡发给王五。
 
@@ -1408,93 +1414,131 @@ SELECT * FROM demo.membermaster;
 我们可以用下面的代码创建销售流水表。因为需要引用会员信息和商品信息，所以表中要包括商品编号字段和会员卡号字段。
 
 ```mysql
-CREATE TABLE demo.trans
-(
-	transactionno INT,
-	itemnumber INT, -- 引用商品信息
-	quantity DECIMAL(10, 3),
-	price DECIMAL(10, 2),
-	salesvalue DECIMAL(10, 2),
-	cardno CHAR(8), -- 引用会员信息
-	transdate DATETIME
-);
+CREATE TABLE
+    demo.trans (
+        transactionno INT,
+        -- 引用商品信息
+        itemnumber INT,
+        quantity DECIMAL(10, 3),
+        price DECIMAL(10, 2),
+        salesvalue DECIMAL(10, 2),
+        -- 引用会员信息
+        cardno CHAR(8),
+        transdate DATETIME
+    );
 ```
 
 创建好表之后，我们就来插入一条销售流水：
 
 ```mysql
-INSERT INTO demo.trans
-(
-	transactionno,
-	itemnumber,
-	quantity,
-	price,
-	salesvalue,
-	cardno,
-	transdate
-)
-VALUES
-(
-	1,
-	1,
-	1,
-	89,
-	89,
-	'10000001',
-	'2023-02-01'
-);
+INSERT INTO
+    demo.trans (
+        transactionno,
+        itemnumber,
+        quantity,
+        price,
+        salesvalue,
+        cardno,
+        transdate
+    )
+VALUES (
+        1,
+        1,
+        1,
+        89,
+        89,
+        '10000001',
+        '2023-10-10'
+    );
 ```
 
-接着，我们再来查看一下 2023 年 02 月 01 日的会员销售记录。
+接着，我们再来查看一下 2023 年 10 月 10 日的会员销售记录。
 
 ```mysql
-SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate
+SELECT
+    b.membername,
+    c.goodsname,
+    a.quantity,
+    a.salesvalue,
+    a.transdate
 FROM demo.trans AS a
-JOIN demo.membermaster AS b
-JOIN demo.goodsmater AS c
-ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);
+    JOIN demo.membermaster AS b
+    JOIN demo.goodsmaster as c ON (
+        a.cardno = b.cardno AND a.itemnumber = c.itemnumber
+    );
 ```
 
-<div><img src="./images/table14.png" /></div>
+```
+mysql> SELECT
+    ->     b.membername,
+    ->     c.goodsname,
+    ->     a.quantity,
+    ->     a.salesvalue,
+    ->     a.transdate
+    -> FROM demo.trans AS a
+    ->     JOIN demo.membermaster AS b
+    ->     JOIN demo.goodsmaster as c ON (
+    ->         a.cardno = b.cardno AND a.itemnumber = c.itemnumber
+    ->     );
++------------+-----------+----------+------------+---------------------+
+| membername | goodsname | quantity | salesvalue | transdate           |
++------------+-----------+----------+------------+---------------------+
+| 张三     | 教科书 |    1.000 |      89.00 | 2023-10-10 00:00:00 |
++------------+-----------+----------+------------+---------------------+
+1 row in set (0.00 sec)
+```
 
-我们用到了 JOIN，也就是表的关联，目的就是为了引用其他表的信息，包括会员信息表（demo.membermaster）和商品信息表（demo.goodsmater）。通过关联查询，我们就可以从会员信息表中获取会员信息，从商品信息表获取商品信息。
+我们可以得到查询结果：张三，在 2023 年 10 月 10 日买了一本书，花了 89 元。
+
+这里我们用到了 JOIN，也就是表的关联，目的就是为了引用其他表的信息，包括会员信息表（`demo.membermaster`）和商品信息表（`demo.goodsmater`）。通过关联查询，我们就可以从会员信息表中获取会员信息，从商品信息表获取商品信息。
 
 下面，我们假设会员卡 ”10000001“ 又发给王五，我们需要更改会员信息表。
 
 ```mysql
 UPDATE demo.membermaster
-SET membername = '王五',
-memberphone = '12345678998',
-memberpid = '475145197001012356',
-memberaddress = '天津',
-sex = '女',
-brithday = '1997-01-01'
+SET
+    membername = '王五',
+    memberphone = '13798293042',
+    memberpid = '475145197001012356',
+    memberaddress = '天津',
+    sex = '女',
+    birthday = '1970-01-01'
 WHERE cardno = '10000001';
 ```
 
 会员记录修改后之后，我们再次运行之前的会员消费流水查询：
 
 ```mysql
-SELECT b.membername, c.goodsname, a.quantity, a.salesvalue, a.transdate
-FROM demo.trans AS a
-JOIN demo.membermaster AS b
-JOIN demo.goodsmater AS c
-ON (a.cardno = b.cardno AND a.itemnumber = c.itemnumber);
+mysql> SELECT
+    ->     b.membername,
+    ->     c.goodsname,
+    ->     a.quantity,
+    ->     a.salesvalue,
+    ->     a.transdate
+    -> FROM demo.trans AS a
+    ->     JOIN demo.membermaster AS b
+    ->     JOIN demo.goodsmaster as c ON (
+    ->         a.cardno = b.cardno AND a.itemnumber = c.itemnumber
+    ->     );
++------------+-----------+----------+------------+---------------------+
+| membername | goodsname | quantity | salesvalue | transdate           |
++------------+-----------+----------+------------+---------------------+
+| 王五     | 教科书 |    1.000 |      89.00 | 2023-10-10 00:00:00 |
++------------+-----------+----------+------------+---------------------+
+1 row in set (0.00 sec)
 ```
 
-<div><img src="./images/table15.png" /></div>
+这次得到的结果是：王五在 2023 年 10 月 10 日买了一本书，消费 89 元。
 
-这次得到的结果是：王五在 2023 年 02 月 01 日，买了一本书，消费 89 元。
+很明显，这个结果把张三的消费行为放到王五身上了，肯定是不对的。原因就是，我们将会员卡号是 “10000001” 对应的会员信息改了，而会员卡号是主键，会员消费查询通过会员卡号关联到会员信息，最终得到错误的结果。
 
-很明显，这个结果把张三的消费行为放到王五身上了，这样是不对的。原因就是，我们将会员卡号对应的会员信息改了，因为会员卡号是主键，会员消费查询通过会员卡号关联到会员信息，最终得到错误的结果。
+现在你已经知道，为什么不能把会员卡号当作主键。另外，会员电话也不能做主键，在实际操作中，手机号也存在被运营商收回，重新发给别人用的情况。
 
-现在你已经知道，为什么不能把会员卡号当作主键。除此之外，会员电话也不能做主键，在实际操作中，手机号也存在被运营商收回，重新发给别人用的情况。
+同理身份证号也不行。虽然身份证号不会重复，与每个人存在一一对应的关系。但是，身份证号属于个人隐私，顾客不一定会提供。对门店来说，顾客就是上帝，要是强制会员必须登记身份证号，会流失很多客户。另外，客户电话也有同样的问题。
 
-身份证号也不行。虽然身份证号不会重复，与每个人存在一一对应的关系。但是，身份证号属于个人隐私，顾客不一定会提供。客户电话也有这个问题。
+这样看来，任何一个现有字段都不适合做主键。所以，建议你尽量不要使用与业务有关的字段做主键。作为项目设计的技术人员，我们无法预测在项目的整个生命周期中，哪个业务字段会因为项目的业务需求存在重复或者重用之类的情况出现。
 
-这样看来，任何一个现有字段都不适合做主键。
-
-所以，建议尽量不要使用与业务有关的字段做主键。作为项目设计的技术人员，我们无法预测在项目的整个声明周期中，哪个业务字段会因为项目的业务需求存在重复或者重用的情况出现。
+既然业务字段不可以，那我们再来试试自增字段。
 
 ### 自增字段做主键
 
