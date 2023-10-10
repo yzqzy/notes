@@ -28,7 +28,7 @@ docker exec -it main-mysql /bin/bash
 mysql -uroot -p9sfx92Yp374YA7wv01ed
 ```
 
-## 01. 数据存储过程
+## 一. 数据存储过程
 
 MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。
 
@@ -36,7 +36,7 @@ MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确�
 
 数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。
 
-### 1. 创建数据库
+### 创建数据库
 
 数据存储的第一步，就是创建数据库。
 
@@ -72,7 +72,7 @@ SHOW DATABASES;
 
 如果你是 DBA 或者 MySQL 数据库程序员，想深入了解 MySQL 数据库，可以查看[官方文档](https://dev.mysql.com/doc/refman/8.0/en/system-schema.html)。
 
-### 2. 确认字段
+### 确认字段
 
 数据存储流程的第二步是确认表的字段。
 
@@ -80,7 +80,7 @@ MySQL 数据表由行与列组成，一行就是一条数据记录，每一条�
 
 每个字段都需要定义数据类型，这个数据类型叫做字段类型。
 
-### 3. 创建数据表
+### 创建数据表
 
 数据存储流程的第三步，是创建数据表。
 
@@ -104,7 +104,7 @@ CREATE TABLE
 DESCRIBE demo.test;
 ```
 
-```
+```mysql
 mysql> DESCRIBE demo.test;
 +-----------+------+------+-----+---------+-------+
 | Field     | Type | Null | Key | Default | Extra |
@@ -133,7 +133,7 @@ USE demo;
 SHOW TABLES;
 ```
 
-```
+```mysql
 mysql> show tables;
 +----------------+
 | Tables_in_demo |
@@ -173,7 +173,7 @@ ADD
     COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
 ```
 
-```
+```mysql
 mysql> ALTER TABLE demo.test
     -> ADD
     ->     COLUMN itemnumber int PRIMARY KEY AUTO_INCREMENT;
@@ -186,7 +186,7 @@ Records: 0  Duplicates: 0  Warnings: 0
 * primary key：表示这一列是主键；
 * auto_increment：表示增加一条记录，这个值会自动增加。
 
-```
+```mysql
 mysql> DESCRIBE demo.test;
 +------------+------+------+-----+---------+----------------+
 | Field      | Type | Null | Key | Default | Extra          |
@@ -199,7 +199,7 @@ mysql> DESCRIBE demo.test;
 4 rows in set (0.00 sec)
 ```
 
-### 4. 插入数据
+### 插入数据
 
 数据存储流程的第四步，也是最后一步，是把数据插入到表当中去。
 
@@ -216,14 +216,14 @@ mysql> INSERT INTO
 Query OK, 1 row affected (0.01 sec)
 ```
 
-insert into 表示向 demo.test 中插入数据，后面是要插入数据的字段名，values 表示对应的值。
+insert into 表示向 `demo.test` 中插入数据，后面是要插入数据的字段名，values 表示对应的值。
 
 注意点：
 
 * 插入数据的字段名可以不写，建议每次都写。这样做的好处是可读性好，不易出错且容易修改。
 * 由于字段 itemnumber 定义了 auto_increment，所以我们插入一条记录的时候，不给它赋值，系统也会自动赋值，每次赋值自增 1。也可以在插入数据的时候给 itemnumber 赋值，但是必须保证与已有记录的 itemnumber 值不同，否则就会提示错误。
 
-### 5. 总结
+### 总结
 
 我们在进行具体操作时，会用到 8 种 SQL 语句：
 
@@ -259,11 +259,11 @@ MySQL 以分号来识别一条 SQL 语句结束，所以，你写的每一条 SQ
 
 所以，建议在写 SQL 语句时遵循统一的样式，以增加可读性，减少错误。可以点击这个[链接](https://www.sqlstyle.guide/zh/)深入学习相关规范。
 
-## 02. 字段类型
+## 二. 字段类型
 
 MySQL 种有很多字段类型，比如整数、文本、浮点数，等等。如果类型定义合理，就能节省存储空间，提升数据查询和处理的速度。相反，如果类型定义不合理，就有可能导致数据超出取值范围，引发系统错误，甚至可能出现计算错误的情况，进而影响整个系统。
 
-### 1. 整数类型
+### 整数类型
 
 整数类型一共有 5 种，包括 TINYINT、SMALLINT、MEDIUMINT、INT（INTEGER）和 BIGINT，它们的区别如下：
 
@@ -280,7 +280,7 @@ MySQL 种有很多字段类型，比如整数、文本、浮点数，等等。�
 
 在实际工作中，系统故障产生的成本远远超过增加几个字段存储空间所产生的成本。因此，建议首先确保数据不会超出取值范围，在这个前提下，再去考虑如何节省存储空间。
 
-### 2. 浮点数类型和定点数类型
+### 浮点数类型和定点数类型
 
 浮点数和定点数类型的特点是可以处理小数，浮点数和定点数的使用场景，比整数大很多。
 
@@ -336,7 +336,7 @@ VALUES ('0002', '胶水', 0.19);
 SELECT * FROM demo.goodsmaster;
 ```
 
-```
+```mysql
 mysql> SELECT *
     -> FROM demo.goodsmaster;
 +---------+-----------+-------+------------+
@@ -355,7 +355,7 @@ mysql> SELECT *
 SELECT SUM(price) FROM demo.goodsmaster;
 ```
 
-```
+```mysql
 mysql> SELECT SUM(price)
     -> FROM demo.goodsmaster;
 +--------------------+
@@ -382,7 +382,7 @@ MySQL 使用 4 个字节存储 FLOAT 类型数据，用 8 个字节存储 DOUBLE
 
 MySQL 用 DECIMAL（M,D）的方式表示高精度小数。其中，M 表示整数部分加小数部分，一共有多少位，M<=65。D 表示小数部分位数，D<M。
 
-我们可以用刚才的表 demo.goodsmaster 验证一下。
+我们可以用刚才的表 `demo.goodsmaster` 验证一下。
 
 首先我们运行下面的语句，将字段 “price” 的数据类型修改为 DECIMAL(5, 2)。
 
@@ -407,9 +407,9 @@ SELECT SUM(price) from demo.goodsmater;
 * 浮点类型取值范围大，但是不精确，适用于需要取值范围大，又可以容忍微小误差的科学计算场景（比如计算化学、分子建模、流体动力学等）；
 * 定点数类型取值范围相对小，但是精确，没有误差，适用于对精度要求极高的场景（比如涉及金额计算的场景）。
 
-### 3. 文本类型
+### 文本类型
 
-在实际的项目中，我们还经常会遇到一种数据，那就是字符串数据。比如，表 demo.goodsmaster 中，有两个字段 “barcode”、“goodsname" 。这两个字段的数据类型，我们都选择了 TEXT 类型。
+在实际的项目中，我们还经常会遇到一种数据，那就是字符串数据。比如，表 `demo.goodsmaster 中`，有两个字段 “barcode”、“goodsname" 。这两个字段的数据类型，我们都选择了 TEXT 类型。
 
 TEXT 类型是 MySQL 支持的文本类型的一种。此外，MySQL 还支持 CHAR、VARCHAR、ENUM 和 SET 等文本类型。
 
@@ -434,7 +434,7 @@ TEXT 类型也有  4 种，它们的区别就是最大长度不同（假设字�
 
 所以，建议在你的项目中，只要不是主键字段，就可以按照数据可能的最大长度，选择这几种 TEXT 类型中的一种，作为存储字符串的数据类型。
 
-### 4. 日期与时间类型
+### 日期与时间类型
 
 日期与时间是重要的信息，在我们的系统中，几乎所有的数据表都用得到。原因是客户需要知道数据的时间标签，从而进行数据查询、统计和处理。
 
@@ -450,7 +450,7 @@ TEXT 类型也有  4 种，它们的区别就是最大长度不同（假设字�
 
 另外，你可以会有疑问，为什么时间类型的取值范围不是 -23.59.59~23.59.59？原因是 MySQL 设计的 TIME 类型，不仅可以表示一天之内的时间，而且还可以表示一个时间间隔，这个时间间隔可以超过 24 小时。
 
-### 5. 总结
+### 总结
 
 今天我们学习了几种常用的字段数据类型，包括整数类型、浮点数类型、定点数类型、文本类型以及日期时间类型。
 
@@ -474,7 +474,7 @@ SELECT SUM(price) FROM demo.goodsmaster;
 
 比如，TEXT 虽然使用方便，但是效率不如 CHAR(M) 和 VARCHAR(M)。如果你有进一步优化需求，可以查看这个[文档](https://dev.mysql.com/doc/refman/8.0/en/data-types.html)。
 
-## 03. 创建、修改数据表
+## 三. 创建、修改数据表
 
 创建和修改数据表，是数据存储过程中的重要一环。我们不仅需要把表创建出来，还需要正确地限定条件，这样才能确保数据的一致性和完整性。同时，表中的数据会随着业务需求的变化而变化，添加和修改相应的字段也是常见的操作。
 
@@ -488,7 +488,7 @@ SELECT SUM(price) FROM demo.goodsmaster;
 
 现在，客户需要一个类似的表来存储进货数据，进货方式有 3 个可能的取值范围，需要设置默认值。那么，应该如何创建这个表？另外，创建好表之后，应该如何修改？
 
-### 1. 创建数据表
+### 创建数据表
 
 首先，我们需要知道 MySQL 创建表的语法结构：
 
@@ -553,7 +553,7 @@ VALUES (
 SELECT * from demo.importhead;
 ```
 
-```
+```mysql
 mysql> select * from demo.importhead;
 +------------+------------+-------------+------------+----------+-------------+----------+---------------------+
 | listnumber | supplierid | stocknumber | importtype | quantity | importvalue | recorder | recordingdate       |
@@ -565,7 +565,7 @@ mysql> select * from demo.importhead;
 
 你会发现，字段 importtype 的值已经是 1 了。
 
-### 2. 约束分类
+### 约束分类
 
 刚才我们给字段设置默认值的做法是默认约束。设置默认约束后，插入数据的时候，如果不明确给字段赋值，那么系统会把设置的默认值自动赋值给字段。
 
@@ -606,7 +606,7 @@ mysql> select * from demo.importhead;
 
 约束要根据业务需要定义在相应的字段上，这样才能保证数据是准确的，我们需要注意它的使用方法。
 
-### 3. 修改数据表
+### 修改数据表
 
 创建完表后，我们经常还需要修改表。
 
@@ -641,7 +641,7 @@ ALTER TABLE demo.importheadhist ADD confirmdate DATETIME;
 DESCRIBE demo.importheadhist;
 ```
 
-```
+```mysql
 mysql> DESCRIBE demo.importheadhist;
 +----------------+---------------+------+-----+---------+-------+
 | Field          | Type          | Null | Key | Default | Extra |
@@ -673,7 +673,7 @@ ALTER TABLE
 
 运行 SQL 语句后，重新查看表结构，可以得到下面的结果：
 
-```
+```mysql
 mysql> DESCRIBE demo.importheadhist;
 +----------------+---------------+------+-----+---------+-------+
 | Field          | Type          | Null | Key | Default | Extra |
@@ -711,7 +711,7 @@ ADD
     suppliername TEXT AFTER supplierid;
 ```
 
-```
+```mysql
 mysql> DESCRIBE demo.importheadhist;
 +----------------+---------------+------+-----+---------+-------+
 | Field          | Type          | Null | Key | Default | Extra |
@@ -733,7 +733,7 @@ mysql> DESCRIBE demo.importheadhist;
 
 到这里，我们就完成了修改字段在表中位置的操作。
 
-### 4. 总结
+### 总结
 
 本篇文章，我们学习了创建和修改数据表的具体方法。
 
@@ -793,15 +793,40 @@ ALTER TABLE 表名 ENGINE=INNDB;
 
 如果想了解更多有关数据表的操作，可以看这两份资料：[MySQL 创建表文档](https://dev.mysql.com/doc/refman/8.0/en/create-table.html) 和 [MySQL 修改表文档](https://dev.mysql.com/doc/refman/8.0/en/alter-table.html)。
 
-## 04. 增删改查
+## 四. 增删改查
+
+```mysql
+SELECT * FROM demo.goodsmaster;
+
+DESCRIBE demo.goodsmaster;
+
+ALTER TABLE demo.goodsmaster MODIFY barcode TEXT NOT NULL;
+ALTER TABLE demo.goodsmaster MODIFY goodsname TEXT NOT NULL;
+ALTER TABLE demo.goodsmaster MODIFY price DECIMAL(10,2) NOT NULL;
+ALTER TABLE demo.goodsmaster ADD COLUMN sepcification TEXT;
+ALTER TABLE demo.goodsmaster ADD unit TEXT;
+```
 
 今天，我们来学习如何操作数据表里的数据。
 
-假设在我们的超市项目中，我们已经给用户设计好一个数据表 demo.goodsmaster，定义好里面的字段，以及各种约束。
+在我们的超市项目中，我们已经给用户设计好一个数据表 `demo.goodsmaster`，定义好里面的字段，以及各种约束。
 
-<div><img src="./images/table06.png" /></div>
+```mysql
+mysql> DESCRIBE demo.goodsmaster;
++---------------+---------------+------+-----+---------+----------------+
+| Field         | Type          | Null | Key | Default | Extra          |
++---------------+---------------+------+-----+---------+----------------+
+| barcode       | text          | NO   |     | NULL    |                |
+| goodsname     | text          | NO   |     | NULL    |                |
+| price         | decimal(10,2) | NO   |     | NULL    |                |
+| itemnumber    | int           | NO   | PRI | NULL    | auto_increment |
+| sepcification | text          | YES  |     | NULL    |                |
+| unit          | text          | YES  |     | NULL    |                |
++---------------+---------------+------+-----+---------+----------------+
+6 rows in set (0.00 sec)
+```
 
-现在，我们需要使用这个表来存储数据，也就是常说的 “增删改查”。
+接下来，我们需要使用这个表来存储数据，也就是常说的 “增删改查”。
 
 ### 添加数据
 
@@ -822,42 +847,71 @@ MySQL 支持的数据插入操作十分灵活。你既可以通过给表里面�
 当我们想插入一条数据记录，其中包含所有字段值，可以这样操作：
 
 ```mysql
-INSERT INTO demo.goodsmater
-(
-	itemnumber,
-	barcode,
-	goodsname,
-	specification,
-	unit,
-	price
-)
-VALUES
-(
-	4,
-	'0003',
-	'尺子',
-	'三角型',
-	'把',
-	5
-);
+INSERT INTO
+    demo.goodsmaster (
+        itemnumber,
+        barcode,
+        goodsname,
+        sepcification,
+        unit,
+        price
+    )
+VALUES (4, '0003', '尺子', '三角型', '把', 5);
+```
+
+```mysql
+mysql> SELECT * FROM demo.goodsmaster;
++---------+-----------+-------+------------+---------------+------+
+| barcode | goodsname | price | itemnumber | sepcification | unit |
++---------+-----------+-------+------------+---------------+------+
+| 0001    | 书       |  0.47 |          1 | NULL          | NULL |
+| 0002    | 笔       |  0.44 |          2 | NULL          | NULL |
+| 0002    | 胶水    |  0.19 |          3 | NULL          | NULL |
+| 0003    | 尺子    |  5.00 |          4 | 三角型     | 把  |
++---------+-----------+-------+------------+---------------+------+
+4 rows in set (0.00 sec)
 ```
 
 如果想插入一条记录，只给部分字段赋值，可以这样操作：
 
 ```mysql
-INSERT INTO demo.goodsmater
-(
-	barcode,
-	goodsname,
-	price
-)
-VALUES
-(
-	'0004',
-	'测试',
-	10
-);
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES ('0004', '测试', 10);
 ```
+
+```mysql
+mysql> SELECT * FROM demo.goodsmaster;
++---------+-----------+-------+------------+---------------+------+
+| barcode | goodsname | price | itemnumber | sepcification | unit |
++---------+-----------+-------+------------+---------------+------+
+| 0001    | 书       |  0.47 |          1 | NULL          | NULL |
+| 0002    | 笔       |  0.44 |          2 | NULL          | NULL |
+| 0002    | 胶水    |  0.19 |          3 | NULL          | NULL |
+| 0003    | 尺子    |  5.00 |          4 | 三角型     | 把  |
+| 0004    | 测试    | 10.00 |          5 | NULL          | NULL |
++---------+-----------+-------+------------+---------------+------+
+5 rows in set (0.00 sec)
+```
+
+我们之所以可以在插入数据的时候，只给部分字段赋值，是因为我们对字段的定义方式。
+
+```mysql
+mysql> DESCRIBE demo.goodsmaster;
++---------------+---------------+------+-----+---------+----------------+
+| Field         | Type          | Null | Key | Default | Extra          |
++---------------+---------------+------+-----+---------+----------------+
+| barcode       | text          | NO   |     | NULL    |                |
+| goodsname     | text          | NO   |     | NULL    |                |
+| price         | decimal(10,2) | NO   |     | NULL    |                |
+| itemnumber    | int           | NO   | PRI | NULL    | auto_increment |
+| sepcification | text          | YES  |     | NULL    |                |
+| unit          | text          | YES  |     | NULL    |                |
++---------------+---------------+------+-----+---------+----------------+
+6 rows in set (0.00 sec)
+```
+
+可以看到，”specification“ 和 ”unit“ 都可以是空值，”itemnumber“ 定义了自增约束。
 
 我们在插入一条数据记录的时候，必须要考虑字段约束的 3 种情况。
 
@@ -868,13 +922,13 @@ VALUES
   * 如果我们的操作违反了字段约束限制，执行 SQL 时，就会提示系统错误。
 
 
-总结一下就是，部分字段插入数据也是可以的，前提是，没有赋值的字段，一定要让 MySQL 知道如何处理，比如可以为空、有默认值，或者是自增约束字段等。否则，MySQL 就会提示错误。
+部分字段插入数据是可以的，前提是，没有赋值的字段，MySQL 需要知道如何处理，比如可以为空、有默认值，或者是自增约束字段等。否则，MySQL 就会提示错误。
 
 到这里，我们已经学会如何给 MySQL 数据表插入一条数据记录。但是，在实际工作中，一次只插入一条数据，并不能满足需求。
 
 假设在我们的项目中有这样的场景：门店每天的销售流水有很多，日积月累，流水表会变得越来越大。如果一直让它这样增长，数据甚至达到数亿条，占据的存储空间也会达到几个 G。虽然 MySQL 可以处理这样比较大的数据表，但是每次操作的响应时间也会延长，这会导致系统的整体效率下降。
 
-假设我们开发日结处理，当天算清所有账目。其中一个步骤就是，把当天流水表的数据全部转到历史流水表中。现在，我们就可以用上数据插入语句了：
+假设我们开发日结处理，需要当天算清所有账目。其中一个步骤就是，把当天流水表的数据全部转到历史流水表中。现在，我们就可以用上数据插入语句了：
 
 * 从流水表取出一条数据；
 * 将这条数据插入到历史流水表中。
@@ -892,9 +946,7 @@ FROM 表名
 WHERE 条件
 ```
 
-假设在我们的超市信息系统的 MySQL 数据库中，历史流水表设计与流水表非常类似。不同的是，历史流水表增加了一些字段来标识历史流水的状态，比如日结时间字段，用来记录日结操作是什么时候进行的。
-
-用 INSERT 语句实现起来也很简单。
+在我们的超市信息系统的 MySQL 数据库中，历史流水表设计与流水表非常类似。不同的是，历史流水表增加了一些字段来标识历史流水的状态，比如日结时间字段，用来记录日结操作是什么时候进行的。用 INSERT 语句实现起来也很简单。
 
 ```mysql
 INSERT INTO 历史流水表 (日结时间字段, 其他字段)
@@ -914,9 +966,22 @@ WHERE 条件
 如果我们想删除表全部数据，可以通过下面的 SQL 语句实现：
 
 ```mysql
-DELETE FROM demo.goodsmater;
+DELETE FROM demo.goodsmaster;
 ```
 ### 修改数据
+
+```mysql
+INSERT INTO
+    demo.goodsmaster (
+        itemnumber,
+        barcode,
+        goodsname,
+        sepcification,
+        unit,
+        price
+    )
+VALUES (4, '0003', '尺子', '三角型', '把', 5);
+```
 
 先来看一下 MySQL 的数据修改语法：
 
@@ -928,11 +993,36 @@ WHERE 条件
 
 语法也很简单，需要注意的是，不能修改主键字段的值。因为主键是数据记录的唯一标识，如果修改主键值，就有可能破坏数据的完整性。
 
+```mysql
+mysql> SELECT * FROM demo.goodsmaster WHERE itemnumber = 4;
++---------+-----------+-------+------------+---------------+------+
+| barcode | goodsname | price | itemnumber | sepcification | unit |
++---------+-----------+-------+------------+---------------+------+
+| 0003    | 尺子    |  5.00 |          4 | 三角型     | 把  |
++---------+-----------+-------+------------+---------------+------+
+1 row in set (0.00 sec)
+```
+
+我们可以查询到商品编号为 4 的数据记录。如果我们修改了主键值，就可能会改变刚才的查询结果。
+
+```mysql
+mysql> UPDATE demo.goodsmaster SET itemnumber = 3 WHERE itemnumber = 4;
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+```
+
+```mysql
+mysql> SELECT * FROM demo.goodsmaster WHERE itemnumber = 4;
+Empty set (0.00 sec)
+```
+
+可以看到，查询结果为空，因为商品编号是 4 的记录已经不存在了。
+
 如果你必须修改主键的值，那极有可能就是主键设置的不合理。
 
 ### 查询数据
 
-先来看下查询语句的语法结构：
+我们先来看下查询语句的语法结构：
 
 ```mysql
 SELECT *|字段列表
@@ -947,65 +1037,53 @@ LIMIT 起始点,行数
 在这些字段中，SELECT、WHERE、GROUP BY 和 HAVING 比较好理解，我们能只需要知道它们的含义就可以了。
 
 * SELECT：查询关键字，表示我们要做一个查询。
-  * “*” 是一个通配符，表示我们要查询表中所有字段。也可以把要查询的字段罗列出来，这样，查询结果就只会显示想要查询的字段内容。
+  * `*` 是一个通配符，表示我们要查询表中所有字段。也可以把要查询的字段罗列出来，这样，查询结果就只会显示想要查询的字段内容。
 * WHERE：表示查询条件。
   * 可以把要查询的数据所要满足的条件，放在 WHERE 关键字之后。
-* GROUP BY：告诉 MySQL，查询结果要如何分组，通常和 MySQL 聚合函数搭配使用。
+* GROUP BY：告诉 MySQL，查询结果要如何分组，通常搭配 MySQL 聚合函数使用。
 * HAVING：用于筛选查询结果，与 WHERE 类似。
 
 FROM、ORDER BY、LIMIT 相对来说比较复杂，需要注意的地方比较多，我们来具体解释一下。
 
-### 关键字
-
 #### FROM
 
-FROM 关键字表示查询的数据源。目前我们只学习了单个数据表，可以把要查询的数据表名，直接写在 FROM 关键字之后。当我们学习关联表之后，在 FROM 关键字后面，还可以跟着更复杂的数据表链接。
+FROM 关键字表示查询的数据源。我们只学习了单个数据表，可以把要查询的数据表名，直接写在 FROM 关键字之后。当我们学习关联表之后，你就会知道，在 FROM 关键字后面，还可以跟着更复杂的数据表联接。
 
 需要注意的是，数据源不一定是表，也可以是一个查询结果。
 
 ```mysql
-SELECT a.goodsname, a.price 
-FROM (
-	SELECT *
-  FROM demo.goodsmaster
-) AS a;
+mysql> SELECT a.goodsname, a.price
+    -> FROM (
+    ->         SELECT *
+    ->         FROM
+    ->             demo.goodsmaster
+    ->     ) AS a;
++-----------+-------+
+| goodsname | price |
++-----------+-------+
+| 尺子    |  5.00 |
++-----------+-------+
+1 row in set (0.00 sec)
 ```
 
-框号中的部分叫做派生表（derived table），或者子查询（subquery），意思是我们可以把一个查询结果数据集当做一个虚拟的数据表来看待。
+需要注意的是，框号中的部分叫做派生表（derived table），或者子查询（subquery），意思是我们可以把一个查询结果数据集当做一个虚拟的数据表来看待。
 
-MySQL 规定，必须使用 AS 关键字给这个派生表起一个别名。
+MySQL 规定，必须使用 AS 关键字给这个派生表起一个别名。在上面的语句中，派生表的名字就叫做 ”a“。
 
 #### ORDER BY
 
-ORDER BY 的作用，是告诉 MySQL，查询结果如何排序。ASC 表示升序，DESC 表示降序。
+ORDER BY 的作用，是告诉 MySQL，查询结果如何排序。**ASC** 表示升序，**DESC** 表示降序。
 
-首先我们向 demo.goodsmaster 中插入两条数据。
+首先我们向 `demo.goodsmaster` 中插入两条数据。
 
 ```mysql
-INSERT INTO demo.goodsmater
-(
-	barcode,
-	goodsname,
-	price
-)
-VALUES
-(
-	'0003',
-	'尺子1',
-	15
-);
-INSERT INTO demo.goodsmater
-(
-	barcode,
-	goodsname,
-	price
-)
-VALUES
-(
-	'0004',
-	'尺子2',
-	20
-);
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES('0003', '尺子1', 15);
+
+INSERT INTO
+    demo.goodsmaster (barcode, goodsname, price)
+VALUES('0004', '测试1', 20);
 ```
 
 如果我们不控制查询结果顺序，就会得到这样的结果：
@@ -1014,15 +1092,36 @@ VALUES
 SELECT * FROM demo.goodsmater;
 ```
 
-<div><img src="./images/table07.png" /></div>
+```mysql
+mysql> SELECT * FROM demo.goodsmaster;
++---------+-----------+-------+------------+---------------+------+
+| barcode | goodsname | price | itemnumber | sepcification | unit |
++---------+-----------+-------+------------+---------------+------+
+| 0003    | 尺子    |  5.00 |          3 | 三角型     | 把  |
+| 0004    | 测试    | 10.00 |          6 | NULL          | NULL |
+| 0003    | 尺子1   | 15.00 |          7 | NULL          | NULL |
+| 0004    | 测试1   | 20.00 |          8 | NULL          | NULL |
++---------+-----------+-------+------------+---------------+------+
+4 rows in set (0.00 sec)
+```
 
 如果我们使用 ORDER BY 对查询结果进行控制，结果就不同了：
 
 ```mysql
-SELECT * FROM demo.goodsmater ORDER BY barcode ASC, price DESC;
+SELECT * FROM demo.goodsmaster ORDER BY barcode ASC, price DESC;
 ```
 
-<div><img src="./images/table08.png" /></div>
+```mysql
+mysql> SELECT * FROM demo.goodsmaster ORDER BY barcode ASC, price DESC;
++---------+-----------+-------+------------+---------------+------+
+| barcode | goodsname | price | itemnumber | sepcification | unit |
++---------+-----------+-------+------------+---------------+------+
+| 0003    | 尺子1   | 15.00 |          7 | NULL          | NULL |
+| 0003    | 尺子    |  5.00 |          3 | 三角型     | 把  |
+| 0004    | 测试1   | 20.00 |          8 | NULL          | NULL |
+| 0004    | 测试    | 10.00 |          6 | NULL          | NULL |
++---------+-----------+-------+------------+---------------+------+
+```
 
 可以看到，查询结果会先按照字段 barcode 的升序排序，相同 barcode，再按照 price 的降序排序。
 
@@ -1030,13 +1129,22 @@ SELECT * FROM demo.goodsmater ORDER BY barcode ASC, price DESC;
 
 LIMIT 作用是告诉 MySQL 只显示部分查询结果。
 
-比如，在我们的数据表 demo.goodsmaster 中有 4 条数据，我们只想显示第 2、3 条数据，就可以使用 LIMIT 关键字来实现。
+比如，在我们的数据表 `demo.goodsmaster` 中有 4 条数据，我们只想显示第 2、3 条数据，就可以使用 LIMIT 关键字来实现。
 
 ```mysql
-SELECT * FROM demo.goodsmater LIMIT 1,2;
+SELECT * FROM demo.goodsmaster LIMIT 1,2;
 ```
 
-<div><img src="./images/table09.png" /></div>
+```mysql
+mysql> SELECT * FROM demo.goodsmaster LIMIT 1,2;
++---------+-----------+-------+------------+---------------+------+
+| barcode | goodsname | price | itemnumber | sepcification | unit |
++---------+-----------+-------+------------+---------------+------+
+| 0004    | 测试    | 10.00 |          6 | NULL          | NULL |
+| 0003    | 尺子1   | 15.00 |          7 | NULL          | NULL |
++---------+-----------+-------+------------+---------------+------+
+2 rows in set (0.00 sec)
+```
 
 ### 总结
 
@@ -1051,7 +1159,6 @@ FROM 表名
 WHERE 条件
 
 DELETE FROM 表名
-SET 字段名=值
 WHERE 条件
 
 UPDATE 表名
@@ -1073,60 +1180,119 @@ LIMIT 起始点,行数
 
 如果我们将查询结果插入到表中，导致主键约束或者唯一性约束被破坏，就可以使用 “ON DUPLICATE” 关键字，把两个门店的商品信息数据整合到一起。
 
-假设门店 A 的商品信息表是 "demo.goodsmaster"，代码如下：
+```mysql
+# 删除数据表
+DELETE FROM demo.goodsmaster;
+
+# 创建数据表 demo.goodsmaster
+CREATE TABLE
+    demo.goodsmaster (
+        itemnumber INT PRIMARY KEY AUTO_INCREMENT,
+        barcode TEXT NOT NULL,
+        goodsname TEXT NOT NULL,
+        specifiction TEXT,
+        unit TEXT,
+        salesprice DECIMAL(10, 2)
+    );
+
+INSERT INTO
+    demo.goodsmaster (
+        barcode,
+        goodsname,
+        specifiction,
+        unit,
+        salesprice
+    )
+VALUES ('0001', '书', '16开', '本', 89), ('0002', '笔', '10支装', '包', 5);
+
+INSERT INTO
+    demo.goodsmaster (
+        barcode,
+        goodsname,
+        unit,
+        salesprice
+    )
+VALUES ('0003', '橡皮', '个', 3);
+
+# 创建数据表 demo.goodsmaster1
+CREATE TABLE demo.goodsmaster1 LIKE demo.goodsmaster;
+
+INSERT INTO
+    demo.goodsmaster1 (barcode, goodsname, salesprice)
+VALUES ('0001', '教科书', 89);
+
+INSERT INTO
+    demo.goodsmaster1 (
+        itemnumber,
+        barcode,
+        goodsname,
+        specifiction,
+        unit,
+        salesprice
+    )
+VALUES (4, '0004', '馒头', '', '', 1.5);
+```
+
+门店 A 的商品信息表是 `demo.goodsmaster`：
 
 ```mysql
-mysql> SELECT *
-    -> FROM demo.goodsmaster;
-    
-+------------+---------+-----------+---------------+------+------------+
-| itemnumber | barcode | goodsname | specification | unit | salesprice |
-+------------+---------+-----------+---------------+------+------------+
-|          1 | 0001    | 书        | 16开          | 本   |      89.00 |
-|          2 | 0002    | 笔        | 10支装        | 包   |       5.00 |
-|          3 | 0003    | 橡皮      | NULL          | 个   |       3.00 |
-+------------+---------+-----------+---------------+------+------------+
+mysql> SELECT * FROM demo.goodsmaster;
++------------+---------+-----------+--------------+------+------------+
+| itemnumber | barcode | goodsname | specifiction | unit | salesprice |
++------------+---------+-----------+--------------+------+------------+
+|          1 | 0001    | 书       | 16开        | 本  |      89.00 |
+|          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |
+|          3 | 0003    | 橡皮    | NULL         | 个  |       3.00 |
++------------+---------+-----------+--------------+------+------------+
 3 rows in set (0.00 sec)
 ```
 
-门店 B 的商品信息表是 ”demo.goodsmater1“：
+门店 B 的商品信息表是 `demo.goodsmater1`：
 
 ```mysql
-mysql> SELECT *
-    -> FROM demo.goodsmaster1;
-    
-+------------+---------+-----------+---------------+------+------------+
-| itemnumber | barcode | goodsname | specification | unit | salesprice |
-+------------+---------+-----------+---------------+------+------------+
-|          1 | 0001    | 教科书    | NULL          | NULL |      89.00 |
-|          4 | 0004    | 馒头      |               |      |       1.50 |
-+------------+---------+-----------+---------------+------+------------+
+mysql> SELECT * FROM demo.goodsmaster1;
++------------+---------+-----------+--------------+------+------------+
+| itemnumber | barcode | goodsname | specifiction | unit | salesprice |
++------------+---------+-----------+--------------+------+------------+
+|          1 | 0001    | 教科书 | NULL         | NULL |      89.00 |
+|          4 | 0004    | 馒头    |              |      |       1.50 |
++------------+---------+-----------+--------------+------+------------+
 2 rows in set (0.00 sec)
 ```
 
-假设我们要把门店 B 的商品数据插入到门店 A 的商品表中，如果有重复的商品编号，就用门店 B 的条码，替换门店 A 的条码，用门店 B 的商品名称，替换门店 A 的商品名称；如果没有重复编号，就直接把门店 B 的商品数据插入到门店 A 的商品表中。这个操作，可以用下面的 SQL 语句实现：
+假设我们要把门店 B 的商品数据插入到门店 A 的商品表中：
+
+* 如果有重复的商品编号，就用门店 B 的条码，替换门店 A 的条码，用门店 B 的商品名称，替换门店 A 的商品名称；
+
+* 如果没有重复编号，就直接把门店 B 的商品数据插入到门店 A 的商品表中。
+
+
+这个操作，可以用下面的 SQL 语句实现：
 
 ```mysql
-INSERT INTO demo.goodsmaster 
+INSERT INTO demo.goodsmaster
 SELECT *
-FROM demo.goodsmaster1 as a
-ON DUPLICATE KEY UPDATE barcode = a.barcode,goodsname=a.goodsname;
+FROM
+    demo.goodsmaster1 AS a ON DUPLICATE KEY
+UPDATE
+    barcode = a.barcode,
+    goodsname = a.goodsname;
+```
 
--- 运行结果如下
-mysql> SELECT *
-    -> FROM demo.goodsmaster;
-+------------+---------+-----------+---------------+------+------------+
-| itemnumber | barcode | goodsname | specification | unit | salesprice |
-+------------+---------+-----------+---------------+------+------------+
-|          1 | 0001    | 教科书    | 16开          | 本   |      89.00 |
-|          2 | 0002    | 笔        | 10支装        | 包   |       5.00 |
-|          3 | 0003    | 橡皮      | NULL          | 个   |       3.00 |
-|          4 | 0004    | 馒头      |               |      |       1.50 |
-+------------+---------+-----------+---------------+------+------------+
+```mysql
+mysql> SELECT * FROM demo.goodsmaster;
++------------+---------+-----------+--------------+------+------------+
+| itemnumber | barcode | goodsname | specifiction | unit | salesprice |
++------------+---------+-----------+--------------+------+------------+
+|          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |
+|          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |
+|          3 | 0003    | 橡皮    | NULL         | 个  |       3.00 |
+|          4 | 0004    | 馒头    |              |      |       1.50 |
++------------+---------+-----------+--------------+------+------------+
 4 rows in set (0.00 sec)
 ```
 
-## 05. 设置主键
+## 五. 设置主键
 
 主键可以唯一标识表中的某一条记录，对数据表来说非常重要。
 
