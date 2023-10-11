@@ -1567,5 +1567,61 @@ ALTER TABLE demo.trans ADD memberid INT;
 第四步，更新一下销售流水表，给新添加的字段 "memberid" 赋值，让它指向对应的会员信息：
 
 ```mysql
+UPDATE
+    demo.trans AS a,
+    demo.membermaster AS b
+SET a.memberid = b.id
+WHERE
+    a.transactionno > 0
+    AND a.cardno = b.cardno;
 ```
+
+这个更新语句包含 2 个关联的表，看起来比较复杂。其实，我们完全可以通过删除表 demo.trans、重建表，再插入一条数据的操作，来达到同样的目的。
+
+在实际操作中，你不一定能删掉 `demo.trans` 这个表，因为这个表里面可能已经有了很多重要的数据。
+
+到这里，我们就完成了数据表的重新设计，让我们看一下新的数据表 `demo.membermaster` 和 `demo.trans` 的结构：
+
+```mysql
+mysql> DESCRIBE demo.membermaster;
++---------------+----------+------+-----+---------+----------------+
+| Field         | Type     | Null | Key | Default | Extra          |
++---------------+----------+------+-----+---------+----------------+
+| cardno        | char(8)  | NO   |     | NULL    |                |
+| membername    | text     | YES  |     | NULL    |                |
+| memberphone   | text     | YES  |     | NULL    |                |
+| memberpid     | text     | YES  |     | NULL    |                |
+| memberaddress | text     | YES  |     | NULL    |                |
+| sex           | text     | YES  |     | NULL    |                |
+| birthday      | datetime | YES  |     | NULL    |                |
+| id            | int      | NO   | PRI | NULL    | auto_increment |
++---------------+----------+------+-----+---------+----------------+
+8 rows in set (0.00 sec)
+```
+
+```mysql
+mysql> DESCRIBE demo.trans;
++---------------+---------------+------+-----+---------+-------+
+| Field         | Type          | Null | Key | Default | Extra |
++---------------+---------------+------+-----+---------+-------+
+| transactionno | int           | YES  |     | NULL    |       |
+| itemnumber    | int           | YES  |     | NULL    |       |
+| quantity      | decimal(10,3) | YES  |     | NULL    |       |
+| price         | decimal(10,2) | YES  |     | NULL    |       |
+| salesvalue    | decimal(10,2) | YES  |     | NULL    |       |
+| cardno        | char(8)       | YES  |     | NULL    |       |
+| transdate     | datetime      | YES  |     | NULL    |       |
+| memberid      | int           | YES  |     | NULL    |       |
++---------------+---------------+------+-----+---------+-------+
+8 rows in set (0.00 sec)
+```
+
+现在，如果我们再次面对卡号重用的情况，该如何应对？首先我们修改会员卡 10000001 为张三的状态。
+
+```mysql
+```
+
+
+
+
 

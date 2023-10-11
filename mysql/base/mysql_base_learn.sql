@@ -423,3 +423,23 @@ ALTER TABLE demo.membermaster ADD id INT PRIMARY KEY AUTO_INCREMENT;
 -- 修改销售流水表（添加字段 memberid）
 
 ALTER TABLE demo.trans ADD memberid INT;
+
+-- 更新销售流水表
+
+UPDATE
+    demo.trans AS a,
+    demo.membermaster AS b
+SET a.memberid = b.id
+WHERE
+    a.transactionno > 0
+    AND a.cardno = b.cardno;
+
+-- 查询表
+
+SELECT * FROM demo.trans;
+
+DESCRIBE demo.membermaster;
+
+DESCRIBE demo.trans;
+
+-- 修改表数据
