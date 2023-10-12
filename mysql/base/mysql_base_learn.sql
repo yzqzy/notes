@@ -443,3 +443,51 @@ DESCRIBE demo.membermaster;
 DESCRIBE demo.trans;
 
 -- 修改表数据
+
+UPDATE demo.membermaster
+SET
+    membername = '张三',
+    memberphone = '15928792771',
+    memberpid = '110123200001017890',
+    memberaddress = '济南',
+    sex = '男',
+    birthday = '2000-01-01 00:00:00'
+WHERE cardno = '10000001';
+
+-- 增加表记录
+
+INSERT INTO
+    demo.membermaster (
+        cardno,
+        membername,
+        memberphone,
+        memberpid,
+        memberaddress,
+        sex,
+        birthday
+    )
+VALUES (
+        '10000001',
+        '王五',
+        '13698765432',
+        '475145197001012356',
+        '天津',
+        '女',
+        '1970-01-01'
+    );
+
+-- 查询表记录
+
+SELECT * FROM demo.membermaster;
+
+SELECT
+    b.membername,
+    c.goodsname,
+    a.quantity,
+    a.salesvalue,
+    a.transdate
+FROM demo.trans AS a
+    JOIN demo.membermaster AS b
+    JOIN demo.goodsmaster AS c ON (
+        a.memberid = b.id AND a.itemnumber = c.itemnumber
+    );
