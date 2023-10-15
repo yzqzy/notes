@@ -526,3 +526,21 @@ CREATE TABLE
     );
 
 DESCRIBE demo.importdetails;
+
+-- 查看外键约束
+
+SELECT
+    -- 表示外键约束名称
+    constraint_name,
+    -- 表示外键约束所属数据表的名称
+    table_name,
+    -- 表示外键约束的字段名称
+    column_name,
+    -- 表示外键约束所参照的数据表名称
+    referenced_table_name,
+    -- 表示外键约束所参照的字段名称
+    referenced_column_name
+FROM
+    information_schema.KEY_COLUMN_USAGE
+WHERE
+    constraint_name = 'fk_importdetails_importhead';

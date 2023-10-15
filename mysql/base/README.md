@@ -1814,3 +1814,42 @@ CREATE TABLE
 
 运行这个 SQL 语句，我们就在创建表的同时定义了一个名字叫做 “fk_importdetails_importhead” 的外键约束。同时，我们声明。这个外键约束的字段 “listnumber”  引用的是表 importhead 里面的字段 “listnumber”。
 
+我们可以通过 SQL 语句来查看，外键约束是否创建成功。
+
+```mysql
+mysql> SELECT
+    ->     -- 
+    ->     constraint_name,
+    ->     -- 
+    ->     table_name,
+    ->     -- 
+    ->     column_name,
+    ->     -- 
+    ->     referenced_table_name,
+    ->     -- 
+    ->     referenced_column_name
+    -> FROM
+    ->     information_schema.KEY_COLUMN_USAGE
+    -> WHERE
+    ->     constraint_name = 'fk_importdetails_importhead';
++-----------------------------+---------------+-------------+-----------------------+------------------------+
+| CONSTRAINT_NAME             | TABLE_NAME    | COLUMN_NAME | REFERENCED_TABLE_NAME | REFERENCED_COLUMN_NAME |
++-----------------------------+---------------+-------------+-----------------------+------------------------+
+| fk_importdetails_importhead | importdetails | listnumber  | importhead            | listnumber             |
++-----------------------------+---------------+-------------+-----------------------+------------------------+
+1 row in set (0.01 sec)
+```
+
+通过查询，我们可以看到，外键约束所在的表是“importdetails”，外键字段是“listnumber”，参照的主表是“importhead”，参照的主表字段是“listnumber”。这样，通过定义外键约束，我们已经建立起了 2 个表之间的关联关系。
+
+关联关系建立起来之后，我们可以用连接查询查询想要的数据。
+
+### 连接
+
+在 MySQL 中，有 2 种类型的连接，分别是内连接（INNER JOIN）和外连接（OUTER JOIN）。
+
+* 内连接表示查询结果只返回符合连接条件的记录，这种连接方式比较常用；
+* 外连接则不同，表示查询结果返回一个表中的所有记录，以及另一个表中满足连接条件的记录。
+
+
+
