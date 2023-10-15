@@ -1402,4 +1402,44 @@ import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">        importvalue DECIMAL(10, 2),</span></span>
 <span class="line"><span style="color:#24292e;">        -- 定义外键约束，指出外键字段和参照的主表字段 constraint, foreign, references</span></span>
 <span class="line"><span style="color:#24292e;">        CONSTRAINT fk_importdetails_importhead FOREIGN KEY (listnumber) REFERENCES importhead (listnumber)</span></span>
-<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>运行这个 SQL 语句，我们就在创建表的同时定义了一个名字叫做 “fk_importdetails_importhead” 的外键约束。同时，我们声明。这个外键约束的字段 “listnumber” 引用的是表 importhead 里面的字段 “listnumber”。</p>`,427),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>运行这个 SQL 语句，我们就在创建表的同时定义了一个名字叫做 “fk_importdetails_importhead” 的外键约束。同时，我们声明。这个外键约束的字段 “listnumber” 引用的是表 importhead 里面的字段 “listnumber”。</p><p>我们可以通过 SQL 语句来查看，外键约束是否创建成功。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     constraint_name,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     table_name,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     column_name,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     referenced_table_name,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     referenced_column_name</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     information_schema.KEY_COLUMN_USAGE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     constraint_name = &#39;fk_importdetails_importhead&#39;;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| CONSTRAINT_NAME             | TABLE_NAME    | COLUMN_NAME | REFERENCED_TABLE_NAME | REFERENCED_COLUMN_NAME |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| fk_importdetails_importhead | importdetails | listnumber  | importhead            | listnumber             |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.01 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     constraint_name,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     table_name,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     column_name,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     referenced_table_name,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     -- </span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     referenced_column_name</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     information_schema.KEY_COLUMN_USAGE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     constraint_name = &#39;fk_importdetails_importhead&#39;;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| CONSTRAINT_NAME             | TABLE_NAME    | COLUMN_NAME | REFERENCED_TABLE_NAME | REFERENCED_COLUMN_NAME |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| fk_importdetails_importhead | importdetails | listnumber  | importhead            | listnumber             |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>通过查询，我们可以看到，外键约束所在的表是“importdetails”，外键字段是“listnumber”，参照的主表是“importhead”，参照的主表字段是“listnumber”。这样，通过定义外键约束，我们已经建立起了 2 个表之间的关联关系。</p><p>关联关系建立起来之后，我们可以用连接查询查询想要的数据。</p><h3 id="连接" tabindex="-1">连接 <a class="header-anchor" href="#连接" aria-label="Permalink to &quot;连接&quot;">​</a></h3><p>在 MySQL 中，有 2 种类型的连接，分别是内连接（INNER JOIN）和外连接（OUTER JOIN）。</p><ul><li>内连接表示查询结果只返回符合连接条件的记录，这种连接方式比较常用；</li><li>外连接则不同，表示查询结果返回一个表中的所有记录，以及另一个表中满足连接条件的记录。</li></ul>`,434),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
