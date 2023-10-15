@@ -491,3 +491,38 @@ FROM demo.trans AS a
     JOIN demo.goodsmaster AS c ON (
         a.memberid = b.id AND a.itemnumber = c.itemnumber
     );
+
+## 六. 外键和连接
+
+-- 创建表
+
+DESCRIBE demo.importhead;
+
+DROP TABLE demo.importhead;
+
+CREATE TABLE
+    demo.importhead (
+        listnumber INT PRIMARY KEY,
+        suppilerid INT,
+        stocknumber INT,
+        importtype INT,
+        importquantity DECIMAL(10, 3),
+        importvalue DECIMAL(10, 2),
+        recorder INT,
+        recordingdate DATETIME
+    );
+
+-- 定义外键约束
+
+CREATE TABLE
+    demo.importdetails (
+        listnumber INT,
+        itemnumber INT,
+        quantity DECIMAL(10, 3),
+        importprice DECIMAL(10, 2),
+        importvalue DECIMAL(10, 2),
+        -- 定义外键约束，指出外键字段和参照的主表字段 constraint, foreign, references
+        CONSTRAINT fk_importdetails_importhead FOREIGN KEY (listnumber) REFERENCES importhead (listnumber)
+    );
+
+DESCRIBE demo.importdetails;

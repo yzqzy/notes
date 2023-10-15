@@ -1748,7 +1748,69 @@ mysql> SELECT
 
 假设我们有 2 个表，分别是表 A 和表 B，它们通过一个公共字段 “id” 发生关联关系，我们把这个关联关系叫做 R。
 
-如果 “id” 在表 A 中是主键，那么，表 A 就是这个关系 R 中的主表。相应的，表 B 就是这个关系中的从表，表 B 中的 
+如果 “id” 在表 A 中是主键，那么，表 A 就是这个关系 R 中的主表。相应的，表 B 就是这个关系中的从表，表 B 就是这个关系中的从表，表 B 中的 “id” ，就是表 B 用来引用表 A 中数据的，叫外键。**所以，外键就是从表中用来引用主表中数据的那个公共字段。**
 
+在 MySQL 中，外键是通过外键约束来定义的。外键约束就是约束的一种，它必须是从表中定义，包括指明哪个是外键字段，以及外键字段所引用的主表中的字段是什么。MySQL 系统会根据外键约束的定义，监控对主表中数据的删除操作。如果发现要删除的主表记录，正在被从表中某条记录的外键字段所引用，MySQL 就会提示错误，从而确保了关联数据不会缺失。
 
+外键约束可以在创建表的时候定义，也可以通过修改表来定义。
+
+首先我们来看外键约束定义的语法结果：
+
+```mysql
+[CONSTRAINT <外键约束名称>] FOREIGN KEY 字段名 REFERENCES <主表名> 字段名
+```
+
+你可以在创建表的时候定义外键约束：
+
+```mysql
+CREATE TABLE 从表名
+(
+  字段名 类型,
+  ...
+-- 定义外键约束，指出外键字段和参照的主表字段
+CONSTRAINT 外键约束名
+FOREIGN KEY (字段名) REFERENCES 主表名 (字段名)
+)
+```
+
+当然，你也可以通过修改表来定义外键约束：
+
+```mysql
+ALTER TABLE 从表名 ADD CONSTRAINT 约束名 FOREIGN KEY 字段名 REFERENCES 主表名 （字段名）;
+```
+
+一般情况下，表与表的关联都是提前设计好的。因此，会在创建表的时候就把外键约束定义好。如果需要修改表设计（比如添加新的字段，增加新的关联关系），但没有预先定义外键约束，那么，就要用修改表的方式来补充定义。
+
+下面，我们就来讲下如何创建外键约束。首先，我们先创建主表 `demo.importhead`：
+
+```mysql
+CREATE TABLE
+    demo.importhead (
+        listnumber INT PRIMARY KEY,
+        suppilerid INT,
+        stocknumber INT,
+        importtype INT,
+        importquantity DECIMAL(10, 3),
+        importvalue DECIMAL(10, 2),
+        recorder INT,
+        recordingdate DATETIME
+    );
+```
+
+然后创建从表 `demo.importdetails` ，并且给它定义外键约束：
+
+```mysql
+CREATE TABLE
+    demo.importdetails (
+        listnumber INT,
+        itemnumber INT,
+        quantity DECIMAL(10, 3),
+        importprice DECIMAL(10, 2),
+        importvalue DECIMAL(10, 2),
+        -- 定义外键约束，指出外键字段和参照的主表字段 constraint, foreign, references
+        CONSTRAINT fk_importdetails_importhead FOREIGN KEY (listnumber) REFERENCES importhead (listnumber)
+    );
+```
+
+运行这个 SQL 语句，我们就在创建表的同时定义了一个名字叫做 “fk_importdetails_importhead” 的外键约束。同时，我们声明。这个外键约束的字段 “listnumber”  引用的是表 importhead 里面的字段 “listnumber”。
 
