@@ -544,3 +544,22 @@ FROM
     information_schema.KEY_COLUMN_USAGE
 WHERE
     constraint_name = 'fk_importdetails_importhead';
+
+-- 内连接
+
+DESCRIBE demo.trans;
+
+SELECT * FROM demo.trans;
+
+UPDATE demo.trans SET memberid='1' WHERE transactionno='2';
+
+SELECT
+    a.transactionno,
+    a.itemnumber,
+    a.quantity,
+    a.price,
+    a.transdate,
+    b.membername
+FROM demo.trans AS a
+    JOIN demo.membermaster as b ON (a.cardno = b.cardno)
+WHERE b.id = 1;
