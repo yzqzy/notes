@@ -586,3 +586,103 @@ FROM demo.membermaster AS b
     RIGHT JOIN demo.trans as a ON (a.cardno = b.cardno);
 
 -- 关联查询误区
+
+SELECT * FROM demo.importhead;
+
+DESCRIBE demo.importhead;
+
+ALTER TABLE demo.importhead CHANGE suppilerid supplierid INT;
+
+DELETE FROM demo.importhead;
+
+INSERT INTO
+    demo.importhead (
+        listnumber,
+        supplierid,
+        stocknumber,
+        importtype
+    )
+VALUES (1234, 1, 1, 1);
+
+SELECT * FROM demo.importdetails;
+
+INSERT INTO
+    demo.importdetails (
+        listnumber,
+        itemnumber,
+        quantity,
+        importprice,
+        importvalue
+    )
+VALUES (1234, 1, 1, 10, 10);
+
+SELECT * FROM demo.importdetails;
+
+DELETE FROM demo.importhead WHERE listnumber = 1234;
+
+-- 定义外键约束：
+
+CREATE TABLE
+    从表名 (
+        字段 字段类型....CONSTRAINT 外键约束名称 FOREIGN KEY (字段名) REFERENCES 主表名 (字段名称)
+    );
+
+ALTER TABLE 从表名 ADD CONSTRAINT 约束名 FOREIGN KEY 字段名 REFERENCES 主表名 （字段名）;
+
+-- 连接查询
+
+SELECT 字段名 FROM 表名 AS a JOIN 表名 AS b ON (a.字段名称=b.字段名称);
+
+SELECT 字段名 FROM 表名 AS a LEFT JOIN 表名 AS b ON (a.字段名称=b.字段名称);
+
+SELECT 字段名 FROM 表名 AS a RIGHT JOIN 表名 AS b ON (a.字段名称=b.字段名称);
+
+## 七. 条件语句：WHERE 与 HAVING有什么不同?
+
+DELETE FROM demo.goodsmaster WHERE itemnumber = 3 OR itemnumber = 4;
+
+SELECT * FROM demo.goodsmaster;
+
+USE demo;
+
+SHOW TABLES;
+
+DROP TABLE demo.transactiondetails;
+
+CREATE Table
+    demo.transactiondetails (
+        transactionid INT,
+        itemnumber INT,
+        quantity DOUBLE,
+        price DOUBLE,
+        salesvalue DOUBLE
+    );
+
+INSERT INTO
+    demo.transactiondetails (
+        transactionId,
+        itemnumber,
+        quantity,
+        price,
+        salesvalue
+    )
+VALUES (1, 1, 1, 89, 89), (1, 2, 2, 5, 10), (2, 1, 2, 89, 178), (3, 2, 10, 5, 50);
+
+SELECT * FROM demo.transactiondetails;
+
+-- 使用 WHERE 关键字查询
+
+SELECT DISTINCT b.goodsname
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+WHERE a.salesvalue > 50;
+
+-- 使用 HAVING 关键字查询
+
+SELECT b.goodsname
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.goodsmaster as b ON (a.itemnumber = b.itemnumber)
+GROUP BY b.goodsname
+HAVING max(a.salesvalue) > 50;
