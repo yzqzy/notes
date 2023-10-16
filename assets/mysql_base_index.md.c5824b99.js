@@ -1,4 +1,4 @@
-import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",S=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),m={name:"mysql/base/index.md"},E=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
+import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",S=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),m={name:"mysql/base/index.md"},E=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
 <span class="line"><span style="color:#E1E4E8;">    --net</span><span style="color:#F97583;">=</span><span style="color:#9ECBFF;">host</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#B392F0;">-e</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">MYSQL_ROOT_PASSWORD=password</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#79B8FF;">-v</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">/data/main-mysql:/var/lib/mysql</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
@@ -1566,4 +1566,182 @@ import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
 <span class="line"><span style="color:#24292e;">|             2 |          2 |    1.000 | 12.00 | 2023-10-16 00:00:00 | NULL       |</span></span>
 <span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
-<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>其实，这里就是把顺序颠倒了一下，意思是一样的。运行之后，我们都能得到一样的结果。</p><p>通过关联查询，销售流水数据里就补齐了会员的名称，我们也就获取到了需要的数据。</p><h3 id="关联查询的误区" tabindex="-1">关联查询的误区 <a class="header-anchor" href="#关联查询的误区" aria-label="Permalink to &quot;关联查询的误区&quot;">​</a></h3><p>有了连接，我们就可以进行 2 个表的关联查询了。你可能会有疑问：关联查询必须在外键约束的基础上，才可以吗？</p><p>其实，在 MySQL 中，外键约束不是关联查询的必要条件。</p><p>很多人往往在设计表的时候，觉得只要连接查询就可以搞定一切了，外键约束太麻烦，没有必要。如果你这么想，就进入了一个误区。</p><p>下面我就以超市进货的例子，来实际说明一下，为什么这种思路不对。</p><p>假设一次进货数据是这样的：供货商编号是 1，进货仓库编号是 1。我们进货的商品编号是 1234，进货数量是 1，进货价格是 10，进货金额是 10。</p><p>我先插入单头数据：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div><p>运行成功后，查看一下表的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div>`,467),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>其实，这里就是把顺序颠倒了一下，意思是一样的。运行之后，我们都能得到一样的结果。</p><p>通过关联查询，销售流水数据里就补齐了会员的名称，我们也就获取到了需要的数据。</p><h3 id="关联查询的误区" tabindex="-1">关联查询的误区 <a class="header-anchor" href="#关联查询的误区" aria-label="Permalink to &quot;关联查询的误区&quot;">​</a></h3><p>有了连接，我们就可以进行 2 个表的关联查询了。你可能会有疑问：关联查询必须在外键约束的基础上，才可以吗？</p><p>其实，在 MySQL 中，外键约束不是关联查询的必要条件。</p><p>很多人往往在设计表的时候，觉得只要连接查询就可以搞定一切了，外键约束太麻烦，没有必要。如果你这么想，就进入了一个误区。</p><p>下面我就以超市进货的例子，来实际说明一下，为什么这种思路不对。</p><p>假设一次进货数据是这样的：供货商编号是 1，进货仓库编号是 1。我们进货的商品编号是 1234，进货数量是 1，进货价格是 10，进货金额是 10。</p><p>先插入单头数据：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">INSERT INTO</span></span>
+<span class="line"><span style="color:#e1e4e8;">    demo.importhead (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        listnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        supplierid,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        stocknumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        importtype</span></span>
+<span class="line"><span style="color:#e1e4e8;">    )</span></span>
+<span class="line"><span style="color:#e1e4e8;">VALUES (1234, 1, 1, 1);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">INSERT INTO</span></span>
+<span class="line"><span style="color:#24292e;">    demo.importhead (</span></span>
+<span class="line"><span style="color:#24292e;">        listnumber,</span></span>
+<span class="line"><span style="color:#24292e;">        supplierid,</span></span>
+<span class="line"><span style="color:#24292e;">        stocknumber,</span></span>
+<span class="line"><span style="color:#24292e;">        importtype</span></span>
+<span class="line"><span style="color:#24292e;">    )</span></span>
+<span class="line"><span style="color:#24292e;">VALUES (1234, 1, 1, 1);</span></span></code></pre></div><p>运行成功后，查看一下表的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.importhead;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+------------+-------------+------------+----------------+-------------+----------+---------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| listnumber | supplierid | stocknumber | importtype | importquantity | importvalue | recorder | recordingdate |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+------------+-------------+------------+----------------+-------------+----------+---------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|       1234 |          1 |           1 |          1 |           NULL |        NULL |     NULL | NULL          |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+------------+-------------+------------+----------------+-------------+----------+---------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.01 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.importhead;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+------------+-------------+------------+----------------+-------------+----------+---------------+</span></span>
+<span class="line"><span style="color:#24292e;">| listnumber | supplierid | stocknumber | importtype | importquantity | importvalue | recorder | recordingdate |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+------------+-------------+------------+----------------+-------------+----------+---------------+</span></span>
+<span class="line"><span style="color:#24292e;">|       1234 |          1 |           1 |          1 |           NULL |        NULL |     NULL | NULL          |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+------------+-------------+------------+----------------+-------------+----------+---------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>可以看到，我们有了一个进货单头，单号是 1234，供货商是 1 号供货商，进货仓库是 1 号仓库。</p><p>接着，我们向进货单明细表中插入进货明细数据：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">INSERT INTO</span></span>
+<span class="line"><span style="color:#e1e4e8;">    demo.importdetails (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        listnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        importprice,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        importvalue</span></span>
+<span class="line"><span style="color:#e1e4e8;">    )</span></span>
+<span class="line"><span style="color:#e1e4e8;">VALUES (1234, 1, 1, 10, 10);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">INSERT INTO</span></span>
+<span class="line"><span style="color:#24292e;">    demo.importdetails (</span></span>
+<span class="line"><span style="color:#24292e;">        listnumber,</span></span>
+<span class="line"><span style="color:#24292e;">        itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">        quantity,</span></span>
+<span class="line"><span style="color:#24292e;">        importprice,</span></span>
+<span class="line"><span style="color:#24292e;">        importvalue</span></span>
+<span class="line"><span style="color:#24292e;">    )</span></span>
+<span class="line"><span style="color:#24292e;">VALUES (1234, 1, 1, 10, 10);</span></span></code></pre></div><p>运行成功，查看一下表的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.importdetails;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+------------+----------+-------------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| listnumber | itemnumber | quantity | importprice | importvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+------------+----------+-------------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|       1234 |          1 |    1.000 |       10.00 |       10.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+------------+----------+-------------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.importdetails;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+------------+----------+-------------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| listnumber | itemnumber | quantity | importprice | importvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+------------+----------+-------------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">|       1234 |          1 |    1.000 |       10.00 |       10.00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+------------+----------+-------------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>这样，我们就有了 1234 号进货单的明细数据：进货商品是 1 号商品，进货数量是 1 个，进货价格是 10 元，进货金额是 10 元。</p><p>这个时候，如果我删除进货单头表的数据，就会出现只有明细、没有单头的数据缺失情况。我们来看看会发生什么：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DELETE FROM demo.importhead WHERE listnumber = 1234;</span></span>
+<span class="line"><span style="color:#e1e4e8;">ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (\`demo\`.\`importdetails\`, CONSTRAINT \`fk_importdetails_importhead\` FOREIGN KEY (\`listnumber\`) REFERENCES \`importhead\` (\`listnumber\`))</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; DELETE FROM demo.importhead WHERE listnumber = 1234;</span></span>
+<span class="line"><span style="color:#24292e;">ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (\`demo\`.\`importdetails\`, CONSTRAINT \`fk_importdetails_importhead\` FOREIGN KEY (\`listnumber\`) REFERENCES \`importhead\` (\`listnumber\`))</span></span></code></pre></div><p>运行这条语句，MySQL 会提示错误，因为数据删除违反了外键约束。MySQL 阻止了数据不一致的情况出现。</p><p>不知道你有没有注意我插入数据的顺序：为什么我要先插入进货单头表的数据，再插入进货单明细表的数据呢？其实，这是因为，如果我先插入数据到从表，也就是进货单明细表，会导致 MySQL 找不到参照的主表信息，会提示错误，因为添加数据违反了外键约束。</p><p>你可能会不以为然，觉得按照信息系统的操作逻辑，生成一张进货单的时候，一定是先生成单头，再插入明细。同样，删除一张进货单的时候，一定是先删除明细，再删除单头。要是你这么想，可能就会“中招”了。原因很简单，既然我们把进货数据拆成了 2 个表，这就决定了无论是数据添加，还是数据删除，都不能通过一条 SQL 语句实现。实际工作中，什么突发情况都是有可能发生的。你认为一定会完成的操作，完全有可能只执行了一部分。</p><p>虽然你不用外键约束，也可以进行关联查询，但是有了它，MySQL 系统才会保护你的数据，避免出现误删的情况，从而提高系统整体的可靠性。</p><p>现在来回答另外一个问题，为什么在 MySQL 里，没有外键约束也可以进行关联查询呢？原因是外键约束是有成本的，需要消耗系统资源。对于大并发的 SQL 操作，有可能会不适合。比如大型网站的中央数据库，可能会因为外键约束的系统开销而变得非常慢。所以，MySQL 允许你不使用系统自带的外键约束，在应用层面完成检查数据一致性的逻辑。也就是说，即使你不用外键约束，也要想办法通过应用层面的附加逻辑，来实现外键约束的功能，确保数据的一致性。</p><h3 id="总结-5" tabindex="-1">总结 <a class="header-anchor" href="#总结-5" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章中，介绍了如何进行多表查询，我们重点学习了外键和连接。</p><p>外键约束，可以帮助我们确定从表中的外键字段与主表中的主键字段之间的引用关系，还可以确保从表中数据所引用的主表数据不会被删除，从而保证了 2 个表中数据的一致性。</p><p>连接可以帮助我们对 2 个相关的表进行连接查询，从 2 个表中获取需要的信息。左连接表示连接以左边的表为主，结果集中要包括左边表中的所有记录；右连接表示连接以右边的表为主，结果集中要包括右边表中的所有记录。</p><p>下面是汇总的常用的 SQL 语句，你一定要重点掌握。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">-- 定义外键约束：</span></span>
+<span class="line"><span style="color:#e1e4e8;">CREATE TABLE 从表名</span></span>
+<span class="line"><span style="color:#e1e4e8;">(</span></span>
+<span class="line"><span style="color:#e1e4e8;">字段 字段类型</span></span>
+<span class="line"><span style="color:#e1e4e8;">....</span></span>
+<span class="line"><span style="color:#e1e4e8;">CONSTRAINT 外键约束名称</span></span>
+<span class="line"><span style="color:#e1e4e8;">FOREIGN KEY (字段名) REFERENCES 主表名 (字段名称)</span></span>
+<span class="line"><span style="color:#e1e4e8;">);</span></span>
+<span class="line"><span style="color:#e1e4e8;">ALTER TABLE 从表名 ADD CONSTRAINT 约束名 FOREIGN KEY 字段名 REFERENCES 主表名 （字段名）;</span></span>
+<span class="line"><span style="color:#e1e4e8;"></span></span>
+<span class="line"><span style="color:#e1e4e8;">-- 连接查询</span></span>
+<span class="line"><span style="color:#e1e4e8;">SELECT 字段名</span></span>
+<span class="line"><span style="color:#e1e4e8;">FROM 表名 AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">JOIN 表名 AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">ON (a.字段名称=b.字段名称);</span></span>
+<span class="line"><span style="color:#e1e4e8;"> </span></span>
+<span class="line"><span style="color:#e1e4e8;">SELECT 字段名</span></span>
+<span class="line"><span style="color:#e1e4e8;">FROM 表名 AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">LEFT JOIN 表名 AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">ON (a.字段名称=b.字段名称);</span></span>
+<span class="line"><span style="color:#e1e4e8;"> </span></span>
+<span class="line"><span style="color:#e1e4e8;">SELECT 字段名</span></span>
+<span class="line"><span style="color:#e1e4e8;">FROM 表名 AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">RIGHT JOIN 表名 AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">ON (a.字段名称=b.字段名称);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">-- 定义外键约束：</span></span>
+<span class="line"><span style="color:#24292e;">CREATE TABLE 从表名</span></span>
+<span class="line"><span style="color:#24292e;">(</span></span>
+<span class="line"><span style="color:#24292e;">字段 字段类型</span></span>
+<span class="line"><span style="color:#24292e;">....</span></span>
+<span class="line"><span style="color:#24292e;">CONSTRAINT 外键约束名称</span></span>
+<span class="line"><span style="color:#24292e;">FOREIGN KEY (字段名) REFERENCES 主表名 (字段名称)</span></span>
+<span class="line"><span style="color:#24292e;">);</span></span>
+<span class="line"><span style="color:#24292e;">ALTER TABLE 从表名 ADD CONSTRAINT 约束名 FOREIGN KEY 字段名 REFERENCES 主表名 （字段名）;</span></span>
+<span class="line"><span style="color:#24292e;"></span></span>
+<span class="line"><span style="color:#24292e;">-- 连接查询</span></span>
+<span class="line"><span style="color:#24292e;">SELECT 字段名</span></span>
+<span class="line"><span style="color:#24292e;">FROM 表名 AS a</span></span>
+<span class="line"><span style="color:#24292e;">JOIN 表名 AS b</span></span>
+<span class="line"><span style="color:#24292e;">ON (a.字段名称=b.字段名称);</span></span>
+<span class="line"><span style="color:#24292e;"> </span></span>
+<span class="line"><span style="color:#24292e;">SELECT 字段名</span></span>
+<span class="line"><span style="color:#24292e;">FROM 表名 AS a</span></span>
+<span class="line"><span style="color:#24292e;">LEFT JOIN 表名 AS b</span></span>
+<span class="line"><span style="color:#24292e;">ON (a.字段名称=b.字段名称);</span></span>
+<span class="line"><span style="color:#24292e;"> </span></span>
+<span class="line"><span style="color:#24292e;">SELECT 字段名</span></span>
+<span class="line"><span style="color:#24292e;">FROM 表名 AS a</span></span>
+<span class="line"><span style="color:#24292e;">RIGHT JOIN 表名 AS b</span></span>
+<span class="line"><span style="color:#24292e;">ON (a.字段名称=b.字段名称);</span></span></code></pre></div><p>刚开始学习 MySQL 的同学，很容易忽略在关联表中定义外键约束的重要性，从而导致数据缺失，影响系统的可靠性。我建议你尽量养成在关联表中定义外键约束的习惯。不过，如果你的业务场景因为高并发等原因，无法承担外键约束的成本，也可以不定义外键约束，但是一定要在应用层面实现外键约束的逻辑功能，这样才能确保系统的正确可靠。</p><h2 id="七、条件语句-where-与-having" tabindex="-1">七、条件语句：WHERE 与 HAVING <a class="header-anchor" href="#七、条件语句-where-与-having" aria-label="Permalink to &quot;七、条件语句：WHERE 与 HAVING&quot;">​</a></h2><p>我们在进行查询的时候，经常需要按条件对查询结果进行筛选，这就要用到条件语句 WHERE 和 HAVING 了。</p><p>WHERE 是直接对表中的字段进行限定，来筛选结果；HAVING 则需要跟分组关键字 GROUP BY 一起使用，通过对分组字段或分组计算函数进行限定，来筛选结果。虽然它们都是对查询进行限定，却有着各自的特点和适用场景。很多时候，我们会遇到 2 个都可以用的情况。一旦用错，就很容易出现执行效率低下、查询结果错误，甚至是查询无法运行的情况。</p><p>下面我们就借助项目实施过程中的实际需求，给你讲讲 WHERE 和 HAVING 分别是如何对查询结果进行筛选的，以及它们各自的优缺点，来帮助你正确地使用它们，使你的查询不仅能够得到正确的结果，还能占用更少的资源，并且速度更快。</p><h3 id="实际的查询需求" tabindex="-1">实际的查询需求 <a class="header-anchor" href="#实际的查询需求" aria-label="Permalink to &quot;实际的查询需求&quot;">​</a></h3><p>超市的经营者提出，要查单笔销售金额超过 50 元的商品。我们来分析一下这个需求：需要查询出一个商品记录集，限定条件是单笔销售金额超过 50 元。这个时候，我们就需要用到 WHERE 和 HAVING 了。</p><p>这个问题的条件很明确，查询的结果也只有“商品”一个字段，好像很容易实现。</p><p>假设我们有一个这样的商品信息表（<code>demo.goodsmaster</code>），里面有 2 种商品：书和笔。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber | barcode | goodsname | specifiction | unit | salesprice |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber | barcode | goodsname | specifiction | unit | salesprice |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |</span></span>
+<span class="line"><span style="color:#24292e;">|          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div><p>同时，我们还有一个商品销售明细表（<code>demo.transactiondetails</code>），里面有 4 条销售记录：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          2 |        2 |     5 |         10 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             3 |          2 |       10 |     5 |         50 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">4 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          2 |        2 |     5 |         10 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#24292e;">|             3 |          2 |       10 |     5 |         50 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><p>接下来，我们分别用 WHERE 和 HAVING 进行查询，看看它们各自是如何查询的，是否能够得到正确的结果。</p><p>第一步，用 WHERE 关键字进行查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT DISTINCT b.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| goodsname |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT DISTINCT b.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| goodsname |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>第二步，用 HAVING 关键字进行查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT b.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster as b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; GROUP BY b.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; HAVING max(a.salesvalue) &gt; 50;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| goodsname |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT b.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster as b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; GROUP BY b.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; HAVING max(a.salesvalue) &gt; 50;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| goodsname |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>可以发现，两次查询的结果是一样的。那么，这两种查询到底有什么区别，哪个更好呢？要弄明白这个问题，我们要先学习下 WHERE 和 HAVING 的执行过程。</p><h3 id="where" tabindex="-1">WHERE <a class="header-anchor" href="#where" aria-label="Permalink to &quot;WHERE&quot;">​</a></h3>`,505),g=[E];function h(u,b,L,T,v,N){return n(),a("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
