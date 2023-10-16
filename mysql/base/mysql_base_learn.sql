@@ -561,5 +561,28 @@ SELECT
     a.transdate,
     b.membername
 FROM demo.trans AS a
-    JOIN demo.membermaster as b ON (a.cardno = b.cardno)
-WHERE b.id = 1;
+    JOIN demo.membermaster as b ON (a.cardno = b.cardno);
+
+-- 外连接
+
+SELECT
+    a.transactionno,
+    a.itemnumber,
+    a.quantity,
+    a.price,
+    a.transdate,
+    b.membername
+FROM demo.trans AS a
+    LEFT JOIN demo.membermaster as b ON (a.cardno = b.cardno);
+
+SELECT
+    a.transactionno,
+    a.itemnumber,
+    a.quantity,
+    a.price,
+    a.transdate,
+    b.membername
+FROM demo.membermaster AS b
+    RIGHT JOIN demo.trans as a ON (a.cardno = b.cardno);
+
+-- 关联查询误区
