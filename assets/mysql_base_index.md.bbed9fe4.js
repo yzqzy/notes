@@ -1442,4 +1442,64 @@ import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
 <span class="line"><span style="color:#24292e;">| fk_importdetails_importhead | importdetails | listnumber  | importhead            | listnumber             |</span></span>
 <span class="line"><span style="color:#24292e;">+-----------------------------+---------------+-------------+-----------------------+------------------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>通过查询，我们可以看到，外键约束所在的表是“importdetails”，外键字段是“listnumber”，参照的主表是“importhead”，参照的主表字段是“listnumber”。这样，通过定义外键约束，我们已经建立起了 2 个表之间的关联关系。</p><p>关联关系建立起来之后，我们可以用连接查询查询想要的数据。</p><h3 id="连接" tabindex="-1">连接 <a class="header-anchor" href="#连接" aria-label="Permalink to &quot;连接&quot;">​</a></h3><p>在 MySQL 中，有 2 种类型的连接，分别是内连接（INNER JOIN）和外连接（OUTER JOIN）。</p><ul><li>内连接表示查询结果只返回符合连接条件的记录，这种连接方式比较常用；</li><li>外连接则不同，表示查询结果返回一个表中的所有记录，以及另一个表中满足连接条件的记录。</li></ul>`,434),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
+<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>通过查询，我们可以看到，外键约束所在的表是“importdetails”，外键字段是“listnumber”，参照的主表是“importhead”，参照的主表字段是“listnumber”。这样，通过定义外键约束，我们已经建立起了 2 个表之间的关联关系。</p><p>关联关系建立起来之后，我们可以用连接查询查询想要的数据。</p><h3 id="连接" tabindex="-1">连接 <a class="header-anchor" href="#连接" aria-label="Permalink to &quot;连接&quot;">​</a></h3><p>在 MySQL 中，有 2 种类型的连接，分别是内连接（INNER JOIN）和外连接（OUTER JOIN）。</p><ul><li>内连接表示查询结果只返回符合连接条件的记录，这种连接方式比较常用；</li><li>外连接则不同，表示查询结果返回一个表中的所有记录，以及另一个表中满足连接条件的记录。</li></ul><h4 id="内连接" tabindex="-1">内连接 <a class="header-anchor" href="#内连接" aria-label="Permalink to &quot;内连接&quot;">​</a></h4><p>首先，我们先来看下内连接。</p><p>在 MySQL 里面，关键字 JOIN、INNER JOIN、CROSS JOIN 的含义是一样的，都表示内连接。我们可以通过 JOIN 把两个表关联起来，来查询两个表中的数据。</p><p>咱们的项目中有会员销售的需求，所以，我们的流水表中的数据记录，既包括非会员的普通销售，又包括会员销售。它们的区别是，会员销售的数据记录包括会员编号，而在非会员销售的数据记录中，会员编号为空。</p><p>来看一下项目中的销售表（<code>demo.trans</code>)。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.trans;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+----------+---------------------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionno | itemnumber | quantity | price | salesvalue | cardno   | transdate           | memberid |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+----------+---------------------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |    1.000 | 89.00 |      89.00 | 10000001 | 2023-10-10 00:00:00 |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          2 |    1.000 | 12.00 |      12.00 | NULL     | 2023-10-16 00:00:00 |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+----------+---------------------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.trans;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+----------+---------------------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionno | itemnumber | quantity | price | salesvalue | cardno   | transdate           | memberid |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+----------+---------------------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 |      89.00 | 10000001 | 2023-10-10 00:00:00 |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          2 |    1.000 | 12.00 |      12.00 | NULL     | 2023-10-16 00:00:00 |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+----------+---------------------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div><p>再看下会员信息表（<code>demo.membermaster</code>）。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.membermaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+------------+-------------+--------------------+---------------+------+---------------------+----+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| cardno   | membername | memberphone | memberpid          | memberaddress | sex  | birthday            | id |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+------------+-------------+--------------------+---------------+------+---------------------+----+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 10000001 | 张三     | 15928792771 | 110123200001017890 | 济南        | 男  | 2000-01-01 00:00:00 |  1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 10000002 | 李四     | 13578271231 | 123123199001012356 | 北京        | 女  | 1990-01-01 00:00:00 |  2 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 10000001 | 王五     | 13698765432 | 475145197001012356 | 天津        | 女  | 1970-01-01 00:00:00 |  3 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+------------+-------------+--------------------+---------------+------+---------------------+----+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.membermaster;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+------------+-------------+--------------------+---------------+------+---------------------+----+</span></span>
+<span class="line"><span style="color:#24292e;">| cardno   | membername | memberphone | memberpid          | memberaddress | sex  | birthday            | id |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+------------+-------------+--------------------+---------------+------+---------------------+----+</span></span>
+<span class="line"><span style="color:#24292e;">| 10000001 | 张三     | 15928792771 | 110123200001017890 | 济南        | 男  | 2000-01-01 00:00:00 |  1 |</span></span>
+<span class="line"><span style="color:#24292e;">| 10000002 | 李四     | 13578271231 | 123123199001012356 | 北京        | 女  | 1990-01-01 00:00:00 |  2 |</span></span>
+<span class="line"><span style="color:#24292e;">| 10000001 | 王五     | 13698765432 | 475145197001012356 | 天津        | 女  | 1970-01-01 00:00:00 |  3 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+------------+-------------+--------------------+---------------+------+---------------------+----+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>这两个表存在关联关系，<code>表 demo.trans</code> 的字符 “cardno” 是这个关联关系中的外键。</p><p>我们可以通过内连接，查询所有会员销售的流水记录。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transactionno,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transdate,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     b.membername</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.membermaster as b ON (a.cardno = b.cardno)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE b.id = 1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionno | itemnumber | quantity | price | transdate           | membername |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transactionno,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transdate,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     b.membername</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.membermaster as b ON (a.cardno = b.cardno)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE b.id = 1;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionno | itemnumber | quantity | price | transdate           | membername |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>可以看到，通过公共字段 “cardno” 把两个表关联到了一起，查询出了会员消费的数据。</p><h4 id="外连接" tabindex="-1">外连接 <a class="header-anchor" href="#外连接" aria-label="Permalink to &quot;外连接&quot;">​</a></h4><p>知道了内连接，我们再来学习下外连接。</p><p>跟内连接只返回符合连接条件的记录不同的是，外连接还可以返回表中的所有记录，它包括两类，分别是左连接和右连接。</p><ul><li></li></ul>`,450),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
