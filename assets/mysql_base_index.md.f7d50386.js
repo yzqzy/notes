@@ -1744,4 +1744,82 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+-----------+</span></span>
 <span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
 <span class="line"><span style="color:#24292e;">+-----------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>可以发现，两次查询的结果是一样的。那么，这两种查询到底有什么区别，哪个更好呢？要弄明白这个问题，我们要先学习下 WHERE 和 HAVING 的执行过程。</p><h3 id="where" tabindex="-1">WHERE <a class="header-anchor" href="#where" aria-label="Permalink to &quot;WHERE&quot;">​</a></h3>`,505),g=[E];function h(u,b,L,T,v,N){return n(),a("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>可以发现，两次查询的结果是一样的。那么，这两种查询到底有什么区别，哪个更好呢？要弄明白这个问题，我们要先学习下 WHERE 和 HAVING 的执行过程。</p><h3 id="where" tabindex="-1">WHERE <a class="header-anchor" href="#where" aria-label="Permalink to &quot;WHERE&quot;">​</a></h3><p>我们先来分析一下刚才使用 WHERE 条件的查询语句，来看看 MySQL 是如何执行这个查询的。</p><p>首先，MySQL 从数据表 <code>demo.transactiondetails</code> 中抽取满足条件 <code>a.salesvalue &gt; 50</code> 的记录：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.transactiondetails AS a WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.transactiondetails AS a WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div><p>为了获取到销售信息所对应的商品名称，我们需要通过公共字段 &quot;itemnumber&quot; 与数据表 <code>demo.goodsmaster</code> 进行关联，从 <code>demo.goodsmaster</code> 中获取商品民称。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT a.*, b.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.transactiondetails a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster b ON (a.itemnumber = b.itemnumber);</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionid | itemnumber | quantity | price | salesvalue | goodsname |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |        1 |    89 |         89 | 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          2 |        2 |     5 |         10 | 笔       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          1 |        2 |    89 |        178 | 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             3 |          2 |       10 |     5 |         50 | 笔       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">4 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT a.*, b.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.transactiondetails a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster b ON (a.itemnumber = b.itemnumber);</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionid | itemnumber | quantity | price | salesvalue | goodsname |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |        1 |    89 |         89 | 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          2 |        2 |     5 |         10 | 笔       |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          1 |        2 |    89 |        178 | 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">|             3 |          2 |       10 |     5 |         50 | 笔       |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><p>这个时候，如何查询商品名称，就会出现两个重复的记录：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT b.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| goodsname |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT b.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| goodsname |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div><p>需要注意的是，为了消除重复的语句，这里我们需要用到一个关键字：DISTINCT，它的作用是返回唯一不同的值。比如，DISTINCT 字段 1，就表示返回字段 1 的不同的值。</p><p>下面我们尝试一下加上 DISTINCT 关键字的查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT DISTINCT(b.goodsname)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| goodsname |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 教科书 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.01 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT DISTINCT(b.goodsname)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     demo.transactiondetails AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE a.salesvalue &gt; 50;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| goodsname |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>这样，我们就得到了需要的结果：单笔销售金额超过 50 元的商品的就是 “书”。</p><p>总之，WHERE 关键字的特点是，直接用表的字段对数据集进行筛选。如果需要通过关联查询从其他的表获取需要的信息，那么执行的时候，也是先通过 WHERE 条件进行筛选，用筛选后的比较小的数据集进行连接。这样一来，连接过程中占用的资源比较少，执行效率也比较高。</p><h3 id="having" tabindex="-1">HAVING <a class="header-anchor" href="#having" aria-label="Permalink to &quot;HAVING&quot;">​</a></h3>`,518),g=[E];function h(u,b,L,v,T,N){return n(),a("div",null,g)}const R=s(m,[["render",h]]);export{S as __pageData,R as default};
