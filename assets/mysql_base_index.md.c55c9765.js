@@ -1502,4 +1502,68 @@ import{_ as s,o as a,c as n,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
 <span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
 <span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>可以看到，通过公共字段 “cardno” 把两个表关联到了一起，查询出了会员消费的数据。</p><h4 id="外连接" tabindex="-1">外连接 <a class="header-anchor" href="#外连接" aria-label="Permalink to &quot;外连接&quot;">​</a></h4><p>知道了内连接，我们再来学习下外连接。</p><p>跟内连接只返回符合连接条件的记录不同的是，外连接还可以返回表中的所有记录，它包括两类，分别是左连接和右连接。</p><ul><li></li></ul>`,450),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>可以看到，通过公共字段 “cardno” 把两个表关联到了一起，查询出了会员消费的数据。</p><h4 id="外连接" tabindex="-1">外连接 <a class="header-anchor" href="#外连接" aria-label="Permalink to &quot;外连接&quot;">​</a></h4><p>知道了内连接，我们再来学习下外连接。</p><p>跟内连接只返回符合连接条件的记录不同的是，外连接还可以返回表中的所有记录，它包括两类，分别是左连接和右连接。</p><ul><li>左连接，一般简写成 LEFT JOIN，返回左边表中的所有记录，以及右表中符合连接条件的记录。</li><li>右连接，一般简写成 RIGHT JOIN，返回右边表中的所有记录，以及左表中符合连接条件的记录。</li></ul><p>当我们需要查询全部流水信息的时候，就会用到外连接，代码如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transactionno,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transdate,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     b.membername</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT JOIN demo.membermaster as b ON (a.cardno = b.cardno);</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionno | itemnumber | quantity | price | transdate           | membername |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 王五     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          2 |    1.000 | 12.00 | 2023-10-16 00:00:00 | NULL       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transactionno,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transdate,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     b.membername</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT JOIN demo.membermaster as b ON (a.cardno = b.cardno);</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionno | itemnumber | quantity | price | transdate           | membername |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 王五     |</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          2 |    1.000 | 12.00 | 2023-10-16 00:00:00 | NULL       |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>可以看到，我用到了 LEFT JOIN，意思是以表 <code>demo.trans</code> 中的数据记录为主，这个表中的数据记录要全部出现在结果集中，同时给出符合连接条件（<code>a.cardno=b.cardno</code>) 的表 <code>demo.membermaster</code> 中的字段 &quot;membername&quot; 的值。</p><p>我们也可以使用 RIGHT JOIN 实现同样的效果，代码如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transactionno,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transdate,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     b.membername</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     RIGHT JOIN demo.trans as a ON (a.cardno = b.cardno);</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionno | itemnumber | quantity | price | transdate           | membername |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 王五     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          2 |    1.000 | 12.00 | 2023-10-16 00:00:00 | NULL       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transactionno,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     a.transdate,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     b.membername</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.membermaster AS b</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     RIGHT JOIN demo.trans as a ON (a.cardno = b.cardno);</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionno | itemnumber | quantity | price | transdate           | membername |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 王五     |</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |    1.000 | 89.00 | 2023-10-10 00:00:00 | 张三     |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          2 |    1.000 | 12.00 | 2023-10-16 00:00:00 | NULL       |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+---------------------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>其实，这里就是把顺序颠倒了一下，意思是一样的。运行之后，我们都能得到一样的结果。</p><p>通过关联查询，销售流水数据里就补齐了会员的名称，我们也就获取到了需要的数据。</p><h3 id="关联查询的误区" tabindex="-1">关联查询的误区 <a class="header-anchor" href="#关联查询的误区" aria-label="Permalink to &quot;关联查询的误区&quot;">​</a></h3><p>有了连接，我们就可以进行 2 个表的关联查询了。你可能会有疑问：关联查询必须在外键约束的基础上，才可以吗？</p><p>其实，在 MySQL 中，外键约束不是关联查询的必要条件。</p><p>很多人往往在设计表的时候，觉得只要连接查询就可以搞定一切了，外键约束太麻烦，没有必要。如果你这么想，就进入了一个误区。</p><p>下面我就以超市进货的例子，来实际说明一下，为什么这种思路不对。</p><p>假设一次进货数据是这样的：供货商编号是 1，进货仓库编号是 1。我们进货的商品编号是 1234，进货数量是 1，进货价格是 10，进货金额是 10。</p><p>我先插入单头数据：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div><p>运行成功后，查看一下表的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div>`,467),g=[E];function h(u,b,L,T,v,N){return a(),n("div",null,g)}const A=s(m,[["render",h]]);export{S as __pageData,A as default};
