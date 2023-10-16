@@ -2175,3 +2175,76 @@ mysql> SELECT b.goodsname
 
 ### WHERE
 
+我们先来分析一下刚才使用 WHERE 条件的查询语句，来看看 MySQL 是如何执行这个查询的。
+
+首先，MySQL 从数据表 `demo.transactiondetails` 中抽取满足条件 `a.salesvalue > 50` 的记录：
+
+```mysql
+mysql> SELECT * FROM demo.transactiondetails AS a WHERE a.salesvalue > 50;
++---------------+------------+----------+-------+------------+
+| transactionid | itemnumber | quantity | price | salesvalue |
++---------------+------------+----------+-------+------------+
+|             1 |          1 |        1 |    89 |         89 |
+|             2 |          1 |        2 |    89 |        178 |
++---------------+------------+----------+-------+------------+
+2 rows in set (0.00 sec)
+```
+
+为了获取到销售信息所对应的商品名称，我们需要通过公共字段 "itemnumber" 与数据表 `demo.goodsmaster` 进行关联，从 `demo.goodsmaster` 中获取商品民称。
+
+```mysql
+mysql> SELECT a.*, b.goodsname
+    -> FROM demo.transactiondetails a
+    ->     JOIN demo.goodsmaster b ON (a.itemnumber = b.itemnumber);
++---------------+------------+----------+-------+------------+-----------+
+| transactionid | itemnumber | quantity | price | salesvalue | goodsname |
++---------------+------------+----------+-------+------------+-----------+
+|             1 |          1 |        1 |    89 |         89 | 教科书 |
+|             1 |          2 |        2 |     5 |         10 | 笔       |
+|             2 |          1 |        2 |    89 |        178 | 教科书 |
+|             3 |          2 |       10 |     5 |         50 | 笔       |
++---------------+------------+----------+-------+------------+-----------+
+4 rows in set (0.00 sec)
+```
+
+这个时候，如何查询商品名称，就会出现两个重复的记录：
+
+```mysql
+mysql> SELECT b.goodsname
+    -> FROM
+    ->     demo.transactiondetails AS a
+    ->     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+    -> WHERE a.salesvalue > 50;
++-----------+
+| goodsname |
++-----------+
+| 教科书 |
+| 教科书 |
++-----------+
+2 rows in set (0.00 sec)
+```
+
+需要注意的是，为了消除重复的语句，这里我们需要用到一个关键字：DISTINCT，它的作用是返回唯一不同的值。比如，DISTINCT 字段 1，就表示返回字段 1 的不同的值。
+
+下面我们尝试一下加上 DISTINCT 关键字的查询：
+
+```mysql
+mysql> SELECT DISTINCT(b.goodsname)
+    -> FROM
+    ->     demo.transactiondetails AS a
+    ->     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+    -> WHERE a.salesvalue > 50;
++-----------+
+| goodsname |
++-----------+
+| 教科书 |
++-----------+
+1 row in set (0.01 sec)
+```
+
+这样，我们就得到了需要的结果：单笔销售金额超过 50 元的商品的就是 “书”。
+
+总之，WHERE 关键字的特点是，直接用表的字段对数据集进行筛选。如果需要通过关联查询从其他的表获取需要的信息，那么执行的时候，也是先通过 WHERE 条件进行筛选，用筛选后的比较小的数据集进行连接。这样一来，连接过程中占用的资源比较少，执行效率也比较高。
+
+### HAVING
+

@@ -678,6 +678,26 @@ FROM
     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
 WHERE a.salesvalue > 50;
 
+SELECT * FROM demo.transactiondetails AS a WHERE a.salesvalue > 50;
+
+SELECT a.*, b.goodsname
+FROM demo.transactiondetails a
+    JOIN demo.goodsmaster b ON (a.itemnumber = b.itemnumber);
+
+SELECT * FROM demo.transactiondetails;
+
+SELECT b.goodsname
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+WHERE a.salesvalue > 50;
+
+SELECT DISTINCT(b.goodsname)
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+WHERE a.salesvalue > 50;
+
 -- 使用 HAVING 关键字查询
 
 SELECT b.goodsname
