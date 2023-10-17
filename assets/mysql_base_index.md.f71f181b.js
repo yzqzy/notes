@@ -1822,4 +1822,52 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+-----------+</span></span>
 <span class="line"><span style="color:#24292e;">| 教科书 |</span></span>
 <span class="line"><span style="color:#24292e;">+-----------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>这样，我们就得到了需要的结果：单笔销售金额超过 50 元的商品的就是 “书”。</p><p>总之，WHERE 关键字的特点是，直接用表的字段对数据集进行筛选。如果需要通过关联查询从其他的表获取需要的信息，那么执行的时候，也是先通过 WHERE 条件进行筛选，用筛选后的比较小的数据集进行连接。这样一来，连接过程中占用的资源比较少，执行效率也比较高。</p><h3 id="having" tabindex="-1">HAVING <a class="header-anchor" href="#having" aria-label="Permalink to &quot;HAVING&quot;">​</a></h3>`,518),g=[E];function h(u,b,L,v,T,N){return n(),a("div",null,g)}const R=s(m,[["render",h]]);export{S as __pageData,R as default};
+<span class="line"><span style="color:#24292e;">1 row in set (0.01 sec)</span></span></code></pre></div><p>这样，我们就得到了需要的结果：单笔销售金额超过 50 元的商品的就是 “书”。</p><p>总之，WHERE 关键字的特点是，直接用表的字段对数据集进行筛选。如果需要通过关联查询从其他的表获取需要的信息，那么执行的时候，也是先通过 WHERE 条件进行筛选，用筛选后的比较小的数据集进行连接。这样一来，连接过程中占用的资源比较少，执行效率也比较高。</p><h3 id="having" tabindex="-1">HAVING <a class="header-anchor" href="#having" aria-label="Permalink to &quot;HAVING&quot;">​</a></h3><p>讲完 WHERE，我们再说说 HAVING 是如何执行的。不过，在这之前，我要先给你介绍一下 GROUP BY，因为 HAVING 不能单独使用，必须要跟 GROUP BY 一起使用。</p><p>我们可以把 GROUP BY 理解成对数据进行分组，方便我们对组内的数据进行统计计算。</p><p>下面举个小例子，具体讲一讲 GROUP BY 如何使用，以及如何在分组里面进行统计计算。</p><p>假设现在有一组销售数据，我们需要从里面查询每天、每个收银员的销售数量和销售金额。我们通过下面的代码，来查看一下数据的内容：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.transactionhead;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionid | transactionno    | operatorid | transdate           |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 | 0120201201000001 |          1 | 2023-10-15 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 | 0120201202000001 |          2 | 2023-10-16 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             3 | 0120201202000003 |          2 | 2023-10-17 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.transactionhead;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionid | transactionno    | operatorid | transdate           |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 | 0120201201000001 |          1 | 2023-10-15 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 | 0120201202000001 |          2 | 2023-10-16 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">|             3 | 0120201202000003 |          2 | 2023-10-17 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------------+------------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          2 |        2 |     5 |         10 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             3 |          2 |       10 |     5 |         50 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">4 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          2 |        2 |     5 |         10 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#24292e;">|             3 |          2 |       10 |     5 |         50 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.operator;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+--------+--------------+-------------+---------+--------------------+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| operatorid | brandchid | workno | operatorname | phone       | address | pid                | duty      |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+--------+--------------+-------------+---------+--------------------+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          1 |         1 | 001    | 张静       | 18612345678 | 北京  | 110392197501012332 | 店长    |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          2 |         1 | 002    | 李强       | 13312345678 | 北京  | 110222199501012332 | 收银员 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+--------+--------------+-------------+---------+--------------------+-----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.operator;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+--------+--------------+-------------+---------+--------------------+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">| operatorid | brandchid | workno | operatorname | phone       | address | pid                | duty      |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+--------+--------------+-------------+---------+--------------------+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">|          1 |         1 | 001    | 张静       | 18612345678 | 北京  | 110392197501012332 | 店长    |</span></span>
+<span class="line"><span style="color:#24292e;">|          2 |         1 | 002    | 李强       | 13312345678 | 北京  | 110222199501012332 | 收银员 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+--------+--------------+-------------+---------+--------------------+-----------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div>`,525),g=[E];function h(u,b,L,v,T,N){return n(),a("div",null,g)}const R=s(m,[["render",h]]);export{S as __pageData,R as default};
