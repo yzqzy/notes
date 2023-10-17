@@ -706,3 +706,84 @@ FROM
     JOIN demo.goodsmaster as b ON (a.itemnumber = b.itemnumber)
 GROUP BY b.goodsname
 HAVING max(a.salesvalue) > 50;
+
+SELECT * FROM demo.transactionhead;
+
+CREATE TABLE
+    demo.transactionhead (
+        transactionid INT,
+        transactionno TEXT,
+        operatorid INT,
+        transdate DATETIME
+    );
+
+INSERT INTO
+    demo.transactionhead (
+        transactionid,
+        transactionno,
+        operatorid,
+        transdate
+    )
+VALUES (
+        1,
+        '0120201201000001',
+        1,
+        '2023-10-15 00:00:00'
+    ), (
+        2,
+        '0120201202000001',
+        2,
+        '2023-10-16 00:00:00'
+    ), (
+        3,
+        '0120201202000003',
+        2,
+        '2023-10-17 00:00:00'
+    );
+
+SELECT * FROM demo.transactiondetails;
+
+SELECT * FROM demo.operator;
+
+CREATE TABLE
+    demo.operator (
+        operatorid INT,
+        brandchid INT,
+        workno TEXT,
+        operatorname TEXT,
+        phone TEXT,
+        address TEXT,
+        pid TEXT,
+        duty TEXT
+    );
+
+INSERT INTO
+    demo.operator (
+        operatorid,
+        brandchid,
+        workno,
+        operatorname,
+        phone,
+        address,
+        pid,
+        duty
+    )
+VALUES (
+        1,
+        1,
+        "001",
+        "张静",
+        "18612345678",
+        '北京',
+        '110392197501012332',
+        '店长'
+    ), (
+        2,
+        1,
+        "002",
+        "李强",
+        "13312345678",
+        '北京',
+        '110222199501012332',
+        '收银员'
+    );
