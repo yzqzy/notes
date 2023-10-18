@@ -637,7 +637,7 @@ SELECT 字段名 FROM 表名 AS a LEFT JOIN 表名 AS b ON (a.字段名称=b.字
 
 SELECT 字段名 FROM 表名 AS a RIGHT JOIN 表名 AS b ON (a.字段名称=b.字段名称);
 
-## 七. 条件语句：WHERE 与 HAVING有什么不同?
+## 七. 条件语句
 
 DELETE FROM demo.goodsmaster WHERE itemnumber = 3 OR itemnumber = 4;
 
@@ -913,3 +913,5 @@ GROUP BY
     a.transdate,
     operatorname
 HAVING SUM(b.salesvalue) > 100;
+
+## 八. 聚合函数
