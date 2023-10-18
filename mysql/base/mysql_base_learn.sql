@@ -787,3 +787,129 @@ VALUES (
         '110222199501012332',
         '收银员'
     );
+
+SELECT
+    -- 交易时间
+    a.transdate,
+    -- 操作员
+    c.operatorname,
+    -- 商品名称
+    d.goodsname,
+    -- 销售数量
+    b.quantity,
+    -- 价格
+    b.price,
+    -- 销售金额
+    b.salesvalue
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    JOIN demo.goodsmaster AS d ON (b.itemnumber = d.itemnumber);
+
+-- 分组统计
+
+SELECT
+    a.transdate,
+    SUM(b.quantity),
+    SUM(b.salesvalue)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+GROUP BY a.transdate;
+
+SELECT
+    a.transdate,
+    c.operatorname,
+    -- 数量求和
+    SUM(b.quantity),
+    -- 金额求和
+    SUM(b.salesvalue)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.operator AS c ON (a.operatorid = c.operatorid) -- 按照交易日期和操作员分组
+GROUP BY
+    a.transdate,
+    c.operatorname;
+
+-- 查询单笔销售金额超过 50 元的商品
+
+SELECT b.goodsname
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+GROUP BY b.goodsname
+HAVING max(a.salesvalue) > 50;
+
+SELECT a.*, b.*
+FROM demo.transactiondetails a
+    JOIN demo.goodsmaster b ON (a.itemnumber = b.itemnumber);
+
+-- 查询收银员哪天卖了 2 单商品
+
+SELECT
+    a.transdate,
+    c.operatorname
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+GROUP BY
+    a.transdate,
+    c.operatorname
+HAVING COUNT(*) = 2;
+
+-- 查询
+
+SELECT
+    a.transdate,
+    c.operatorname,
+    d.goodsname,
+    b.quantity,
+    b.price,
+    b.salesvalue
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    JOIN demo.goodsmaster as d ON (b.itemnumber = d.itemnumber);
+
+SELECT
+    a.transdate,
+    c.operatorname,
+    SUM(b.quantity),
+    SUM(b.salesvalue)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+GROUP BY
+    a.transdate,
+    operatorname
+HAVING
+    a.transdate IN ('2023-10-15', '2023-10-16')
+    AND SUM(b.salesvalue) > 100;
+
+SELECT
+    a.transdate,
+    c.operatorname,
+    SUM(b.quantity),
+    SUM(b.salesvalue)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+WHERE
+    a.transdate IN ('2023-10-15', '2023-10-16')
+GROUP BY
+    a.transdate,
+    operatorname
+HAVING SUM(b.salesvalue) > 100;

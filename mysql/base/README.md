@@ -2292,3 +2292,286 @@ mysql> SELECT * FROM demo.operator;
 2 rows in set (0.00 sec)
 ```
 
+```mysql
+mysql> SELECT
+    ->     -- 交易时间
+    ->     a.transdate,
+    ->     -- 操作员
+    ->     c.operatorname,
+    ->     -- 商品名称
+    ->     d.goodsname,
+    ->     -- 销售数量
+    ->     b.quantity,
+    ->     -- 价格
+    ->     b.price,
+    ->     -- 销售金额
+    ->     b.salesvalue
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    ->     JOIN demo.goodsmaster AS d ON (b.itemnumber = d.itemnumber);
++---------------------+--------------+-----------+----------+-------+------------+
+| transdate           | operatorname | goodsname | quantity | price | salesvalue |
++---------------------+--------------+-----------+----------+-------+------------+
+| 2023-10-15 00:00:00 | 张静       | 教科书 |        1 |    89 |         89 |
+| 2023-10-15 00:00:00 | 张静       | 笔       |        2 |     5 |         10 |
+| 2023-10-16 00:00:00 | 李强       | 教科书 |        2 |    89 |        178 |
+| 2023-10-17 00:00:00 | 李强       | 笔       |       10 |     5 |         50 |
++---------------------+--------------+-----------+----------+-------+------------+
+4 rows in set (0.00 sec)
+```
+
+如果我想看看每天的销售数量和销售金额，可以按照一个字段 “transdate” 对数据进行分组和统计：
+
+```mysql
+mysql> SELECT
+    ->     a.transdate,
+    ->     SUM(b.quantity),
+    ->     SUM(b.salesvalue)
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    -> GROUP BY a.transdate;
++---------------------+-----------------+-------------------+
+| transdate           | SUM(b.quantity) | SUM(b.salesvalue) |
++---------------------+-----------------+-------------------+
+| 2023-10-15 00:00:00 |               3 |                99 |
+| 2023-10-16 00:00:00 |               2 |               178 |
+| 2023-10-17 00:00:00 |              10 |                50 |
++---------------------+-----------------+-------------------+
+3 rows in set (0.00 sec)
+```
+
+如果我想看每天、每个收银员的销售数量和销售金额，就可以按 2 个字段进行分组和统计，分别是 “transdate” 和 “operatorname”：
+
+```mysql
+mysql> SELECT
+    ->     a.transdate,
+    ->     c.operatorname,
+    ->     --
+    ->     SUM(b.quantity),
+    ->     --
+    ->     SUM(b.salesvalue)
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.operator AS c ON (a.operatorid = c.operatorid) --
+    -> GROUP BY
+    ->     a.transdate,
+    ->     c.operatorname;
++---------------------+--------------+-----------------+-------------------+
+| transdate           | operatorname | SUM(b.quantity) | SUM(b.salesvalue) |
++---------------------+--------------+-----------------+-------------------+
+| 2023-10-15 00:00:00 | 张静       |               3 |                99 |
+| 2023-10-16 00:00:00 | 李强       |               2 |               178 |
+| 2023-10-17 00:00:00 | 李强       |              10 |                50 |
++---------------------+--------------+-----------------+-------------------+
+3 rows in set (0.01 sec)
+```
+
+可以看到，通过对销售数据按照交易日期和收银员进行分组，再对组内数据进行求和统计，就实现了对每天、每个收银员的销售数量和销售金额的查询。
+
+知道了 GROUP BY 的使用方法，我们就来学习下 HAVING。
+
+回到开头的超市经营者的需求：查询单笔销售金额超过 50 元的商品。现在我们来使用 HAVING 来实现，代码如下：
+
+```mysql
+
+mysql> SELECT b.goodsname
+    -> FROM
+    ->     demo.transactiondetails AS a
+    ->     JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+    -> GROUP BY b.goodsname
+    -> HAVING max(a.salesvalue) > 50;
++-----------+
+| goodsname |
++-----------+
+| 教科书 |
++-----------+
+1 row in set (0.00 sec)
+```
+
+这种查询方式在 MySQL 里面是分四步实现的。
+
+第一步，把流水明细表和商品信息表通过公共字段 “itemnumber” 连接起来，从 2 个表中获取数据：
+
+```mysql
+mysql> SELECT a.*, b.*
+    -> FROM demo.transactiondetails a
+    ->     JOIN demo.goodsmaster b ON (a.itemnumber = b.itemnumber);
++---------------+------------+----------+-------+------------+------------+---------+-----------+--------------+------+------------+
+| transactionid | itemnumber | quantity | price | salesvalue | itemnumber | barcode | goodsname | specifiction | unit | salesprice |
++---------------+------------+----------+-------+------------+------------+---------+-----------+--------------+------+------------+
+|             1 |          1 |        1 |    89 |         89 |          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |
+|             1 |          2 |        2 |     5 |         10 |          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |
+|             2 |          1 |        2 |    89 |        178 |          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |
+|             3 |          2 |       10 |     5 |         50 |          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |
++---------------+------------+----------+-------+------------+------------+---------+-----------+--------------+------+------------+
+4 rows in set (0.00 sec)
+```
+
+查询的结果有点复杂，为了方便你理解，我对结果进行了分类，并加了注释，如下图所示：
+
+<img src="./images/table16.png" />
+
+第二步，把结果集按照商品名称分组，分组的示意图如下所示：
+
+组 1：
+
+<img src="./images/table17.png" />
+
+组 2：
+
+<img src="./images/table18.png" />
+
+第三步，对分组后的数据集进行筛选，把组中字段“salesvalue”的最大值 >50 的组筛选出来。筛选后的结果集如下所示：
+
+<img src="./images/table19.png" />
+
+第四步，返回商品名称。这时，我们就得到了需要的结果：单笔销售金额超过 50 元的商品就是“书”。
+
+现在我们来简单小结下使用 HAVING 的查询过程。首先，我们要把所有的信息都准备好，包括从关联表中获取需要的信息，对数据集进行分组，形成一个包含所有需要的信息的数据集合。接着，再通过 HAVING 条件的筛选，得到需要的数据。
+
+### 正确的使用 WHERE 和 HAVING
+
+首先，你要知道它们的 2 个典型区别。
+
+第一个区别是，如果需要通过连接从关联表中获取需要的数据，WHERE 是先筛选后连接，而 HAVING 是先连接后筛选。
+
+这一点，就决定了在关联查询中，WHERE 比 HAVING 更高效。因为 WHERE 可以先筛选，用一个筛选后的较小数据集和关联表进行连接，这样占用的资源比较少，执行效率也就比较高。HAVING 则需要先把结果集准备好，也就是用未被筛选的数据集进行关联，然后对这个大的数据集进行筛选，这样占用的资源就比较多，执行效率也较低。
+
+第二个区别是，WHERE 可以直接使用表中的字段作为筛选条件，但不能使用分组中的计算函数作为筛选条件；HAVING 必须要与 GROUP BY 配合使用，可以把分组计算的函数和分组字段作为筛选条件。
+
+这决定了，在需要对数据进行分组统计的时候，HAVING 可以完成 WHERE 不能完成的任务。这是因为，在查询语法结构中，WHERE 在 GROUP BY 之前，所以无法对分组结果进行筛选。HAVING 在 GROUP BY 之后，可以使用分组字段和分组中的计算函数，对分组的结果集进行筛选，这个功能是 WHERE 无法完成的。
+
+这么说你可能不太好理解，我来举个小例子。假如超市经营者提出，要查询一下是哪个收银员、在哪天卖了 2 单商品。这种必须先分组才能筛选的查询，用 WHERE 语句实现就比较难，我们可能要分好几步，通过把中间结果存储起来，才能搞定。但是用 HAVING，则很轻松，代码如下：
+
+```mysql
+mysql> SELECT
+    ->     a.transdate,
+    ->     c.operatorname
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    -> GROUP BY
+    ->     a.transdate,
+    ->     c.operatorname
+    -> HAVING COUNT(*) = 2;
++---------------------+--------------+
+| transdate           | operatorname |
++---------------------+--------------+
+| 2023-10-15 00:00:00 | 张静       |
++---------------------+--------------+
+1 row in set (0.00 sec)
+```
+
+下面汇总了 WHERE 和 HAVING 各自的优缺点，如下图所示：
+
+|        | 优点                         | 缺点                                   |
+| ------ | ---------------------------- | -------------------------------------- |
+| WHERE  | 先筛选数据再关联，执行效率高 | 不能使用分组中的计算函数进行筛选       |
+| HAVING | 可以使用分组中的计算函数     | 在最后的结果集中进行筛选，执行效率较低 |
+
+不过，需要注意的是，WHERE 和 HAVING 也不是互相排斥的，我们可以在一个查询里面同时使用 WHERE 和 HAVING。
+
+假设现在我们有一组销售数据，包括交易时间、收银员、商品名称、销售数量、价格和销售金额等信息，超市的经营者要查询“2023-10-15”和“2023-10-16”这两天收银金额超过 100 元的销售日期、收银员名称、销售数量和销售金额。
+
+```mysql
+mysql> SELECT
+    ->     a.transdate,
+    ->     c.operatorname,
+    ->     d.goodsname,
+    ->     b.quantity,
+    ->     b.price,
+    ->     b.salesvalue
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    ->     JOIN demo.goodsmaster as d ON (b.itemnumber = d.itemnumber);
++---------------------+--------------+-----------+----------+-------+------------+
+| transdate           | operatorname | goodsname | quantity | price | salesvalue |
++---------------------+--------------+-----------+----------+-------+------------+
+| 2023-10-15 00:00:00 | 张静       | 教科书 |        1 |    89 |         89 |
+| 2023-10-15 00:00:00 | 张静       | 笔       |        2 |     5 |         10 |
+| 2023-10-16 00:00:00 | 李强       | 教科书 |        2 |    89 |        178 |
+| 2023-10-17 00:00:00 | 李强       | 笔       |       10 |     5 |         50 |
++---------------------+--------------+-----------+----------+-------+------------+
+4 rows in set (0.00 sec)
+```
+
+我们来分析一下这个需求：由于是要按照销售日期和收银员进行统计，所以，必须按照销售日期和收银员进行分组，因此，我们可以通过使用 GROUP BY 和 HAVING 进行查询：
+
+```mysql
+mysql> SELECT
+    ->     a.transdate,
+    ->     c.operatorname,
+    ->     SUM(b.quantity),
+    ->     SUM(b.salesvalue)
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    -> GROUP BY
+    ->     a.transdate,
+    ->     operatorname
+    -> HAVING
+    ->     a.transdate IN ('2023-10-15', '2023-10-16')
+    ->     AND SUM(b.salesvalue) > 100;
++---------------------+--------------+-----------------+-------------------+
+| transdate           | operatorname | SUM(b.quantity) | SUM(b.salesvalue) |
++---------------------+--------------+-----------------+-------------------+
+| 2023-10-16 00:00:00 | 李强       |               2 |               178 |
++---------------------+--------------+-----------------+-------------------+
+1 row in set (0.00 sec)
+```
+
+如果你仔细看 HAVING 后面的筛选条件，就会发现，条件 `a.transdate IN ('2020-12-10' , '2020-12-11')`，其实可以用 WHERE 来限定。我们把查询改一下试试：
+
+```mysql
+mysql> SELECT
+    ->     a.transdate,
+    ->     c.operatorname,
+    ->     SUM(b.quantity),
+    ->     SUM(b.salesvalue)
+    -> FROM demo.transactionhead AS a
+    ->     JOIN demo.transactiondetails AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.operator AS c ON (a.operatorid = c.operatorid)
+    -> WHERE
+    ->     a.transdate IN ('2023-10-15', '2023-10-16')
+    -> GROUP BY
+    ->     a.transdate,
+    ->     operatorname
+    -> HAVING SUM(b.salesvalue) > 100;
++---------------------+--------------+-----------------+-------------------+
+| transdate           | operatorname | SUM(b.quantity) | SUM(b.salesvalue) |
++---------------------+--------------+-----------------+-------------------+
+| 2023-10-16 00:00:00 | 李强       |               2 |               178 |
++---------------------+--------------+-----------------+-------------------+
+1 row in set (0.00 sec)
+```
+
+很显然，我们同样得到了需要的结果。这是因为我们把条件拆分开，包含分组统计函数的条件用 HAVING，普通条件用 WHERE。这样，我们就既利用了 WHERE 条件的高效快速，又发挥了 HAVING 可以使用包含分组统计函数的查询条件的优点。当数据量特别大的时候，运行效率会有很大的差别。
+
+### 总结
+
+今天，我们介绍了条件语句 WHERE 和 HAVING 在 MySQL 中的执行原理。WHERE 可以先按照条件对数据进行筛选，然后进行数据连接，所以效率更高。HAVING 可以在分组之后，通过使用分组中的计算函数，实现 WHERE 难以完成的数据筛选。
+
+了解了 WHERE 和 HAVING 各自的特点，我们就可以在查询中，充分利用它们的优势，更高效地实现我们的查询目标。
+
+最后，我想提醒你的是，很多人刚开始学习 MySQL 的时候，不太喜欢用 HAVING，一提到条件语句，就想当然地用 WHERE。其实，HAVING 是非常有用的，特别是在做一些复杂的统计查询的时候，经常要用到分组，这个时候 HAVING 就派上用场了。
+
+当然，你也可以不用 HAVING，而是把查询分成几步，把中间结果存起来，再用 WHERE 筛选，或者干脆把这部分筛选功能放在应用层面，用代码来实现。但是，这样做的效率很低，而且会增加工作量，加大维护成本。所以，学会使用 HAVING，对你完成复杂的查询任务非常有帮助。
+
+## 八、聚合函数
+
