@@ -915,3 +915,70 @@ GROUP BY
 HAVING SUM(b.salesvalue) > 100;
 
 ## 八. 聚合函数
+
+## 十一. 索引
+
+DESCRIBE demo.trans;
+
+DROP TABLE demo.trans;
+
+CREATE TABLE
+    demo.trans (
+        itemnumber INT,
+        quantity TEXT,
+        price TEXT,
+        transdate DATETIME,
+        actualvalue TEXT,
+        barcode TEXT,
+        cashiernumber INT,
+        branchnumber INT,
+        transuniqueid TEXT
+    );
+
+SELECT * FROM demo.trans;
+
+DELETE FROM demo.trans;
+
+INSERT INTO
+    demo.trans (
+        itemnumber,
+        quantity,
+        price,
+        transdate,
+        actualvalue,
+        barcode,
+        cashiernumber,
+        branchnumber,
+        transuniqueid
+    )
+VALUES (
+        100,
+        '1.000',
+        '220.00',
+        '2023-10-18',
+        '1',
+        '100001',
+        1,
+        1,
+        '1'
+    ), (
+        100,
+        '1.000',
+        '220.00',
+        '2023-10-18',
+        '1',
+        '100002',
+        1,
+        1,
+        '1'
+    );
+
+SELECT
+    quantity,
+    price,
+    transdate
+FROM demo.trans
+WHERE
+    transdate >= '2023-10-18'
+    AND transdate < '2023-10-19'
+    AND itemnumber = 100;
