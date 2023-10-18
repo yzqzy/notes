@@ -2264,4 +2264,48 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
 <span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
 <span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
-<span class="line"><span style="color:#24292e;">2 rows in set (8.08 sec)</span></span></code></pre></div><p>可以看到，结果总共有 2 条记录，可是却花了 8 秒钟，非常慢。同时，这里我没有做表的关联，这只是单表的查询，而且只是一个门店几个月的数据而已。而总部是把所有门店的数据都汇总到一起，查询速度更慢，这样的查询效率，我们肯定是不能接受的。怎么解决这个问题呢？</p><p>这时，我们就可以给数据表添加索引。</p><h3 id="单字段索引" tabindex="-1">单字段索引 <a class="header-anchor" href="#单字段索引" aria-label="Permalink to &quot;单字段索引&quot;">​</a></h3>`,584),L=[b];function v(N,T,S,C,A,R){return n(),a("div",null,L)}const O=s(u,[["render",v]]);export{k as __pageData,O as default};
+<span class="line"><span style="color:#24292e;">2 rows in set (8.08 sec)</span></span></code></pre></div><p>可以看到，结果总共有 2 条记录，可是却花了 8 秒钟，非常慢。同时，这里我没有做表的关联，这只是单表的查询，而且只是一个门店几个月的数据而已。而总部是把所有门店的数据都汇总到一起，查询速度更慢，这样的查询效率，我们肯定是不能接受的。怎么解决这个问题呢？</p><p>这时，我们就可以给数据表添加索引。</p><h3 id="单字段索引" tabindex="-1">单字段索引 <a class="header-anchor" href="#单字段索引" aria-label="Permalink to &quot;单字段索引&quot;">​</a></h3><h4 id="如何创建" tabindex="-1">如何创建 <a class="header-anchor" href="#如何创建" aria-label="Permalink to &quot;如何创建&quot;">​</a></h4><p>MySQL 支持单字段索引和组合索引，而单字段索引比较常用，我们先来学习下创建单字段索引的方法。</p><p><strong>如何创建单字段索引？</strong></p><p>创建单字段索引，一般有 3 种方式：</p><ul><li>你可以通过 CREATE 语句直接给存在的表创建索引，这种方式比较简单；</li><li>可以在创建表的同时创建索引；</li><li>可以通过修改表来创建索引。</li></ul><p>直接给数据表创建索引的语法如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE INDEX 索引名 ON TABLE 表名 (字段);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE INDEX 索引名 ON TABLE 表名 (字段);</span></span></code></pre></div><p>创建表的同时创建索引的语法如下所示：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE TABLE 表名</span></span>
+<span class="line"><span style="color:#e1e4e8;">(</span></span>
+<span class="line"><span style="color:#e1e4e8;">字段 数据类型,</span></span>
+<span class="line"><span style="color:#e1e4e8;">….</span></span>
+<span class="line"><span style="color:#e1e4e8;">{ INDEX | KEY } 索引名(字段)</span></span>
+<span class="line"><span style="color:#e1e4e8;">)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE TABLE 表名</span></span>
+<span class="line"><span style="color:#24292e;">(</span></span>
+<span class="line"><span style="color:#24292e;">字段 数据类型,</span></span>
+<span class="line"><span style="color:#24292e;">….</span></span>
+<span class="line"><span style="color:#24292e;">{ INDEX | KEY } 索引名(字段)</span></span>
+<span class="line"><span style="color:#24292e;">)</span></span></code></pre></div><p>修改表时创建索引的语法如下所示：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 ADD { INDEX | KEY } 索引名 (字段);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 ADD { INDEX | KEY } 索引名 (字段);</span></span></code></pre></div><blockquote><p>给表设定主键约束或者唯一性约束的时候，MySQL 会自动创建主键索引或唯一性索引。</p></blockquote><p>举个小例子，我们可以给表 <code>demo.trans</code> 创建索引如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; CREATE INDEX index_trans ON demo.trans (transdate);</span></span>
+<span class="line"><span style="color:#e1e4e8;">Query OK, 0 rows affected (0.06 sec)</span></span>
+<span class="line"><span style="color:#e1e4e8;">Records: 0  Duplicates: 0  Warnings: 0</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; CREATE INDEX index_trans ON demo.trans (transdate);</span></span>
+<span class="line"><span style="color:#24292e;">Query OK, 0 rows affected (0.06 sec)</span></span>
+<span class="line"><span style="color:#24292e;">Records: 0  Duplicates: 0  Warnings: 0</span></span></code></pre></div><blockquote><p>CREATE INDEX index_trans ON demo.trans (transdate(10));</p><p>在 MySQL 8 中，无法为 <code>datetime</code> 类型的列指定索引长度。<code>datetime</code> 类型所占用的存储空间是固定的，无法通过索引长度进行调整。MySQL 8 将会根据完整的 <code>datetime</code> 值来创建索引。如果需要调整存储空间或提高索引性能，可以考虑其他的优化策略，如合适的索引类型、创建组合索引等。</p></blockquote><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| quantity | price  | transdate           |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.30 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| quantity | price  | transdate           |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.30 sec)</span></span></code></pre></div><p>可以看到，加了索引之后，这一次我们只用了 0.3 秒，比没有索引的时候，快了 20 多倍。这么大的差距，说明索引对提高查询的速度确实很有帮助。那么，索引是如何做到这一点的呢？下面我们来学习下单字段索引的作用原理。</p><h4 id="作用原理" tabindex="-1">作用原理 <a class="header-anchor" href="#作用原理" aria-label="Permalink to &quot;作用原理&quot;">​</a></h4>`,602),L=[b];function v(N,T,S,C,A,q){return n(),a("div",null,L)}const O=s(u,[["render",v]]);export{k as __pageData,O as default};
