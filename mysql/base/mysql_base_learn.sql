@@ -927,7 +927,7 @@ CREATE TABLE
         itemnumber INT,
         quantity TEXT,
         price TEXT,
-        transdate DATETIME,
+        transdate DATETIME NOT NULL,
         actualvalue TEXT,
         barcode TEXT,
         cashiernumber INT,
@@ -982,3 +982,9 @@ WHERE
     transdate >= '2023-10-18'
     AND transdate < '2023-10-19'
     AND itemnumber = 100;
+
+-- 创建索引
+
+-- CREATE INDEX index_trans ON demo.trans (transdate(10));
+
+CREATE INDEX index_trans ON demo.trans (transdate);
