@@ -2206,4 +2206,62 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+---------------------+--------------+-----------------+-------------------+</span></span>
 <span class="line"><span style="color:#24292e;">| 2023-10-16 00:00:00 | 李强       |               2 |               178 |</span></span>
 <span class="line"><span style="color:#24292e;">+---------------------+--------------+-----------------+-------------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>很显然，我们同样得到了需要的结果。这是因为我们把条件拆分开，包含分组统计函数的条件用 HAVING，普通条件用 WHERE。这样，我们就既利用了 WHERE 条件的高效快速，又发挥了 HAVING 可以使用包含分组统计函数的查询条件的优点。当数据量特别大的时候，运行效率会有很大的差别。</p><h3 id="总结-6" tabindex="-1">总结 <a class="header-anchor" href="#总结-6" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们介绍了条件语句 WHERE 和 HAVING 在 MySQL 中的执行原理。WHERE 可以先按照条件对数据进行筛选，然后进行数据连接，所以效率更高。HAVING 可以在分组之后，通过使用分组中的计算函数，实现 WHERE 难以完成的数据筛选。</p><p>了解了 WHERE 和 HAVING 各自的特点，我们就可以在查询中，充分利用它们的优势，更高效地实现我们的查询目标。</p><p>最后，我想提醒你的是，很多人刚开始学习 MySQL 的时候，不太喜欢用 HAVING，一提到条件语句，就想当然地用 WHERE。其实，HAVING 是非常有用的，特别是在做一些复杂的统计查询的时候，经常要用到分组，这个时候 HAVING 就派上用场了。</p><p>当然，你也可以不用 HAVING，而是把查询分成几步，把中间结果存起来，再用 WHERE 筛选，或者干脆把这部分筛选功能放在应用层面，用代码来实现。但是，这样做的效率很低，而且会增加工作量，加大维护成本。所以，学会使用 HAVING，对你完成复杂的查询任务非常有帮助。</p><h2 id="八、聚合函数" tabindex="-1">八、聚合函数 <a class="header-anchor" href="#八、聚合函数" aria-label="Permalink to &quot;八、聚合函数&quot;">​</a></h2>`,572),L=[b];function v(N,T,S,C,A,R){return n(),a("div",null,L)}const O=s(u,[["render",v]]);export{k as __pageData,O as default};
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>很显然，我们同样得到了需要的结果。这是因为我们把条件拆分开，包含分组统计函数的条件用 HAVING，普通条件用 WHERE。这样，我们就既利用了 WHERE 条件的高效快速，又发挥了 HAVING 可以使用包含分组统计函数的查询条件的优点。当数据量特别大的时候，运行效率会有很大的差别。</p><h3 id="总结-6" tabindex="-1">总结 <a class="header-anchor" href="#总结-6" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们介绍了条件语句 WHERE 和 HAVING 在 MySQL 中的执行原理。WHERE 可以先按照条件对数据进行筛选，然后进行数据连接，所以效率更高。HAVING 可以在分组之后，通过使用分组中的计算函数，实现 WHERE 难以完成的数据筛选。</p><p>了解了 WHERE 和 HAVING 各自的特点，我们就可以在查询中，充分利用它们的优势，更高效地实现我们的查询目标。</p><p>最后，我想提醒你的是，很多人刚开始学习 MySQL 的时候，不太喜欢用 HAVING，一提到条件语句，就想当然地用 WHERE。其实，HAVING 是非常有用的，特别是在做一些复杂的统计查询的时候，经常要用到分组，这个时候 HAVING 就派上用场了。</p><p>当然，你也可以不用 HAVING，而是把查询分成几步，把中间结果存起来，再用 WHERE 筛选，或者干脆把这部分筛选功能放在应用层面，用代码来实现。但是，这样做的效率很低，而且会增加工作量，加大维护成本。所以，学会使用 HAVING，对你完成复杂的查询任务非常有帮助。</p><h2 id="八、聚合函数" tabindex="-1">八、聚合函数 <a class="header-anchor" href="#八、聚合函数" aria-label="Permalink to &quot;八、聚合函数&quot;">​</a></h2><h2 id="十一、索引" tabindex="-1">十一、索引 <a class="header-anchor" href="#十一、索引" aria-label="Permalink to &quot;十一、索引&quot;">​</a></h2><p>在我们的超市信息系统刚刚开始运营的时候，因为数据量很少，每一次的查询都能很快拿到结果。但是，系统运转时间长了以后，数据量不断地累积，变得越来越庞大，很多查询的速度就变得特别慢。这个时候，我们可以采用了 MySQL 提供的高效访问数据的方法—— 索引，有效解决这个问题。</p><h3 id="索引是什么" tabindex="-1">索引是什么 <a class="header-anchor" href="#索引是什么" aria-label="Permalink to &quot;索引是什么&quot;">​</a></h3><p>如果你去过图书馆，应该会知道图书馆的检索系统。图书馆为图书准备了检索目录，包括书名、书号、对应的位置信息，包括在哪个区、哪个书架、哪一层。我们可以通过书名或书号，快速获知书的位置，拿到需要的书。</p><p>MySQL 中的索引，就相当于图书馆的检索目录，它是帮助 MySQL 系统快速检索数据的一种存储结构。我们可以在索引中按照查询条件，检索索引字段的值，然后快速定位数据记录的位置，这样就不需要遍历整个数据表了。而且，数据表中的字段越多，表中数据记录越多，速度提升越是明显。</p><p>我们来举个例子，进一步解释下索引的作用。这里要用到销售流水表（<code>demo.trans</code>），表结果如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DESCRIBE demo.trans;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| Field         | Type     | Null | Key | Default | Extra |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber    | int      | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| quantity      | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| price         | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transdate     | datetime | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| actualvalue   | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| barcode       | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| cashiernumber | int      | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| branchnumber  | int      | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transuniqueid | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">9 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; DESCRIBE demo.trans;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#24292e;">| Field         | Type     | Null | Key | Default | Extra |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber    | int      | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| quantity      | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| price         | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| transdate     | datetime | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| actualvalue   | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| barcode       | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| cashiernumber | int      | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| branchnumber  | int      | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">| transuniqueid | text     | YES  |     | NULL    |       |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+----------+------+-----+---------+-------+</span></span>
+<span class="line"><span style="color:#24292e;">9 rows in set (0.00 sec)</span></span></code></pre></div><p>某个门店的销售流水表有 400 万条数据，现在我要查看一下商品编号是 100 的商品在 2023-10-18 这一天的销售情况，查询代码如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| quantity | price  | transdate           |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (8.08 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| quantity | price  | transdate           |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (8.08 sec)</span></span></code></pre></div><p>可以看到，结果总共有 2 条记录，可是却花了 8 秒钟，非常慢。同时，这里我没有做表的关联，这只是单表的查询，而且只是一个门店几个月的数据而已。而总部是把所有门店的数据都汇总到一起，查询速度更慢，这样的查询效率，我们肯定是不能接受的。怎么解决这个问题呢？</p><p>这时，我们就可以给数据表添加索引。</p><h3 id="单字段索引" tabindex="-1">单字段索引 <a class="header-anchor" href="#单字段索引" aria-label="Permalink to &quot;单字段索引&quot;">​</a></h3>`,584),L=[b];function v(N,T,S,C,A,R){return n(),a("div",null,L)}const O=s(u,[["render",v]]);export{k as __pageData,O as default};
