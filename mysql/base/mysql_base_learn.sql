@@ -988,3 +988,16 @@ WHERE
 -- CREATE INDEX index_trans ON demo.trans (transdate(10));
 
 CREATE INDEX index_trans ON demo.trans (transdate);
+
+-- 查看 SQL 执行细节
+
+EXPLAIN
+SELECT
+    quantity,
+    price,
+    transdate
+FROM demo.trans
+WHERE
+    transdate >= '2023-10-18'
+    AND transdate < '2023-10-19'
+    AND itemnumber = 100;
