@@ -2749,3 +2749,51 @@ mysql> EXPLAIN
 
 ### 如果选择索引字段
 
+在刚刚的查询中，我们是选择 transdate（交易时间）字段来当索引字段，你可能会问，为啥不选别的字段呢？这是因为，交易时间是查询条件。MySQL 可以按照交易时间的限定 “2023 年 10 月 18 日” ，在索引中而不是数据表中寻找满足条件的索引记录，在通过索引记录中的指针来定位数据表中的数据。这样，索引就能发挥作用了。
+
+不过，你有没有想过，`itemnumber` 字段也是查询条件，能不能用 `itemnumber` 来创建一个索引呢？
+
+```mysql
+mysql> CREATE INDEX index_trans_itemnumber ON demo.trans (itemnumber);
+Query OK, 0 rows affected (0.05 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+```
+
+然后查看效果：
+
+```mysql
+mysql> SELECT
+    ->     quantity,
+    ->     price,
+    ->     transdate
+    -> FROM demo.trans
+    -> WHERE
+    ->     transdate >= '2023-10-18'
+    ->     AND transdate < '2023-10-19'
+    ->     AND itemnumber = 100;
++----------+--------+---------------------+
+| quantity | price  | transdate           |
++----------+--------+---------------------+
+| 1.000    | 220.00 | 2023-10-18 00:00:00 |
+| 1.000    | 220.00 | 2023-10-18 00:00:00 |
++----------+--------+---------------------+
+2 rows in set (0.38 sec)
+```
+
+我们发现，用 `itemnumber` 创建索引之后，查询速度跟之前差不多，基本在同一个数量级。
+
+这是为啥呢？我们来看下 MySQL 的运行计划：
+
+```mysql
+EXPLAIN
+SELECT
+    quantity,
+    price,
+    transdate
+FROM demo.trans
+WHERE
+    transdate >= '2023-10-18'
+    AND transdate < '2023-10-19'
+    AND itemnumber = 100;
+```
+

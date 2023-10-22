@@ -1001,3 +1001,5 @@ WHERE
     transdate >= '2023-10-18'
     AND transdate < '2023-10-19'
     AND itemnumber = 100;
+
+CREATE INDEX index_trans_itemnumber ON demo.trans (itemnumber);
