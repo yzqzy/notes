@@ -2338,4 +2338,56 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+----+-------------+-------------+------------+-------+-------------------+-------------------+---------+------+------+----------+-----------------------------------------------+</span></span>
 <span class="line"><span style="color:#24292e;">| 1 | SIMPLE | trans | NULL | range | index_trans | index_trans | 6 | NULL | 5411 | 10.00 | Using index condition; Using where; Using MRR |</span></span>
 <span class="line"><span style="color:#24292e;">+----+-------------+-------------+------------+-------+-------------------+-------------------+---------+------+------+----------+-----------------------------------------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.00 sec)</span></span></code></pre></div><p>解析下代码里的关键内容：</p><ul><li>type=range：表示使用索引查询特定范围内容的数据记录。 <ul><li>&quot;type&quot;是&quot;explain&quot;命令中的一个字段，表示MySQL在执行查询时所使用的访问类型。&quot;type&quot;字段的值越优秀，查询的性能就越好。以下是&quot;explain&quot;命令中&quot;type&quot;字段可能的值及其含义：</li><li>&quot;system&quot;：表只有一行记录（等于系统表），这是const类型的特例。</li><li>&quot;const&quot;：通过索引一次就找到了，const用于比较primary key或者unique索引。因为只匹配一行数据，所以很快。例如，将主键置于WHERE列表中，MySQL就能将该查询转换为一个常量。</li><li>&quot;eq_ref&quot;：类似于ref，区别在于使用的是唯一索引。对于每个索引键值，表中只有一条记录匹配，简单来说，就是多表连接中使用primary key或者unique key作为关联条件。</li><li>&quot;ref&quot;：使用非唯一索引或者唯一索引的前缀部分，返回匹配某个单独值的所有行。本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，它可能会找到多个符合条件的行，所以它应该属于查找和扫描的混合体。</li><li>&quot;range&quot;：只检索给定范围的行，使用一个索引来选择行。key列显示使用了哪个索引。这个类型通常出现在对索引进行范围限制的查询中，虽然也可能是使用=操作符的常量查询。</li><li>&quot;index&quot;：Full Index Scan，索引全扫描，和ALL一样，也是把全表扫描一遍。该类型查询效率极低，应该尽量避免。</li><li>&quot;ALL&quot;：Full Table Scan，将遍历全表以找到匹配的行。这个效率低，应该尽量避免这种情况。</li></ul></li><li>rows=5411：表示需要读取的记录数。</li><li>possible_keys=index_trans：表示可以选择的索引是 index_trans。</li><li>key=index_trans：表示实际选择的索引是 index_trans。</li><li>extra=Using index condition;USing where; Using MRR：这里面的信息对 SQL 语句执行细节做了进一步的解释，包含 3 层含义：第一个是执行时使用了索引，第二个执行时通过 WHERE 条件进行了筛选，第三个是使用了顺序磁盘读取的策略。</li></ul><p>通过上面这个例子，我们可以发现，有了索引之后，MySQL 在执行 SQL 语句的时候多了一种优化的手段。也就是说，在查询的时候，可以先通过查询索引快速定位，然后再找到对应的数据进行读取，这样就大大提高了查询的速度。</p><h3 id="如果选择索引字段" tabindex="-1">如果选择索引字段 <a class="header-anchor" href="#如果选择索引字段" aria-label="Permalink to &quot;如果选择索引字段&quot;">​</a></h3>`,610),L=[b];function v(N,T,S,C,q,A){return n(),a("div",null,L)}const O=s(h,[["render",v]]);export{k as __pageData,O as default};
+<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.00 sec)</span></span></code></pre></div><p>解析下代码里的关键内容：</p><ul><li>type=range：表示使用索引查询特定范围内容的数据记录。 <ul><li>&quot;type&quot;是&quot;explain&quot;命令中的一个字段，表示MySQL在执行查询时所使用的访问类型。&quot;type&quot;字段的值越优秀，查询的性能就越好。以下是&quot;explain&quot;命令中&quot;type&quot;字段可能的值及其含义：</li><li>&quot;system&quot;：表只有一行记录（等于系统表），这是const类型的特例。</li><li>&quot;const&quot;：通过索引一次就找到了，const用于比较primary key或者unique索引。因为只匹配一行数据，所以很快。例如，将主键置于WHERE列表中，MySQL就能将该查询转换为一个常量。</li><li>&quot;eq_ref&quot;：类似于ref，区别在于使用的是唯一索引。对于每个索引键值，表中只有一条记录匹配，简单来说，就是多表连接中使用primary key或者unique key作为关联条件。</li><li>&quot;ref&quot;：使用非唯一索引或者唯一索引的前缀部分，返回匹配某个单独值的所有行。本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，它可能会找到多个符合条件的行，所以它应该属于查找和扫描的混合体。</li><li>&quot;range&quot;：只检索给定范围的行，使用一个索引来选择行。key列显示使用了哪个索引。这个类型通常出现在对索引进行范围限制的查询中，虽然也可能是使用=操作符的常量查询。</li><li>&quot;index&quot;：Full Index Scan，索引全扫描，和ALL一样，也是把全表扫描一遍。该类型查询效率极低，应该尽量避免。</li><li>&quot;ALL&quot;：Full Table Scan，将遍历全表以找到匹配的行。这个效率低，应该尽量避免这种情况。</li></ul></li><li>rows=5411：表示需要读取的记录数。</li><li>possible_keys=index_trans：表示可以选择的索引是 index_trans。</li><li>key=index_trans：表示实际选择的索引是 index_trans。</li><li>extra=Using index condition;USing where; Using MRR：这里面的信息对 SQL 语句执行细节做了进一步的解释，包含 3 层含义：第一个是执行时使用了索引，第二个执行时通过 WHERE 条件进行了筛选，第三个是使用了顺序磁盘读取的策略。</li></ul><p>通过上面这个例子，我们可以发现，有了索引之后，MySQL 在执行 SQL 语句的时候多了一种优化的手段。也就是说，在查询的时候，可以先通过查询索引快速定位，然后再找到对应的数据进行读取，这样就大大提高了查询的速度。</p><h3 id="如果选择索引字段" tabindex="-1">如果选择索引字段 <a class="header-anchor" href="#如果选择索引字段" aria-label="Permalink to &quot;如果选择索引字段&quot;">​</a></h3><p>在刚刚的查询中，我们是选择 transdate（交易时间）字段来当索引字段，你可能会问，为啥不选别的字段呢？这是因为，交易时间是查询条件。MySQL 可以按照交易时间的限定 “2023 年 10 月 18 日” ，在索引中而不是数据表中寻找满足条件的索引记录，在通过索引记录中的指针来定位数据表中的数据。这样，索引就能发挥作用了。</p><p>不过，你有没有想过，<code>itemnumber</code> 字段也是查询条件，能不能用 <code>itemnumber</code> 来创建一个索引呢？</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; CREATE INDEX index_trans_itemnumber ON demo.trans (itemnumber);</span></span>
+<span class="line"><span style="color:#e1e4e8;">Query OK, 0 rows affected (0.05 sec)</span></span>
+<span class="line"><span style="color:#e1e4e8;">Records: 0  Duplicates: 0  Warnings: 0</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; CREATE INDEX index_trans_itemnumber ON demo.trans (itemnumber);</span></span>
+<span class="line"><span style="color:#24292e;">Query OK, 0 rows affected (0.05 sec)</span></span>
+<span class="line"><span style="color:#24292e;">Records: 0  Duplicates: 0  Warnings: 0</span></span></code></pre></div><p>然后查看效果：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| quantity | price  | transdate           |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.38 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| quantity | price  | transdate           |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 1.000    | 220.00 | 2023-10-18 00:00:00 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.38 sec)</span></span></code></pre></div><p>我们发现，用 <code>itemnumber</code> 创建索引之后，查询速度跟之前差不多，基本在同一个数量级。</p><p>这是为啥呢？我们来看下 MySQL 的运行计划：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">EXPLAIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">FROM demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    AND itemnumber = 100;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">EXPLAIN</span></span>
+<span class="line"><span style="color:#24292e;">SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    price,</span></span>
+<span class="line"><span style="color:#24292e;">    transdate</span></span>
+<span class="line"><span style="color:#24292e;">FROM demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    transdate &gt;= &#39;2023-10-18&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    AND transdate &lt; &#39;2023-10-19&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    AND itemnumber = 100;</span></span></code></pre></div>`,618),L=[b];function v(N,T,S,C,q,A){return n(),a("div",null,L)}const O=s(h,[["render",v]]);export{k as __pageData,O as default};
