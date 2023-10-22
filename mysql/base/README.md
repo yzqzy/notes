@@ -2708,7 +2708,7 @@ mysql> SELECT
 
 EXPLAIN 关键字能够查看 SQL 语句的执行细节，包括表的加载顺序，表是如何连接的，以及索引使用情况等。
 
-> "explain"是MySQL中的一个关键字，用于解释查询语句的执行计划。
+> "explain" 是 MySQL 中的一个关键字，用于解释查询语句的执行计划。
 
 ```mysql
 mysql> EXPLAIN
@@ -2741,4 +2741,11 @@ mysql> EXPLAIN
   * "index"：Full Index Scan，索引全扫描，和ALL一样，也是把全表扫描一遍。该类型查询效率极低，应该尽量避免。
   *  "ALL"：Full Table Scan，将遍历全表以找到匹配的行。这个效率低，应该尽量避免这种情况。
 * rows=5411：表示需要读取的记录数。
-* 
+* possible_keys=index_trans：表示可以选择的索引是 index_trans。
+* key=index_trans：表示实际选择的索引是 index_trans。
+* extra=Using index condition;USing  where; Using MRR：这里面的信息对 SQL 语句执行细节做了进一步的解释，包含 3 层含义：第一个是执行时使用了索引，第二个执行时通过 WHERE 条件进行了筛选，第三个是使用了顺序磁盘读取的策略。
+
+通过上面这个例子，我们可以发现，有了索引之后，MySQL 在执行 SQL 语句的时候多了一种优化的手段。也就是说，在查询的时候，可以先通过查询索引快速定位，然后再找到对应的数据进行读取，这样就大大提高了查询的速度。
+
+### 如果选择索引字段
+
