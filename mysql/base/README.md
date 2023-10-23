@@ -2785,15 +2785,31 @@ mysql> SELECT
 这是为啥呢？我们来看下 MySQL 的运行计划：
 
 ```mysql
-EXPLAIN
-SELECT
-    quantity,
-    price,
-    transdate
-FROM demo.trans
-WHERE
-    transdate >= '2023-10-18'
-    AND transdate < '2023-10-19'
-    AND itemnumber = 100;
+mysql> EXPLAIN
+    -> SELECT
+    ->     quantity,
+    ->     price,
+    ->     transdate
+    -> FROM demo.trans
+    -> WHERE
+    ->     transdate >= '2023-10-18'
+    ->     AND transdate < '2023-10-19'
+    ->     AND itemnumber = 100;
++----+-------------+-------+------------+------+------------------------------------+------------------------+---------+-------+------+----------+-------------+
+| id | select_type | table | partitions | type | possible_keys                      | key                    | key_len | ref   | rows | filtered | Extra       |
++----+-------------+-------+------------+------+------------------------------------+------------------------+---------+-------+------+----------+-------------+
+|  1 | SIMPLE      | trans | NULL       | ref  | index_trans,index_trans_itemnumber | index_trans_itemnumber | 5       | const |    1192 |   0.14 | Using where |
++----+-------------+-------+------------+------+------------------------------------+------------------------+---------+-------+------+----------+-------------+
+1 row in set, 1 warning (0.01 sec)
 ```
+
+我们可以发现，“`possible_keys=index_trans,index_trans_itemnumber`”，就是说 MySQL 认为可以选择的索引确实有 2 个，一个是用 `translate` 字段创建的索引 `index_trans`，另一个是用 `item number` 字段创建的索引 `index_trans_itemnumber`。
+
+`key= index_trans_itemnumber`， 说明 MySQL 实际选择使用的索引是 `itemnumber` 字段创建的索引 `index_trans_itemnumber`。而 `rows=1192`，就表示实际读取的数据记录数只有 1192 个，比用 `transdate` 创建的索引 `index_trans`的实际读取记录数要少，这就是 MySQL 选择使用 `itemnumber` 索引的原因。
+
+所以，我建议你在选择索引字段的时候，要选择那些经常被用做筛选条件的字段。这样才能发挥索引的作用，提升检索的效率。
+
+### 组合索引
+
+在实际工作中，有时会遇到比较复杂的数据表，这种表包括的字段比较多，经常需要通过不同的字段筛选数据，特别是数据表中包含多个层级信息。比如我们的销售流水表就包含了门店信息、收款信息和商品信息这 3 个层级信息。门店对应多个门店里的收款机，每个收款机对应多个这台收款机销售出去的商品。我们经常要把这些层次信息作为筛选条件，来进行查询。这个时候单字段的索引往往不容易发挥出索引的最大功效，可以使用组合索引。
 
