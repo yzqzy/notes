@@ -1003,3 +1003,34 @@ WHERE
     AND itemnumber = 100;
 
 CREATE INDEX index_trans_itemnumber ON demo.trans (itemnumber);
+
+-- 创建单字段索引
+
+DESCRIBE demo.trans;
+
+CREATE INDEX index_trans_branchnumber ON demo.trans (branchnumber);
+
+CREATE INDEX index_trans_cashiernumber ON demo.trans (cashiernumber);
+
+SELECT
+    itemnumber,
+    quantity,
+    price,
+    transdate
+FROM demo.trans
+WHERE
+    branchnumber = 11
+    AND cashiernumber = 1
+    AND itemnumber = 100;
+
+EXPLAIN
+SELECT
+    itemnumber,
+    quantity,
+    price,
+    transdate
+FROM demo.trans
+WHERE
+    branchnumber = 11
+    AND cashiernumber = 1
+    AND itemnumber = 10;
