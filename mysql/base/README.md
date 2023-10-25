@@ -2575,6 +2575,61 @@ mysql> SELECT
 
 ## 八、聚合函数
 
+今天，我们来聊一聊聚合函数。
+
+MySQL 中有 5 种聚合函数较为常用，分别是求和函数 SUM()、求平均函数 AVG()、最大值函数 MAX()、最小值函数 MIN() 和计数函数 COUNT()。接下来，我就结合超市项目的真实需求，来带你掌握聚合函数的用法，帮你实现高效的分组统计。
+
+咱们的项目需求是这样的：超市经营者提出，他们需要统计某个门店，每天、每个单品的销售情况，包括销售数量和销售金额等。这里涉及 3 个数据表，具体信息如下所示：
+
+销售明细表（`demo.transactiondetails`）：
+
+<img src="./images/table20.png" />
+
+销售单头表（`demo.transactionhead`）：
+
+<img src="./images/table21.png" />
+
+商品信息表（`demo.goodsmaster`）：
+
+<img src="./images/table22.png" />
+
+### SUM()
+
+`SUM()`  函数可以返回指定字段值的和。我们可以用它获取某个门店，每天，每种商品的销售总计数据：
+
+```mysql
+mysql> SELECT
+    ->     LEFT(b.transdate, 10),
+    ->     c.goodsname,
+    ->     SUM(a.quantity),
+    ->     SUM(a.salesvalue)
+    -> FROM
+    ->     demo.transactiondetails AS a
+    ->     JOIN demo.transactionhead AS b ON (
+    ->         a.transactionid = b.transactionid
+    ->     )
+    ->     JOIN demo.goodsmaster AS c ON (a.itemnumber = c.itemnumber)
+    -> GROUP BY
+    ->     LEFT(b.transdate, 10),
+    ->     c.goodsname
+    -> ORDER BY
+    ->     LEFT(b.transdate, 10),
+    ->     c.goodsname;
++-----------------------+-----------+-----------------+-------------------+
+| LEFT(b.transdate, 10) | goodsname | SUM(a.quantity) | SUM(a.salesvalue) |
++-----------------------+-----------+-----------------+-------------------+
+| 2023-10-15            | 教科书 |               1 |                89 |
+| 2023-10-15            | 笔       |               2 |                10 |
+| 2023-10-16            | 教科书 |               2 |               178 |
+| 2023-10-17            | 笔       |              10 |                50 |
++-----------------------+-----------+-----------------+-------------------+
+4 rows in set (0.00 sec)
+```
+
+可以看到，我们引入了 2 个关键字：LEFT 和 ORDER BY，下面我来具体解释一下。
+
+
+
 ## 十一、索引
 
 在我们的超市信息系统刚刚开始运营的时候，因为数据量很少，每一次的查询都能很快拿到结果。但是，系统运转时间长了以后，数据量不断地累积，变得越来越庞大，很多查询的速度就变得特别慢。这个时候，我们可以采用了 MySQL 提供的高效访问数据的方法—— 索引，有效解决这个问题。

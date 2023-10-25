@@ -916,6 +916,39 @@ HAVING SUM(b.salesvalue) > 100;
 
 ## 八. 聚合函数
 
+-- 查看表结构
+
+DESCRIBE demo.transactiondetails;
+
+DESCRIBE demo.transactionhead;
+
+ALTER TABLE
+    demo.transactionhead
+ADD COLUMN cashierid INT,
+ADD COLUMN memberid INT;
+
+DESCRIBE demo.goodsmaster;
+
+-- SUM()
+
+SELECT
+    LEFT(b.transdate, 10),
+    c.goodsname,
+    SUM(a.quantity),
+    SUM(a.salesvalue)
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.transactionhead AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.goodsmaster AS c ON (a.itemnumber = c.itemnumber)
+GROUP BY
+    LEFT(b.transdate, 10),
+    c.goodsname
+ORDER BY
+    LEFT(b.transdate, 10),
+    c.goodsname;
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;
