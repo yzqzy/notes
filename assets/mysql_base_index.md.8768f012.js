@@ -2427,10 +2427,10 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#e1e4e8;">+------------+----------+--------+---------------------+</span></span>
 <span class="line"><span style="color:#e1e4e8;">| itemnumber | quantity | price | transdate |</span></span>
 <span class="line"><span style="color:#e1e4e8;">+------------+----------+--------+---------------------+</span></span>
-<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-07-11 09:18:35 |</span></span>
-<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-09-06 21:21:58 |</span></span>
-<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-11-10 15:00:11 |</span></span>
-<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-12-25 14:28:06 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-07-11 09:18:35 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-09-06 21:21:58 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-11-10 15:00:11 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-12-25 14:28:06 |</span></span>
 <span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-01-09 20:21:44 |</span></span>
 <span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-02-08 10:45:05 |</span></span>
 <span class="line"><span style="color:#e1e4e8;">+------------+----------+--------+---------------------+</span></span>
@@ -2447,10 +2447,10 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+------------+----------+--------+---------------------+</span></span>
 <span class="line"><span style="color:#24292e;">| itemnumber | quantity | price | transdate |</span></span>
 <span class="line"><span style="color:#24292e;">+------------+----------+--------+---------------------+</span></span>
-<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-07-11 09:18:35 |</span></span>
-<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-09-06 21:21:58 |</span></span>
-<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-11-10 15:00:11 |</span></span>
-<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-12-25 14:28:06 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-07-11 09:18:35 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-09-06 21:21:58 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-11-10 15:00:11 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-12-25 14:28:06 |</span></span>
 <span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-01-09 20:21:44 |</span></span>
 <span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-02-08 10:45:05 |</span></span>
 <span class="line"><span style="color:#24292e;">+------------+----------+--------+---------------------+</span></span>
@@ -2464,7 +2464,7 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
 <span class="line"><span style="color:#e1e4e8;">    -&gt;     branchnumber = 11</span></span>
 <span class="line"><span style="color:#e1e4e8;">    -&gt;     AND cashiernumber = 1</span></span>
-<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 10;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 100;</span></span>
 <span class="line"><span style="color:#e1e4e8;">+----+-------------+-------+------------+------+---------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
 <span class="line"><span style="color:#e1e4e8;">| id | select_type | table | partitions | type | possible_keys                                                             | key                    | key_len | ref   | rows | filtered | Extra       |</span></span>
 <span class="line"><span style="color:#e1e4e8;">+----+-------------+-------+------------+------+---------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
@@ -2480,7 +2480,7 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
 <span class="line"><span style="color:#24292e;">    -&gt;     branchnumber = 11</span></span>
 <span class="line"><span style="color:#24292e;">    -&gt;     AND cashiernumber = 1</span></span>
-<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 10;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 100;</span></span>
 <span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+---------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
 <span class="line"><span style="color:#24292e;">| id | select_type | table | partitions | type | possible_keys                                                             | key                    | key_len | ref   | rows | filtered | Extra       |</span></span>
 <span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+---------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
@@ -2496,4 +2496,100 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">字段 数据类型,</span></span>
 <span class="line"><span style="color:#24292e;">….</span></span>
 <span class="line"><span style="color:#24292e;">{ INDEX | KEY } 索引名(字段1，字段2，...)</span></span>
-<span class="line"><span style="color:#24292e;">)</span></span></code></pre></div><p>修改表时创建索引：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 ADD { INDEX | KEY } 索引名 (字段1，字段2，...);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 ADD { INDEX | KEY } 索引名 (字段1，字段2，...);</span></span></code></pre></div><p>现在，针对刚刚的查询场景，我们就可以通过创建组合索引，发挥多个字段的筛选作用。</p>`,644),L=[b];function v(N,T,S,q,C,A){return n(),a("div",null,L)}const O=s(h,[["render",v]]);export{R as __pageData,O as default};
+<span class="line"><span style="color:#24292e;">)</span></span></code></pre></div><p>修改表时创建索引：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 ADD { INDEX | KEY } 索引名 (字段1，字段2，...);</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 ADD { INDEX | KEY } 索引名 (字段1，字段2，...);</span></span></code></pre></div><p>现在，针对刚刚的查询场景，我们就可以通过创建组合索引，发挥多个字段的筛选作用。</p><p>具体做法就是，我们给销售流水表创建一个由 3 个字段 <code>branchnumber</code>、<code>cashiernumber</code>、<code>itemnumber</code> 组成的组合索引。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">CREATE INDEX</span></span>
+<span class="line"><span style="color:#e1e4e8;">    index_branchnumber_cashiernumber_itemnumber ON demo.trans (</span></span>
+<span class="line"><span style="color:#e1e4e8;">        branchnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        cashiernumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">        itemnumber</span></span>
+<span class="line"><span style="color:#e1e4e8;">    );</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">CREATE INDEX</span></span>
+<span class="line"><span style="color:#24292e;">    index_branchnumber_cashiernumber_itemnumber ON demo.trans (</span></span>
+<span class="line"><span style="color:#24292e;">        branchnumber,</span></span>
+<span class="line"><span style="color:#24292e;">        cashiernumber,</span></span>
+<span class="line"><span style="color:#24292e;">        itemnumber</span></span>
+<span class="line"><span style="color:#24292e;">    );</span></span></code></pre></div><p>有了组合索引，刚刚的查询速度就更快了。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     branchnumber = 11</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND cashiernumber = 1</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 10;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber | quantity | price | transdate |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-07-11 09:18:35 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-09-06 21:21:58 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-11-10 15:00:11 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2022-12-25 14:28:06 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-01-09 20:21:44 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 100 | 1.000 | 220.00 | 2023-02-08 10:45:05 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">6 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     branchnumber = 11</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND cashiernumber = 1</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 10;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber | quantity | price | transdate |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-07-11 09:18:35 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-09-06 21:21:58 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-11-10 15:00:11 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2022-12-25 14:28:06 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-01-09 20:21:44 |</span></span>
+<span class="line"><span style="color:#24292e;">| 100 | 1.000 | 220.00 | 2023-02-08 10:45:05 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+--------+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">6 rows in set (0.00 sec)</span></span></code></pre></div><p>几乎是瞬间完成，不超过 10 毫秒。我们再来看下 MySQL 的执行计划。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; EXPLAIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     branchnumber = 11</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND cashiernumber = 1</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+---------------------------------------------+---------+-------------------+------+----------+-------+| id | select_type | table | partitions | type | possible_keys | key | key_len | ref | rows | filtered | Extra |+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+---------------------------------------------+---------+-------------------+------+----------+-------+| 1 | SIMPLE | trans | NULL | ref | index_trans_itemnumber,index_trans_branchnumber,index_trans_cashiernumber,index_branchnumber_cashiernumber_itemnumber | index_branchnumber_cashiernumber_itemnumber | 15 | const,const,const | 6 | 100.00 | NULL |+----+-------------+-------+------------+------+------------------------------------------------------</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; EXPLAIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     quantity,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     price,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     transdate</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     branchnumber = 11</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND cashiernumber = 1</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+---------------------------------------------+---------+-------------------+------+----------+-------+| id | select_type | table | partitions | type | possible_keys | key | key_len | ref | rows | filtered | Extra |+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+---------------------------------------------+---------+-------------------+------+----------+-------+| 1 | SIMPLE | trans | NULL | ref | index_trans_itemnumber,index_trans_branchnumber,index_trans_cashiernumber,index_branchnumber_cashiernumber_itemnumber | index_branchnumber_cashiernumber_itemnumber | 15 | const,const,const | 6 | 100.00 | NULL |+----+-------------+-------+------------+------+------------------------------------------------------</span></span></code></pre></div><p>这个查询，MySQL 可以用到的索引有 4 个：</p><ul><li>index_trans_itemnumber；</li><li>index_trans_branchnumber；</li><li>index_trans_cashiernumber；</li><li>我们刚才用 branchnumber、cashiernumber 和 itemnumber 创建的组合索引 Index_branchnumber_cashiernumber_itemnumber。</li></ul><p>MySQL 选择了组合索引，筛选后读取的记录只有 6 条。组合索引被充分利用，筛选更加精准，所以非常快。</p><h4 id="作用原理-1" tabindex="-1">作用原理 <a class="header-anchor" href="#作用原理-1" aria-label="Permalink to &quot;作用原理&quot;">​</a></h4><p>下面我就来讲讲组合索引的工作原理。</p><p>组合索引的多个字段是有序的，遵循左对齐的原则。比如我们创建的组合索引，排序的方式是 <code>branchnumber</code>、<code>cashiernumber</code> 和 <code>itemnumber</code>。因此，筛选的条件也要遵循从左向右的原则，如果中断，那么，断点后面的条件就没有办法利用索引了。</p><p>比如说我们刚才的条件，<code>branchnumber = 11 AND cashiernumber = 1 AND itemnumber = 100</code>，包含了从左到右的所有字段，所以可以最大限度使用全部组合索引。</p><p>假如把条件换成 “<code>cashiernumber = 1 AND itemnumber = 100”</code>，由于我们的组合索引是按照 <code>branchnumber</code>、<code>cashiernumber</code> 和 <code>itemnumber</code> 的顺序建立的，最左边的字段 <code>branchnumber</code> 没有包含到条件当中，中断了，所以这个条件完全不能使用组合索引。</p><p>类似的，如果筛选的是一个范围，如果没有办法无法精确定位，也相当于中断。比如“<code>branchnumber &gt; 10 AND cashiernumber = 1 AND itemnumber = 100</code>”这个条件，只能用到组合索引中 <code>branchnumber&gt;10</code> 的部分，后面的索引就都用不上了。我们来看看 MySQL 的运行计划：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; EXPLAIN </span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; itemnumber,quantity,price,transdate</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; demo.trans</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; branchnumber &gt; 10 AND cashiernumber = 1 AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| id | select_type | table | partitions | type | possible_keys | key | key_len | ref | rows | filtered | Extra |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1 | SIMPLE | trans | NULL | ref | index_trans_itemnumber,index_trans_branchnumber,index_trans_cashiernumber,index_branchnumber_cashiernumber_itemnumber | index_trans_itemnumber | 5 | const | 1192 | 20.50 | Using where |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set, 1 warning (0.02 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; EXPLAIN </span></span>
+<span class="line"><span style="color:#24292e;">-&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; itemnumber,quantity,price,transdate</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; demo.trans</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; branchnumber &gt; 10 AND cashiernumber = 1 AND itemnumber = 100;</span></span>
+<span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| id | select_type | table | partitions | type | possible_keys | key | key_len | ref | rows | filtered | Extra |</span></span>
+<span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1 | SIMPLE | trans | NULL | ref | index_trans_itemnumber,index_trans_branchnumber,index_trans_cashiernumber,index_branchnumber_cashiernumber_itemnumber | index_trans_itemnumber | 5 | const | 1192 | 20.50 | Using where |</span></span>
+<span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.02 sec)</span></span></code></pre></div><p>果然，MySQL 没有选择组合索引，而是选择了用 <code>itemnumber</code> 创建的普通索引 <code>index_trans_itemnumber</code>。因为如果只用组合索引的一部分，效果没有单字段索引那么好。</p><h3 id="总结-7" tabindex="-1">总结 <a class="header-anchor" href="#总结-7" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章我们学习了什么是索引、如何创建和使用索引。索引可以非常显著地提高数据查询的速度，数据表里包含的数据越多，效果越显著。我们应该选择经常被用做筛选条件的字段来创建索引，这样才能通过索引缩小实际读取数据表中数据的范围，发挥出索引的优势。如果有多个筛选的字段，而且经常一起出现，也可以用多个字段来创建组合索引。</p><p>如果你要删除索引，就可以用：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">DROP INDEX 索引名 ON 表名;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">DROP INDEX 索引名 ON 表名;</span></span></code></pre></div><p>当然， 有的索引不能用这种方法删除，比如主键索引，你就必须通过修改表来删除索引。语法如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre></div><p>最后，我来跟你说说索引的成本。索引能够提升查询的效率，但是建索引也是有成本的，主要有 2 个方面，一个存储空间的开销，还有一个是数据操作上的开销。</p><ul><li>存储空间的开销，是指索引需要单独占用存储空间。</li><li>数据操作上的开销，是指一旦数据表有变动，无论是插入一条新数据，还是删除一条旧的数据，甚至是修改数据，如果涉及索引字段，都需要对索引本身进行修改，以确保索引能够指向正确的记录。</li></ul><p>因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。</p>`,670),L=[b];function v(N,T,S,q,C,k){return n(),a("div",null,L)}const O=s(h,[["render",v]]);export{R as __pageData,O as default};
