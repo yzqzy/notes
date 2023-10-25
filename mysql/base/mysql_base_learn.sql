@@ -1034,3 +1034,12 @@ WHERE
     branchnumber = 11
     AND cashiernumber = 1
     AND itemnumber = 10;
+
+-- 创建组合索引
+
+CREATE INDEX
+    index_branchnumber_cashiernumber_itemnumber ON demo.trans (
+        branchnumber,
+        cashiernumber,
+        itemnumber
+    );
