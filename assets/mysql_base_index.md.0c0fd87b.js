@@ -1,4 +1,4 @@
-import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",m="/assets/table16.05a0d7e2.png",g="/assets/table17.111e1ccd.png",E="/assets/table18.ae446ac7.png",u="/assets/table19.4090d758.png",h="/assets/table20.545bdf77.png",b="/assets/table21.5cafcb80.png",L="/assets/table22.fa161884.png",M=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),v={name:"mysql/base/index.md"},N=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
+import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",m="/assets/table16.05a0d7e2.png",g="/assets/table17.111e1ccd.png",u="/assets/table18.ae446ac7.png",E="/assets/table19.4090d758.png",h="/assets/table20.545bdf77.png",b="/assets/table21.5cafcb80.png",L="/assets/table22.fa161884.png",M=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),v={name:"mysql/base/index.md"},N=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
 <span class="line"><span style="color:#E1E4E8;">    --net</span><span style="color:#F97583;">=</span><span style="color:#9ECBFF;">host</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#B392F0;">-e</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">MYSQL_ROOT_PASSWORD=password</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#79B8FF;">-v</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">/data/main-mysql:/var/lib/mysql</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
@@ -2046,7 +2046,7 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">|             2 |          1 |        2 |    89 |        178 |          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |</span></span>
 <span class="line"><span style="color:#24292e;">|             3 |          2 |       10 |     5 |         50 |          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |</span></span>
 <span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+------------+---------+-----------+--------------+------+------------+</span></span>
-<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><p>查询的结果有点复杂，为了方便你理解，我对结果进行了分类，并加了注释，如下图所示：</p><img src="`+m+'"><p>第二步，把结果集按照商品名称分组，分组的示意图如下所示：</p><p>组 1：</p><img src="'+g+'"><p>组 2：</p><img src="'+E+'"><p>第三步，对分组后的数据集进行筛选，把组中字段“salesvalue”的最大值 &gt;50 的组筛选出来。筛选后的结果集如下所示：</p><img src="'+u+`"><p>第四步，返回商品名称。这时，我们就得到了需要的结果：单笔销售金额超过 50 元的商品就是“书”。</p><p>现在我们来简单小结下使用 HAVING 的查询过程。首先，我们要把所有的信息都准备好，包括从关联表中获取需要的信息，对数据集进行分组，形成一个包含所有需要的信息的数据集合。接着，再通过 HAVING 条件的筛选，得到需要的数据。</p><h3 id="正确的使用-where-和-having" tabindex="-1">正确的使用 WHERE 和 HAVING <a class="header-anchor" href="#正确的使用-where-和-having" aria-label="Permalink to &quot;正确的使用 WHERE 和 HAVING&quot;">​</a></h3><p>首先，你要知道它们的 2 个典型区别。</p><p>第一个区别是，如果需要通过连接从关联表中获取需要的数据，WHERE 是先筛选后连接，而 HAVING 是先连接后筛选。</p><p>这一点，就决定了在关联查询中，WHERE 比 HAVING 更高效。因为 WHERE 可以先筛选，用一个筛选后的较小数据集和关联表进行连接，这样占用的资源比较少，执行效率也就比较高。HAVING 则需要先把结果集准备好，也就是用未被筛选的数据集进行关联，然后对这个大的数据集进行筛选，这样占用的资源就比较多，执行效率也较低。</p><p>第二个区别是，WHERE 可以直接使用表中的字段作为筛选条件，但不能使用分组中的计算函数作为筛选条件；HAVING 必须要与 GROUP BY 配合使用，可以把分组计算的函数和分组字段作为筛选条件。</p><p>这决定了，在需要对数据进行分组统计的时候，HAVING 可以完成 WHERE 不能完成的任务。这是因为，在查询语法结构中，WHERE 在 GROUP BY 之前，所以无法对分组结果进行筛选。HAVING 在 GROUP BY 之后，可以使用分组字段和分组中的计算函数，对分组的结果集进行筛选，这个功能是 WHERE 无法完成的。</p><p>这么说你可能不太好理解，我来举个小例子。假如超市经营者提出，要查询一下是哪个收银员、在哪天卖了 2 单商品。这种必须先分组才能筛选的查询，用 WHERE 语句实现就比较难，我们可能要分好几步，通过把中间结果存储起来，才能搞定。但是用 HAVING，则很轻松，代码如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><p>查询的结果有点复杂，为了方便你理解，我对结果进行了分类，并加了注释，如下图所示：</p><img src="`+m+'"><p>第二步，把结果集按照商品名称分组，分组的示意图如下所示：</p><p>组 1：</p><img src="'+g+'"><p>组 2：</p><img src="'+u+'"><p>第三步，对分组后的数据集进行筛选，把组中字段“salesvalue”的最大值 &gt;50 的组筛选出来。筛选后的结果集如下所示：</p><img src="'+E+`"><p>第四步，返回商品名称。这时，我们就得到了需要的结果：单笔销售金额超过 50 元的商品就是“书”。</p><p>现在我们来简单小结下使用 HAVING 的查询过程。首先，我们要把所有的信息都准备好，包括从关联表中获取需要的信息，对数据集进行分组，形成一个包含所有需要的信息的数据集合。接着，再通过 HAVING 条件的筛选，得到需要的数据。</p><h3 id="正确的使用-where-和-having" tabindex="-1">正确的使用 WHERE 和 HAVING <a class="header-anchor" href="#正确的使用-where-和-having" aria-label="Permalink to &quot;正确的使用 WHERE 和 HAVING&quot;">​</a></h3><p>首先，你要知道它们的 2 个典型区别。</p><p>第一个区别是，如果需要通过连接从关联表中获取需要的数据，WHERE 是先筛选后连接，而 HAVING 是先连接后筛选。</p><p>这一点，就决定了在关联查询中，WHERE 比 HAVING 更高效。因为 WHERE 可以先筛选，用一个筛选后的较小数据集和关联表进行连接，这样占用的资源比较少，执行效率也就比较高。HAVING 则需要先把结果集准备好，也就是用未被筛选的数据集进行关联，然后对这个大的数据集进行筛选，这样占用的资源就比较多，执行效率也较低。</p><p>第二个区别是，WHERE 可以直接使用表中的字段作为筛选条件，但不能使用分组中的计算函数作为筛选条件；HAVING 必须要与 GROUP BY 配合使用，可以把分组计算的函数和分组字段作为筛选条件。</p><p>这决定了，在需要对数据进行分组统计的时候，HAVING 可以完成 WHERE 不能完成的任务。这是因为，在查询语法结构中，WHERE 在 GROUP BY 之前，所以无法对分组结果进行筛选。HAVING 在 GROUP BY 之后，可以使用分组字段和分组中的计算函数，对分组的结果集进行筛选，这个功能是 WHERE 无法完成的。</p><p>这么说你可能不太好理解，我来举个小例子。假如超市经营者提出，要查询一下是哪个收银员、在哪天卖了 2 单商品。这种必须先分组才能筛选的查询，用 WHERE 语句实现就比较难，我们可能要分好几步，通过把中间结果存储起来，才能搞定。但是用 HAVING，则很轻松，代码如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
 <span class="line"><span style="color:#e1e4e8;">    -&gt;     a.transdate,</span></span>
 <span class="line"><span style="color:#e1e4e8;">    -&gt;     c.operatorname</span></span>
 <span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.transactionhead AS a</span></span>
@@ -2268,7 +2268,219 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+---------------+-----------------+</span></span>
 <span class="line"><span style="color:#24292e;">|            15 |             327 |</span></span>
 <span class="line"><span style="color:#24292e;">+---------------+-----------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>最后，需要提醒你的是，求和函数获取的是分组中的合计数据，所以你要对分组中的结果有准确的把握，否则就很容易搞错。也就是说，你要知道是按什么字段进行分组。如果是按多个字段分组，你要知道字段之间有什么样的层次关系；如果是按照以字段作为变量的某个函数进行分组，你要知道这个函数的返回值是什么，返回值又如何影响分组。</p><h3 id="avg-、max-、min" tabindex="-1">AVG()、MAX()、MIN() <a class="header-anchor" href="#avg-、max-、min" aria-label="Permalink to &quot;AVG()、MAX()、MIN()&quot;">​</a></h3><p>接下来，我们来计算分组中数据的平均值、最大值和最小值。</p><h4 id="avg" tabindex="-1">AVG() <a class="header-anchor" href="#avg" aria-label="Permalink to &quot;AVG()&quot;">​</a></h4><h4 id="max" tabindex="-1">MAX() <a class="header-anchor" href="#max" aria-label="Permalink to &quot;MAX()&quot;">​</a></h4><h4 id="min" tabindex="-1">MIN() <a class="header-anchor" href="#min" aria-label="Permalink to &quot;MIN()&quot;">​</a></h4><h2 id="十一、索引" tabindex="-1">十一、索引 <a class="header-anchor" href="#十一、索引" aria-label="Permalink to &quot;十一、索引&quot;">​</a></h2><p>在我们的超市信息系统刚刚开始运营的时候，因为数据量很少，每一次的查询都能很快拿到结果。但是，系统运转时间长了以后，数据量不断地累积，变得越来越庞大，很多查询的速度就变得特别慢。这个时候，我们可以采用了 MySQL 提供的高效访问数据的方法—— 索引，有效解决这个问题。</p><h3 id="索引是什么" tabindex="-1">索引是什么 <a class="header-anchor" href="#索引是什么" aria-label="Permalink to &quot;索引是什么&quot;">​</a></h3><p>如果你去过图书馆，应该会知道图书馆的检索系统。图书馆为图书准备了检索目录，包括书名、书号、对应的位置信息，包括在哪个区、哪个书架、哪一层。我们可以通过书名或书号，快速获知书的位置，拿到需要的书。</p><p>MySQL 中的索引，就相当于图书馆的检索目录，它是帮助 MySQL 系统快速检索数据的一种存储结构。我们可以在索引中按照查询条件，检索索引字段的值，然后快速定位数据记录的位置，这样就不需要遍历整个数据表了。而且，数据表中的字段越多，表中数据记录越多，速度提升越是明显。</p><p>我们来举个例子，进一步解释下索引的作用。这里要用到销售流水表（<code>demo.trans</code>），表结果如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DESCRIBE demo.trans;</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>最后，需要提醒你的是，求和函数获取的是分组中的合计数据，所以你要对分组中的结果有准确的把握，否则就很容易搞错。也就是说，你要知道是按什么字段进行分组。如果是按多个字段分组，你要知道字段之间有什么样的层次关系；如果是按照以字段作为变量的某个函数进行分组，你要知道这个函数的返回值是什么，返回值又如何影响分组。</p><h3 id="avg-、max-、min" tabindex="-1">AVG()、MAX()、MIN() <a class="header-anchor" href="#avg-、max-、min" aria-label="Permalink to &quot;AVG()、MAX()、MIN()&quot;">​</a></h3><p>接下来，我们来计算分组中数据的平均值、最大值和最小值。</p><h4 id="avg" tabindex="-1">AVG() <a class="header-anchor" href="#avg" aria-label="Permalink to &quot;AVG()&quot;">​</a></h4><p>首先，我们来学习下计算平均值的函数 AVG()。它的作用是，通过计算分组内指定字段值和，以及分组内的记录数，算出分组内指定字段的平均值。</p><p>举个例子，如果用户需要计算每天、每种商品，平均一次卖出多少个、多少钱，这个时候，就可以使用 AVG() 函数。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AVG(b.quantity),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     AVG(b.salesvalue)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.transactionhead AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.transactiondetails AS b ON (</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;         a.transactionid = b.transactionid</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     )</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; GROUP BY</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; ORDER BY</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| LEFT(a.transdate, 10) | goodsname | AVG(b.quantity) | AVG(b.salesvalue) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-15            | 教科书 |               1 |                89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-15            | 笔       |               2 |                10 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-16            | 教科书 |               2 |               178 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-17            | 笔       |              10 |                50 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">4 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AVG(b.quantity),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     AVG(b.salesvalue)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.transactionhead AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.transactiondetails AS b ON (</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;         a.transactionid = b.transactionid</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     )</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; GROUP BY</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; ORDER BY</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| LEFT(a.transdate, 10) | goodsname | AVG(b.quantity) | AVG(b.salesvalue) |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-15            | 教科书 |               1 |                89 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-15            | 笔       |               2 |                10 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-16            | 教科书 |               2 |               178 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-17            | 笔       |              10 |                50 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.00 sec)</span></span></code></pre></div><h4 id="max-、min" tabindex="-1">MAX()、MIN() <a class="header-anchor" href="#max-、min" aria-label="Permalink to &quot;MAX()、MIN()&quot;">​</a></h4><p>MAX() 表示获取指定字段在分组中的最大值，MIN() 表示获取指定字段在分组中的最小值。</p><p>我们还是来看具体的例子。假如用户要求计算每天里的一次销售的最大数量和最大金额，就可以用下面的代码，得到我们需要的结果：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     MAX(b.quantity),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     MAX(b.salesvalue)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.transactionhead AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.transactiondetails AS b ON (</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;         a.transactionid = b.transactionid</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     )</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; GROUP BY</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; ORDER BY</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10);</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| LEFT(a.transdate, 10) | MAX(b.quantity) | MAX(b.salesvalue) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-15            |               2 |                89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-16            |               2 |               178 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-17            |              10 |                50 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     MAX(b.quantity),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     MAX(b.salesvalue)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.transactionhead AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.transactiondetails AS b ON (</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;         a.transactionid = b.transactionid</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     )</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; GROUP BY</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; ORDER BY</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10);</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| LEFT(a.transdate, 10) | MAX(b.quantity) | MAX(b.salesvalue) |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-15            |               2 |                89 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-16            |               2 |               178 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-17            |              10 |                50 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------------+-------------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>代码很简单，你一看就明白了。但是，这里有个问题你要注意：千万不要以为 <code>MAX（b.quantity）</code> 和 <code>MAX（b.salesvalue）</code>算出的结果一定是同一条记录的数据。实际上，MySQL 是分别计算的。MAX（字段）这个函数返回分组集中最大的那个值。如果你要查询 MAX（字段 1）和 MAX（字段 2），而它们是相互独立、分别计算的，你千万不要想当然地认为结果在同一条记录上。那样的话，你就掉坑里了。</p><h3 id="count" tabindex="-1">COUNT() <a class="header-anchor" href="#count" aria-label="Permalink to &quot;COUNT()&quot;">​</a></h3><p>通过 <strong>COUNT()</strong>，我们可以了解数据集的大小，这对系统优化十分重要。</p><p>举个小例子，在项目实施的过程中，我们遇到了这么一个问题：由于用户的销售数据很多，而且每天都在增长，因此，在做销售查询的时候，经常会遇到卡顿的问题。这是因为，查询的数据量太大了，导致系统不得不花很多时间来处理数据，并给数据集分配资源，比如内存什么的。</p><p>怎么解决卡顿的问题呢？我们想到了一个分页的策略。</p><p>所谓的分页策略，其实就是，不把查询的结果一次性全部返回给客户端，而是根据用户电脑屏幕的大小，计算一屏可以显示的记录数，每次只返回用户电脑屏幕可以显示的数据集。接着，再通过翻页、跳转等功能按钮，实现查询目标的精准锁定。这样一来，每次查询的数据量较少，也就大大提高了系统响应速度。</p><p>这个策略能够实现的一个关键，就是要计算出符合条件的记录一共有多少条，之后才能计算出一共有几页、能不能翻页或跳转。</p><p>要计算记录数，就要用到 COUNT() 函数了。这个函数有两种情况。</p><ul><li><p>COUNT（*）：统计一共有多少条记录；</p></li><li><p>COUNT（字段）：统计有多少个不为空的字段值。</p></li></ul><h4 id="count-1" tabindex="-1">COUNT(*) <a class="header-anchor" href="#count-1" aria-label="Permalink to &quot;COUNT(*)&quot;">​</a></h4><p>如果 <code>COUNT（*）</code>与 <code>GROUP BY </code>一起使用，就表示统计分组内有多少条数据。它也可以单独使用，这就相当于数据集全体是一个分组，统计全部数据集的记录数。</p><p>我举个小例子，假设我有个销售流水明细表如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             1 |          2 |        2 |     5 |         10 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             2 |          2 |        6 |     5 |         30 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             3 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|             3 |          2 |       10 |     5 |         50 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">6 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| transactionid | itemnumber | quantity | price | salesvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#24292e;">|             1 |          2 |        2 |     5 |         10 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          1 |        2 |    89 |        178 |</span></span>
+<span class="line"><span style="color:#24292e;">|             2 |          2 |        6 |     5 |         30 |</span></span>
+<span class="line"><span style="color:#24292e;">|             3 |          1 |        1 |    89 |         89 |</span></span>
+<span class="line"><span style="color:#24292e;">|             3 |          2 |       10 |     5 |         50 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------+------------+----------+-------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">6 rows in set (0.00 sec)</span></span></code></pre></div><p>如果我们一屏可以显示 30 行，需要多少页才能显示完这个表的全部数据呢？</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT COUNT(*) FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| COUNT(*) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|        6 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT COUNT(*) FROM demo.transactiondetails;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| COUNT(*) |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">|        6 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>我们这里只有 6 条数据，一屏就可以显示了，所以一共 1 页。</p><p>那么，如果超市经营者想知道，每天、每种商品都有几次销售，我们就需要按天、按商品名称，进行分组查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     COUNT(*)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM demo.transactionhead AS a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.transactiondetails AS b ON (</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;         a.transactionid = b.transactionid</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     )</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; GROUP BY</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; ORDER BY</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt;     c.goodsname;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| LEFT(a.transdate, 10) | goodsname | COUNT(*) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-15            | 教科书 |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-15            | 笔       |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-16            | 教科书 |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-16            | 笔       |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-17            | 教科书 |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2023-10-17            | 笔       |        1 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------------------+-----------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">6 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     COUNT(*)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM demo.transactionhead AS a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.transactiondetails AS b ON (</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;         a.transactionid = b.transactionid</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     )</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; GROUP BY</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; ORDER BY</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     LEFT(a.transdate, 10),</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt;     c.goodsname;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| LEFT(a.transdate, 10) | goodsname | COUNT(*) |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-15            | 教科书 |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-15            | 笔       |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-16            | 教科书 |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-16            | 笔       |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-17            | 教科书 |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2023-10-17            | 笔       |        1 |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------------------+-----------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">6 rows in set (0.00 sec)</span></span></code></pre></div><p>运行这段代码，我们就得到了每天、每种商品有几次销售的全部结果。</p><h4 id="count-字段" tabindex="-1">COUNT(字段) <a class="header-anchor" href="#count-字段" aria-label="Permalink to &quot;COUNT(字段)&quot;">​</a></h4><p>COUNT（字段）用来统计分组内这个字段的值出现了多少次。如果字段值是空，就不统计。</p><p>为了说明它们的区别，我举个小例子。假设我们有这样的一个商品信息表，里面包括了商品编号、条码、名称、规格、单位和售价的信息。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber | barcode | goodsname | specifiction | unit | salesprice |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">|          3 | 0002    | 笔       | NULL         | 支  |      10.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber | barcode | goodsname | specifiction | unit | salesprice |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">|          1 | 0001    | 教科书 | 16开        | 本  |      89.00 |</span></span>
+<span class="line"><span style="color:#24292e;">|          2 | 0002    | 笔       | 10支装     | 包  |       5.00 |</span></span>
+<span class="line"><span style="color:#24292e;">|          3 | 0002    | 笔       | NULL         | 支  |      10.00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+---------+-----------+--------------+------+------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>如果我们要统计字段 “goodsname” 出现了多少次，就要用到函数 <code>COUNT（goodsname）</code>，结果是 3 次：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT COUNT(goodsname) FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| COUNT(goodsname) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|                3 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT COUNT(goodsname) FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#24292e;">+------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| COUNT(goodsname) |</span></span>
+<span class="line"><span style="color:#24292e;">+------------------+</span></span>
+<span class="line"><span style="color:#24292e;">|                3 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>如果我们统计字段“specification”，用 COUNT(specification)，结果是 2 次：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT COUNT(specifiction) FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| COUNT(specifiction) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">|                   2 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT COUNT(specifiction) FROM demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| COUNT(specifiction) |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">|                   2 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>你可能会问，为啥计数字段“goodsname”的结果是 3，计数字段“specification”却只有 1 呢？其实，这里的原因就是，3 条记录里面的字段“goodsname”没有空值，因此被统计了 3 次；而字段“specification”有 1 个空值，因此只统计了 2 次。</p><p>理解了这一点，你就可以利用计数函数对某个字段计数时，不统计空值的特点，对表中字段的非空值进行计数了。</p><h3 id="总结-7" tabindex="-1">总结 <a class="header-anchor" href="#总结-7" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了聚合函数 SUM（）、AVG（）、MAX（）、MIN（）和 COUNT（）。我们在对分组数据进行统计的时候，可以用这些函数来对分组数据求和、求平均值、最大值、最小值，以及统计分组内的记录数，或者分组内字段的值不为空的次数。</p><p>这些函数，为我们对数据库中的数据进行统计和计算提供了方便。因为计算直接在数据库中执行，比在应用层面完成相同的工作，效率高很多。</p><p>l另外，聚合函数可以和其他关键字、函数一起使用，这样会拓展它的使用场景，让原本复杂的计算变简单。所以，你不仅要认真学习这节课的聚合函数，还要掌握 MySQL 的各种关键字的功能和用法，并且根据实际工作的需要，尝试把它们组合在一起使用，这样就能利用好数据库的强大功能，更好地满足用户的需求。</p><h2 id="九、时间函数" tabindex="-1">九、时间函数 <a class="header-anchor" href="#九、时间函数" aria-label="Permalink to &quot;九、时间函数&quot;">​</a></h2><h2 id="十一、索引" tabindex="-1">十一、索引 <a class="header-anchor" href="#十一、索引" aria-label="Permalink to &quot;十一、索引&quot;">​</a></h2><p>在我们的超市信息系统刚刚开始运营的时候，因为数据量很少，每一次的查询都能很快拿到结果。但是，系统运转时间长了以后，数据量不断地累积，变得越来越庞大，很多查询的速度就变得特别慢。这个时候，我们可以采用了 MySQL 提供的高效访问数据的方法—— 索引，有效解决这个问题。</p><h3 id="索引是什么" tabindex="-1">索引是什么 <a class="header-anchor" href="#索引是什么" aria-label="Permalink to &quot;索引是什么&quot;">​</a></h3><p>如果你去过图书馆，应该会知道图书馆的检索系统。图书馆为图书准备了检索目录，包括书名、书号、对应的位置信息，包括在哪个区、哪个书架、哪一层。我们可以通过书名或书号，快速获知书的位置，拿到需要的书。</p><p>MySQL 中的索引，就相当于图书馆的检索目录，它是帮助 MySQL 系统快速检索数据的一种存储结构。我们可以在索引中按照查询条件，检索索引字段的值，然后快速定位数据记录的位置，这样就不需要遍历整个数据表了。而且，数据表中的字段越多，表中数据记录越多，速度提升越是明显。</p><p>我们来举个例子，进一步解释下索引的作用。这里要用到销售流水表（<code>demo.trans</code>），表结果如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DESCRIBE demo.trans;</span></span>
 <span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
 <span class="line"><span style="color:#e1e4e8;">| Field         | Type     | Null | Key | Default | Extra |</span></span>
 <span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
@@ -2654,4 +2866,4 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
 <span class="line"><span style="color:#24292e;">| 1 | SIMPLE | trans | NULL | ref | index_trans_itemnumber,index_trans_branchnumber,index_trans_cashiernumber,index_branchnumber_cashiernumber_itemnumber | index_trans_itemnumber | 5 | const | 1192 | 20.50 | Using where |</span></span>
 <span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.02 sec)</span></span></code></pre></div><p>果然，MySQL 没有选择组合索引，而是选择了用 <code>itemnumber</code> 创建的普通索引 <code>index_trans_itemnumber</code>。因为如果只用组合索引的一部分，效果没有单字段索引那么好。</p><h3 id="总结-7" tabindex="-1">总结 <a class="header-anchor" href="#总结-7" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章我们学习了什么是索引、如何创建和使用索引。索引可以非常显著地提高数据查询的速度，数据表里包含的数据越多，效果越显著。我们应该选择经常被用做筛选条件的字段来创建索引，这样才能通过索引缩小实际读取数据表中数据的范围，发挥出索引的优势。如果有多个筛选的字段，而且经常一起出现，也可以用多个字段来创建组合索引。</p><p>如果你要删除索引，就可以用：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">DROP INDEX 索引名 ON 表名;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">DROP INDEX 索引名 ON 表名;</span></span></code></pre></div><p>当然， 有的索引不能用这种方法删除，比如主键索引，你就必须通过修改表来删除索引。语法如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre></div><p>最后，我来跟你说说索引的成本。索引能够提升查询的效率，但是建索引也是有成本的，主要有 2 个方面，一个存储空间的开销，还有一个是数据操作上的开销。</p><ul><li>存储空间的开销，是指索引需要单独占用存储空间。</li><li>数据操作上的开销，是指一旦数据表有变动，无论是插入一条新数据，还是删除一条旧的数据，甚至是修改数据，如果涉及索引字段，都需要对索引本身进行修改，以确保索引能够指向正确的记录。</li></ul><p>因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。</p>`,694),T=[N];function S(q,C,k,A,R,O){return n(),a("div",null,T)}const U=s(v,[["render",S]]);export{M as __pageData,U as default};
+<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.02 sec)</span></span></code></pre></div><p>果然，MySQL 没有选择组合索引，而是选择了用 <code>itemnumber</code> 创建的普通索引 <code>index_trans_itemnumber</code>。因为如果只用组合索引的一部分，效果没有单字段索引那么好。</p><h3 id="总结-8" tabindex="-1">总结 <a class="header-anchor" href="#总结-8" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章我们学习了什么是索引、如何创建和使用索引。索引可以非常显著地提高数据查询的速度，数据表里包含的数据越多，效果越显著。我们应该选择经常被用做筛选条件的字段来创建索引，这样才能通过索引缩小实际读取数据表中数据的范围，发挥出索引的优势。如果有多个筛选的字段，而且经常一起出现，也可以用多个字段来创建组合索引。</p><p>如果你要删除索引，就可以用：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">DROP INDEX 索引名 ON 表名;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">DROP INDEX 索引名 ON 表名;</span></span></code></pre></div><p>当然， 有的索引不能用这种方法删除，比如主键索引，你就必须通过修改表来删除索引。语法如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre></div><p>最后，我来跟你说说索引的成本。索引能够提升查询的效率，但是建索引也是有成本的，主要有 2 个方面，一个存储空间的开销，还有一个是数据操作上的开销。</p><ul><li>存储空间的开销，是指索引需要单独占用存储空间。</li><li>数据操作上的开销，是指一旦数据表有变动，无论是插入一条新数据，还是删除一条旧的数据，甚至是修改数据，如果涉及索引字段，都需要对索引本身进行修改，以确保索引能够指向正确的记录。</li></ul><p>因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。</p>`,733),T=[N];function S(q,C,A,k,R,O){return n(),a("div",null,T)}const U=s(v,[["render",S]]);export{M as __pageData,U as default};
