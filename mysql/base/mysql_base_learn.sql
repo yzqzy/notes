@@ -949,6 +949,8 @@ ORDER BY
     LEFT(b.transdate, 10),
     c.goodsname;
 
+SELECT SUM(quantity), SUM(salesvalue) FROM demo.transactiondetails;
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;
