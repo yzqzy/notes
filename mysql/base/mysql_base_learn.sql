@@ -951,6 +951,97 @@ ORDER BY
 
 SELECT SUM(quantity), SUM(salesvalue) FROM demo.transactiondetails;
 
+-- AVG()
+
+SELECT
+    LEFT(a.transdate, 10),
+    c.goodsname,
+    AVG(b.quantity),
+    AVG(b.salesvalue)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)
+GROUP BY
+    LEFT(a.transdate, 10),
+    c.goodsname
+ORDER BY
+    LEFT(a.transdate, 10),
+    c.goodsname;
+
+-- MAX()、MIN()
+
+SELECT
+    LEFT(a.transdate, 10),
+    MAX(b.quantity),
+    MAX(b.salesvalue)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)
+GROUP BY
+    LEFT(a.transdate, 10)
+ORDER BY
+    LEFT(a.transdate, 10);
+
+-- COUNT(*)
+
+SELECT * FROM demo.transactiondetails;
+
+DELETE FROM demo.transactiondetails WHERE transactionid = 2;
+
+INSERT INTO
+    demo.transactiondetails (
+        transactionid,
+        itemnumber,
+        quantity,
+        price,
+        salesvalue
+    )
+VALUES (2, 1, 2, 89, 178), (2, 2, 6, 5, 30);
+
+SELECT COUNT(*) FROM demo.transactiondetails;
+
+SELECT * FROM demo.transactionhead;
+
+SELECT
+    LEFT(a.transdate, 10),
+    c.goodsname,
+    COUNT(*)
+FROM demo.transactionhead AS a
+    JOIN demo.transactiondetails AS b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.goodsmaster AS c ON (b.itemnumber = c.itemnumber)
+GROUP BY
+    LEFT(a.transdate, 10),
+    c.goodsname
+ORDER BY
+    LEFT(a.transdate, 10),
+    c.goodsname;
+
+-- COUNT(字段)
+
+SELECT * FROM demo.goodsmaster;
+
+DESCRIBE demo.goodsmaster;
+
+INSERT INTO
+    demo.goodsmaster (
+        itemnumber,
+        barcode,
+        goodsname,
+        unit,
+        salesprice
+    )
+VALUES (3, '0002', '笔', '支', 10);
+
+SELECT COUNT(goodsname) FROM demo.goodsmaster;
+
+SELECT COUNT(specifiction) FROM demo.goodsmaster;
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;
