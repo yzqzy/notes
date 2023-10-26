@@ -1042,6 +1042,45 @@ SELECT COUNT(goodsname) FROM demo.goodsmaster;
 
 SELECT COUNT(specifiction) FROM demo.goodsmaster;
 
+## 九、时间函数
+
+-- 获取日期时间部分信息 extract
+
+SELECT * FROM demo.transactionhead;
+
+SELECT EXTRACT (
+        HOUR
+        FROM
+            b.transdate
+    ) AS 时段,
+    SUM (a.quantity) AS 数量,
+    SUM (a.salesvalue) AS 金额
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.transactionhead AS b ON (
+        a.transactionid = b.transactionid
+    )
+GROUP BY EXTRACT(
+        HOUR
+        FROM b.transdate
+    )
+ORDER BY EXTRACT(
+        HOUR
+        FROM b.transdate
+    );
+
+SELECT
+    HOUR(b.transdate) AS 时段,
+    SUM(a.quantity) AS 数量,
+    SUM(a.salesvalue) AS 金额
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.transactionhead AS b ON (
+        a.transactionid = b.transactionid
+    )
+GROUP BY HOUR(b.transdate)
+ORDER BY HOUR(b.transdate);
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;

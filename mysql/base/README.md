@@ -2863,6 +2863,163 @@ l另外，聚合函数可以和其他关键字、函数一起使用，这样会�
 
 ## 九、时间函数
 
+今天，我们来聊一聊 MySQL 的时间函数。
+
+顾名思义，时间函数就是用来处理时间的函数。根据项目需求不同，我们需要的时间函数也不一样，比如：
+
+* 如果我们要统计一天之中不同时间段的销售情况，就要获取时间值中的小时值，这就会用到函数 HOUR()；
+* 要计算与去年同期相比的增长率，这就要计算去年同期的日期时间，就会用到函数 DATE_ADD()；
+* 要计算今天是周几、有没有优惠活动，这就是需要用到函数 DAYOFWEEK() 了。
+
+这么多不同类型的时间函数，该如何选择呢？本篇文章，我就根据不同的项目需求，来讲一讲不同的时间函数的使用方法，帮助你轻松地处理各类时间数据。
+
+### 获取日期时间部分信息
+
+我先举个小例子。超市的经营者提出，他们希望通过实际的销售数据，了解到一天当中什么时间段卖得好，什么时间段卖得不好，这样他们就可以根据不同时间的销售情况，合理安排商品陈列和人员促销，以实现收益最大化。
+
+要达到这个目标，我们就需要统计一天中每小时的销售数量和销售金额。
+
+这里涉及 3 组数据，分别是销售单头表（demo.transactionhead)、销售单明细表 (demo.transactiondetails) 和商品信息表（demo.goodsmaster）
+
+销售单头表包含销售单的整体信息，包括流水单号、交易时间、收款机编号、会员编号和收银员编号等。
+
+<img src="./images/table23.png" />
+
+销售单明细表中保存的是交易明细数据，包括商品编号、销售数量、价格、销售金额等。
+
+<img src="./images/table24.png" />
+
+商品信息表主要包括商品编号、条码、商品名称、规格、单位和售价。
+
+<img src="./images/table25.png" />
+
+需要注意的是，销售单明细表通过流水编号与销售单头表关联，其中流水编号是外键。通过流水编号，销售单明细表引用销售单头表里的交易时间、会员编号等信息，同时，通过商品编号与商品信息表关联，引用商品信息表里的商品名称等信息。
+
+首先，我们来分析一下“统计一天中每小时的销售数量和销售金额”的这个需求。
+
+要统计一天中每小时的销售情况，实际上就是要把销售数据按照小时进行分组统计。那么，解决问题的关键，就是把交易时间的小时部分提取出来。这就要用到 MySQL 的日期时间处理函数 EXTRACT（）和 HOUR（）了。
+
+为了获取小时的值，我们要用到 EXTRACT() 函数。**EXTRACT（type FROM date）表示从日期时间数据“date”中抽取“type”指定的部分**。
+
+有了这个函数，我们就可以获取到交易时间的小时部分，从而完成一天中每小时的销售数量和销售金额的查询：
+
+```mysql
+SELECT EXTRACT (
+        HOUR
+        FROM
+            b.transdate
+    ) AS 时段,
+    SUM (a.quantity) AS 数量,
+    SUM (a.salesvalue) AS 金额
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.transactionhead AS b ON (
+        a.transactionid = b.transactionid
+    )
+GROUP BY EXTRACT(
+        HOUR
+        FROM b.transdate
+    )
+ORDER BY EXTRACT(
+        HOUR
+        FROM b.transdate
+    );
+```
+
+```mysql
+mysql> SELECT
+    -> EXTRACT(HOUR FROM b.transdate) AS 时段,
+    -> SUM(a.quantity) AS 数量,
+    -> SUM(a.salesvalue) AS 金额
+    -> FROM
+    -> demo.transactiondetails a
+    -> JOIN
+    -> demo.transactionhead b ON (a.transactionid = b.transactionid)
+    -> GROUP BY EXTRACT(HOUR FROM b.transdate)
+    -> ORDER BY EXTRACT(HOUR FROM b.transdate);
++------+--------+--------+
+| 时段 | 数量   | 金额   |
++------+--------+--------+
+|    9 | 16.000 | 500.00 |
+|   10 | 11.000 | 139.00 |
+|   11 | 10.000 |  30.00 |
+|   12 | 40.000 | 200.00 |
+|   13 |  5.000 | 445.00 |
+|   15 |  6.000 |  30.00 |
+|   17 |  1.000 |   3.00 |
+|   18 |  2.000 | 178.00 |
+|   19 |  2.000 |   6.00 |
++------+--------+--------+
+9 rows in set (0.00 sec)
+```
+
+查询的过程是这样的：
+
+* 从交易时间中抽取小时信息：EXTRACT(HOUR FROM b.transdate)；
+* 按交易的小时信息分组；
+* 按分组统计销售数量和销售金额的和；
+* 按交易的小时信息排序。
+
+这里我是用“HOUR”提取时间类型 DATETIME 中的小时信息，同样道理，你可以用“YEAR”获取年度信息，用“MONTH”获取月份信息，用“DAY”获取日的信息。如果你需要获取其他时间部分的信息，可以参考下[时间单位](https://dev.mysql.com/doc/refman/8.0/en/expressions.html#temporal-intervals)。
+
+这个查询，我们也可以通过使用日期时间函数 HOUR() 来达到同样的效果。HOUR（time）表示从日期时间“time”中，获取小时部分信息。
+
+需要注意的是，EXTRACT() 函数中的“HOUR”表示要获取时间的类型，而 HOUR() 是一个函数，HOUR(time) 可以单独使用，表示返回 time 的小时部分信息。
+
+我们可以通过在代码中，把 EXTRACT 函数改成 HOUR 函数，来实现相同的功能，如下所示：
+
+```mysql
+SELECT
+    HOUR(b.transdate) AS 时段,
+    SUM(a.quantity) AS 数量,
+    SUM(a.salesvalue) AS 金额
+FROM
+    demo.transactiondetails AS a
+    JOIN demo.transactionhead AS b ON (
+        a.transactionid = b.transactionid
+    )
+GROUP BY HOUR(b.transdate)
+ORDER BY HOUR(b.transdate);
+```
+
+```mysql
+mysql> SELECT
+-> HOUR(b.transdate) AS 时段, -- 改为使用HOUR函数
+-> SUM(a.quantity) AS 数量,
+-> SUM(a.salesvalue) AS 金额
+-> FROM
+-> demo.transactiondetails a
+-> JOIN
+-> demo.transactionhead b ON (a.transactionid = b.transactionid)
+-> GROUP BY HOUR(b.transdate) -- 改写为HOUR函数
+-> ORDER BY HOUR(b.transdate);-- 改写为HOUR函数
++------+--------+--------+
+| 时段 | 数量   | 金额   |
++------+--------+--------+
+|    9 | 16.000 | 500.00 |
+|   10 | 11.000 | 139.00 |
+|   11 | 10.000 |  30.00 |
+|   12 | 40.000 | 200.00 |
+|   13 |  5.000 | 445.00 |
+|   15 |  6.000 |  30.00 |
+|   17 |  1.000 |   3.00 |
+|   18 |  2.000 | 178.00 |
+|   19 |  2.000 |   6.00 |
++------+--------+--------+
+9 rows in set (0.00 sec)
+```
+
+除了获取小时信息，我们往往还会遇到要统计年度信息、月度信息等情况，MySQL 也提供了支持的函数。
+
+* YEAR（date）：获取 date 中的年。
+* MONTH（date）：获取 date 中的月。
+* DAY（date）：获取 date 中的日。
+* HOUR（date）：获取 date 中的小时。
+* MINUTE（date）：获取 date 中的分。
+* SECOND（date）：获取 date 中的秒。
+
+### 计算日期时间的函数
+
 
 
 ## 十一、索引
