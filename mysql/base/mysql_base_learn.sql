@@ -1081,6 +1081,10 @@ FROM
 GROUP BY HOUR(b.transdate)
 ORDER BY HOUR(b.transdate);
 
+-- 计算日期时间的函数
+
+SELECT DATE_ADD('2020-12-10', INTERVAL - 1 YEAR);
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;
