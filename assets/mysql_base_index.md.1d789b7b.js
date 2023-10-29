@@ -1,4 +1,4 @@
-import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",m="/assets/table16.05a0d7e2.png",g="/assets/table17.111e1ccd.png",E="/assets/table18.ae446ac7.png",u="/assets/table19.4090d758.png",h="/assets/table20.545bdf77.png",b="/assets/table21.5cafcb80.png",L="/assets/table22.fa161884.png",T="/assets/table23.91230d34.png",A="/assets/table24.d1a81e26.png",v="/assets/table25.468f8f56.png",N="/assets/table26.8fca5399.png",S="/assets/table27.572271dc.png",Y=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),R={name:"mysql/base/index.md"},q=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
+import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",m="/assets/table16.05a0d7e2.png",g="/assets/table17.111e1ccd.png",E="/assets/table18.ae446ac7.png",u="/assets/table19.4090d758.png",h="/assets/table20.545bdf77.png",b="/assets/table21.5cafcb80.png",L="/assets/table22.fa161884.png",A="/assets/table23.91230d34.png",T="/assets/table24.d1a81e26.png",v="/assets/table25.468f8f56.png",N="/assets/table26.8fca5399.png",S="/assets/table27.572271dc.png",R="/assets/table28.23c4804e.png",f=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),C={name:"mysql/base/index.md"},q=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
 <span class="line"><span style="color:#E1E4E8;">    --net</span><span style="color:#F97583;">=</span><span style="color:#9ECBFF;">host</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#B392F0;">-e</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">MYSQL_ROOT_PASSWORD=password</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#79B8FF;">-v</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">/data/main-mysql:/var/lib/mysql</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
@@ -2480,7 +2480,7 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+---------------------+</span></span>
 <span class="line"><span style="color:#24292e;">|                   2 |</span></span>
 <span class="line"><span style="color:#24292e;">+---------------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>你可能会问，为啥计数字段“goodsname”的结果是 3，计数字段“specification”却只有 1 呢？其实，这里的原因就是，3 条记录里面的字段“goodsname”没有空值，因此被统计了 3 次；而字段“specification”有 1 个空值，因此只统计了 2 次。</p><p>理解了这一点，你就可以利用计数函数对某个字段计数时，不统计空值的特点，对表中字段的非空值进行计数了。</p><h3 id="总结-7" tabindex="-1">总结 <a class="header-anchor" href="#总结-7" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了聚合函数 SUM（）、AVG（）、MAX（）、MIN（）和 COUNT（）。我们在对分组数据进行统计的时候，可以用这些函数来对分组数据求和、求平均值、最大值、最小值，以及统计分组内的记录数，或者分组内字段的值不为空的次数。</p><p>这些函数，为我们对数据库中的数据进行统计和计算提供了方便。因为计算直接在数据库中执行，比在应用层面完成相同的工作，效率高很多。</p><p>l另外，聚合函数可以和其他关键字、函数一起使用，这样会拓展它的使用场景，让原本复杂的计算变简单。所以，你不仅要认真学习这节课的聚合函数，还要掌握 MySQL 的各种关键字的功能和用法，并且根据实际工作的需要，尝试把它们组合在一起使用，这样就能利用好数据库的强大功能，更好地满足用户的需求。</p><h2 id="九、时间函数" tabindex="-1">九、时间函数 <a class="header-anchor" href="#九、时间函数" aria-label="Permalink to &quot;九、时间函数&quot;">​</a></h2><p>今天，我们来聊一聊 MySQL 的时间函数。</p><p>顾名思义，时间函数就是用来处理时间的函数。根据项目需求不同，我们需要的时间函数也不一样，比如：</p><ul><li>如果我们要统计一天之中不同时间段的销售情况，就要获取时间值中的小时值，这就会用到函数 HOUR()；</li><li>要计算与去年同期相比的增长率，这就要计算去年同期的日期时间，就会用到函数 DATE_ADD()；</li><li>要计算今天是周几、有没有优惠活动，这就是需要用到函数 DAYOFWEEK() 了。</li></ul><p>这么多不同类型的时间函数，该如何选择呢？本篇文章，我就根据不同的项目需求，来讲一讲不同的时间函数的使用方法，帮助你轻松地处理各类时间数据。</p><h3 id="获取日期时间部分信息" tabindex="-1">获取日期时间部分信息 <a class="header-anchor" href="#获取日期时间部分信息" aria-label="Permalink to &quot;获取日期时间部分信息&quot;">​</a></h3><p>我先举个小例子。超市的经营者提出，他们希望通过实际的销售数据，了解到一天当中什么时间段卖得好，什么时间段卖得不好，这样他们就可以根据不同时间的销售情况，合理安排商品陈列和人员促销，以实现收益最大化。</p><p>要达到这个目标，我们就需要统计一天中每小时的销售数量和销售金额。</p><p>这里涉及 3 组数据，分别是销售单头表（demo.transactionhead)、销售单明细表 (demo.transactiondetails) 和商品信息表（demo.goodsmaster）</p><p>销售单头表包含销售单的整体信息，包括流水单号、交易时间、收款机编号、会员编号和收银员编号等。</p><img src="`+T+'"><p>销售单明细表中保存的是交易明细数据，包括商品编号、销售数量、价格、销售金额等。</p><img src="'+A+'"><p>商品信息表主要包括商品编号、条码、商品名称、规格、单位和售价。</p><img src="'+v+`"><p>需要注意的是，销售单明细表通过流水编号与销售单头表关联，其中流水编号是外键。通过流水编号，销售单明细表引用销售单头表里的交易时间、会员编号等信息，同时，通过商品编号与商品信息表关联，引用商品信息表里的商品名称等信息。</p><p>首先，我们来分析一下“统计一天中每小时的销售数量和销售金额”的这个需求。</p><p>要统计一天中每小时的销售情况，实际上就是要把销售数据按照小时进行分组统计。那么，解决问题的关键，就是把交易时间的小时部分提取出来。这就要用到 MySQL 的日期时间处理函数 EXTRACT（）和 HOUR（）了。</p><p>为了获取小时的值，我们要用到 EXTRACT() 函数。<strong>EXTRACT（type FROM date）表示从日期时间数据“date”中抽取“type”指定的部分</strong>。</p><p>有了这个函数，我们就可以获取到交易时间的小时部分，从而完成一天中每小时的销售数量和销售金额的查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT EXTRACT (</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>你可能会问，为啥计数字段“goodsname”的结果是 3，计数字段“specification”却只有 1 呢？其实，这里的原因就是，3 条记录里面的字段“goodsname”没有空值，因此被统计了 3 次；而字段“specification”有 1 个空值，因此只统计了 2 次。</p><p>理解了这一点，你就可以利用计数函数对某个字段计数时，不统计空值的特点，对表中字段的非空值进行计数了。</p><h3 id="总结-7" tabindex="-1">总结 <a class="header-anchor" href="#总结-7" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了聚合函数 SUM（）、AVG（）、MAX（）、MIN（）和 COUNT（）。我们在对分组数据进行统计的时候，可以用这些函数来对分组数据求和、求平均值、最大值、最小值，以及统计分组内的记录数，或者分组内字段的值不为空的次数。</p><p>这些函数，为我们对数据库中的数据进行统计和计算提供了方便。因为计算直接在数据库中执行，比在应用层面完成相同的工作，效率高很多。</p><p>l另外，聚合函数可以和其他关键字、函数一起使用，这样会拓展它的使用场景，让原本复杂的计算变简单。所以，你不仅要认真学习这节课的聚合函数，还要掌握 MySQL 的各种关键字的功能和用法，并且根据实际工作的需要，尝试把它们组合在一起使用，这样就能利用好数据库的强大功能，更好地满足用户的需求。</p><h2 id="九、时间函数" tabindex="-1">九、时间函数 <a class="header-anchor" href="#九、时间函数" aria-label="Permalink to &quot;九、时间函数&quot;">​</a></h2><p>今天，我们来聊一聊 MySQL 的时间函数。</p><p>顾名思义，时间函数就是用来处理时间的函数。根据项目需求不同，我们需要的时间函数也不一样，比如：</p><ul><li>如果我们要统计一天之中不同时间段的销售情况，就要获取时间值中的小时值，这就会用到函数 HOUR()；</li><li>要计算与去年同期相比的增长率，这就要计算去年同期的日期时间，就会用到函数 DATE_ADD()；</li><li>要计算今天是周几、有没有优惠活动，这就是需要用到函数 DAYOFWEEK() 了。</li></ul><p>这么多不同类型的时间函数，该如何选择呢？本篇文章，我就根据不同的项目需求，来讲一讲不同的时间函数的使用方法，帮助你轻松地处理各类时间数据。</p><h3 id="获取日期时间部分信息" tabindex="-1">获取日期时间部分信息 <a class="header-anchor" href="#获取日期时间部分信息" aria-label="Permalink to &quot;获取日期时间部分信息&quot;">​</a></h3><p>我先举个小例子。超市的经营者提出，他们希望通过实际的销售数据，了解到一天当中什么时间段卖得好，什么时间段卖得不好，这样他们就可以根据不同时间的销售情况，合理安排商品陈列和人员促销，以实现收益最大化。</p><p>要达到这个目标，我们就需要统计一天中每小时的销售数量和销售金额。</p><p>这里涉及 3 组数据，分别是销售单头表（demo.transactionhead)、销售单明细表 (demo.transactiondetails) 和商品信息表（demo.goodsmaster）</p><p>销售单头表包含销售单的整体信息，包括流水单号、交易时间、收款机编号、会员编号和收银员编号等。</p><img src="`+A+'"><p>销售单明细表中保存的是交易明细数据，包括商品编号、销售数量、价格、销售金额等。</p><img src="'+T+'"><p>商品信息表主要包括商品编号、条码、商品名称、规格、单位和售价。</p><img src="'+v+`"><p>需要注意的是，销售单明细表通过流水编号与销售单头表关联，其中流水编号是外键。通过流水编号，销售单明细表引用销售单头表里的交易时间、会员编号等信息，同时，通过商品编号与商品信息表关联，引用商品信息表里的商品名称等信息。</p><p>首先，我们来分析一下“统计一天中每小时的销售数量和销售金额”的这个需求。</p><p>要统计一天中每小时的销售情况，实际上就是要把销售数据按照小时进行分组统计。那么，解决问题的关键，就是把交易时间的小时部分提取出来。这就要用到 MySQL 的日期时间处理函数 EXTRACT（）和 HOUR（）了。</p><p>为了获取小时的值，我们要用到 EXTRACT() 函数。<strong>EXTRACT（type FROM date）表示从日期时间数据“date”中抽取“type”指定的部分</strong>。</p><p>有了这个函数，我们就可以获取到交易时间的小时部分，从而完成一天中每小时的销售数量和销售金额的查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">SELECT EXTRACT (</span></span>
 <span class="line"><span style="color:#e1e4e8;">        HOUR</span></span>
 <span class="line"><span style="color:#e1e4e8;">        FROM</span></span>
 <span class="line"><span style="color:#e1e4e8;">            b.transdate</span></span>
@@ -2846,7 +2846,257 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+-------------------------------------+</span></span>
 <span class="line"><span style="color:#24292e;">|                                  62 |</span></span>
 <span class="line"><span style="color:#24292e;">+-------------------------------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><h3 id="总结-8" tabindex="-1">总结 <a class="header-anchor" href="#总结-8" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了 MySQL 的时间处理函数，包括获取日期时间类型数据中部分信息的函数、计算日期时间的函数和获取特定日期的函数，我用图片来帮你汇总了下。</p><img src="`+S+`"><p>最后，我还想多说一句，MySQL 中获取的时间，其实就是 MySQL 服务器计算机的系统时间。如果你的系统有一定规模，需要在多台计算机上运行，就要注意时间校准的问题。比如我们的信息系统受门店经营环境和操作人员的素质所限，有时会遇到误操作、停电等故障而导致的计算机系统时间失准问题。这对整个信息系统的可靠性影响非常大。</p><p>针对这个问题，有 2 种解决办法。</p><p>第一种方法是，可以利用 Windows 系统自带的网络同步的方式，来校准系统时间。</p><p>另一种办法就是，门店统一从总部 MySQL 服务器获取时间。由于总部的服务器的配置和运维状况一般要好于门店，所以系统时间出现误差的可能性也较小。如果采用云服务器，系统时间的可靠性会更高。</p><h2 id="十、数学计算、字符串处理" tabindex="-1">十、数学计算、字符串处理 <a class="header-anchor" href="#十、数学计算、字符串处理" aria-label="Permalink to &quot;十、数学计算、字符串处理&quot;">​</a></h2><h2 id="十一、索引" tabindex="-1">十一、索引 <a class="header-anchor" href="#十一、索引" aria-label="Permalink to &quot;十一、索引&quot;">​</a></h2><p>在我们的超市信息系统刚刚开始运营的时候，因为数据量很少，每一次的查询都能很快拿到结果。但是，系统运转时间长了以后，数据量不断地累积，变得越来越庞大，很多查询的速度就变得特别慢。这个时候，我们可以采用了 MySQL 提供的高效访问数据的方法—— 索引，有效解决这个问题。</p><h3 id="索引是什么" tabindex="-1">索引是什么 <a class="header-anchor" href="#索引是什么" aria-label="Permalink to &quot;索引是什么&quot;">​</a></h3><p>如果你去过图书馆，应该会知道图书馆的检索系统。图书馆为图书准备了检索目录，包括书名、书号、对应的位置信息，包括在哪个区、哪个书架、哪一层。我们可以通过书名或书号，快速获知书的位置，拿到需要的书。</p><p>MySQL 中的索引，就相当于图书馆的检索目录，它是帮助 MySQL 系统快速检索数据的一种存储结构。我们可以在索引中按照查询条件，检索索引字段的值，然后快速定位数据记录的位置，这样就不需要遍历整个数据表了。而且，数据表中的字段越多，表中数据记录越多，速度提升越是明显。</p><p>我们来举个例子，进一步解释下索引的作用。这里要用到销售流水表（<code>demo.trans</code>），表结果如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DESCRIBE demo.trans;</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><h3 id="总结-8" tabindex="-1">总结 <a class="header-anchor" href="#总结-8" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了 MySQL 的时间处理函数，包括获取日期时间类型数据中部分信息的函数、计算日期时间的函数和获取特定日期的函数，我用图片来帮你汇总了下。</p><img src="`+S+`"><p>最后，我还想多说一句，MySQL 中获取的时间，其实就是 MySQL 服务器计算机的系统时间。如果你的系统有一定规模，需要在多台计算机上运行，就要注意时间校准的问题。比如我们的信息系统受门店经营环境和操作人员的素质所限，有时会遇到误操作、停电等故障而导致的计算机系统时间失准问题。这对整个信息系统的可靠性影响非常大。</p><p>针对这个问题，有 2 种解决办法。</p><p>第一种方法是，可以利用 Windows 系统自带的网络同步的方式，来校准系统时间。</p><p>另一种办法就是，门店统一从总部 MySQL 服务器获取时间。由于总部的服务器的配置和运维状况一般要好于门店，所以系统时间出现误差的可能性也较小。如果采用云服务器，系统时间的可靠性会更高。</p><h2 id="十、数学计算、字符串处理" tabindex="-1">十、数学计算、字符串处理 <a class="header-anchor" href="#十、数学计算、字符串处理" aria-label="Permalink to &quot;十、数学计算、字符串处理&quot;">​</a></h2><p>MySQL 提供了很多功能强大，而且使用起来非常方便的函数，包括数学函数、字符串处理函数和条件判断函数等。</p><p>在很多场景中 ，我们都会用到这些函数，比如说，在超市项目的实际开发过程中，会有这样的需求：</p><ul><li>会员积分的规则是一元积一分，不满一元不积分，这就要用到向下取整的数学函数 FLOOR()；</li><li>在打印小票的时候，收银纸的宽度是固定的，怎么才能让打印的结果清晰而整齐呢？这个时候，就要用到 CONCAT() 等字符串处理函数；不</li><li>同数据的处理方式不同，怎么选择正确的处理方式呢？这就会用到 IF(表达式，V1，V2) 这样的条件判断函数；</li></ul><p>这些函数对我们管理数据库、提高数据处理的效率有很大的帮助。接下来，我就带你在解决实际问题的过程中，帮你掌握使用这些函数的方法。</p><h3 id="数学函数" tabindex="-1">数学函数 <a class="header-anchor" href="#数学函数" aria-label="Permalink to &quot;数学函数&quot;">​</a></h3><p>我们先来学习下数学函数，它主要用来处理数值数据，常用的主要有 3 类，分别是取整函数 ROUND()、CEIL()、FLOOR()，绝对值函数 ABS() 和求余函数 MOD()。</p><p>知道了这些函数，我们来看看超市经营者的具体需求。他们提出，为了提升销量，要进行会员营销，主要是给会员积分，并以积分数量为基础，给会员一定的优惠。</p><p>积分的规则也很简单，就是消费一元积一分，不满一元不积分，那我们就需要对销售金额的数值进行取整。</p><p>这里主要用到四个表，分别是销售单明细表、销售单头表、商品信息表和会员信息表。</p><p>这个场景下，可以用到 MySQL 数学函数中的取整函数，主要有 3 种。</p><ul><li>向上取整 CEIL(X) 和 CEILING(X)：返回大于等于 X 的最小 INT 型整数。</li><li>向下取整 FLOOR(X)：返回小于等于 X 的最大 INT 型整数。</li><li>舍入函数 ROUND(X,D)：X 表示要处理的数，D 表示保留的小数位数，处理的方式是四舍五入。</li><li>ROUND(X) 表示保留 0 位小数。</li></ul><p>现在积分的规则是一元积一分，不满一元不积分，显然是向下取整，那就可以用 FLOOR（）函数。</p><p>首先，我们要通过关联查询，获得会员消费的相关信息：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt;  SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; c.membername AS &#39;会员&#39;,   -- 从会员表获取会员名称</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; b.transactionno AS &#39;单号&#39;,-- 从销售单头表获取单号</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; b.transdate AS &#39;交易时间&#39;, -- 从销售单头表获取交易时间</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; d.goodsname AS &#39;商品名称&#39;, -- 从商品信息表获取商品名称</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; a.salesvalue AS &#39;交易金额&#39;</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.transactiondetails a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.transactionhead b ON (a.transactionid = b.transactionid)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.membermaster c ON (b.memberid = c.memberid)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.goodsmaster d ON (a.itemnumber = d.itemnumber);</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------+------------------+---------------------+----------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 会员 | 单号             | 交易时间            | 商品名称 | 交易金额 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------+------------------+---------------------+----------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 书       |   176.22 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 笔       |    24.75 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 书       |   234.96 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 笔       |    26.40 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------+------------------+---------------------+----------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">4 rows in set (0.01 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt;  SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; c.membername AS &#39;会员&#39;,   -- 从会员表获取会员名称</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; b.transactionno AS &#39;单号&#39;,-- 从销售单头表获取单号</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; b.transdate AS &#39;交易时间&#39;, -- 从销售单头表获取交易时间</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; d.goodsname AS &#39;商品名称&#39;, -- 从商品信息表获取商品名称</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; a.salesvalue AS &#39;交易金额&#39;</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.transactiondetails a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.transactionhead b ON (a.transactionid = b.transactionid)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.membermaster c ON (b.memberid = c.memberid)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.goodsmaster d ON (a.itemnumber = d.itemnumber);</span></span>
+<span class="line"><span style="color:#24292e;">+------+------------------+---------------------+----------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 会员 | 单号             | 交易时间            | 商品名称 | 交易金额 |</span></span>
+<span class="line"><span style="color:#24292e;">+------+------------------+---------------------+----------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 书       |   176.22 |</span></span>
+<span class="line"><span style="color:#24292e;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 笔       |    24.75 |</span></span>
+<span class="line"><span style="color:#24292e;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 书       |   234.96 |</span></span>
+<span class="line"><span style="color:#24292e;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 笔       |    26.40 |</span></span>
+<span class="line"><span style="color:#24292e;">+------+------------------+---------------------+----------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.01 sec)</span></span></code></pre></div><p>接着，我们用 FLOOR（a.salesvalue），对销售金额向下取整，获取会员积分值，代码如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; c.membername AS &#39;会员&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; b.transactionno AS &#39;单号&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; b.transdate AS &#39;交易时间&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; d.goodsname AS &#39;商品名称&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; a.salesvalue AS &#39;交易金额&#39;,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FLOOR(a.salesvalue) AS &#39;积分&#39;  -- 使用FLOOR函数向下取整</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.transactiondetails a</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.transactionhead b ON (a.transactionid = b.transactionid)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.membermaster c ON (b.memberid = c.memberid)</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.goodsmaster d ON (a.itemnumber = d.itemnumber);</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------+------------------+---------------------+----------+----------+------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 会员 | 单号             | 交易时间            | 商品名称 | 交易金额 | 积分 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------+------------------+---------------------+----------+----------+------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 书       |   176.22 |  176 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 笔       |    24.75 |   24 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 书       |   234.96 |  234 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 笔       |    26.40 |   26 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------+------------------+---------------------+----------+----------+------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">4 rows in set (0.01 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; c.membername AS &#39;会员&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; b.transactionno AS &#39;单号&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; b.transdate AS &#39;交易时间&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; d.goodsname AS &#39;商品名称&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; a.salesvalue AS &#39;交易金额&#39;,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FLOOR(a.salesvalue) AS &#39;积分&#39;  -- 使用FLOOR函数向下取整</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.transactiondetails a</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.transactionhead b ON (a.transactionid = b.transactionid)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.membermaster c ON (b.memberid = c.memberid)</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; JOIN</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.goodsmaster d ON (a.itemnumber = d.itemnumber);</span></span>
+<span class="line"><span style="color:#24292e;">+------+------------------+---------------------+----------+----------+------+</span></span>
+<span class="line"><span style="color:#24292e;">| 会员 | 单号             | 交易时间            | 商品名称 | 交易金额 | 积分 |</span></span>
+<span class="line"><span style="color:#24292e;">+------+------------------+---------------------+----------+----------+------+</span></span>
+<span class="line"><span style="color:#24292e;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 书       |   176.22 |  176 |</span></span>
+<span class="line"><span style="color:#24292e;">| 张三 | 0120201201000001 | 2020-12-01 14:25:56 | 笔       |    24.75 |   24 |</span></span>
+<span class="line"><span style="color:#24292e;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 书       |   234.96 |  234 |</span></span>
+<span class="line"><span style="color:#24292e;">| 李四 | 0120201202000001 | 2020-12-02 10:50:50 | 笔       |    26.40 |   26 |</span></span>
+<span class="line"><span style="color:#24292e;">+------+------------------+---------------------+----------+----------+------+</span></span>
+<span class="line"><span style="color:#24292e;">4 rows in set (0.01 sec)</span></span></code></pre></div><p>你看，通过 FLOOR()，我们轻松地获得了超市经营者需要的积分数据。</p><p>类似的，如果用户的积分规则改为“不满一元积一分”，其实就是对金额数值向上取整，这个时候，我们就可以用 CEIL() 函数。操作方法和前面是一样的，我就不具体解释了。</p><p>最后，我再来讲一讲舍入函数 ROUND（）的使用方法。</p><p>超市经营者提出，收银的时候，应收金额可以被设定四舍五入到哪一位。比如，可以设定四舍五入到元、到角，或者到分。</p><p>按照指定的位数，对小数进行四舍五入计算，这样的场景就要用到 ROUND（X,D）了。它的作用是通过四舍五入，对数值 X 保留 D 位小数。</p><p>根据超市经营者的要求，我们把函数 ROUND(X,D) 中的保留小数的位数 D 设置成 0、1 和 2。</p><p>如果要精确到分，我们可以设置保留 2 位小数：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT ROUND(salesvalue,2) -- D设置成2，表示保留2位小数，也就是精确到分</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM demo.transactiondetails</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE transactionid=1 AND itemnumber=1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| ROUND(salesvalue,2) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 176.22 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT ROUND(salesvalue,2) -- D设置成2，表示保留2位小数，也就是精确到分</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM demo.transactiondetails</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE transactionid=1 AND itemnumber=1;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| ROUND(salesvalue,2) |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 176.22 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1rows in set (0.00 sec)</span></span></code></pre></div><p>如果要精确到角，可以设置保留 1 位小数：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT ROUND(salesvalue,1) -- D设置成1，表示保留1位小数，也就是精确到角</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM demo.transactiondetails</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE transactionid=1 AND itemnumber=1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| ROUND(salesvalue,1) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 176.2 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 rows in set (0.00 sec</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT ROUND(salesvalue,1) -- D设置成1，表示保留1位小数，也就是精确到角</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM demo.transactiondetails</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE transactionid=1 AND itemnumber=1;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| ROUND(salesvalue,1) |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 176.2 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 rows in set (0.00 sec</span></span></code></pre></div><p>如果要精确到元，可以设置保留 0 位小数：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT ROUND(salesvalue,0)-- D设置成0，表示保留0位小数，也就是精确到元</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM demo.transactiondetails</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE transactionid=1 AND itemnumber=1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| ROUND(salesvalue,0) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 176 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 rows in set (0.00 se</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT ROUND(salesvalue,0)-- D设置成0，表示保留0位小数，也就是精确到元</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM demo.transactiondetails</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE transactionid=1 AND itemnumber=1;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| ROUND(salesvalue,0) |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 176 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 rows in set (0.00 se</span></span></code></pre></div><p>除了刚刚我们所学习的函数，MySQL 还支持绝对值函数 ABS（）和求余函数 MOD（），ABS（X）表示获取 X 的绝对值；MOD（X，Y）表示获取 X 被 Y 除后的余数。这些函数使用起来都比较简单，你重点掌握它们的含义就可以了，下面我再带你学习下字符串函数。</p><h3 id="字符串函数" tabindex="-1">字符串函数 <a class="header-anchor" href="#字符串函数" aria-label="Permalink to &quot;字符串函数&quot;">​</a></h3><p>除了数学计算，我们还经常会遇到需要对字符串进行处理的场景，比如我们想要在金额前面加一个“￥”的符号，就会用到字符串拼接函数；再比如，我们需要把一组数字以字符串的形式在网上传输，就要用到类型转换函数。</p><p>常用的字符串函数有 4 个。</p><ul><li>CONCAT（s1,s2,...）：表示把字符串 s1、s2……拼接起来，组成一个字符串。</li><li>CAST（表达式 AS CHAR）：表示将表达式的值转换成字符串。</li><li>CHAR_LENGTH（字符串）：表示获取字符串的长度。</li><li>SPACE（n）：表示获取一个由 n 个空格组成的字符串。</li></ul><p>接下来我还是借助超市项目中的实际应用场景，来说明一下怎么使用这些字符串函数。</p><p>顾客交了钱，完成交易之后，系统必须要打出一张小票。打印小票时，对格式有很多要求。比如说，一张小票纸，57 毫米宽，大概可以打 32 个字符，也就是 16 个汉字。用户要求一条流水打 2 行，第一行是商品信息，第二行要包括数量、价格、折扣和金额 4 种信息。那么，怎么才能清晰地在小票上打印出这些信息，并且打印得整齐漂亮呢？这就涉及对字符串的处理了。</p><p>首先，我们来看一下如何打印第一行的商品信息。商品信息包括：商品名称和商品规格，而且商品规格要包含在括号里面。这样就必须把商品名称和商品规格拼接起来，变成一个字符串。</p><p>这时，我们就可以用合并字符串函数 CONCAT（），如下所示：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; CONCAT(goodsname, &#39;(&#39;, specification, &#39;)&#39;) AS 商品信息 -- 这里把商品名称、括号和规格拼接起来</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; demo.goodsmaster</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE itemnumber = 1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 商品信息 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 书(16开) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; CONCAT(goodsname, &#39;(&#39;, specification, &#39;)&#39;) AS 商品信息 -- 这里把商品名称、括号和规格拼接起来</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; demo.goodsmaster</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE itemnumber = 1;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 商品信息 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 书(16开) |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>这样，我们就得到了商品编号是 1 的商品，它的商品信息是：“书（16 开）”。</p><p>第二步，我们来看一下如何打印第二行。第二行包括数量、价格、折扣和金额，一共是 4 种信息。因为一行最多是 32 个字符，我们给数量分配 7 个字符，价格分配 7 个字符，折扣分配 6 个字符，金额分配 9 个字符，加上中间 3 个空格，正好是 32 个字符。</p><p>为啥这么分配呢？我简单解释下。</p><ul><li>数量 7 个字符，就是小数点前面给 3 位，小数点后面给 3 位，外加小数点 1 位，最大 999.999，基本满足零售的需求了。</li><li>同样道理，价格给 7 位，意思是小数点前面 4 位，小数点后面 2 位，外加小数点，这样最大可以表示 9999.99。</li><li>折扣 6 位，小数点后面 2 位，小数点前面 2 位，加上小数点和“%”，这样是够用的。</li><li>金额 9 位，最大可以显示到 999999.99，也够用了。</li></ul><p>分配好了各部分信息的字符串大小，我再讲一下格式处理，因为数据的取值每次都会不同，如果直接打印，会参差不齐。这里我以数量为例，来具体说明一下。因为数量比较有代表性，而且比较简单，不像金额或者折扣率那样，有时还要根据用户的需求，加上“￥”或者“%”。</p><p>第一步，把数量转换成字符串。这里我们需要用到把数值转换成字符串的 CAST（）函数，如下所示：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; CAST(quantity AS CHAR) -- 把decimal类型转换成字符串</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; demo.transactiondetails</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; transactionid = 1 AND itemnumber =1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| CAST(price AS CHAR) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2.000 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; CAST(quantity AS CHAR) -- 把decimal类型转换成字符串</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; demo.transactiondetails</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; transactionid = 1 AND itemnumber =1;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| CAST(price AS CHAR) |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 2.000 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 rows in set (0.00 sec)</span></span></code></pre></div><p>第二步，计算字符串的长度，这里我们要用到 CHAR_LENGTH（）函数。</p><p>需要注意的是，虽然每个汉字打印的时候占 2 个字符长度，但是这个函数获取的是汉字的个数。因此，如果字符串中有汉字，函数获取的字符串长度跟实际打印的长度是不一样的，需要用空格来补齐。</p><p>我们可以通过下面的查询，获取数量字段转换成字符串后的字符串长度：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; CHAR_LENGTH(CAST(quantity AS CHAR)) AS 长度</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; demo.transactiondetails</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; transactionid = 1 AND itemnumber =1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 长度 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 5 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+---------------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; CHAR_LENGTH(CAST(quantity AS CHAR)) AS 长度</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; demo.transactiondetails</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; transactionid = 1 AND itemnumber =1;</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 长度 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 5 |</span></span>
+<span class="line"><span style="color:#24292e;">+---------------------+</span></span>
+<span class="line"><span style="color:#24292e;">1 rows in set (0.00 sec)</span></span></code></pre></div><p>第三步，用空格补齐 7 位长度。这时，我们要用到 SPACE（）函数。</p><p>因为我们采用左对齐的方式打印（左对齐表示字符串从左边开始，右边空余的位置用空格补齐），所以就需要先拼接字符串，再在字符串的后面补齐空格：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; CONCAT(CAST(quantity AS CHAR),</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; SPACE(7 - CHAR_LENGTH(CAST(quantity AS CHAR)))) AS 数量</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; demo.transactiondetails</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; transactionid = 1 AND itemnumber = 1;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 数量 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2.000 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; CONCAT(CAST(quantity AS CHAR),</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; SPACE(7 - CHAR_LENGTH(CAST(quantity AS CHAR)))) AS 数量</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; demo.transactiondetails</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; WHERE</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; transactionid = 1 AND itemnumber = 1;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 数量 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 2.000 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span></code></pre></div><p>除此以外，MySQL 还支持 SUBSTR（）、MID（）、TRIM（）、LTRIM（）、RTRIM（）。我画了一张图来展示它们的含义，你可以了解一下。</p><img src="`+R+`"><p>般来说，关于字符串函数，你掌握这些就足够了。不过，MySQL 支持的字符串函数还有很多，如果你在实际工作中，遇到了更复杂的情况，可以参考 MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/string-functions.html" target="_blank" rel="noreferrer">官方的文档</a>。</p><h3 id="条件判断函数" tabindex="-1">条件判断函数 <a class="header-anchor" href="#条件判断函数" aria-label="Permalink to &quot;条件判断函数&quot;">​</a></h3><p>我们刚才在对商品信息字符串进行拼接的时候，会有一种例外的情况，那就是当规格为空的时候，商品信息会变成“NULL”。这个结果显然不是我们想要的，因为名称变成 NULL，顾客会觉得奇怪，也不知道买了什么商品。我们希望，如果规格是空值，就不用加规格了。怎么实现呢？这就要用到条件判断函数了。</p><p>条件判断函数的主要作用，就是根据特定的条件返回不同的值，常用的有两种。</p><ul><li>IFNULL（V1，V2）：表示如果 V1 的值不为空值，则返回 V1，否则返回 V2。</li><li>IF（表达式，V1，V2）：如果表达式为真（TRUE），则返回 V1，否则返回 V2。</li></ul><p>我们希望规格是空的商品，拼接商品信息字符串的时候，规格不要是空。这个问题，可以通过 IFNULL(specification, &#39;&#39;) 函数来解决。具体点说就是，对字段“specification”是否为空进行判断，如果为空，就返回空字符串，否则就返回商品规格 specification 的值。代码如下所示：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; specification,</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; CONCAT(goodsname,&#39;(&#39;, IFNULL(specification, &#39;&#39;),&#39;)&#39;) AS 拼接 -- 用条件判断函数，如果规格是空，则括号中是空字符串</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">    -&gt; demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+---------------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| goodsname | specification | 拼接     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+---------------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 书        | 16开          | 书(16开) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 笔        | NULL          | 笔()     |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+-----------+---------------+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">2 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; specification,</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; CONCAT(goodsname,&#39;(&#39;, IFNULL(specification, &#39;&#39;),&#39;)&#39;) AS 拼接 -- 用条件判断函数，如果规格是空，则括号中是空字符串</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">    -&gt; demo.goodsmaster;</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+---------------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| goodsname | specification | 拼接     |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+---------------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 书        | 16开          | 书(16开) |</span></span>
+<span class="line"><span style="color:#24292e;">| 笔        | NULL          | 笔()     |</span></span>
+<span class="line"><span style="color:#24292e;">+-----------+---------------+----------+</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.00 sec)</span></span></code></pre></div><p>结果是，如果规格为空，商品信息就变成了“商品信息（）”，好像还不错。但是也存在一点问题：商品名称后面的那个空括号“()”会让客人觉得奇怪，能不能去掉呢？</p><p>如果用 IFNULL（V1，V2）函数，就不容易做到，但是没关系，我们可以尝试用另一个条件判断函数 IF（表达式，V1，V2）来解决。这里表达式是 ISNULL(specification)，这个函数用来判断字段&quot;specificaiton&quot;是否为空，V1 是返回商品名称，V2 是返回商品名称拼接规格。代码如下所示：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div><h2 id="十一、索引" tabindex="-1">十一、索引 <a class="header-anchor" href="#十一、索引" aria-label="Permalink to &quot;十一、索引&quot;">​</a></h2><p>在我们的超市信息系统刚刚开始运营的时候，因为数据量很少，每一次的查询都能很快拿到结果。但是，系统运转时间长了以后，数据量不断地累积，变得越来越庞大，很多查询的速度就变得特别慢。这个时候，我们可以采用了 MySQL 提供的高效访问数据的方法—— 索引，有效解决这个问题。</p><h3 id="索引是什么" tabindex="-1">索引是什么 <a class="header-anchor" href="#索引是什么" aria-label="Permalink to &quot;索引是什么&quot;">​</a></h3><p>如果你去过图书馆，应该会知道图书馆的检索系统。图书馆为图书准备了检索目录，包括书名、书号、对应的位置信息，包括在哪个区、哪个书架、哪一层。我们可以通过书名或书号，快速获知书的位置，拿到需要的书。</p><p>MySQL 中的索引，就相当于图书馆的检索目录，它是帮助 MySQL 系统快速检索数据的一种存储结构。我们可以在索引中按照查询条件，检索索引字段的值，然后快速定位数据记录的位置，这样就不需要遍历整个数据表了。而且，数据表中的字段越多，表中数据记录越多，速度提升越是明显。</p><p>我们来举个例子，进一步解释下索引的作用。这里要用到销售流水表（<code>demo.trans</code>），表结果如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; DESCRIBE demo.trans;</span></span>
 <span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
 <span class="line"><span style="color:#e1e4e8;">| Field         | Type     | Null | Key | Default | Extra |</span></span>
 <span class="line"><span style="color:#e1e4e8;">+---------------+----------+------+-----+---------+-------+</span></span>
@@ -3232,4 +3482,4 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
 <span class="line"><span style="color:#24292e;">| 1 | SIMPLE | trans | NULL | ref | index_trans_itemnumber,index_trans_branchnumber,index_trans_cashiernumber,index_branchnumber_cashiernumber_itemnumber | index_trans_itemnumber | 5 | const | 1192 | 20.50 | Using where |</span></span>
 <span class="line"><span style="color:#24292e;">+----+-------------+-------+------------+------+-----------------------------------------------------------------------------------------------------------------------+------------------------+---------+-------+------+----------+-------------+</span></span>
-<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.02 sec)</span></span></code></pre></div><p>果然，MySQL 没有选择组合索引，而是选择了用 <code>itemnumber</code> 创建的普通索引 <code>index_trans_itemnumber</code>。因为如果只用组合索引的一部分，效果没有单字段索引那么好。</p><h3 id="总结-9" tabindex="-1">总结 <a class="header-anchor" href="#总结-9" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章我们学习了什么是索引、如何创建和使用索引。索引可以非常显著地提高数据查询的速度，数据表里包含的数据越多，效果越显著。我们应该选择经常被用做筛选条件的字段来创建索引，这样才能通过索引缩小实际读取数据表中数据的范围，发挥出索引的优势。如果有多个筛选的字段，而且经常一起出现，也可以用多个字段来创建组合索引。</p><p>如果你要删除索引，就可以用：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">DROP INDEX 索引名 ON 表名;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">DROP INDEX 索引名 ON 表名;</span></span></code></pre></div><p>当然， 有的索引不能用这种方法删除，比如主键索引，你就必须通过修改表来删除索引。语法如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre></div><p>最后，我来跟你说说索引的成本。索引能够提升查询的效率，但是建索引也是有成本的，主要有 2 个方面，一个存储空间的开销，还有一个是数据操作上的开销。</p><ul><li>存储空间的开销，是指索引需要单独占用存储空间。</li><li>数据操作上的开销，是指一旦数据表有变动，无论是插入一条新数据，还是删除一条旧的数据，甚至是修改数据，如果涉及索引字段，都需要对索引本身进行修改，以确保索引能够指向正确的记录。</li></ul><p>因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。</p>`,824),C=[q];function k(O,I,D,M,U,F){return n(),a("div",null,C)}const f=s(R,[["render",k]]);export{Y as __pageData,f as default};
+<span class="line"><span style="color:#24292e;">1 row in set, 1 warning (0.02 sec)</span></span></code></pre></div><p>果然，MySQL 没有选择组合索引，而是选择了用 <code>itemnumber</code> 创建的普通索引 <code>index_trans_itemnumber</code>。因为如果只用组合索引的一部分，效果没有单字段索引那么好。</p><h3 id="总结-9" tabindex="-1">总结 <a class="header-anchor" href="#总结-9" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章我们学习了什么是索引、如何创建和使用索引。索引可以非常显著地提高数据查询的速度，数据表里包含的数据越多，效果越显著。我们应该选择经常被用做筛选条件的字段来创建索引，这样才能通过索引缩小实际读取数据表中数据的范围，发挥出索引的优势。如果有多个筛选的字段，而且经常一起出现，也可以用多个字段来创建组合索引。</p><p>如果你要删除索引，就可以用：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">DROP INDEX 索引名 ON 表名;</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">DROP INDEX 索引名 ON 表名;</span></span></code></pre></div><p>当然， 有的索引不能用这种方法删除，比如主键索引，你就必须通过修改表来删除索引。语法如下：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">ALTER TABLE 表名 DROP PRIMARY KEY；</span></span></code></pre></div><p>最后，我来跟你说说索引的成本。索引能够提升查询的效率，但是建索引也是有成本的，主要有 2 个方面，一个存储空间的开销，还有一个是数据操作上的开销。</p><ul><li>存储空间的开销，是指索引需要单独占用存储空间。</li><li>数据操作上的开销，是指一旦数据表有变动，无论是插入一条新数据，还是删除一条旧的数据，甚至是修改数据，如果涉及索引字段，都需要对索引本身进行修改，以确保索引能够指向正确的记录。</li></ul><p>因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。</p>`,888),O=[q];function k(D,I,M,U,F,_){return n(),a("div",null,O)}const B=s(C,[["render",k]]);export{f as __pageData,B as default};
