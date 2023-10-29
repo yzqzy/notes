@@ -1122,6 +1122,53 @@ SELECT
         INTERVAL 1 DAY
     );
 
+-- 其他日期函数
+
+DROP TABLE demo.discountrule;
+
+CREATE TABLE
+    demo.discountrule (
+        branchid INT,
+        itemnumber TEXT,
+        weekday INT,
+        discountrate DOUBLE
+    );
+
+INSERT INTO
+    demo.discountrule (
+        branchid,
+        itemnumber,
+        weekday,
+        discountrate
+    )
+VALUES (1, "1", 1, 0.9), (1, "1", 3, 0.75), (1, "1", 5, 0.88), (1, "2", 2, 0.5), (1, "2", 4, 0.65), (1, "2", 6, 0.8), (1, "1", 7, 0.5), (1, "2", 7, 0.5), (1, "3", 7, 0.5);
+
+SELECT * FROM demo.discountrule;
+
+SELECT
+    CURDATE() AS 日期,
+    CASE DAYOFWEEK(CURDATE()) - 1
+        WHEN 0 THEN 7
+        ELSE DAYOFWEEK(CURDATE()) - 1
+    END AS 周几,
+    a.goodsname AS 商品名称,
+    a.salesprice AS 价格,
+    IFNULL(b.discountrate, 1) AS 折扣率,
+    a.salesprice * IFNULL(b.discountrate, 1) AS 折后价格
+FROM demo.goodsmaster AS a
+    LEFT JOIN demo.discountrule AS b ON (
+        a.itemnumber = b.itemnumber AND CASE DAYOFWEEK(CURDATE()) - 1
+            WHEN 0 THEN 7
+            ELSE DAYOFWEEK(CURDATE()) - 1
+        END = b.weekday
+    );
+
+SELECT DATE_FORMAT("2020-12-0 15:25:50", "%T");
+
+SELECT DATE_FORMAT("2020-12-0 15:25:50", "%r");
+
+SELECT DATEDIFF("2021-02-01", "2020-12-01");
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;
