@@ -1083,7 +1083,44 @@ ORDER BY HOUR(b.transdate);
 
 -- 计算日期时间的函数
 
+--- 获取起始日期
+
 SELECT DATE_ADD('2020-12-10', INTERVAL - 1 YEAR);
+
+SELECT
+    DATE_ADD(
+        DATE_ADD('2020-12-10', INTERVAL - 1 YEAR),
+        INTERVAL - 1 MONTH
+    );
+
+SELECT
+    LAST_DAY(
+        DATE_ADD(
+            DATE_ADD('2020-12-10', INTERVAL - 1 YEAR),
+            INTERVAL - 1 MONTH
+        )
+    );
+
+SELECT
+    DATE_ADD(
+        LAST_DAY(
+            DATE_ADD(
+                DATE_ADD('2020-12-10', INTERVAL - 1 YEAR),
+                INTERVAL - 1 MONTH
+            )
+        ),
+        INTERVAL 1 DAY
+    );
+
+--- 获取截止日期
+
+SELECT
+    DATE_ADD(
+        LAST_DAY(
+            DATE_ADD('2020-12-10', INTERVAL - 1 YEAR)
+        ),
+        INTERVAL 1 DAY
+    );
 
 ## 十一. 索引
 
