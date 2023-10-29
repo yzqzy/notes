@@ -1169,6 +1169,103 @@ SELECT DATE_FORMAT("2020-12-0 15:25:50", "%r");
 
 SELECT DATEDIFF("2021-02-01", "2020-12-01");
 
+## 十、数学计算、字符串处理
+
+DESCRIBE demo.transactiondetails;
+
+SELECT * FROM demo.goodsmaster;
+
+SELECT * FROM demo.membermaster;
+
+SELECT * FROM demo.transactiondetails;
+
+SELECT * FROM demo.transactionhead;
+
+SELECT
+    c.membername AS '会员',
+    b.transactionno AS '单号',
+    b.transdate AS '交易时间',
+    d.goodsname AS '商品名称',
+    a.salesvalue AS '交易金额'
+FROM demo.transactiondetails a
+    JOIN demo.transactionhead b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.membermaster c ON (b.memberid = c.id)
+    JOIN demo.goodsmaster d ON (a.itemnumber = d.itemnumber);
+
+SELECT
+    c.membername AS '会员',
+    b.transactionno AS '单号',
+    b.transdate AS '交易时间',
+    d.goodsname AS '商品名称',
+    a.salesvalue AS '交易金额',
+    FLOOR(a.salesvalue) AS '积分'
+FROM demo.transactiondetails a
+    JOIN demo.transactionhead b ON (
+        a.transactionid = b.transactionid
+    )
+    JOIN demo.membermaster c ON (b.memberid = c.id)
+    JOIN demo.goodsmaster d ON (a.itemnumber = d.itemnumber);
+
+SELECT ROUND(salesvalue, 2)
+FROM demo.transactiondetails
+WHERE
+    transactionid = 1
+    AND itemnumber = 1;
+
+SELECT ROUND(salesvalue, 1)
+FROM demo.transactiondetails
+WHERE
+    transactionid = 1
+    AND itemnumber = 1;
+
+SELECT
+    CONCAT(
+        goodsname,
+        '(',
+        specifiction,
+        ')'
+    ) AS 商品信息
+FROM demo.goodsmaster
+WHERE itemnumber = 1;
+
+SELECT CAST(quantity AS CHAR)
+FROM demo.transactiondetails
+WHERE
+    transactionid = 1
+    AND itemnumber = 1;
+
+SELECT
+    CHAR_LENGTH(CAST(quantity AS CHAR)) AS 长度
+FROM demo.transactiondetails
+WHERE
+    transactionid = 3
+    AND itemnumber = 2;
+
+SELECT
+    CONCAT(
+        CAST(quantity AS CHAR),
+        SPACE(
+            7 - CHAR_LENGTH(CAST(quantity AS CHAR))
+        )
+    ) AS 数量
+FROM demo.transactiondetails
+WHERE
+    transactionid = 1
+    AND itemnumber = 1;
+
+SELECT
+    goodsname,
+    specifiction,
+    CONCAT(
+        goodsname,
+        '(',
+        IFNULL(specifiction, ''),
+        ')'
+    ) AS 拼接
+FROM demo.goodsmaster;
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;
