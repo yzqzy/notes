@@ -1410,3 +1410,94 @@ CREATE INDEX
         cashiernumber,
         itemnumber
     );
+
+## 十二、事务
+
+CREATE TABLE
+    demo.mytrans (
+        transid INT,
+        itemnumber TEXT,
+        quantity DOUBLE
+    );
+
+CREATE TABLE
+    demo.inventory (
+        itemnumber TEXT,
+        invquantity DOUBLE
+    );
+
+DELETE FROM demo.mytrans;
+
+DELETE FROM demo.inventory;
+
+SELECT * FROM demo.inventory;
+
+INSERT INTO
+    demo.inventory (itemnumber, invquantity)
+VALUES (1, 10);
+
+-- 事务处理
+
+START TRANSACTION;
+
+INSERT INTO demo.mytrans VALUES (1, 1, 5);
+
+UPDATE demo.inventory
+SET
+    invquantity = invquantity - 5
+WHERE itemnumber = "1";
+
+COMMIT;
+
+-- 查询结果
+
+SELECT * FROM demo.mytrans;
+
+SELECT * FROM demo.inventory;
+
+-- 事务（错误示范）
+
+START TRANSACTION;
+
+INSERT INTO demo.mytrans VALUES (1, 5);
+
+UPDATE demo.inventory
+SET
+    invquantity = invquantity - 5
+WHERE itemnumber = 1;
+
+COMMIT;
+
+-- 事务（获取操作记录）
+
+INSERT INTO demo.mytrans VALUES (1, 5);
+
+SELECT ROW_COUNT();
+
+-- 存储过程
+
+-- DELIMITER //
+
+-- CREATE PROCEDURE DEMO
+
+-- 	DEMO demo.mytest();
+
+-- BEGIN;
+
+-- DECLARE DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
+
+-- START TRANSACTION;
+
+-- INSERT INTO demo.mytrans VALUES (1, 5);
+
+-- UPDATE demo.inventory SET invquantity = invquantity - 5;
+
+-- COMMIT;
+
+-- END;
+
+-- //
+
+-- DELIMITER ;
+
+-- CALL demo.mytest();

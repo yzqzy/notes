@@ -4098,5 +4098,195 @@ ALTER TABLE 表名 DROP PRIMARY KEY；
 
 因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。
 
-## 十二、
+## 十二、事务
+
+我们经常会遇到这样的场景：几个相互关联的数据操作，必须是全部执行，或者全部不执行，不可以出现部分执行的情况。
+
+比如说，你从微信账号里提现 100 元到银行卡上，这个动作就包括了相互关联的 2 个步骤，首先是微信账号减 100 元，然后是银行卡账号加 100 元（这里假设没有手续费）。假如因为某种异常，这 2  个操作只执行了一个，另外一个没有执行，就会出现你的钱少了 100 元，或者你的钱多了 100 元的情况，这肯定是不能接受的。
+
+如果才能确保多个关联操作全部执行呢？这时就要用到事物了。
+
+### 什么是事物
+
+事务是 MySQL 的一项功能，它可以使一组数据操作（也叫 DML 操作，是英文 Data Manipulation Language 的缩写，包括 SELECT、INSERT、UPDATE 和 DELETE），要么全部执行，要么全部不执行，不会因为某种异常情况出现执行一部分操作的情况。
+
+事务的语法结构如下所示：
+
+```mysql
+START TRANSACTION 或者 BEGIN （开始事务）
+一组DML语句
+COMMIT（提交事务）
+ROLLBACK（事务回滚）
+```
+
+我解释一下这几个关键字。
+
+* **START TRANSACTION 和 BEGIN**：表示开始事务，意思是通知 MySQL，后面的 DML 操作都是当前事务的一部分。
+* **COMMIT**：表示提交事务，意思是执行当前事务的全部操作，让数据更改永久有效。
+* **ROLLBACK**：表示回滚当前事务的操作，取消对数据的更改。
+
+事务有 4 个主要特征，分别是原子性（atomicity）、一致性（consistency）、持久性（durability）和隔离性（isolation）。
+
+* 原子性：表示事务中的操作要么全部执行，要么全部不执行，像一个整体，不能从中间打断。
+* 一致性：表示数据的完整性不会因为事务的执行而受到破坏。
+* 隔离性：表示多个事务同时执行的时候，不互相干扰。不同的隔离级别，相互独立的程度不同。
+* 持久性：表示事务对数据的修改是永远有效的，不会因为系统故障而失效。
+
+### 操作原子性、数据一致性
+
+我借助一个超市的收银员帮顾客结账的简单场景来讲解。在系统中，结算的动作主要就是销售流水的产生和库存的消减。这里会涉及销售流水表和库存表，如下所示：
+
+销售流水表（demo.mytrans）：
+
+| transid（流水单号） | itemnumber（商品编号） | quantity（销售数量） |
+| ------------------- | ---------------------- | -------------------- |
+|                     |                        |                      |
+
+库存表（demo.inventory）：
+
+| itemnumber（商品编号） | invquantity（库存数量） |
+| ---------------------- | ----------------------- |
+| 1                      | 10                      |
+
+现在，假设门店销售了 5 个商品编号是 1 的商品，这个动作实际上包括了 2 个相互关联的数据库操作：
+
+* 向流水表中插入一条“1 号商品卖了 5 个”的销售流水；
+* 把库存表中的 1 号商品的库存减 5。
+
+这里包含两个 DML 操作，为了避免意外事件导致的一个操作执行而另一个没有执行的情况，我们可以把他们放到一个事务里面，利用事务中数据操作的原子性，来确保数据的一致性。
+
+```mysql
+mysql> START TRANSACTION;
+Query OK, 0 rows affected (0.00 sec)
+mysql> INSERT INTO demo.mytrans VALUES (1,1,5);
+Query OK, 1 row affected (0.00 sec)
+mysql> UPDATE demo.inventory SET invquantity = invquantity - 5 WHERE itemnumber = 1;               
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1 Changed: 1 Warnings: 0
+mysql> COMMIT;
+Query OK, 0 rows affected (0.06 sec)
+```
+
+然后我们查询一下结果：
+
+```mysql
+mysql> SELECT * FROM demo.mytrans;
++---------+------------+----------+
+| transid | itemnumber | quantity |
++---------+------------+----------+
+| 1 | 1 | 5.000 |
++---------+------------+----------+
+1 row in set (0.00 sec)
+mysql> SELECT * FROM demo.inventory;
++------------+-------------+
+| itemnumber | invquantity |
++------------+-------------+
+| 1 | 5.000 |
++------------+-------------+
+1 row in set (0.00 sec)
+```
+
+这样，通过把 2 个相关操作放到事务里面，我们就实现了一个事务操作。
+
+这里有一个坑，我要提醒你一下。事务并不会自动帮你处理 SQL 语句执行中的错误，如果你对事务中的某一步数据操作发生的错误不做处理，继续提交的话，仍然会导致数据不一致。
+
+为了方便你理解，我举个小例子。
+
+假如我们的插入一条销售流水的语句少了一个字段，执行的时候出现错误了，如果我们不对这个错误做回滚处理，继续执行后面的操作，最后提交事务，结果就会出现没有流水但库存消减了的情况：
+
+```mysql
+mysql> START TRANSACTION;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> INSERT INTO demo.mytrans VALUES (1,5);
+ERROR 1136 (21S01): Column count doesn't match value count at row 1
+
+mysql> UPDATE demo.inventory SET invquantity = invquantity - 5 WHERE itemnumber = 1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1 Changed: 1 Warnings: 0
+
+mysql> COMMIT;
+Query OK, 0 rows affected (0.03 sec)
+```
+
+我们查一下表的内容：
+
+```mysql
+mysql> SELECT * FROM demo.mytrans;
+Empty set (0.16 sec)
+mysql> SELECT * FROM demo.inventory;
++------------+-------------+
+| itemnumber | invquantity |
++------------+-------------+
+| 1 | 5.000 |
++------------+-------------+
+1 row in set (0.00 sec)
+```
+
+结果显示，流水插入失败了，但是库存更新成功了，这时候没有销售流水，但是库存却被消减了。
+
+这就是因为没有正确使用事务导致的数据不完整问题。那么，如何使用事务，才能避免这种由于事务中的某一步或者几步操作出现错误，而导致数据不完整的情况发生呢？这就要用到事务中错误处理和回滚了：
+
+* 如果发现事务中的某个操作发生错误，要及时使用回滚；
+* 只有事务中的所有操作都可以正常执行，才进行提交。
+
+那这里的关键就是判断操作是不是发生了错误。我们可以通过 MySQL 的函数 ROW_COUNT() 的返回，来判断一个 DML 操作是否失败，-1 表示操作失败，否则就表示影响的记录数。
+
+```mysql
+mysql> INSERT INTO demo.mytrans VALUES (1,5);
+ERROR 1136 (21S01): Column count doesn't match value count at row 1
+mysql> SELECT ROW_COUNT();
++-------------+
+| ROW_COUNT() |
++-------------+
+| -1 |
++-------------+
+1 row in set (0.00 sec)
+```
+
+另外一个经常会用到事务的地方是存储过程。由于存储过程中包含很多相互关联的数据操作，所以会大量使用事务。我们可以在 MySQL 的存储过程中，通过获取 SQL 错误，来决定事务是提交还是回滚：
+
+```mysql
+mysql> DELIMITER //                   -- 修改分隔符为 //
+mysql> CREATE PROCEDURE demo.mytest() -- 创建存储过程
+-> BEGIN                              -- 开始程序体
+-> DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; -- 定义SQL操作发生错误是自动回滚
+-> START TRANSACTION;                              -- 开始事务
+-> INSERT INTO demo.mytrans VALUES (1,5);
+-> UPDATE demo.inventory SET invquantity = invquantity - 5;
+-> COMMIT;                                         -- 提交事务
+-> END
+-> //                                              -- 完成创建存储过程
+Query OK, 0 rows affected (0.05 sec)
+ 
+mysql> DELIMITER ;                                 -- 恢复分隔符为；
+mysql> CALL demo.mytest();                         -- 调用存储过程
+Query OK, 0 rows affected (0.00 sec)
+ 
+mysql> SELECT * FROM demo.mytrans;                 -- 销售流水没有插入
+Empty set (0.00 sec)
+mysql> SELECT * FROM demo.inventory;               -- 库存也没有消减，说明事务回滚了
++------------+-------------+
+| itemnumber | invquantity |
++------------+-------------+
+| 1 | 10.000 |
++------------+-------------+
+1 row in set (0.00 sec)
+```
+
+这里，我们要先通过“DELIMITER //”语句把 MySQL 语句的结束标识改为“//”（默认语句的结束标识是“;”）。这样做的目的是告诉 MySQL 一直到“//”才是语句的结束，否则，MySQL 会在遇到第一个“;”的时候认为语句已经结束，并且执行。这样就会报错，自然也就没办法创建存储过程了。
+
+创建结束以后，我们还要录入“//”，告诉 MySQL 存储过程创建完成了，并且通过“DELIMITER ;”，再把语句结束标识改回到“;”。
+
+在这个存储过程中，我使用了“DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;”这个语句，来监控 SQL 语句的执行结果，一旦发发生错误，就自动回滚并退出。通过这个机制，我们就实现了对事务中的 SQL 操作进行监控，如果发现事务中的任何 SQL 操作发生错误，就自动回滚。
+
+总之，我们要把重要的关联操作放在事务中，确保操作的原子性，并且对失败的操作进行回滚处理。只有这样，才能真正发挥事务的作用，保证关联操作全部成功或全部失败，最终确保数据的一致性。
+
+### 事务的隔离性
+
+接下来，我们再学习下如何用好事务的隔离性。
+
+超市经营者提出，门店要支持网上会员销售，现在我们假设会员张三是储值会员，他的会员卡里有 100 元。张三用会员卡到门店消费 100 元，他爱人用他的会员卡在网上消费 100 元。
+
+张三在门店消费结算的时候，开启了一个事务 A，包括这样 3 个操作：
 
