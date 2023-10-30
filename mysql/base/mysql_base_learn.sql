@@ -1266,6 +1266,23 @@ SELECT
     ) AS 拼接
 FROM demo.goodsmaster;
 
+SELECT
+    goodsname,
+    specifiction,
+    IF(
+        ISNULL(specifiction),
+        goodsname,
+        CONCAT(
+            goodsname,
+            '(',
+            specifiction,
+            ')'
+        )
+    ) AS 拼接
+FROM demo.goodsmaster;
+
+SELECT ROUND(-1.5);
+
 ## 十一. 索引
 
 DESCRIBE demo.trans;

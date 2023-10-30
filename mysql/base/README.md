@@ -3553,6 +3553,19 @@ mysql> SELECT
 我们希望规格是空的商品，拼接商品信息字符串的时候，规格不要是空。这个问题，可以通过 IFNULL(specification, '') 函数来解决。具体点说就是，对字段“specification”是否为空进行判断，如果为空，就返回空字符串，否则就返回商品规格 specification 的值。代码如下所示：
 
 ```mysql
+SELECT
+    goodsname,
+    specifiction,
+    CONCAT(
+        goodsname,
+        '(',
+        IFNULL(specifiction, ''),
+        ')'
+    ) AS 拼接
+FROM demo.goodsmaster;
+```
+
+```mysql
 mysql> SELECT
     -> goodsname,
     -> specification,
@@ -3573,9 +3586,62 @@ mysql> SELECT
 如果用 IFNULL（V1，V2）函数，就不容易做到，但是没关系，我们可以尝试用另一个条件判断函数 IF（表达式，V1，V2）来解决。这里表达式是 ISNULL(specification)，这个函数用来判断字段"specificaiton"是否为空，V1 是返回商品名称，V2 是返回商品名称拼接规格。代码如下所示：
 
 ```mysql
+SELECT
+    goodsname,
+    specifiction,
+    IF(
+        ISNULL(specifiction),
+        goodsname,
+        CONCAT(
+            goodsname,
+            '(',
+            specifiction,
+            ')'
+        )
+    ) AS 拼接
+FROM demo.goodsmaster;
 ```
 
+```mysql
+mysql> SELECT
+    -> goodsname,
+    -> specification,
+    -> -- 这里做判断，如果是空值，返回商品名称，否则就拼接规格
+    -> IF(ISNULL(specification),
+    -> goodsname,
+    -> CONCAT(goodsname, '(', specification, ')')) AS 拼接
+    -> FROM
+    -> demo.goodsmaster;
++-----------+---------------+----------+
+| goodsname | specification | 拼接     |
++-----------+---------------+----------+
+| 书        | 16开          | 书(16开) |
+| 笔        | NULL          | 笔       |
++-----------+---------------+----------+
+2 rows in set (0.02 sec)
+```
 
+这个结果就是，如果规格为空，商品信息就是商品名称；如果规格不为空，商品信息是商品名称拼接商品规格，这就达到了我们的目的。
+
+### 总结
+
+今天，我们学习了用于提升数据处理效率的数学函数、字符串函数和条件判断函数。
+
+<img src="./images/table29.png" />
+
+这些函数看起来很容易掌握，但是有很多坑。比如说，ROUND（X）是对 X 小数部分四舍五入，那么在“五入”的时候，返回的值是不是一定比 X 大呢？其实不一定，因为当 X 为负数时，五入的值会更小。你可以看看下面的代码：
+
+```mysql
+mysql> SELECT ROUND(-1.5);
++-------------+
+| ROUND(-1.5) |
++-------------+
+|          -2 |
++-------------+
+1 row in set (0.00 sec)
+```
+
+所以，我建议你在学习的时候，多考虑边界条件的场景，实际测试一下。就像这个问题，对于 ROUND(X,0)，并没有指定 X 是正数，那如果是负数，会怎样呢？你去测试一下，就明白了。
 
 ## 十一、索引
 
@@ -4031,4 +4097,6 @@ ALTER TABLE 表名 DROP PRIMARY KEY；
 * 数据操作上的开销，是指一旦数据表有变动，无论是插入一条新数据，还是删除一条旧的数据，甚至是修改数据，如果涉及索引字段，都需要对索引本身进行修改，以确保索引能够指向正确的记录。
 
 因此，索引也不是越多越好，创建索引有存储开销和操作开销，需要综合考虑。
+
+## 十二、
 
