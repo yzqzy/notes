@@ -1501,3 +1501,71 @@ SELECT ROW_COUNT();
 -- DELIMITER ;
 
 -- CALL demo.mytest();
+
+## 十三、临时表
+
+SELECT * FROM demo.mysales;
+
+DESCRIBE demo.transactiondetails;
+
+CREATE TABLE
+    demo.mysales (
+        transid INT,
+        itemnumber TEXT,
+        quantity DOUBLE,
+        salesvalue DOUBLE,
+        transdate DATETIME
+    );
+
+INSERT INTO
+    demo.mysales (
+        transid,
+        itemnumber,
+        quantity,
+        salesvalue,
+        transdate
+    )
+VALUES (5897, 1, 2, 176.22, '2023-10-02'), (5897, 2, 5, 24.75, '2023-10-02'), (5898, 1, 3, 234.96, '2023-10-03');
+
+--- 创建临时表
+
+CREATE TEMPORARY
+TABLE demo.mysales
+SELECT
+    itemnumber,
+    SUM(quantity) AS QUANTITY,
+    SUM(salesvalue) AS SALESVALUE
+FROM demo.transactiondetails
+GROUP BY itemnumber
+ORDER BY itemnumber;
+
+SELECT * FROM demo.mysales;
+
+--- 创建进货单头表
+
+DESCRIBE demo.importhead;
+
+DROP TABLE demo.importhead;
+
+DROP TABLE demo.importdetails;
+
+CREATE TABLE
+    demo.importhead (
+        listnumber TEXT,
+        supplierid INT,
+        stockid INT,
+        operatorid INT,
+        confitmationdate DATETIME
+    );
+
+INSERT INTO
+    demo.importhead (
+        listnumber,
+        supplierid,
+        stockid,
+        operatorid,
+        confitmationdate
+    )
+VALUES (4587, 1, 1, 1, '2023-10-02'), (4598, 2, 1, 1, '2023-10-03');
+
+SELECT * FROM demo.importhead;
