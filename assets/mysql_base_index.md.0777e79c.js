@@ -1,4 +1,4 @@
-import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",m="/assets/table16.05a0d7e2.png",g="/assets/table17.111e1ccd.png",E="/assets/table18.ae446ac7.png",u="/assets/table19.4090d758.png",h="/assets/table20.545bdf77.png",b="/assets/table21.5cafcb80.png",L="/assets/table22.fa161884.png",T="/assets/table23.91230d34.png",A="/assets/table24.d1a81e26.png",v="/assets/table25.468f8f56.png",N="/assets/table26.8fca5399.png",S="/assets/table27.572271dc.png",R="/assets/table28.23c4804e.png",C="/assets/table29.7005626a.png",B=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),q={name:"mysql/base/index.md"},O=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
+import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p="/assets/type.7da76259.png",l="/assets/type02.7a662d7a.png",o="/assets/type03.1e016f4e.png",c="/assets/table02.4a53e957.png",t="/assets/table03.13f6828b.png",i="/assets/table10.cc69f1be.png",r="/assets/table13.90726171.png",y="/assets/importthead.a9acd552.png",d="/assets/importdetails.6c1b8cdf.png",m="/assets/table16.05a0d7e2.png",g="/assets/table17.111e1ccd.png",E="/assets/table18.ae446ac7.png",u="/assets/table19.4090d758.png",h="/assets/table20.545bdf77.png",b="/assets/table21.5cafcb80.png",L="/assets/table22.fa161884.png",T="/assets/table23.91230d34.png",A="/assets/table24.d1a81e26.png",v="/assets/table25.468f8f56.png",N="/assets/table26.8fca5399.png",S="/assets/table27.572271dc.png",R="/assets/table28.23c4804e.png",q="/assets/table29.7005626a.png",B=JSON.parse('{"title":"MySQL 必知必会","description":"","frontmatter":{},"headers":[],"relativePath":"mysql/base/index.md","filePath":"mysql/base/index.md"}'),C={name:"mysql/base/index.md"},O=e(`<h1 id="mysql-必知必会" tabindex="-1">MySQL 必知必会 <a class="header-anchor" href="#mysql-必知必会" aria-label="Permalink to &quot;MySQL 必知必会&quot;">​</a></h1><h2 id="一-数据存储过程" tabindex="-1">一. 数据存储过程 <a class="header-anchor" href="#一-数据存储过程" aria-label="Permalink to &quot;一. 数据存储过程&quot;">​</a></h2><p>MySQL 中，一个完整数据存储过程分为四步：创建数据库 - 确认字段 - 创建数据表 - 插入数据。</p><p>从系统架构层次来看，MySQL 数据库系统从大到小依次是数据库服务器、数据库、数据表、数据表的行与列。</p><p>数据库是 MySQL 最大的存储单元，没有数据库，数据表就没有载体，也就无法存储数据。</p><h3 id="准备工作" tabindex="-1">准备工作 <a class="header-anchor" href="#准备工作" aria-label="Permalink to &quot;准备工作&quot;">​</a></h3><p>安装数据库</p><div class="language-bash vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">bash</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#B392F0;">docker</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">run</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-d</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">-p</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">3306</span><span style="color:#9ECBFF;">:3306</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\d</span></span>
 <span class="line"><span style="color:#E1E4E8;">    --net</span><span style="color:#F97583;">=</span><span style="color:#9ECBFF;">host</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#B392F0;">-e</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">MYSQL_ROOT_PASSWORD=password</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
 <span class="line"><span style="color:#E1E4E8;">    </span><span style="color:#79B8FF;">-v</span><span style="color:#E1E4E8;"> </span><span style="color:#9ECBFF;">/data/main-mysql:/var/lib/mysql</span><span style="color:#E1E4E8;"> </span><span style="color:#79B8FF;">\\</span></span>
@@ -3170,7 +3170,7 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">| 书        | 16开          | 书(16开) |</span></span>
 <span class="line"><span style="color:#24292e;">| 笔        | NULL          | 笔       |</span></span>
 <span class="line"><span style="color:#24292e;">+-----------+---------------+----------+</span></span>
-<span class="line"><span style="color:#24292e;">2 rows in set (0.02 sec)</span></span></code></pre></div><p>这个结果就是，如果规格为空，商品信息就是商品名称；如果规格不为空，商品信息是商品名称拼接商品规格，这就达到了我们的目的。</p><h3 id="总结-9" tabindex="-1">总结 <a class="header-anchor" href="#总结-9" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了用于提升数据处理效率的数学函数、字符串函数和条件判断函数。</p><img src="`+C+`"><p>这些函数看起来很容易掌握，但是有很多坑。比如说，ROUND（X）是对 X 小数部分四舍五入，那么在“五入”的时候，返回的值是不是一定比 X 大呢？其实不一定，因为当 X 为负数时，五入的值会更小。你可以看看下面的代码：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT ROUND(-1.5);</span></span>
+<span class="line"><span style="color:#24292e;">2 rows in set (0.02 sec)</span></span></code></pre></div><p>这个结果就是，如果规格为空，商品信息就是商品名称；如果规格不为空，商品信息是商品名称拼接商品规格，这就达到了我们的目的。</p><h3 id="总结-9" tabindex="-1">总结 <a class="header-anchor" href="#总结-9" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>今天，我们学习了用于提升数据处理效率的数学函数、字符串函数和条件判断函数。</p><img src="`+q+`"><p>这些函数看起来很容易掌握，但是有很多坑。比如说，ROUND（X）是对 X 小数部分四舍五入，那么在“五入”的时候，返回的值是不是一定比 X 大呢？其实不一定，因为当 X 为负数时，五入的值会更小。你可以看看下面的代码：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT ROUND(-1.5);</span></span>
 <span class="line"><span style="color:#e1e4e8;">+-------------+</span></span>
 <span class="line"><span style="color:#e1e4e8;">| ROUND(-1.5) |</span></span>
 <span class="line"><span style="color:#e1e4e8;">+-------------+</span></span>
@@ -3764,4 +3764,164 @@ import{_ as s,o as n,c as a,Q as e}from"./chunks/framework.9bc09dc8.js";const p=
 <span class="line"><span style="color:#24292e;">| 1 | 5.000 | 411.18 |</span></span>
 <span class="line"><span style="color:#24292e;">| 2 | 5.000 | 24.75 |</span></span>
 <span class="line"><span style="color:#24292e;">+------------+----------+------------+</span></span>
-<span class="line"><span style="color:#24292e;">2 rows in set (0.01 sec)</span></span></code></pre></div><p>需要注意的是，这里我是直接用查询结果来创建的临时表。因为创建临时表就是为了存放某个查询的中间结果。直接用查询语句创建临时表比较快捷，而且连接结束后临时表就会被自动删除，不需要过多考虑表的结构设计问题（比如冗余、效率等）。</p><p>到这里，我们就有了一个存储单品销售统计的临时表。接下来，我们计算一下 2023 年 10 月的进货信息。</p><p>我们的进货数据包括进货单头表（importhead）和进货单明细表（importdetails）。</p><p>进货单头表包括进货单编号、供货商编号、仓库编号、操作员编号和验收日期：</p><table><thead><tr><th>listnumber（进货单编号）</th><th>supplierid（供货商编号）</th><th>stockid（仓库编号）</th><th>operatorid（操作员编号）</th><th>confitmationdate（验收日期）</th></tr></thead><tbody><tr><td>4587</td><td>1</td><td>1</td><td>1</td><td>2023-10-02</td></tr><tr><td>4588</td><td>2</td><td>1</td><td>1</td><td>2023-10-03</td></tr></tbody></table><p>进货单明细表包括进货单编号、商品编号、进货数量、进货价格和进货金额：</p><table><thead><tr><th>listnumber（进货单编号）</th><th>itemnumber（商品编号）</th><th>quantity（进货数量）</th><th>importprice（进货价格）</th><th>importvalue（进货金额）</th></tr></thead><tbody><tr><td>4587</td><td>1</td><td>2</td><td>55</td><td>110</td></tr><tr><td>4587</td><td>2</td><td>5</td><td>3</td><td>15</td></tr><tr><td>4587</td><td>3</td><td>8</td><td>5</td><td>40</td></tr><tr><td>4588</td><td>1</td><td>3</td><td>60</td><td>180</td></tr></tbody></table><p>我们用下面的 SQL 语句计算进货数据，并且保存在临时表里面：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;"></span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;"></span></span></code></pre></div>`,988),k=[O];function I(D,M,U,F,_,f){return n(),a("div",null,k)}const H=s(q,[["render",I]]);export{B as __pageData,H as default};
+<span class="line"><span style="color:#24292e;">2 rows in set (0.01 sec)</span></span></code></pre></div><p>需要注意的是，这里我是直接用查询结果来创建的临时表。因为创建临时表就是为了存放某个查询的中间结果。直接用查询语句创建临时表比较快捷，而且连接结束后临时表就会被自动删除，不需要过多考虑表的结构设计问题（比如冗余、效率等）。</p><p>到这里，我们就有了一个存储单品销售统计的临时表。接下来，我们计算一下 2023 年 10 月的进货信息。</p><p>我们的进货数据包括进货单头表（importhead）和进货单明细表（importdetails）。</p><p>进货单头表包括进货单编号、供货商编号、仓库编号、操作员编号和验收日期：</p><table><thead><tr><th>listnumber（进货单编号）</th><th>supplierid（供货商编号）</th><th>stockid（仓库编号）</th><th>operatorid（操作员编号）</th><th>confitmationdate（验收日期）</th></tr></thead><tbody><tr><td>4587</td><td>1</td><td>1</td><td>1</td><td>2023-10-02</td></tr><tr><td>4588</td><td>2</td><td>1</td><td>1</td><td>2023-10-03</td></tr></tbody></table><p>进货单明细表包括进货单编号、商品编号、进货数量、进货价格和进货金额：</p><table><thead><tr><th>listnumber（进货单编号）</th><th>itemnumber（商品编号）</th><th>quantity（进货数量）</th><th>importprice（进货价格）</th><th>importvalue（进货金额）</th></tr></thead><tbody><tr><td>4587</td><td>1</td><td>2</td><td>55</td><td>110</td></tr><tr><td>4587</td><td>2</td><td>5</td><td>3</td><td>15</td></tr><tr><td>4587</td><td>3</td><td>8</td><td>5</td><td>40</td></tr><tr><td>4588</td><td>1</td><td>3</td><td>60</td><td>180</td></tr></tbody></table><p>我们用下面的 SQL 语句计算进货数据，并且保存在临时表里面：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; CREATE TEMPORARY TABLE demo.myimport</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; SELECT b.itemnumber,SUM(b.quantity) AS quantity,SUM(b.importvalue) AS importvalue</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM demo.importhead a JOIN demo.importdetails b</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ON (a.listnumber=b.listnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; GROUP BY b.itemnumber;</span></span>
+<span class="line"><span style="color:#e1e4e8;">Query OK, 3 rows affected (0.01 sec)</span></span>
+<span class="line"><span style="color:#e1e4e8;">Records: 3 Duplicates: 0 Warnings: 0</span></span>
+<span class="line"><span style="color:#e1e4e8;"> </span></span>
+<span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.myimport;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber | quantity | importvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1 | 5.000 | 290.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2 | 5.000 | 15.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 3 | 8.000 | 40.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; CREATE TEMPORARY TABLE demo.myimport</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; SELECT b.itemnumber,SUM(b.quantity) AS quantity,SUM(b.importvalue) AS importvalue</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM demo.importhead a JOIN demo.importdetails b</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ON (a.listnumber=b.listnumber)</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; GROUP BY b.itemnumber;</span></span>
+<span class="line"><span style="color:#24292e;">Query OK, 3 rows affected (0.01 sec)</span></span>
+<span class="line"><span style="color:#24292e;">Records: 3 Duplicates: 0 Warnings: 0</span></span>
+<span class="line"><span style="color:#24292e;"> </span></span>
+<span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.myimport;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber | quantity | importvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1 | 5.000 | 290.00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2 | 5.000 | 15.00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 3 | 8.000 | 40.00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>这样，我们又得到了一个临时表 demo.myimport，里面保存了我们需要的进货数据。</p><p>接着，我们来查询单品返厂数据，并且保存到临时表。</p><p>我们的返厂数据表有 2 个，分别是返厂单头表（returnhead）和返厂单明细表（returndetails）。</p><p>返厂单头表包括返厂单编号、供货商编号、仓库编号、操作员编号和验收日期：</p><table><thead><tr><th>listnumber（返厂单编号）</th><th>supplierid（供货商编号）</th><th>stockid（仓库编号）</th><th>operatorid（操作员编号）</th><th>confirmationdate（验收日期）</th></tr></thead><tbody><tr><td>654</td><td>1</td><td>1</td><td>1</td><td>2023-10-02</td></tr><tr><td>655</td><td>2</td><td>1</td><td>1</td><td>2023-10-03</td></tr></tbody></table><p>返厂单明细表包括返厂单编号、商品编号、返厂数量、返厂价格和返厂金额：</p><table><thead><tr><th>listnumber（返厂单编号）</th><th>itemnumber（商品编号）</th><th>quantity（返厂数量）</th><th>returnprice（返厂价格）</th><th>returnvalue（返厂金额）</th></tr></thead><tbody><tr><td>654</td><td>1</td><td>1</td><td>55</td><td>55</td></tr><tr><td>654</td><td>2</td><td>1</td><td>3</td><td>3</td></tr><tr><td>655</td><td>3</td><td>1</td><td>5</td><td>5</td></tr><tr><td>655</td><td>1</td><td>1</td><td>60</td><td>60</td></tr></tbody></table><p>我们可以使用下面的 SQL 语句计算返厂信息，并且保存到临时表中。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; CREATE TEMPORARY TABLE demo.myreturn</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; SELECT b.itemnumber,SUM(b.quantity) AS quantity,SUM(b.returnvalue) AS returnvalue</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM demo.returnhead a JOIN demo.returndetails b</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ON (a.listnumber=b.listnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; GROUP BY b.itemnumber;</span></span>
+<span class="line"><span style="color:#e1e4e8;">Query OK, 3 rows affected (0.01 sec)</span></span>
+<span class="line"><span style="color:#e1e4e8;">Records: 3 Duplicates: 0 Warnings: 0</span></span>
+<span class="line"><span style="color:#e1e4e8;"> </span></span>
+<span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT * FROM demo.myreturn;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber | quantity | returnvalue |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1 | 2.000 | 115.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2 | 1.000 | 3.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 3 | 1.000 | 5.00 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; CREATE TEMPORARY TABLE demo.myreturn</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; SELECT b.itemnumber,SUM(b.quantity) AS quantity,SUM(b.returnvalue) AS returnvalue</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM demo.returnhead a JOIN demo.returndetails b</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ON (a.listnumber=b.listnumber)</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; GROUP BY b.itemnumber;</span></span>
+<span class="line"><span style="color:#24292e;">Query OK, 3 rows affected (0.01 sec)</span></span>
+<span class="line"><span style="color:#24292e;">Records: 3 Duplicates: 0 Warnings: 0</span></span>
+<span class="line"><span style="color:#24292e;"> </span></span>
+<span class="line"><span style="color:#24292e;">mysql&gt; SELECT * FROM demo.myreturn;</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber | quantity | returnvalue |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1 | 2.000 | 115.00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2 | 1.000 | 3.00 |</span></span>
+<span class="line"><span style="color:#24292e;">| 3 | 1.000 | 5.00 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+----------+-------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>这样，我们就获得了单品的返厂信息。</p><p>有了前面计算出来的数据，现在，我们就可以把单品的销售信息、进货信息和返厂信息汇总到一起了。</p><p>如果你跟着实际操作的话，你可能会有这样一个问题：我们现在有 3 个临时表，分别存储单品的销售信息、进货信息和返厂信息。那么，能不能把这 3 个表相互关联起来，把这些信息都汇总到对应的单品呢？</p><p>答案是不行，不管是用内连接、还是用外连接，都不可以。因为无论是销售信息、进货信息，还是返厂信息，都存在商品信息缺失的情况。换句话说，就是在指定时间段内，某些商品可能没有销售，某些商品可能没有进货，某些商品可能没有返厂。如果仅仅通过这 3 个表之间的连接进行查询，我们可能会丢失某些数据。</p><p>为了解决这个问题，我们可以引入商品信息表。因为商品信息表包含所有的商品，因此，把商品信息表放在左边，与其他的表进行左连接，就可以确保所有的商品都包含在结果集中。凡是不存在的数值，都设置为 0，然后再筛选一下，把销售、进货、返厂都是 0 的商品去掉，这样就能得到我们最终希望的查询结果：2023 年 10 月的商品销售数量、进货数量和返厂数量。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; a.itemnumber,</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; a.goodsname,</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ifnull(b.quantity,0) as salesquantity,    -- 如果没有销售记录，销售数量设置为0</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ifnull(c.quantity,0) as importquantity,   -- 如果没有进货，进货数量设为0</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ifnull(d.quantity,0) as returnquantity    -- 如果没有返厂，返厂数量设为0</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; demo.goodsmaster a               -- 商品信息表放在左边进行左连接，确保所有的商品都包含在结果集中</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; LEFT JOIN demo.mysales b</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ON (a.itemnumber=b.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; LEFT JOIN demo.myimport c</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ON (a.itemnumber=c.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; LEFT JOIN demo.myreturn d</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ON (a.itemnumber=d.itemnumber)</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; HAVING salesquantity&gt;0 OR importquantity&gt;0 OR returnquantity&gt;0; -- 在结果集中剔除没有销售，没有进货，也没有返厂的商品</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+---------------+----------------+----------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| itemnumber | goodsname | salesquantity | importquantity | returnquantity |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+---------------+----------------+----------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 1 | 书 | 5.000 | 5.000 | 2.000 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 2 | 笔 | 5.000 | 5.000 | 1.000 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 3 | 橡皮 | 0.000 | 8.000 | 1.000 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+------------+-----------+---------------+----------------+----------------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">3 rows in set (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; a.itemnumber,</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; a.goodsname,</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ifnull(b.quantity,0) as salesquantity,    -- 如果没有销售记录，销售数量设置为0</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ifnull(c.quantity,0) as importquantity,   -- 如果没有进货，进货数量设为0</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ifnull(d.quantity,0) as returnquantity    -- 如果没有返厂，返厂数量设为0</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; FROM</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; demo.goodsmaster a               -- 商品信息表放在左边进行左连接，确保所有的商品都包含在结果集中</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; LEFT JOIN demo.mysales b</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ON (a.itemnumber=b.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; LEFT JOIN demo.myimport c</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ON (a.itemnumber=c.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; LEFT JOIN demo.myreturn d</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ON (a.itemnumber=d.itemnumber)</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; HAVING salesquantity&gt;0 OR importquantity&gt;0 OR returnquantity&gt;0; -- 在结果集中剔除没有销售，没有进货，也没有返厂的商品</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+---------------+----------------+----------------+</span></span>
+<span class="line"><span style="color:#24292e;">| itemnumber | goodsname | salesquantity | importquantity | returnquantity |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+---------------+----------------+----------------+</span></span>
+<span class="line"><span style="color:#24292e;">| 1 | 书 | 5.000 | 5.000 | 2.000 |</span></span>
+<span class="line"><span style="color:#24292e;">| 2 | 笔 | 5.000 | 5.000 | 1.000 |</span></span>
+<span class="line"><span style="color:#24292e;">| 3 | 橡皮 | 0.000 | 8.000 | 1.000 |</span></span>
+<span class="line"><span style="color:#24292e;">+------------+-----------+---------------+----------------+----------------+</span></span>
+<span class="line"><span style="color:#24292e;">3 rows in set (0.00 sec)</span></span></code></pre></div><p>总之，通过临时表，我们就可以把一个复杂的问题拆分成很多个前后关联的步骤，把中间的运行结果存储起来，用于之后的查询。这样一来，就把面向集合的 SQL 查询变成了面向过程的编程模式，大大降低了难度。</p><h3 id="内存临时表和磁盘临时表" tabindex="-1">内存临时表和磁盘临时表 <a class="header-anchor" href="#内存临时表和磁盘临时表" aria-label="Permalink to &quot;内存临时表和磁盘临时表&quot;">​</a></h3><p>由于采用的存储方式不同，临时表也可分为内存临时表和磁盘临时表，它们有着各自的优缺点，下面我来解释下。</p><p>关于内存临时表，有一点你要注意的是，你可以通过指定引擎类型（比如 ENGINE=MEMORY），来告诉 MySQL 临时表存储在内存中。</p><p>好了，现在我们先来创建一个内存中的临时表：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; CREATE TEMPORARY TABLE demo.mytrans</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; (</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; itemnumber int,</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; groupnumber int,</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; branchnumber int</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; ) ENGINE = MEMORY; （临时表数据存在内存中）</span></span>
+<span class="line"><span style="color:#e1e4e8;">Query OK, 0 rows affected (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; CREATE TEMPORARY TABLE demo.mytrans</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; (</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; itemnumber int,</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; groupnumber int,</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; branchnumber int</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; ) ENGINE = MEMORY; （临时表数据存在内存中）</span></span>
+<span class="line"><span style="color:#24292e;">Query OK, 0 rows affected (0.00 sec)</span></span></code></pre></div><p>接下来，我们在磁盘上创建一个同样结构的临时表。在磁盘上创建临时表时，只要我们不指定存储引擎，MySQL 会默认存储引擎是 InnoDB，并且把表存放在磁盘上。</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; CREATE TEMPORARY TABLE demo.mytransdisk</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; (</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; itemnumber int,</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; groupnumber int,</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; branchnumber int</span></span>
+<span class="line"><span style="color:#e1e4e8;">-&gt; );</span></span>
+<span class="line"><span style="color:#e1e4e8;">Query OK, 0 rows affected (0.00 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; CREATE TEMPORARY TABLE demo.mytransdisk</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; (</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; itemnumber int,</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; groupnumber int,</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; branchnumber int</span></span>
+<span class="line"><span style="color:#24292e;">-&gt; );</span></span>
+<span class="line"><span style="color:#24292e;">Query OK, 0 rows affected (0.00 sec)</span></span></code></pre></div><p>现在，我们向刚刚的两张表里都插入同样数量的记录，然后再分别做一个查询：</p><div class="language-mysql vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mysql</span><pre class="shiki github-dark vp-code-dark"><code><span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT COUNT(*) FROM demo.mytrans;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| count(*) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 4355 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.00 sec)</span></span>
+<span class="line"><span style="color:#e1e4e8;"> </span></span>
+<span class="line"><span style="color:#e1e4e8;">mysql&gt; SELECT COUNT(*) FROM demo.mytransdisk;</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| count(*) |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">| 4355 |</span></span>
+<span class="line"><span style="color:#e1e4e8;">+----------+</span></span>
+<span class="line"><span style="color:#e1e4e8;">1 row in set (0.21 sec)</span></span></code></pre><pre class="shiki github-light vp-code-light"><code><span class="line"><span style="color:#24292e;">mysql&gt; SELECT COUNT(*) FROM demo.mytrans;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| count(*) |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 4355 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.00 sec)</span></span>
+<span class="line"><span style="color:#24292e;"> </span></span>
+<span class="line"><span style="color:#24292e;">mysql&gt; SELECT COUNT(*) FROM demo.mytransdisk;</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| count(*) |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">| 4355 |</span></span>
+<span class="line"><span style="color:#24292e;">+----------+</span></span>
+<span class="line"><span style="color:#24292e;">1 row in set (0.21 sec)</span></span></code></pre></div><p>可以看到，区别是比较明显的。对于同一条查询，内存中的临时表执行时间不到 10 毫秒，而磁盘上的表却用掉了 210 毫秒。显然，内存中的临时表查询速度更快。</p><p>不过，内存中的临时表也有缺陷。因为数据完全在内存中，所以，一旦断电，数据就消失了，无法找回。不过临时表只保存中间结果，所以还是可以用的。</p><p>下面的表格，汇总了内存临时表和磁盘临时表的优缺点：</p><table><thead><tr><th>类别</th><th>优点</th><th>缺点</th></tr></thead><tbody><tr><td>内存临时表</td><td>查询速度快</td><td>一旦断电，全部丢失，数据无法找回</td></tr><tr><td>磁盘临时表</td><td>数据不易丢失</td><td>速度相对较慢</td></tr></tbody></table><h3 id="总结-12" tabindex="-1">总结 <a class="header-anchor" href="#总结-12" aria-label="Permalink to &quot;总结&quot;">​</a></h3><p>这篇文章，我们学习了临时表的概念，以及使用临时表来存储中间结果以拆分复杂查询的方法。临时表可以存储在磁盘中，也可以通过指定引擎的办法存储在内存中，以加快存取速度。</p><p>其实，临时表有很多好处，除了可以帮助我们把复杂的 SQL 查询拆分成多个简单的 SQL 查询，而且，因为临时表是连接隔离的，不同的连接可以使用相同的临时表名称，相互之间不会受到影响。除此之外，临时表会在连接结束的时候自动删除，不会占用磁盘空间。</p><p>当然，临时表也有不足，比如会挤占空间。我建议你，在使用临时表的时候，要从简化查询和挤占资源两个方面综合考虑，既不能过度加重系统的负担，同时又能够通过存储中间结果，最大限度地简化查询。</p><h2 id="十四、视图" tabindex="-1">十四、视图 <a class="header-anchor" href="#十四、视图" aria-label="Permalink to &quot;十四、视图&quot;">​</a></h2>`,1022),k=[O];function I(M,D,U,F,_,f){return n(),a("div",null,k)}const w=s(C,[["render",I]]);export{B as __pageData,w as default};
