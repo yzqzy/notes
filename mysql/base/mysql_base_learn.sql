@@ -1566,6 +1566,119 @@ INSERT INTO
         operatorid,
         confitmationdate
     )
-VALUES (4587, 1, 1, 1, '2023-10-02'), (4598, 2, 1, 1, '2023-10-03');
+VALUES (4587, 1, 1, 1, '2023-10-02'), (4588, 2, 1, 1, '2023-10-03');
 
 SELECT * FROM demo.importhead;
+
+CREATE TABLE
+    demo.importdetails (
+        listnumber INT,
+        itemnumber TEXT,
+        quantity DOUBLE,
+        importprice DOUBLE,
+        importvalue DOUBLE
+    );
+
+INSERT INTO
+    demo.importdetails (
+        listnumber,
+        itemnumber,
+        quantity,
+        importprice,
+        importvalue
+    )
+VALUES (4587, 1, 2, 55, 110), (4587, 2, 5, 3, 15), (4587, 3, 8, 5, 40), (4588, 1, 3, 60, 180);
+
+SELECT * FROM demo.importdetails;
+
+--- 创建临时表
+
+DROP TABLE demo.myimport;
+
+CREATE TEMPORARY
+TABLE demo.myimport
+SELECT
+    b.itemnumber,
+    SUM(b.quantity) AS quantity,
+    SUM(b.importvalue) AS importvalue
+FROM demo.importhead AS a
+    JOIN demo.importdetails AS b ON (a.listnumber = b.listnumber)
+GROUP BY b.itemnumber;
+
+SELECT * FROM demo.myimport;
+
+-- 创建返厂表
+
+CREATE TABLE
+    demo.returnhead (
+        listnumber TEXT,
+        supplierid INT,
+        stockid INT,
+        operatorid INT,
+        confirmationdate DATETIME
+    );
+
+INSERT INTO
+    demo.returnhead (
+        listnumber,
+        supplierid,
+        stockid,
+        operatorid,
+        confirmationdate
+    )
+VALUES (654, 1, 1, 1, "2023-10-02"), (655, 2, 1, 1, "2023-10-03");
+
+SELECT * FROM demo.returnhead;
+
+DROP TABLE demo.returndetails;
+
+CREATE TABLE
+    demo.returndetails (
+        listnumber TEXT,
+        itemnumber TEXT,
+        quantity INT,
+        returmprice INT,
+        returnvalue INT
+    );
+
+INSERT INTO
+    demo.returndetails (
+        listnumber,
+        itemnumber,
+        quantity,
+        returmprice,
+        returnvalue
+    )
+VALUES (654, 1, 1, 55, 55), (654, 2, 1, 3, 3), (655, 3, 1, 5, 5), (655, 1, 1, 60, 60);
+
+SELECT * FROM demo.returndetails;
+
+CREATE TEMPORARY
+TABLE demo.myreturn
+SELECT
+    b.itemnumber,
+    SUM(b.quantity) AS quantity,
+    SUM(b.returnvalue) AS returnvalue
+FROM demo.returnhead AS a
+    JOIN demo.returndetails AS b ON (a.listnumber = b.listnumber)
+GROUP BY b.itemnumber;
+
+SELECT * FROM demo.myreturn;
+
+-- 内存临时表
+
+CREATE TEMPORARY
+TABLE
+    demo.mytrans (
+        itemnumber INT,
+        groupnumber INT,
+        branchnumber INT
+    ) ENGINE = MEMORY;
+
+CREATE TEMPORARY
+TABLE
+    demo.mytransdisk (
+        itemnumber INT,
+        groupnumber INT,
+        branchnumber INT
+    );

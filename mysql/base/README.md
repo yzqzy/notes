@@ -4426,5 +4426,175 @@ mysql> SELECT * FROM demo.mysales;
 我们用下面的 SQL 语句计算进货数据，并且保存在临时表里面：
 
 ```mysql
+mysql> CREATE TEMPORARY TABLE demo.myimport
+-> SELECT b.itemnumber,SUM(b.quantity) AS quantity,SUM(b.importvalue) AS importvalue
+-> FROM demo.importhead a JOIN demo.importdetails b
+-> ON (a.listnumber=b.listnumber)
+-> GROUP BY b.itemnumber;
+Query OK, 3 rows affected (0.01 sec)
+Records: 3 Duplicates: 0 Warnings: 0
+ 
+mysql> SELECT * FROM demo.myimport;
++------------+----------+-------------+
+| itemnumber | quantity | importvalue |
++------------+----------+-------------+
+| 1 | 5.000 | 290.00 |
+| 2 | 5.000 | 15.00 |
+| 3 | 8.000 | 40.00 |
++------------+----------+-------------+
+3 rows in set (0.00 sec)
 ```
+
+这样，我们又得到了一个临时表 demo.myimport，里面保存了我们需要的进货数据。
+
+接着，我们来查询单品返厂数据，并且保存到临时表。
+
+我们的返厂数据表有 2 个，分别是返厂单头表（returnhead）和返厂单明细表（returndetails）。
+
+返厂单头表包括返厂单编号、供货商编号、仓库编号、操作员编号和验收日期：
+
+| listnumber（返厂单编号） | supplierid（供货商编号） | stockid（仓库编号） | operatorid（操作员编号） | confirmationdate（验收日期） |
+| ------------------------ | ------------------------ | ------------------- | ------------------------ | ---------------------------- |
+| 654                      | 1                        | 1                   | 1                        | 2023-10-02                   |
+| 655                      | 2                        | 1                   | 1                        | 2023-10-03                   |
+
+返厂单明细表包括返厂单编号、商品编号、返厂数量、返厂价格和返厂金额：
+
+| listnumber（返厂单编号） | itemnumber（商品编号） | quantity（返厂数量） | returnprice（返厂价格） | returnvalue（返厂金额） |
+| ------------------------ | ---------------------- | -------------------- | ----------------------- | ----------------------- |
+| 654                      | 1                      | 1                    | 55                      | 55                      |
+| 654                      | 2                      | 1                    | 3                       | 3                       |
+| 655                      | 3                      | 1                    | 5                       | 5                       |
+| 655                      | 1                      | 1                    | 60                      | 60                      |
+
+我们可以使用下面的 SQL 语句计算返厂信息，并且保存到临时表中。
+
+```mysql
+mysql> CREATE TEMPORARY TABLE demo.myreturn
+-> SELECT b.itemnumber,SUM(b.quantity) AS quantity,SUM(b.returnvalue) AS returnvalue
+-> FROM demo.returnhead a JOIN demo.returndetails b
+-> ON (a.listnumber=b.listnumber)
+-> GROUP BY b.itemnumber;
+Query OK, 3 rows affected (0.01 sec)
+Records: 3 Duplicates: 0 Warnings: 0
+ 
+mysql> SELECT * FROM demo.myreturn;
++------------+----------+-------------+
+| itemnumber | quantity | returnvalue |
++------------+----------+-------------+
+| 1 | 2.000 | 115.00 |
+| 2 | 1.000 | 3.00 |
+| 3 | 1.000 | 5.00 |
++------------+----------+-------------+
+3 rows in set (0.00 sec)
+```
+
+这样，我们就获得了单品的返厂信息。
+
+有了前面计算出来的数据，现在，我们就可以把单品的销售信息、进货信息和返厂信息汇总到一起了。
+
+如果你跟着实际操作的话，你可能会有这样一个问题：我们现在有 3 个临时表，分别存储单品的销售信息、进货信息和返厂信息。那么，能不能把这 3 个表相互关联起来，把这些信息都汇总到对应的单品呢？
+
+答案是不行，不管是用内连接、还是用外连接，都不可以。因为无论是销售信息、进货信息，还是返厂信息，都存在商品信息缺失的情况。换句话说，就是在指定时间段内，某些商品可能没有销售，某些商品可能没有进货，某些商品可能没有返厂。如果仅仅通过这 3 个表之间的连接进行查询，我们可能会丢失某些数据。
+
+为了解决这个问题，我们可以引入商品信息表。因为商品信息表包含所有的商品，因此，把商品信息表放在左边，与其他的表进行左连接，就可以确保所有的商品都包含在结果集中。凡是不存在的数值，都设置为 0，然后再筛选一下，把销售、进货、返厂都是 0 的商品去掉，这样就能得到我们最终希望的查询结果：2023 年 10 月的商品销售数量、进货数量和返厂数量。
+
+```mysql
+mysql> SELECT
+-> a.itemnumber,
+-> a.goodsname,
+-> ifnull(b.quantity,0) as salesquantity,    -- 如果没有销售记录，销售数量设置为0
+-> ifnull(c.quantity,0) as importquantity,   -- 如果没有进货，进货数量设为0
+-> ifnull(d.quantity,0) as returnquantity    -- 如果没有返厂，返厂数量设为0
+-> FROM
+-> demo.goodsmaster a               -- 商品信息表放在左边进行左连接，确保所有的商品都包含在结果集中
+-> LEFT JOIN demo.mysales b
+-> ON (a.itemnumber=b.itemnumber)
+-> LEFT JOIN demo.myimport c
+-> ON (a.itemnumber=c.itemnumber)
+-> LEFT JOIN demo.myreturn d
+-> ON (a.itemnumber=d.itemnumber)
+-> HAVING salesquantity>0 OR importquantity>0 OR returnquantity>0; -- 在结果集中剔除没有销售，没有进货，也没有返厂的商品
++------------+-----------+---------------+----------------+----------------+
+| itemnumber | goodsname | salesquantity | importquantity | returnquantity |
++------------+-----------+---------------+----------------+----------------+
+| 1 | 书 | 5.000 | 5.000 | 2.000 |
+| 2 | 笔 | 5.000 | 5.000 | 1.000 |
+| 3 | 橡皮 | 0.000 | 8.000 | 1.000 |
++------------+-----------+---------------+----------------+----------------+
+3 rows in set (0.00 sec)
+```
+
+总之，通过临时表，我们就可以把一个复杂的问题拆分成很多个前后关联的步骤，把中间的运行结果存储起来，用于之后的查询。这样一来，就把面向集合的 SQL 查询变成了面向过程的编程模式，大大降低了难度。
+
+### 内存临时表和磁盘临时表
+
+由于采用的存储方式不同，临时表也可分为内存临时表和磁盘临时表，它们有着各自的优缺点，下面我来解释下。
+
+关于内存临时表，有一点你要注意的是，你可以通过指定引擎类型（比如 ENGINE=MEMORY），来告诉 MySQL 临时表存储在内存中。
+
+好了，现在我们先来创建一个内存中的临时表：
+
+```mysql
+mysql> CREATE TEMPORARY TABLE demo.mytrans
+-> (
+-> itemnumber int,
+-> groupnumber int,
+-> branchnumber int
+-> ) ENGINE = MEMORY; （临时表数据存在内存中）
+Query OK, 0 rows affected (0.00 sec)
+```
+
+接下来，我们在磁盘上创建一个同样结构的临时表。在磁盘上创建临时表时，只要我们不指定存储引擎，MySQL 会默认存储引擎是 InnoDB，并且把表存放在磁盘上。
+
+```mysql
+mysql> CREATE TEMPORARY TABLE demo.mytransdisk
+-> (
+-> itemnumber int,
+-> groupnumber int,
+-> branchnumber int
+-> );
+Query OK, 0 rows affected (0.00 sec)
+```
+
+现在，我们向刚刚的两张表里都插入同样数量的记录，然后再分别做一个查询：
+
+```mysql
+mysql> SELECT COUNT(*) FROM demo.mytrans;
++----------+
+| count(*) |
++----------+
+| 4355 |
++----------+
+1 row in set (0.00 sec)
+ 
+mysql> SELECT COUNT(*) FROM demo.mytransdisk;
++----------+
+| count(*) |
++----------+
+| 4355 |
++----------+
+1 row in set (0.21 sec)
+```
+
+可以看到，区别是比较明显的。对于同一条查询，内存中的临时表执行时间不到 10 毫秒，而磁盘上的表却用掉了 210 毫秒。显然，内存中的临时表查询速度更快。
+
+不过，内存中的临时表也有缺陷。因为数据完全在内存中，所以，一旦断电，数据就消失了，无法找回。不过临时表只保存中间结果，所以还是可以用的。
+
+下面的表格，汇总了内存临时表和磁盘临时表的优缺点：
+
+| 类别       | 优点         | 缺点                             |
+| ---------- | ------------ | -------------------------------- |
+| 内存临时表 | 查询速度快   | 一旦断电，全部丢失，数据无法找回 |
+| 磁盘临时表 | 数据不易丢失 | 速度相对较慢                     |
+
+### 总结
+
+这篇文章，我们学习了临时表的概念，以及使用临时表来存储中间结果以拆分复杂查询的方法。临时表可以存储在磁盘中，也可以通过指定引擎的办法存储在内存中，以加快存取速度。
+
+其实，临时表有很多好处，除了可以帮助我们把复杂的 SQL 查询拆分成多个简单的 SQL 查询，而且，因为临时表是连接隔离的，不同的连接可以使用相同的临时表名称，相互之间不会受到影响。除此之外，临时表会在连接结束的时候自动删除，不会占用磁盘空间。
+
+当然，临时表也有不足，比如会挤占空间。我建议你，在使用临时表的时候，要从简化查询和挤占资源两个方面综合考虑，既不能过度加重系统的负担，同时又能够通过存储中间结果，最大限度地简化查询。
+
+## 十四、视图
 
