@@ -112,3 +112,43 @@ FROM demo.trans_goodsmater AS a
     LEFT JOIN demo.inventoryhist AS b ON (
         a.transdate = b.invdate AND a.itemnumber = b.itemnumber
     );
+
+--- 操作视图
+
+SELECT * FROM demo.goodsmaster;
+
+CREATE VIEW
+    demo.view_goodsmaster AS
+SELECT
+    itemnumber,
+    barcode,
+    goodsname,
+    salesprice
+FROM demo.goodsmaster;
+
+ALTER VIEW
+    demo.view_goodsmaster AS
+SELECT
+    itemnumber,
+    barcode,
+    goodsname,
+    salesprice
+FROM demo.goodsmaster
+WHERE salesprice > 50;
+
+SELECT * FROM demo.view_goodsmaster;
+
+INSERT INTO
+    demo.view_goodsmaster (
+        itemnumber,
+        barcode,
+        goodsname,
+        salesprice
+    )
+VALUES (5, '0005', '测试', 100);
+
+--- 删除视图数据
+
+DELETE FROM demo.view_goodsmaster WHERE itemnumber = 5;
+
+--- 修改视图数据

@@ -4864,3 +4864,133 @@ DROP VIEW 视图名;
 
 视图本身是一个虚拟表，所以，对视图中的数据进行插入、修改和删除操作，实际都是通过对实际数据表的操作来实现的。
 
+#### 插入数据
+
+为了方便你理解，我们创建一个视图，如下所示：
+
+```mysql
+CREATE VIEW
+    demo.view_goodsmaster AS
+SELECT
+    itemnumber,
+    barcode,
+    goodsname,
+    specification,
+    salesprice
+FROM demo.goodsmaster;
+```
+
+假设商品信息表中的规格字段（specification）被删除了，当我们尝试用 INSERT INTO 语句向视图中插入一条记录的时候，就会提示错误了：
+
+```mysql
+mysql> INSERT INTO demo.view_goodsmaster
+-> (itemnumber,barcode,goodsname,salesprice)
+-> VALUES
+-> (5,'0005','测试',100);
+ERROR 1471 (HY000): The target table view_goodsmaster of the INSERT is not insertable-into
+```
+
+这是因为，只有视图中的字段跟实际数据表中的字段完全一样，MySQL 才允许通过视图插入数据。刚刚的视图中包含了实际数据表所没有的字段“specification”，所以在插入数据时，系统就会提示错误。
+
+为了解决这个问题，我们来修改一下视图，让它只包含实际数据表中有的字段，也就是商品编号、条码、名称和售价。代码如下：
+
+```mysql
+ALTER VIEW
+    demo.view_goodsmaster AS
+SELECT
+    itemnumber,
+    barcode,
+    goodsname,
+    salesprice
+FROM demo.goodsmaster
+WHERE salesprice > 50;
+```
+
+对视图进行修改之后，我们重新尝试向视图中插入一条记录：
+
+```mysql
+INSERT INTO
+    demo.view_goodsmaster (
+        itemnumber,
+        barcode,
+        goodsname,
+        salesprice
+    )
+VALUES (5, '0005', '测试', 100);
+```
+
+现在我们来查看一下视图中的数据：
+
+```mysql
+mysql> SELECT *
+-> FROM demo.view_goodsmaster;
++------------+---------+-----------+------------+
+| itemnumber | barcode | goodsname | salesprice |
++------------+---------+-----------+------------+
+| 1 | 0001 | 本 | 89.00 |
+| 5 | 0005 | 测试 | 100.00 |                        -- 通过视图插入的数据
++------------+---------+-----------+------------+
+2 rows in set (0.01 sec)
+```
+
+结果显示，表中确实包含了我们插入的商品编号是 5 的商品信息。
+
+现在，视图中已经包括了刚才插入的数据，那么，实际数据表中的数据情况又是怎样的呢？我们再来看一下：
+
+```mysql
+mysql> SELECT *
+-> FROM demo.goodsmaster;
++------------+---------+-----------+------------+
+| itemnumber | barcode | goodsname | salesprice |
++------------+---------+-----------+------------+
+| 1 | 0001 | 本 | 89.00 |
+| 2 | 0002 | 笔 | 5.00 |
+| 3 | 0003 | 胶水 | 10.00 |
+| 5 | 0005 | 测试 | 100.00 |                      -- 通过视图插入的数据
++------------+---------+-----------+------------+
+4 rows in set (0.00 sec)
+```
+
+可以看到，实际数据表 demo.goodsmaster 中，也已经包含通过视图插入的商品编号是 5 的商品数据了。
+
+#### 删除数据
+
+我们可以通过 DELETE 语句，删除视图中的数据：
+
+```mysql
+mysql> DELETE FROM demo.view_goodsmaster   -- 直接在视图中删除数据
+-> WHERE itemnumber = 5;
+Query OK, 1 row affected (0.02 sec)
+```
+
+现在我们来查看视图和实际数据表的内容，会发现商品编号是 5 的商品都已经被删除了。
+
+```mysql
+mysql> SELECT *
+-> FROM demo.view_goodsmaster;
++------------+---------+-----------+------------+
+| itemnumber | barcode | goodsname | salesprice |
++------------+---------+-----------+------------+
+| 1 | 0001 | 本 | 89.00 |                         -- 视图中已经没有商品编号是5的商品了
++------------+---------+-----------+------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT *
+-> FROM demo.goodsmaster;
++------------+---------+-----------+------------+
+| itemnumber | barcode | goodsname | salesprice |
++------------+---------+-----------+------------+
+| 1 | 0001 | 本 | 89.00 |
+| 2 | 0002 | 笔 | 5.00 |
+| 3 | 0003 | 胶水 | 10.00 |                        -- 实际表中也已经没有商品编号是5的商品了
++------------+---------+-----------+------------+
+3 rows in set (0.00 sec)
+```
+
+#### 修改视图数据
+
+我们可以通过 UPDATE 语句对视图中的数据进行修改：
+
+```mysql
+```
+
