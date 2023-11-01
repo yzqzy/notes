@@ -4637,6 +4637,21 @@ AS 查询语句
 在不使用视图的情况下，我们可以通过对销售流水表和商品信息表进行关联查询，得到每天商品销售统计的结果，包括销售日期、商品名称、每天销售数量的合计和每天销售金额的合计，如下所示：
 
 ```mysql
+SELECT
+    a.transdate,
+    a.itemnumber,
+    b.goodsname,
+    SUM(a.salesquantity) AS quantity,
+    SUM(a.salesvalue) AS salesvalue
+FROM demo.trans AS a
+    LEFT JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+GROUP BY
+    a.transdate,
+    a.itemnumber,
+    b.goodsname;
+```
+
+```mysql
 mysql> SELECT
 -> a.transdate,
 -> a.itemnumber,
@@ -4651,9 +4666,9 @@ mysql> SELECT
 +---------------------+------------+-----------+----------+------------+
 | transdate | itemnumber | goodsname | quantity | salesvalue |
 +---------------------+------------+-----------+----------+------------+
-| 2020-12-01 00:00:00 | 1 | 本 | 1.000 | 89.00 |
-| 2020-12-01 00:00:00 | 2 | 笔 | 1.000 | 5.00 |
-| 2020-12-02 00:00:00 | 3 | 胶水 | 2.000 | 20.00 |
+| 2023-11-01 00:00:00 | 1 | 本 | 1.000 | 89.00 |
+| 2023-11-01 00:00:00 | 2 | 笔 | 1.000 | 5.00 |
+| 2023-11-02 00:00:00 | 3 | 胶水 | 2.000 | 20.00 |
 +---------------------+------------+-----------+----------+------------+
 3 rows in set (0.00 sec)
 ```
@@ -4661,4 +4676,191 @@ mysql> SELECT
 在实际项目中，我们发现，每日商品销售查询使用的频次很高，而且经常需要以这个查询的结果为基础，进行更进一步的统计。
 
 举个例子，超市经营者要查一下“每天商品的销售数量和当天库存数量的对比”，如果用一个 SQL 语句查询，就会比较复杂。历史库存表（demo.inventoryhist）如下所示：
+
+| itemnumber（商品编号） | invquantity（库存数量） | invdate（库存日期） |
+| ---------------------- | ----------------------- | ------------------- |
+| 1                      | 100                     | 2023-11-01          |
+| 2                      | 99                      | 2023-11-01          |
+| 3                      | 88                      | 2023-11-01          |
+| 1                      | 149                     | 2023-11-02          |
+| 2                      | 105                     | 2023-11-02          |
+| 3                      | 200                     | 2023-11-02          |
+
+接下来我们的查询步骤会使用到子查询和派生表，很容易理解。
+
+* 子查询：就是嵌套在另一个查询中的查询。
+* 派生表：如果我们在查询中把子查询的结果作为一个表来使用，这个表就是派生表。
+
+这个查询的具体步骤是：
+
+* 通过子查询获得单品销售统计的查询结果；
+* 把第一步中的查询结果作为一个派生表，跟历史库存表进行连接，查询获得包括销售日期、商品名称、销售数量和历史库存数量在内的最终结果。
+
+```mysql
+SELECT
+    a.transdate,
+    a.itemnumber,
+    a.goodsname,
+    a.salesquantity,
+    b.invquantity
+FROM (
+        SELECT
+            a.transdate,
+            a.itemnumber,
+            b.goodsname,
+            SUM(a.salesquantity) AS salesquantity,
+            SUM(a.salesvalue) AS salesvalue
+        FROM demo.trans AS a
+            LEFT JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+        GROUP BY
+            a.transdate,
+            a.itemnumber,
+            b.goodsname
+    ) AS a
+    LEFT JOIN demo.inventoryhist AS b ON (
+        a.transdate = b.invdate
+        AND a.itemnumber = b.itemnumber
+    );
+```
+
+```mysql
+mysql> SELECT
+-> a.transdate,
+-> a.itemnumber,
+-> a.goodsname,
+-> a.quantity,       -- 获取单品销售数量
+-> b.invquantity     -- 获取历史库存数量
+-> FROM
+-> (SELECT           -- 子查询，统计单品销售         
+-> a.transdate,
+-> a.itemnumber,
+-> b.goodsname,
+-> SUM(a.quantity) AS quantity,
+-> SUM(a.salesvalue) AS salesvalue
+-> FROM
+-> demo.trans AS a
+-> LEFT JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+-> GROUP BY a.transdate , a.itemnumber
+-> ) AS a -- 派生表，与历史库存进行连接
+-> LEFT JOIN
+-> demo.inventoryhist AS b
+-> ON (a.transdate = b.invdate
+-> AND a.itemnumber = b.itemnumber);
++---------------------+------------+-----------+----------+-------------+
+| transdate | itemnumber | goodsname | quantity | invquantity |
++---------------------+------------+-----------+----------+-------------+
+| 2023-11-01 00:00:00 | 1 | 本 | 1.000 | 100.000 |
+| 2023-11-01 00:00:00 | 2 | 笔 | 1.000 | 99.000 |
+| 2023-11-02 00:00:00 | 3 | 胶水 | 2.000 | 200.000 |
++---------------------+------------+-----------+----------+-------------+
+3 rows in set (0.00 sec)
+```
+
+可以看到，这个查询语句是比较复杂的，可读性和可维护性都比较差。那该怎么办呢？其实，针对这种情况，我们就可以使用视图。
+
+我们可以把商品的每日销售统计查询做成一个视图，存储在数据库里，代码如下所示：
+
+```mysql
+CREATE VIEW
+    demo.trans_goodsmater AS
+SELECT
+    a.transdate,
+    a.itemnumber,
+    b.goodsname,
+    SUM(a.salesquantity) AS quantity,
+    SUM(a.salesvalue) AS salesvalue
+FROM demo.trans AS a
+    LEFT JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+GROUP BY
+    a.transdate,
+    a.itemnumber,
+    b.goodsname;
+```
+
+这样一来，我们每次需要查询每日商品销售数据的时候，就可以直接查询视图，不需要再写一个复杂的关联查询语句了。
+
+我们来试试用一个查询语句直接从视图中进行查询：
+
+```mysql
+mysql> SELECT *                 -- 直接查询
+-> FROM demo.trans_goodsmaster; -- 视图
++---------------------+------------+-----------+----------+------------+
+| transdate | itemnumber | goodsname | quantity | salesvalue |
++---------------------+------------+-----------+----------+------------+
+| 2023-11-01 00:00:00 | 1 | 本 | 1.000 | 89.00 |
+| 2023-11-01 00:00:00 | 2 | 笔 | 1.000 | 5.00 |
+| 2023-11-02 00:00:00 | 3 | 胶水 | 2.000 | 20.00 |
++---------------------+------------+-----------+----------+------------+
+3 rows in set (0.01 sec)
+```
+
+结果显示，这两种查询方式得到的结果是一样的。
+
+如果我们要进一步查询“每日单品销售的数量与当日的库存数量的对比”，就可以把刚刚定义的视图作为一个数据表来使用。我们把它跟历史库存表连接起来，来获取销售数量和历史库存数量。就像下面的代码这样，查询就简单多了：
+
+```mysql
+SELECT
+    a.transdate,
+    a.itemnumber,
+    a.goodsname,
+    a.quantity,
+    b.invquantity
+FROM demo.trans_goodsmater AS a
+    LEFT JOIN demo.inventoryhist AS b ON (
+        a.transdate = b.invdate AND a.itemnumber = b.itemnumber
+    );
+```
+
+```mysql
+mysql> SELECT
+-> a.transdate,               -- 从视图中获取销售日期
+-> a.itemnumber,              -- 从视图中获取商品编号
+-> a.goodsname,               -- 从视图中获取商品名称
+-> a.quantity,                -- 从视图中获取销售数量
+-> b.invquantity              -- 从历史库存表中获取历史库存数量
+-> FROM
+-> demo.trans_goodsmaster AS a -- 视图
+-> LEFT JOIN
+-> demo.inventoryhist AS b ON (a.transdate = b.invdate
+-> AND a.itemnumber = b.itemnumber);  -- 直接连接库存历史表
++---------------------+------------+-----------+----------+-------------+
+| transdate | itemnumber | goodsname | quantity | invquantity |
++---------------------+------------+-----------+----------+-------------+
+| 2020-12-01 00:00:00 | 1 | 本 | 1.000 | 100.000 |
+| 2020-12-01 00:00:00 | 2 | 笔 | 1.000 | 99.000 |
+| 2020-12-02 00:00:00 | 3 | 胶水 | 2.000 | 200.000 |
++---------------------+------------+-----------+----------+-------------+
+3 rows in set (0.00 sec)
+```
+
+结果显示，这里的查询结果和我们刚刚使用派生表的查询结果是一样的。但是，使用视图的查询语句明显简单多了，可读性更好，也更容易维护。
+
+### 操作视图
+
+创建完了视图，我们还经常需要对视图进行一些操作，比如修改、查看和删除视图。同时，我们可能还需要修改视图中的数据。具体咋操作呢？我来介绍下。
+
+修改视图的语法如下所示：
+
+```mysql
+ALTER VIEW 视图名
+AS 查询语句;
+```
+
+查看视图的语法是：
+
+```mysql
+查看视图：
+DESCRIBE 视图名；
+```
+
+删除视图要使用 DROP 关键词
+
+```mysql
+删除视图：
+DROP VIEW 视图名;
+```
+
+### 操作视图数据
+
+视图本身是一个虚拟表，所以，对视图中的数据进行插入、修改和删除操作，实际都是通过对实际数据表的操作来实现的。
 

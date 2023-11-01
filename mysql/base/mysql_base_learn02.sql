@@ -43,3 +43,72 @@ GROUP BY
     a.transdate,
     a.itemnumber,
     b.goodsname;
+
+CREATE TABLE
+    demo.inventoryhist (
+        itemnumber TEXT,
+        invquantity DOUBLE,
+        invdate DATETIME
+    );
+
+INSERT INTO demo.inventoryhist
+VALUES (1, 100, '2023-11-01'), (2, 99, '2023-11-01'), (3, 88, '2023-11-01'), (1, 149, '2023-11-02'), (2, 105, '2023-11-02'), (3, 200, '2023-11-02');
+
+SELECT * FROM demo.inventoryhist;
+
+SELECT * FROM demo.trans;
+
+SELECT
+    a.transdate,
+    a.itemnumber,
+    a.goodsname,
+    a.salesquantity,
+    b.invquantity
+FROM (
+        SELECT
+            a.transdate,
+            a.itemnumber,
+            b.goodsname,
+            SUM(a.salesquantity) AS salesquantity,
+            SUM(a.salesvalue) AS salesvalue
+        FROM demo.trans AS a
+            LEFT JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+        GROUP BY
+            a.transdate,
+            a.itemnumber,
+            b.goodsname
+    ) AS a
+    LEFT JOIN demo.inventoryhist AS b ON (
+        a.transdate = b.invdate
+        AND a.itemnumber = b.itemnumber
+    );
+
+--- 创建视图
+
+CREATE VIEW
+    demo.trans_goodsmater AS
+SELECT
+    a.transdate,
+    a.itemnumber,
+    b.goodsname,
+    SUM(a.salesquantity) AS quantity,
+    SUM(a.salesvalue) AS salesvalue
+FROM demo.trans AS a
+    LEFT JOIN demo.goodsmaster AS b ON (a.itemnumber = b.itemnumber)
+GROUP BY
+    a.transdate,
+    a.itemnumber,
+    b.goodsname;
+
+SELECT * FROM demo.trans_goodsmater;
+
+SELECT
+    a.transdate,
+    a.itemnumber,
+    a.goodsname,
+    a.quantity,
+    b.invquantity
+FROM demo.trans_goodsmater AS a
+    LEFT JOIN demo.inventoryhist AS b ON (
+        a.transdate = b.invdate AND a.itemnumber = b.itemnumber
+    );
