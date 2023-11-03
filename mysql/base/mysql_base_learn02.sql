@@ -152,3 +152,7 @@ VALUES (5, '0005', '测试', 100);
 DELETE FROM demo.view_goodsmaster WHERE itemnumber = 5;
 
 --- 修改视图数据
+
+UPDATE demo.view_goodsmaster
+SET salesprice = 100
+WHERE itemnumber = 1;
