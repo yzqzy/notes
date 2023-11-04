@@ -156,3 +156,5 @@ DELETE FROM demo.view_goodsmaster WHERE itemnumber = 5;
 UPDATE demo.view_goodsmaster
 SET salesprice = 100
 WHERE itemnumber = 1;
+
+SELECT * FROM demo.goodsmaster;
