@@ -5145,3 +5145,160 @@ mysql> SELECT barcode,goodsname,specification
 
 ## 十五、存储过程
 
+在我们的超市项目中，每天营业结束后，超市经营者都要计算当日的销量，核算成本和毛利等营业数据，这也就意味着每天都要做重复的数据统计工作。其实，这种数据量大，而且计算过程复杂的场景，就非常适合使用存储过程。
+
+简单来说呢，存储过程就是把一系列 SQL 语句预先存储在 MySQL 服务器上，需要执行的时候，客户端只需要向服务器端发出调用存储过程的命令，服务器端就可以把预先存储好的这一系列 SQL 语句全部执行。
+
+这样一来，不仅执行效率非常高，而且客户端不需要把所有的 SQL 语句通过网络发给服务器，减少了 SQL 语句暴露在网上的风险，也提高了数据查询的安全性。
+
+今天，我们就借助真实的超市项目，给你介绍一下如何创建和使用存储过程，帮助你提升查询的效率，并且让你开发的应用更加简洁安全。
+
+### 创建存储过程
+
+在创建存储过程的时候，我们需要用到关键字 CREATE PROCEDURE。具体的语法结构如下：
+
+```mysql
+CREATE PROCEDURE 存储过程名 （[ IN | OUT | INOUT] 参数名称 类型）程序体
+```
+
+接下来，我以超市的日结计算为例，给你讲一讲怎么创建存储过程。
+
+假设在日结计算中，我们需要统计每天的单品销售，包括销售数量、销售金额、成本、毛利、毛利率等。同时，我们还要把计算出来的结果存入单品统计表中。
+
+这个计算需要用到几个数据表，我分别来展示下这些表的基本信息。
+
+销售单明细表（demo.transactiondetails）中包括了每笔销售中的商品编号、销售数量、销售价格和销售金额。
+
+```mysql
+mysql> SELECT *
+-> FROM demo.transactiondetails;
++---------------+------------+----------+------------+------------+
+| transactionid | itemnumber | quantity | salesprice | salesvalue |
++---------------+------------+----------+------------+------------+
+| 1 | 1 | 1.000 | 89.00 | 89.00 |
+| 1 | 2 | 2.000 | 5.00 | 10.00 |
+| 2 | 1 | 2.000 | 89.00 | 178.00 |
+| 3 | 2 | 10.000 | 5.00 | 50.00 |
+| 3 | 3 | 3.000 | 15.00 | 45.00 |
++---------------+------------+----------+------------+------------+
+5 rows in set (0.00 sec)
+```
+
+销售单头表（demo.transactionhead）中包括流水单号、收款机编号、会员编号、操作员编号、交易时间。
+
+```mysql
+mysql> SELECT *
+-> FROM demo.transactionhead;
++---------------+------------------+-----------+----------+------------+---------------------+
+| transactionid | transactionno | cashierid | memberid | operatorid | transdate |
++---------------+------------------+-----------+----------+------------+---------------------+
+| 1 | 0120201201000001 | 1 | 1 | 1 | 2020-12-01 00:00:00 |
+| 2 | 0120201201000002 | 1 | NULL | 1 | 2020-12-01 00:00:00 |
+| 3 | 0120201202000001 | 1 | NULL | 1 | 2020-12-02 00:00:00 |
++---------------+------------------+-----------+----------+------------+---------------------+
+3 rows in set (0.00 sec)
+```
+
+商品信息表（demo.goodsmaster）中包括商品编号、商品条码、商品名称、规格、单位、售价和平均进价。
+
+```mysql
+mysql> SELECT *
+-> FROM demo.goodsmaster;
++------------+---------+-----------+---------------+------+------------+----------------+
+| itemnumber | barcode | goodsname | specification | unit | salesprice | avgimportprice |
++------------+---------+-----------+---------------+------+------------+----------------+
+| 1 | 0001 | 书 | NULL | 本 | 89.00 | 33.50 |
+| 2 | 0002 | 笔 | NULL | 支 | 5.00 | 3.50 |
+| 3 | 0003 | 胶水 | NULL | 瓶 | 15.00 | 11.00 |
++------------+---------+-----------+---------------+------+------------+----------------+
+3 rows in set (0.00 sec)
+```
+
+存储过程会用刚刚的三个表中的数据进行计算，并且把计算的结果存储到下面的这个单品统计表中。
+
+```mysql
+mysql> DESCRIBE demo.dailystatistics;
++-------------+---------------+------+-----+---------+----------------+
+| Field | Type | Null | Key | Default | Extra |
++-------------+---------------+------+-----+---------+----------------+
+| id | int | NO | PRI | NULL | auto_increment |
+| itemnumber | int | YES | MUL | NULL | |
+| quantity | decimal(10,3) | YES | | NULL | |
+| actualvalue | decimal(10,2) | YES | | NULL | |
+| cost | decimal(10,2) | YES | | NULL | |
+| profit | decimal(10,2) | YES | | NULL | |
+| profitratio | decimal(10,4) | YES | | NULL | |
+| salesdate | datetime | YES | MUL | NULL | |
++-------------+---------------+------+-----+---------+----------------+
+8 rows in set (0.01 sec)
+```
+
+我们现在就来创建一个存储过程，完成单品销售统计的计算。
+
+第一步，我们把 SQL 语句的分隔符改为“//”。因为存储过程中包含很多 SQL 语句，如果不修改分隔符的话，MySQL 会在读到第一个 SQL 语句的分隔符“;”的时候，认为语句结束并且执行，这样就会导致错误。
+
+第二步，我们来创建存储过程，把要处理的日期作为一个参数传入（关于参数，下面我会具体讲述）。同时，用 BEGIN 和 END 关键字把存储过程中的 SQL 语句包裹起来，形成存储过程的程序体。
+
+第三步，在程序体中，先定义 2 个数据类型为 DATETIME 的变量，用来记录要计算数据的起始时间和截止时间。
+
+第四步，删除保存结果数据的单品统计表中相同时间段的数据，目的是防止数据重复。第五步，计算起始时间和截止时间内单品的销售数量合计、销售金额合计、成本合计、毛利和毛利率，并且把结果存储到单品统计表中。
+
+这五个步骤，我们就可以用下面的代码来实现。
+
+```mysql
+mysql> DELIMITER // -- 设置分割符为//
+-> CREATE PROCEDURE demo.dailyoperation(transdate TEXT)
+-> BEGIN -- 开始程序体
+-> DECLARE startdate,enddate DATETIME; -- 定义变量
+-> SET startdate = date_format(transdate,'%Y-%m-%d'); -- 给起始时间赋值
+-> SET enddate = date_add(startdate,INTERVAL 1 DAY); -- 截止时间赋值为1天以后
+-> -- 删除原有数据
+-> DELETE FROM demo.dailystatistics
+-> WHERE
+-> salesdate = startdate;
+-> -- 插入新计算的数据
+-> INSERT into dailystatistics
+-> (
+-> salesdate,
+-> itemnumber,
+-> quantity,
+-> actualvalue,
+-> cost,
+-> profit,
+-> profitratio
+-> )
+-> SELECT
+-> LEFT(b.transdate,10),
+-> a.itemnumber,
+-> SUM(a.quantity), -- 数量总计
+-> SUM(a.salesvalue), -- 金额总计
+-> SUM(a.quantity*c.avgimportprice), -- 计算成本
+-> SUM(a.salesvalue-a.quantity*c.avgimportprice), -- 计算毛利
+-> CASE sum(a.salesvalue) WHEN 0 THEN 0
+-> ELSE round(sum(a.salesvalue-a.quantity*c.avgimportprice)/sum(a.salesvalue),4) END -- 计算毛利率
+-> FROM
+-> demo.transactiondetails AS a
+-> JOIN
+-> demo.transactionhead AS b
+-> ON (a.transactionid = b.transactionid)
+-> JOIN
+-> demo.goodsmaster c
+-> ON (a.itemnumber=c.itemnumber)
+-> WHERE
+-> b.transdate>startdate AND b.transdate<enddate
+-> GROUP BY
+-> LEFT(b.transdate,10),a.itemnumber
+-> ORDER BY
+-> LEFT(b.transdate,10),a.itemnumber;
+-> END
+-> // -- 语句结束，执行语句
+Query OK, 0 rows affected (0.01 sec)
+-> DELIMITER ; -- 恢复分隔符为；
+```
+
+这样，我们的存储过程就创建成功了。
+
+在这个存储过程中，我们用到了存储过程的参数定义和程序体，这些具体是什么意思呢？我们来学习下。
+
+### 存储过程的参数定义
+

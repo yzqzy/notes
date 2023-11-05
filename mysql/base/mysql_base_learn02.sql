@@ -158,3 +158,23 @@ SET salesprice = 100
 WHERE itemnumber = 1;
 
 SELECT * FROM demo.goodsmaster;
+
+## 十五、存储过程
+
+SELECT * FROM demo.transactiondetails;
+
+SELECT * FROM demo.transactionhead;
+
+SELECT * FROM demo.goodsmaster;
+
+CREATE TABLE
+    demo.dailystatistics (
+        id INT PRIMARY KEY,
+        itemnumber INT,
+        quantity DECIMAL(10, 3),
+        actualvalue DECIMAL(10, 2),
+        cost DECIMAL(10, 2),
+        profit DECIMAL(10, 2),
+        profitratio DECIMAL(10, 4),
+        salesdate DATETIME
+    );
