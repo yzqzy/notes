@@ -353,7 +353,7 @@ mysql> show variables like 'transaction_isolation';
 
 ### 事务隔离的实现
 
-。。。
+### 。。。
 
 ## 四、深入浅出索引
 
