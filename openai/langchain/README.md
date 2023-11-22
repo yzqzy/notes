@@ -208,14 +208,3 @@ https://davidsj.substack.com/p/semantic-superiority-part-2
 5. 缩略图工具，自然语言描述创造图片
 6. 获取有价值信息，收集信息，基础信息
 7. 创建每日报道，利用 agent 功能
-
-
-
-
-
-
-
-
-
-
-
