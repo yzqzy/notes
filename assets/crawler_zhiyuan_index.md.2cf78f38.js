@@ -1,1 +1,0 @@
-import{_ as e,o as a,c as t}from"./chunks/framework.9bc09dc8.js";const l=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"crawler/zhiyuan/index.md","filePath":"crawler/zhiyuan/index.md"}'),r={name:"crawler/zhiyuan/index.md"};function n(c,i,o,s,d,p){return a(),t("div")}const m=e(r,[["render",n]]);export{l as __pageData,m as default};
