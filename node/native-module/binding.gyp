@@ -1,10 +1,10 @@
 {
     "targets": [
         {
-            "target_name": "hello",
+            "target_name": "core",
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],
-            "sources": ["main.cc"],
+            "sources": ["src/main.cc"],
             "include_dirs": [
                 "<!@(node -p \"require('node-addon-api').include\")"
             ],
