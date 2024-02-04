@@ -1,0 +1,16 @@
+{
+  "name": "native-module",
+  "description": "compile native module for node.js",
+  "version": "1.0.0",
+  "scripts": {
+    "configure": "node-gyp configure",
+    "build": "node-gyp build",
+    "build:dev": "node-gyp build --debug",
+    "rebuild": "node-gyp rebuild",
+    "clean": "node-gyp clean"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.1.0"
+  },
+  "gypfile": true
+}
