@@ -38,12 +38,33 @@ Napi::Value DoubleAdd(const Napi::CallbackInfo &info)
     return Napi::Number::New(env, a + b);
 }
 
+// Callback function
+Napi::Value Callback(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    Napi::Function callback = info[0].As<Napi::Function>();
+    callback.Call(env.Undefined(), {Napi::String::New(env, "hello world")});
+    return env.Undefined();
+}
+
+// Object
+Napi::Value CreateObject(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    Napi::Object obj = Napi::Object::New(env);
+    obj.Set(Napi::String::New(env, "name"), info[0].As<Napi::String>());
+    obj.Set(Napi::String::New(env, "age"), info[1].As<Napi::Number>());
+    return obj;
+}
+
 // Init
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
     exports.Set(Napi::String::New(env, "hello"), Napi::Function::New(env, Hello));
     exports.Set(Napi::String::New(env, "add"), Napi::Function::New(env, Add));
     exports.Set(Napi::String::New(env, "doubleAdd"), Napi::Function::New(env, DoubleAdd));
+    exports.Set(Napi::String::New(env, "callback"), Napi::Function::New(env, Callback));
+    exports.Set(Napi::String::New(env, "createObject"), Napi::Function::New(env, CreateObject));
     return exports;
 }
 
