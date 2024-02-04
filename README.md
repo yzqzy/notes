@@ -84,6 +84,7 @@
   - [Node 核心模块](https://github.com/yw0525/notes/tree/master/node/core_module) 已完成
   - ~~[Node 进阶](https://github.com/yw0525/notes/tree/master/node/plus) 已废弃~~ 😅
   - [koa 架构分析与源码重写](https://github.com/yw0525/notes/tree/master/node/koa) 已完成
+  - [node 原生模块开发](https://github.com/yzqzy/notes/tree/master/node/native-module) 更新中... 😁
 - Go
   - [Go 基础](https://github.com/yw0525/notes/tree/master/go/base) 暂停中 😀
   - [Go 进阶](https://github.com/yw0525/notes/tree/master/go/plus) 暂停中 😁
