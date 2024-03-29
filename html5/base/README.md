@@ -4,7 +4,7 @@
 
               Cookie       LocalStorage   SessionStorage
 
-    容量      4kb             10MB          5MB
+    容量      4kb             5MB          5MB
     兼容      HTML4/HTML5     HTML5         HTML5
     访问限制  任意窗口         任意窗口       同一个标签页
     过期时间  可以手动设置      不会过期      标签页关闭就会过期（会话存储）
