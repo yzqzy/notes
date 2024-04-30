@@ -1,6 +1,7 @@
 import sidebars from './sidebar.json'
 
 export default {
+  base: '/notes/',
   lang: 'en-US',
   title: 'Personal Notes',
   titleTemplate: '月落 - Personal Notes',
